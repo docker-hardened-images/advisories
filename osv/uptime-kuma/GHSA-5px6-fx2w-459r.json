@@ -1,0 +1,39 @@
+{
+  "modified": "2025-06-04T05:16:23Z",
+  "published": "2025-06-04T05:16:23Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-5px6-fx2w-459r",
+  "details": "### Summary\r\nThe socket message `getPushExample` is vulnerable to unauthenticated requests, and allows for a path traversal which leads to the leakage of a file that begins with `index.`.\r\n\r\n### Details\r\n[This code](https://github.com/louislam/uptime-kuma/blob/3b58ac3fd3712df192741b6b7bfd759d4624fd2c/server/socket-handlers/general-socket-handler.js#L93) is vulnerable to unauthenticated requests, and allows for a path traversal which leads to the leakage of a file that begins with `index.`.\r\n\r\n```js\r\n    socket.on(\"getPushExample\", (language, callback) =\u003e {\r\n\r\n        try {\r\n            let dir = path.join(\"./extra/push-examples\", language);\r\n            let files = fs.readdirSync(dir);\r\n\r\n            for (let file of files) {\r\n                if (file.startsWith(\"index.\")) {\r\n                    callback({\r\n                        ok: true,\r\n                        code: fs.readFileSync(path.join(dir, file), \"utf8\"),\r\n                    });\r\n                    return;\r\n                }\r\n            }\r\n        } catch (e) {\r\n\r\n        }\r\n\r\n        callback({\r\n            ok: false,\r\n            msg: \"Not found\",\r\n        });\r\n    });\r\n```\r\n\r\nBy using an unauthenticated session, it is possible to request this endpoint as `checkLogin(socket);` is not called. Furthermore, `language` could be a path with a path traversal (`../`) which could read files in other directories.\r\n\r\n### PoC\r\nBy sending the following payload `420[\"getPushExample\",\"../../\"]`, we can obtain Uptime Kuma's index.html file.\r\n![image](https://github.com/user-attachments/assets/71a75185-8d9a-43d9-b760-b55d69dc4338)\r\n\r\nThis is in BurpSuite, but it can also be accomplished natively in JS.\r\n\r\nSteps:\r\n1. Set a breakpoint in `login()` to capture the socket object\r\n![image](https://github.com/user-attachments/assets/dea4b7b6-215c-4a29-b6f0-c2f943fb4030)\r\n\r\n2. Call `emit` with `getPushExample` and the path. For example: `SOCK.emit(\"getPushExample\", '../../', (res) =\u003e { console.log(res); });`\r\n![image](https://github.com/user-attachments/assets/71ac32bd-3f15-47f5-8b8a-7129cf020e7e)\r\n\r\n\r\n### Impact\r\nThis vulnerability has very low impact, as the file must be named index.*. However, as it is a common filename, some sensitive files could be leaked leading to more issues.\r\n\r\nThe CVSS I calculated was like so: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "uptime-kuma",
+        "purl": "pkg:dhi/uptime-kuma"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.0.0-beta.0"
+            },
+            {
+              "fixed": "2.0.0-beta.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "",
+        "source_package": "uptime-kuma"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/louislam/uptime-kuma/security/advisories/GHSA-5px6-fx2w-459r"
+    }
+  ]
+}
