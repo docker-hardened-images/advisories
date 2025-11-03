@@ -142,6 +142,50 @@ Example with Docker Scout:
 docker scout cves --vex-location ./vex/aspnetcore/ dhi/aspnetcore:latest
 ```
 
+### Verifying VEX Documents
+
+#### Checksums
+
+Each VEX document includes SHA256 and SHA512 checksums for integrity verification. Checksum files are provided alongside the VEX documents:
+
+```bash
+# Verify SHA256 checksum
+sha256sum -c dhi-aspnetcore.vex.json.sha256
+
+# Verify SHA512 checksum
+sha512sum -c dhi-aspnetcore.vex.json.sha512
+```
+
+#### Signature Verification with Cosign
+
+All VEX documents are signed using [Cosign](https://github.com/sigstore/cosign) for authenticity verification.
+
+**Verify a VEX document signature:**
+
+```bash
+# Install cosign (if not already installed)
+# See https://docs.sigstore.dev/cosign/installation/
+
+# Verify the signature
+cosign verify-blob \
+  --bundle dhi-aspnetcore.vex.json.sig \
+  --key https://registry.scout.docker.com/keyring/dhi/latest \
+  dhi-aspnetcore.vex.json
+```
+
+**Verifying the consolidated VEX file:**
+
+```bash
+cosign verify-blob \
+  --bundle dhi.vex.json.sig \
+  --key https://registry.scout.docker.com/keyring/dhi/latest \
+  dhi.vex.json
+```
+
+Successful verification confirms:
+- The VEX document was signed by the Docker Hardened Images team
+- The document has not been tampered with since signing
+
 ## Contributing
 
 This repository is maintained by the Docker Hardened Images team. Security advisories are generated and updated
