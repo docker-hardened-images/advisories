@@ -129,6 +129,13 @@ VEX statements follow OpenVEX v0.2.0:
 
 ## Usage
 
+### Consuming OSV Advisories
+
+OSV advisories can be consumed by tools that support the OSV schema:
+- OSV.dev
+- Dependency scanning tools
+- Vulnerability management platforms
+
 ### Consuming VEX Data
 
 VEX documents can be used with tools that support OpenVEX:
@@ -141,6 +148,53 @@ Example with Docker Scout:
 ```bash
 docker scout cves --vex-location ./vex/aspnetcore/ dhi/aspnetcore:latest
 ```
+
+### Verifying OSV Advisories
+
+#### Checksums
+
+Each OSV advisory includes SHA256 and SHA512 checksums for integrity verification. Checksum files are provided alongside the advisory documents:
+
+```bash
+# Verify SHA256 checksum
+shasum -a 256 -c CVE-2022-38013.json.sha256
+
+# Verify SHA512 checksum
+shasum -a 512 -c CVE-2022-38013.json.sha512
+```
+
+#### Signature Verification with Cosign
+
+All OSV advisories and their checksum files are signed using [Cosign](https://github.com/sigstore/cosign) for authenticity verification.
+
+**Verify an advisory signature:**
+
+```bash
+# Install cosign (if not already installed)
+# See https://docs.sigstore.dev/cosign/installation/
+
+# Verify the advisory JSON file
+cosign verify-blob \
+  --bundle CVE-2022-38013.json.sig \
+  --key https://registry.scout.docker.com/keyring/dhi/latest \
+  CVE-2022-38013.json
+
+# Verify the SHA256 checksum file
+cosign verify-blob \
+  --bundle CVE-2022-38013.json.sha256.sig \
+  --key https://registry.scout.docker.com/keyring/dhi/latest \
+  CVE-2022-38013.json.sha256
+
+# Verify the SHA512 checksum file
+cosign verify-blob \
+  --bundle CVE-2022-38013.json.sha512.sig \
+  --key https://registry.scout.docker.com/keyring/dhi/latest \
+  CVE-2022-38013.json.sha512
+```
+
+Successful verification confirms:
+- The advisory was signed by the Docker Hardened Images team
+- The document has not been tampered with since signing
 
 ### Verifying VEX Documents
 
