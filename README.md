@@ -77,6 +77,55 @@ VEX documents provide:
 - **Status notes**: Detailed explanations and upstream references
 - **Product associations**: Links vulnerabilities to specific package versions
 
+### VEXHub Discovery (`pkg/` and `index.json`)
+
+This repository implements the [VEX Repository Specification](https://github.com/aquasecurity/vex-repo-spec) to enable automated VEX discovery. The `pkg/` directory contains VEX documents organized by package type and repository URL, with an `index.json` file at the root for programmatic discovery.
+
+```
+pkg/
+└── oci/
+    └── index.docker.io/
+        └── dhi/
+            ├── airflow/
+            │   └── dhi-airflow.vex.json
+            ├── nginx/
+            │   └── dhi-nginx.vex.json
+            └── ...
+index.json
+```
+
+The `index.json` file provides a complete catalog of all VEX documents with:
+- **Package URLs (PURLs)**: Standard identifiers without version qualifiers
+- **File locations**: Relative paths to VEX documents
+- **Format information**: Document format (OpenVEX)
+- **Last updated timestamp**: When the index was generated
+
+Example `index.json` structure:
+
+```json
+{
+  "updated_at": "2025-11-18T23:16:54Z",
+  "packages": [
+    {
+      "id": "pkg:oci/nginx?repository_url=index.docker.io/dhi/nginx",
+      "location": "oci/index.docker.io/dhi/nginx/dhi-nginx.vex.json",
+      "format": "openvex"
+    },
+    {
+      "id": "pkg:oci/airflow?repository_url=index.docker.io/dhi/airflow",
+      "location": "oci/index.docker.io/dhi/airflow/dhi-airflow.vex.json",
+      "format": "openvex"
+    }
+  ]
+}
+```
+
+This structure enables:
+- **Automated discovery**: Tools can read `index.json` to find all available VEX data
+- **Package-specific lookups**: Find VEX documents by Package URL (PURL)
+- **Integration with scanning tools**: Trivy, Grype, and other tools can automatically locate relevant VEX data
+- **Version control**: Track changes to VEX availability over time
+
 ## Data Formats
 
 ### OSV Schema
@@ -148,6 +197,117 @@ Example with Docker Scout:
 ```bash
 docker scout cves --vex-location ./vex/aspnetcore/ dhi/aspnetcore:latest
 ```
+
+### Discovering VEX Data Programmatically
+
+The `index.json` file enables automated VEX discovery following the VEX Repository Specification:
+
+**Fetch the index:**
+```bash
+curl -s https://raw.githubusercontent.com/docker/advisories/main/index.json | jq .
+```
+
+**Find VEX data for a specific package:**
+```bash
+# Search by package name
+curl -s https://raw.githubusercontent.com/docker/advisories/main/index.json \
+  | jq '.packages[] | select(.id | contains("nginx"))'
+
+# Output:
+# {
+#   "id": "pkg:oci/nginx?repository_url=index.docker.io/dhi/nginx",
+#   "location": "oci/index.docker.io/dhi/nginx/dhi-nginx.vex.json",
+#   "format": "openvex"
+# }
+```
+
+**Download a specific VEX document:**
+```bash
+# Get the location from index.json
+LOCATION=$(curl -s https://raw.githubusercontent.com/docker/advisories/main/index.json \
+  | jq -r '.packages[] | select(.id | contains("nginx")) | .location')
+
+# Download the VEX document
+curl -s "https://raw.githubusercontent.com/docker/advisories/main/pkg/${LOCATION}"
+```
+
+### Using VEX Data with Trivy
+
+#### VEX Hub Repository Format
+
+Trivy supports the [VEX Hub repository format](https://github.com/aquasecurity/vex-repo-spec), which automatically manages updates to VEX data. This is the recommended approach for consuming DHI VEX statements with Trivy.
+
+**Configure Trivy to use the DHI VEX Hub:**
+
+Add the DHI advisories repository to your Trivy VEX configuration file (typically `~/.trivy/vex/repository.yaml`):
+
+```yaml
+repositories:
+  - name: dhi-vex
+    url: https://github.com/docker-hardened-images/advisories
+    enabled: true
+    username: ""
+    password: ""
+```
+
+**Download and update the VEX repository:**
+
+```bash
+# Download VEX data to Trivy's local cache
+trivy vex repo download
+
+# Output:
+# INFO [vex] Updating repository... repo="dhi-vex" url="https://github.com/docker-hardened-images/advisories"
+```
+
+**Scan with VEX repository:**
+
+```bash
+# Scan a DHI image with VEX data applied
+trivy image --scanners vuln --vex repo --show-suppressed dhi/bash:5
+```
+
+Example output showing suppressed vulnerabilities:
+
+```
+dhi/nginx:latest (debian 12.8)
+Total: 0 (HIGH: 0, CRITICAL: 0)
+
+Suppressed Vulnerabilities (Total: 5)
+┌─────────────┬────────────────┬──────────┬──────────────┬─────────────────────────────────────────┬────────────────────────────────────────┐
+│   Library   │ Vulnerability  │ Severity │    Status    │                Statement                │                 Source                 │
+├─────────────┼────────────────┼──────────┼──────────────┼─────────────────────────────────────────┼────────────────────────────────────────┤
+│ libssl3t64  │ CVE-2024-9143  │ HIGH     │ not_affected │ vulnerable_code_not_in_execute_path     │ VEX Repository: dhi-advisories         │
+│             │                │          │              │                                         │ (https://github.com/docker/advisories) │
+├─────────────┼────────────────┼──────────┼──────────────┼─────────────────────────────────────────┼────────────────────────────────────────┤
+│ openssl     │ CVE-2024-8096  │ HIGH     │ not_affected │ vulnerable_code_cannot_be_controlled_   │ VEX Repository: dhi-advisories         │
+│             │                │          │              │ by_adversary                            │ (https://github.com/docker/advisories) │
+└─────────────┴────────────────┴──────────┴──────────────┴─────────────────────────────────────────┴────────────────────────────────────────┘
+```
+
+#### Standalone VEX File Usage
+
+You can also use individual VEX files directly without configuring a repository:
+
+```bash
+# Download a specific VEX file
+curl -o dhi-nginx.vex.json https://raw.githubusercontent.com/docker/advisories/main/vex/nginx/dhi-nginx.vex.json
+
+# Scan with the VEX file
+trivy image --vex dhi-nginx.vex.json --show-suppressed dhi/nginx:latest
+```
+
+Or use the consolidated VEX file for all DHI images:
+
+```bash
+# Download the consolidated VEX file containing all DHI VEX statements
+curl -o dhi.vex.json https://raw.githubusercontent.com/docker/advisories/main/vex/dhi.vex.json
+
+# Scan any DHI image with the consolidated file
+trivy image --vex dhi.vex.json --show-suppressed dhi/postgres:latest
+```
+
+**Note:** When scanning Docker Hardened Images, we recommend using the VEX data from this repository as the authoritative source, since these statements are created and maintained by the DHI team.
 
 ### Verifying OSV Advisories
 
