@@ -1,0 +1,57 @@
+{
+  "modified": "2025-12-09T22:28:09Z",
+  "published": "2025-12-09T22:28:09Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-fg9g-pvc4-776f",
+  "details": "### Summary\r\n\r\nA heap use-after-free vulnerability has been identified in c-ares (`\u003c1.34.6`). The issue occurs during the `ares_getaddrinfo` query lifecycle when processing a specific sequence of DNS responses. If a trusted adjacent DNS resolver returns an `NXDOMAIN` response followed by a connection refusal during a search domain retry, it triggers a memory corruption error. This vulnerability can be exploited by an attacker controlling the local DNS infrastructure to cause a Denial of Service (DoS) in Envoy or any application linked against affected versions of c-ares.\r\n\r\n### Details\r\n\r\nThe vulnerability is triggered when `ares_getaddrinfo` processes a non-FQDN query that follows a specific transaction sequence:\r\n\r\n1.  **Initial Query:** A query is sent for a non-FQDN (e.g. `www.google.com`).\r\n2.  **Trigger Response:** The upstream DNS server replies with `NXDOMAIN`.\r\n3.  **Search Domain Retry:** `c-ares` attempts to retry the query by appending a search domain.\r\n4.  **Connection Failure:** The retry attempt fails with a local or network error (e.g., `ECONNREFUSED`).\r\n5.  **Requeue:** `c-ares` requeues the query and resends it immediately.\r\n6.  **Use-After-Free:** If the resent query succeeds, the function `end_query()` is called. This invalidates the server connection while it is still being referenced in the call stack by `read_answers()`, resulting in a heap use-after-free.\r\n\r\nThis behavior is reproducible in c-ares `main` (`ee2a1c3e`) and c-ares release `1.34.5` (`d3a507e9`).\r\n\r\n**Relevant source code:**\r\n*   `ares_process.c` → `read_answers()` / `process_answer()` → `end_query()`\r\n\r\n### PoC\r\nThe following test case demonstrates the underlying memory corruption mechanics. It simulates the specific network topology and response sequence required to trigger the use-after-free condition.\r\n\r\n**Note:** This PoC uses a mock server to deterministically replicate the crash state (`NXDOMAIN` followed by connection refusal). In a real-world scenario, this sequence would need to be triggered by a compromised or malfunctioning adjacent DNS resolver manipulating the response stream, limiting potential exploitability.\r\n\r\nPossible scenarios:\r\n\r\n* The operator has configured a compromised DNS resolver.\r\n* The DNS traffic is being intercepted/manipulated (Man-in-the-Middle).\r\n* A legitimate provider malfunctions in a very specific way.\r\n\r\n```cpp\r\nTEST_P(MockUDPChannelTestAI, ConnectionRefusedOnSearchDomainRetry) {\r\n  DNSPacket badrsp4;\r\n  badrsp4.set_response().set_aa()\r\n    .add_question(new DNSQuestion(\"www.google.com\", T_A))\r\n    .set_rcode(NXDOMAIN);\r\n\r\n  // Simulate trusted resolver returning NXDOMAIN\r\n  EXPECT_CALL(server_, OnRequest(\"www.google.com\", T_A))\r\n    .WillOnce(SetReplyAndFailSend(\u0026server_, \u0026badrsp4));\r\n\r\n  DNSPacket goodrsp4;\r\n  goodrsp4.set_response().set_aa()\r\n    .add_question(new DNSQuestion(\"www.google.com.first.com\", T_A))\r\n    .add_answer(new DNSARR(\"www.google.com.first.com\", 0x0100, {0x01,0x02,0x03,0x04}));\r\n\r\n  // Simulate subsequent search domain query logic\r\n  EXPECT_CALL(server_, OnRequest(\"www.google.com.first.com\", T_A))\r\n    .WillOnce(SetReply(\u0026server_, \u0026goodrsp4));\r\n\r\n  ares_socket_functions sock_funcs = {0};\r\n  sock_funcs.asendv = ares_sendv_fail;\r\n  ares_set_socket_functions(channel_, \u0026sock_funcs, NULL);\r\n\r\n  AddrInfoResult result;\r\n  struct ares_addrinfo_hints hints = {0,0,0,0};\r\n  hints.ai_family = AF_INET;\r\n  hints.ai_flags = ARES_AI_NOSORT;\r\n  ares_getaddrinfo(channel_, \"www.google.com\", NULL, \u0026hints, AddrInfoCallback, \u0026result);\r\n  Process();\r\n}\r\n\r\n```\r\n\r\n### Mitigation\r\n\r\nUpdate c-ares library \u003e= 1.34.6\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "envoy",
+        "purl": "pkg:dhi/envoy"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.33.13"
+            },
+            {
+              "introduced": "1.34.0"
+            },
+            {
+              "fixed": "1.34.11"
+            },
+            {
+              "introduced": "1.35.0"
+            },
+            {
+              "fixed": "1.35.7"
+            },
+            {
+              "introduced": "1.36.0"
+            },
+            {
+              "fixed": "1.36.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "envoy",
+        "source_package": "c-ares"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-fg9g-pvc4-776f"
+    }
+  ]
+}
