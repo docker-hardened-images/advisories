@@ -1,9 +1,11 @@
+<img alt="dhi-banner" src="https://github.com/user-attachments/assets/fc0ca203-3f25-4ae5-aa8e-e3918bbcc31f" />
+
 # Docker Hardened Images - Advisories
 
 This repository contains vulnerability advisories for OSS components built and distributed with Docker Hardened
 Images (DHIs), along with VEX (Vulnerability Exploitability eXchange) documents.
 
-## Overview
+## 🎯 Overview
 
 Docker Hardened Images are security-focused container images that include:
 - Security patches and hardening configurations
@@ -12,7 +14,7 @@ Docker Hardened Images are security-focused container images that include:
 
 This repository serves as the authoritative source for security information about components included in DHIs.
 
-## Repository Structure
+## 📁 Repository Structure
 
 ### OSV Advisories (`osv/`)
 
@@ -126,7 +128,7 @@ This structure enables:
 - **Integration with scanning tools**: Trivy, Grype, and other tools can automatically locate relevant VEX data
 - **Version control**: Track changes to VEX availability over time
 
-## Data Formats
+## 📖 Data Formats
 
 ### OSV Schema
 
@@ -176,7 +178,7 @@ VEX statements follow OpenVEX v0.2.0:
 }
 ```
 
-## Usage
+## 🚀 Usage
 
 ### Consuming OSV Advisories
 
@@ -400,7 +402,7 @@ Successful verification confirms:
 - The VEX document was signed by the Docker Hardened Images team
 - The document has not been tampered with since signing
 
-## Contributing
+## 🤝 Contributing
 
 This repository is maintained by the Docker Hardened Images team. Security advisories are generated and updated
 based on:
@@ -409,7 +411,7 @@ based on:
 - Vulnerability scanning results
 - Security research
 
-## License
+## 📄 License
 
 See [LICENSE](LICENSE) for details.
 
@@ -418,3 +420,7 @@ See [LICENSE](LICENSE) for details.
 For security concerns or questions about DHI advisories:
 - Email: dhi@docker.com
 - Documentation: [Docker Hardened Images](https://www.docker.com/products/hardened-images/)
+
+--- 
+
+**Docker Hardened Images** - Building secure containers, together.
