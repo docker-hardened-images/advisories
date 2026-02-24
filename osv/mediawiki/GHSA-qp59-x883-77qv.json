@@ -1,0 +1,39 @@
+{
+  "modified": "2026-01-19T21:56:41Z",
+  "published": "2026-01-19T21:56:41Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-qp59-x883-77qv",
+  "details": "### Summary\r\n\r\nA memory leak vulnerability exists in the `LoadOpenCLDeviceBenchmark()` function in `MagickCore/opencl.c`. When parsing a malformed OpenCL device profile XML file that contains `\u003cdevice` elements without proper `/\u003e` closing tags, the function fails to release allocated memory for string members (`platform_name`, `vendor_name`, `name`, `version`), leading to memory leaks that could result in resource exhaustion.\r\n\r\n**Affected Version**: ImageMagick 7.1.2-12 and possibly earlier versions\r\n\r\n---\r\n\r\n### Details\r\n\r\nThe vulnerability is located in `MagickCore/opencl.c`, function `LoadOpenCLDeviceBenchmark()` (lines 754-911).\r\n\r\n**Root Cause Analysis:**\r\n\r\n1. When a `\u003cdevice` tag is encountered, a `MagickCLDeviceBenchmark` structure is allocated (line 807-812)\r\n2. String attributes (`platform`, `vendor`, `name`, `version`) are allocated via `ConstantString()` (lines 878, 885, 898, 900)\r\n3. These strings are **only freed** when a `/\u003e` closing tag is encountered (lines 840-849)\r\n4. At function exit (lines 908-910), only the `device_benchmark` structure is freed, but **its member variables are not freed** if `/\u003e` was never parsed\r\n\r\n**Vulnerable Code (lines 908-910):**\r\n\r\n```c\r\ntoken=(char *) RelinquishMagickMemory(token);\r\ndevice_benchmark=(MagickCLDeviceBenchmark *) RelinquishMagickMemory(\r\n  device_benchmark);  // BUG: members (platform_name, vendor_name, name, version) not freed!\r\n```\r\n\r\n**Correct cleanup (only executed when `/\u003e` is found, lines 840-849):**\r\n\r\n```c\r\ndevice_benchmark-\u003eplatform_name=(char *) RelinquishMagickMemory(device_benchmark-\u003eplatform_name);\r\ndevice_benchmark-\u003evendor_name=(char *) RelinquishMagickMemory(device_benchmark-\u003evendor_name);\r\ndevice_benchmark-\u003ename=(char *) RelinquishMagickMemory(device_benchmark-\u003ename);\r\ndevice_benchmark-\u003eversion=(char *) RelinquishMagickMemory(device_benchmark-\u003eversion);\r\ndevice_benchmark=(MagickCLDeviceBenchmark *) RelinquishMagickMemory(device_benchmark);\r\n```\r\n\r\n---\r\n\r\n### PoC\r\n\r\n**Environment:**\r\n- OS: Ubuntu 22.04.5 LTS (Linux 6.8.0-87-generic x86_64)\r\n- Compiler: GCC 11.4.0\r\n- ImageMagick: 7.1.2-13 (commit `a52c1b402be08ef8ae193f28ac5b2e120f2fa26f`)\r\n\r\n**Step 1: Build ImageMagick with AddressSanitizer**\r\n\r\n```bash\r\ncd ImageMagick\r\n./configure \\\r\n    CFLAGS=\"-g -O0 -fsanitize=address -fno-omit-frame-pointer\" \\\r\n    CXXFLAGS=\"-g -O0 -fsanitize=address -fno-omit-frame-pointer\" \\\r\n    LDFLAGS=\"-fsanitize=address\" \\\r\n    --disable-openmp\r\nmake -j$(nproc)\r\n```\r\n\r\n**Step 2: Create malformed XML file**\r\n\r\n**Step 3: Place file in OpenCL cache directory**\r\n\r\n```bash\r\nmkdir -p ~/.cache/ImageMagick\r\ncp malformed_opencl_profile.xml ~/.cache/ImageMagick/ImagemagickOpenCLDeviceProfile.xml\r\n```\r\n\r\n**Step 4: Run ImageMagick with leak detection**\r\n\r\n```bash\r\nexport ASAN_OPTIONS=\"detect_leaks=1:symbolize=1\"\r\n./utilities/magick -size 100x100 xc:red output.png\r\n```\r\n\r\n**ASAN Output:**\r\n\r\n```\r\n=================================================================\r\n==2543490==ERROR: LeakSanitizer: detected memory leaks\r\n\r\nDirect leak of 96 byte(s) in 2 object(s) allocated from:\r\n    #0 ... in AcquireMagickMemory MagickCore/memory.c:536\r\n    #1 ... in LoadOpenCLDeviceBenchmark MagickCore/opencl.c:807\r\n\r\nDirect leak of 16 byte(s) in 1 object(s) allocated from:\r\n    #0 ... in ConstantString MagickCore/string.c:692\r\n    #1 ... in LoadOpenCLDeviceBenchmark MagickCore/opencl.c:878  ← name\r\n\r\nDirect leak of 14 byte(s) in 1 object(s) allocated from:\r\n    #0 ... in ConstantString MagickCore/string.c:692\r\n    #1 ... in LoadOpenCLDeviceBenchmark MagickCore/opencl.c:885  ← platform_name\r\n\r\nDirect leak of 14 byte(s) in 1 object(s) allocated from:\r\n    #0 ... in ConstantString MagickCore/string.c:692\r\n    #1 ... in LoadOpenCLDeviceBenchmark MagickCore/opencl.c:898  ← vendor_name\r\n\r\nDirect leak of 15 byte(s) in 1 object(s) allocated from:\r\n    #0 ... in ConstantString MagickCore/string.c:692\r\n    #1 ... in LoadOpenCLDeviceBenchmark MagickCore/opencl.c:900  ← version\r\n\r\nSUMMARY: AddressSanitizer: 203 byte(s) leaked in 18 allocation(s).\r\n```\r\n\r\n---\r\n\r\n### Impact\r\n\r\n**Vulnerability Type:** CWE-401 (Missing Release of Memory after Effective Lifetime)\r\n\r\n**Severity:** Low\r\n\r\n**Who is impacted:**\r\n- Users who have OpenCL enabled in ImageMagick\r\n- Systems where an attacker can place or modify files in the OpenCL cache directory (`~/.cache/ImageMagick/`)\r\n- Long-running ImageMagick processes or services that repeatedly initialize OpenCL\r\n\r\n**Potential consequences:**\r\n- Memory exhaustion over time if the malformed configuration is repeatedly loaded\r\n- Denial of Service (DoS) in resource-constrained environments\r\n\r\n**Attack Vector:** Local - requires write access to the user's OpenCL cache directory\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "mediawiki",
+        "purl": "pkg:dhi/mediawiki"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "7.1.2-13"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "c/c++",
+        "source_package": "ImageMagick"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/ImageMagick/ImageMagick/security/advisories/GHSA-qp59-x883-77qv"
+    }
+  ]
+}
