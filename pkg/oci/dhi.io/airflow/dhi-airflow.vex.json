@@ -4,9 +4,86 @@
   "author": "Docker Hardened Images \u003cdhi@docker.com\u003e",
   "role": "Document Creator",
   "timestamp": "2025-06-17T12:21:41.904Z",
-  "last_updated": "2026-03-04T08:39:31.124Z",
-  "version": 27,
+  "last_updated": "2026-03-04T08:39:43.534Z",
+  "version": 28,
   "statements": [
+    {
+      "@id": "792db6f7-abed-453a-87d8-bb9550e7d143",
+      "vulnerability": {
+        "name": "GHSA-72hv-8253-57qq"
+      },
+      "timestamp": "2026-03-04T08:39:43.534Z",
+      "products": [
+        {
+          "@id": "pkg:docker/dhi/airflow",
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.16.1"
+            }
+          ]
+        },
+        {
+          "@id": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.16.1"
+        },
+        {
+          "@id": "pkg:oci/airflow?repository_url=dhi.io",
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.16.1"
+            }
+          ]
+        },
+        {
+          "@id": "pkg:oci/dhi.io%2Fairflow",
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.16.1"
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "status_notes": "jackson-core 2.16.1 is bundled inside ray_dist.jar, which is part of the Ray Python package. The vulnerable async JSON parser in jackson-core is only reachable when Ray's Java-based distributed runtime processes JSON input. Airflow uses Ray exclusively as a Python client library via vertex_ray from google_cloud_aiplatform to manage remote Ray resources on Vertex AI. The Ray Java runtime is never started within the Airflow container, so the vulnerable async parser code path is never executed. Upstream Ray still pins jackson 2.16.1 in java/dependencies.bzl on master.",
+      "justification": "vulnerable_code_not_in_execute_path"
+    },
+    {
+      "@id": "17a13ed7-d352-4bcd-bab9-253c058d6def",
+      "vulnerability": {
+        "name": "CVE-2026-27205"
+      },
+      "timestamp": "2026-03-04T08:39:37.499Z",
+      "products": [
+        {
+          "@id": "pkg:docker/dhi/airflow",
+          "subcomponents": [
+            {
+              "@id": "pkg:pypi/flask@2.2.5"
+            }
+          ]
+        },
+        {
+          "@id": "pkg:oci/airflow?repository_url=dhi.io",
+          "subcomponents": [
+            {
+              "@id": "pkg:pypi/flask@2.2.5"
+            }
+          ]
+        },
+        {
+          "@id": "pkg:oci/dhi.io%2Fairflow",
+          "subcomponents": [
+            {
+              "@id": "pkg:pypi/flask@2.2.5"
+            }
+          ]
+        },
+        {
+          "@id": "pkg:pypi/flask@2.2.5"
+        }
+      ],
+      "status": "under_investigation",
+      "status_notes": "Waiting for upstream fix. Flask 2.2.5 is pulled in as a transitive dependency of flask-appbuilder, which pins flask\u003c3.0. Fixed in flask 3.1.3."
+    },
     {
       "@id": "83a6feb4-3732-4943-a39a-1e0d53af234b",
       "vulnerability": {
