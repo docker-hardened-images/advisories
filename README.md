@@ -16,6 +16,11 @@ This repository serves as the authoritative source for security information abou
 
 ## 📁 Repository Structure
 
+### Scanner Integration Guide (`integration`)
+
+Review the [README.md](integration/README.md) for information on how to integrate the OSV and VEX data contained in this repository
+into a third-party scanner. 
+
 ### OSV Advisories (`osv/`)
 
 Vulnerability advisories in [OSV (Open Source Vulnerability)](https://ossf.github.io/osv-schema/) format,
