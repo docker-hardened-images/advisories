@@ -1,0 +1,45 @@
+{
+  "modified": "2026-05-06T18:03:31Z",
+  "published": "2026-05-06T18:03:31Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-fh5r-jpm3-fjwp",
+  "details": "### Summary\r\n\r\nUnsanitized virtual host names allow for XSS in the the management UI pages that list virtual hosts if the attacker\r\nmanages to find a way to force a virtual host to restart.\r\n\r\n### Details\r\n\r\nThe relevant blocks were introduced in https://github.com/rabbitmq/rabbitmq-server/commit/7f54319279d1ece161ae0b4cdc6f0e58a4045eb5. In `vhost.ejs` and `vhosts.ejs` the forms to restart a dead vhost include a hidden input with the vhost name without using the `fmt_string` sanitizer. Wrapping these values in `fmt_string` fixes this issue without affecting the form's functionality.\r\n\r\n### Impact\r\n\r\nSince vhost names are not limited in length (to my knowledge), the XSS script can be arbitrarily long. It requires the ability to create vhosts as well as a means to kill them somehow, and for the attack to affect unsuspecting users they need to visit the vhost page of the malicious vhost.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.7.0"
+            },
+            {
+              "fixed": "4.0.13"
+            },
+            {
+              "introduced": "4.1.0"
+            },
+            {
+              "fixed": "4.1.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-fh5r-jpm3-fjwp"
+    }
+  ]
+}
