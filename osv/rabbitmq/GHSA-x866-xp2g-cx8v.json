@@ -1,0 +1,63 @@
+{
+  "modified": "2026-05-06T18:03:16Z",
+  "published": "2026-05-06T18:03:16Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-x866-xp2g-cx8v",
+  "details": "# RabbitMQ MQTT Topic Permission Authorization Bypass\r\n\r\n## Summary\r\n\r\nRabbitMQ's MQTT plugin allows for topic-level authorization using regular expressions with variable substitution. Administrators can create patterns such as `^{client_id}-sensors$` to restrict user access to topics that include their client ID. However, the `client_id` is provided by the user in the MQTT CONNECT packet and is inserted into the regex pattern without escaping special regex characters. This flaw enables an authenticated MQTT user to inject regex operators to bypass authorization.\r\n\r\nFor instance, a user with `client_id=\".*\"` can transform the pattern `^{client_id}-sensors$` into `^.*-sensors$`, which incorrectly matches any topic ending in `-sensors`.\r\n\r\n## Details\r\n\r\n### The Vulnerability\r\n\r\nAdministrators can configure topic permissions using regular expressions that include variables like `{client_id}`. The intended behavior is to substitute this variable with the client's ID, thus restricting their access to a specific set of topics. For example, a user with `client_id=\"device123\"` should only be able to access topics like `device123-sensors` and `device123-telemetry`.\r\n\r\nThe vulnerability exists because the `client_id` from the MQTT CONNECT packet is directly substituted into the regex pattern without escaping. This allows an attacker to inject regex metacharacters. For example, by providing a `client_id` of `.*`, the regex becomes overly permissive.\r\n\r\n## Impact\r\n\r\nThis vulnerability allows an authenticated MQTT user to bypass all topic authorization checks. This can lead to:\r\n\r\n*   **Unauthorized Data Access**: Attackers can subscribe to any topic and read sensitive data.\r\n*   **Unauthorized Actions**: Attackers can publish messages to restricted topics, potentially leading to unauthorized actions within the system.\r\n\r\n## Workarounds\r\n\r\nOne of:\r\n\r\n1. Disable the MQTT plugin\r\n2. Do not use/rely on variable expansion in topic authorization\r\n3. Switch to using separate users per client instead of topic authorization with extrapolated variables such as `client_id`",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "RabbitMQ server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.4"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "RabbitMQ server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-x866-xp2g-cx8v"
+    }
+  ]
+}
