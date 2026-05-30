@@ -1,0 +1,13 @@
+{
+  "modified": "2026-05-19T18:40:07Z",
+  "published": "2026-05-19T18:40:07Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-3p57-xxv6-6wqp",
+  "details": "## Summary\r\nAn open redirect vulnerability has been identified in the DataHub frontend `/authenticate` endpoint that could allow attackers to redirect users to malicious external sites.\r\n\r\n## Vulnerability Details\r\n\r\n### Root Cause\r\nThe vulnerability exists in `AuthenticationController.java` (line 148) where the `redirect_uri` query parameter is passed directly to `Results.redirect()` without proper validation.\r\n\r\n### Attack Vector\r\nWhen the redirect URI contains triple slashes (e.g., `///google.com`), URL normalization causes browsers to interpret this as a fully qualified external URL (`https://google.com`), bypassing intended redirect restrictions.\r\n\r\n**Example Request:**\r\n```http\r\nGET /authenticate?redirect_uri=///google.com HTTP/2\r\nHost: demo.datahub.com\r\n```\r\n\r\n## Impact\r\nAttackers can craft malicious links to redirect authenticated users to phishing sites or malicious domains.\r\n\r\n## Patches\r\nA fix has been developed and is available in the following pull request:\r\n- https://github.com/datahub-project/datahub/pull/16279\r\n\r\nUsers should upgrade to the patched version once released.\r\n\r\n## Workarounds\r\nUntil the patch can be applied, consider the following temporary mitigations:\r\n1. **Web Application Firewall (WAF)**: Block requests to `/authenticate` containing `redirect_uri` parameters with multiple leading slashes (`//` or more)\r\n2. **Reverse Proxy Rules**: Implement URL filtering at the reverse proxy level to reject malformed redirect parameters\r\n3. **User Education**: Warn users to verify URLs before clicking authentication links\r\n4. **Network Monitoring**: Monitor for suspicious redirect patterns in access logs\r\n\r\n## References\r\n- Vulnerable Code: https://github.com/datahub-project/datahub/blob/master/datahub-frontend/app/controllers/AuthenticationController.java#L148\r\n- Fix PR: https://github.com/datahub-project/datahub/pull/16279\r\n- CWE-601: URL Redirection to Untrusted Site ('Open Redirect')\r\n- OWASP: https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/04-Testing_for_Client-side_URL_Redirect",
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/datahub-project/datahub/security/advisories/GHSA-3p57-xxv6-6wqp"
+    }
+  ]
+}
