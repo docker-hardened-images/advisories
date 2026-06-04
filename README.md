@@ -211,13 +211,13 @@ The `index.json` file enables automated VEX discovery following the VEX Reposito
 
 **Fetch the index:**
 ```bash
-curl -s https://raw.githubusercontent.com/docker/advisories/main/index.json | jq .
+curl -s https://raw.githubusercontent.com/docker-hardened-images/advisories/main/index.json | jq .
 ```
 
 **Find VEX data for a specific package:**
 ```bash
 # Search by package name
-curl -s https://raw.githubusercontent.com/docker/advisories/main/index.json \
+curl -s https://raw.githubusercontent.com/docker-hardened-images/advisories/main/index.json \
   | jq '.packages[] | select(.id | contains("nginx"))'
 
 # Output:
@@ -231,11 +231,11 @@ curl -s https://raw.githubusercontent.com/docker/advisories/main/index.json \
 **Download a specific VEX document:**
 ```bash
 # Get the location from index.json
-LOCATION=$(curl -s https://raw.githubusercontent.com/docker/advisories/main/index.json \
+LOCATION=$(curl -s https://raw.githubusercontent.com/docker-hardened-images/advisories/main/index.json \
   | jq -r '.packages[] | select(.id | contains("nginx")) | .location')
 
 # Download the VEX document
-curl -s "https://raw.githubusercontent.com/docker/advisories/main/pkg/${LOCATION}"
+curl -s "https://raw.githubusercontent.com/docker-hardened-images/advisories/main/pkg/${LOCATION}"
 ```
 
 ### Using VEX Data with Trivy
@@ -298,7 +298,7 @@ You can also use individual VEX files directly without configuring a repository:
 
 ```bash
 # Download a specific VEX file
-curl -o dhi-nginx.vex.json https://raw.githubusercontent.com/docker/advisories/main/vex/nginx/dhi-nginx.vex.json
+curl -o dhi-nginx.vex.json https://raw.githubusercontent.com/docker-hardened-images/advisories/main/vex/nginx/dhi-nginx.vex.json
 
 # Scan with the VEX file
 trivy image --vex dhi-nginx.vex.json --show-suppressed dhi/nginx:latest
@@ -308,7 +308,7 @@ Or use the consolidated VEX file for all DHI images:
 
 ```bash
 # Download the consolidated VEX file containing all DHI VEX statements
-curl -o dhi.vex.json https://raw.githubusercontent.com/docker/advisories/main/vex/dhi.vex.json
+curl -o dhi.vex.json https://raw.githubusercontent.com/docker-hardened-images/advisories/main/vex/dhi.vex.json
 
 # Scan any DHI image with the consolidated file
 trivy image --vex dhi.vex.json --show-suppressed dhi/postgres:latest
