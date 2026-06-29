@@ -1,0 +1,57 @@
+{
+  "modified": "2026-06-23T15:05:29Z",
+  "published": "2026-06-23T15:05:29Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-p7c7-7c47-pwch",
+  "details": "This issue was reported publicly as: https://github.com/google/quiche/issues/105\r\n\r\nQuoting from the report:\r\n\r\nVulnerability Description\r\nThe issue is not a simple QPACK decoding failure. The root cause is that, when a QPACK header block becomes blocked waiting for dynamic table updates, the corresponding HTTP/3 HEADERS payload bytes are accounted for as consumed by the QUIC receive-flow-control path, while the same bytes are still retained in an internal heap buffer inside the QPACK decoder.\r\n\r\nIn the affected design, HEADERS frame payload is delivered progressively to the HTTP/3/QPACK layer rather than being fully buffered and bounded before processing. If the header block prefix declares a Required Insert Count that depends on dynamic table entries not yet received on the QPACK encoder stream, the decoder enters a blocked state. Once blocked, subsequent header block bytes are appended to an internal decoder buffer and are not semantically decoded until the required dynamic table insertions arrive.\r\n\r\nHowever, on the request stream path, the implementation still marks the received payload as consumed after each decode call. As a result, stream-level and connection-level flow-control windows are returned to the peer even though the payload bytes are still resident in heap memory. This creates a discrepancy between protocol-level accounting and actual memory retention.\r\n\r\nBecause HTTP/3 HEADERS frames are processed in a streaming manner and are not subject to the buffered-frame payload cap used for certain other HTTP/3 frame types, and because the blocked-stream limit only constrains the number of concurrently blocked header blocks rather than the retained size of each blocked block, an attacker can keep feeding additional HEADERS payload bytes into the hidden decoder-side heap buffer. In practice, this can lead to unbounded memory growth and denial of service of the HTTP/3 stack.\r\n\r\nIn one sentence, the vulnerability can be summarized as follows:\r\n\r\nDuring blocked QPACK decoding, HEADERS payload is released from QUIC receive-flow-control accounting before it becomes safely releasable in memory, causing the payload to accumulate in an internal heap buffer that is no longer effectively bounded by QUIC flow control.\r\n\r\nAttack Preconditions\r\nThe target uses IETF QUIC with HTTP/3 enabled.\r\nThe server supports the QPACK dynamic table.\r\nThe server permits blocked QPACK streams (commonly with QPACK_BLOCKED_STREAMS = 100 by default, or another non-zero value).\r\nThe attacker can establish at least one normal HTTP/3 connection to the target service.\r\nThe attacker can send a syntactically valid HEADERS frame whose QPACK header block prefix declares dependence on a dynamic table entry that has not yet arrived.\r\nIn deployments using google/quiche as the HTTP/3 server core, these conditions are met by default. Therefore, no additional privileges, authentication, or special access are required beyond the ability to interact with the service as a normal remote HTTP/3 client.\r\n\r\n### Impact\r\nAttacker can send unbounded data which will be buffered internally in the HTTP/3 stack, resulting in an out-of-memory condition.\r\n\r\n### Patches\r\n_Has the problem been patched? What versions should users upgrade to?_\r\n\r\n### Workarounds\r\nNo\r\n\r\n### References\r\nhttps://github.com/google/quiche/issues/105\r\n\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "envoy",
+        "purl": "pkg:dhi/envoy"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.35.13"
+            },
+            {
+              "introduced": "1.36.0"
+            },
+            {
+              "fixed": "1.36.9"
+            },
+            {
+              "introduced": "1.37.0"
+            },
+            {
+              "fixed": "1.37.5"
+            },
+            {
+              "introduced": "1.38.0"
+            },
+            {
+              "fixed": "1.38.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "",
+        "source_package": "github.com/envoyproxy/envoy"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-p7c7-7c47-pwch"
+    }
+  ]
+}
