@@ -27,9 +27,10 @@ The model-specific guides define the integration contract. The one-page
 overview is explanatory and should not be used as a separate routing contract.
 
 The existing `integration/docs`, `integration/examples`,
-`integration/reference-implementations`, and `integration/validation` paths are
-retained for compatibility with published links and automation. New integrations
-should enter through the model-specific guides above.
+`integration/reference-implementations`, and `integration/validation` paths
+contain the current-production implementation material. They remain at their
+published paths for link and automation compatibility. New integrations should
+enter through the model-specific guides above.
 
 ## New Model Summary
 
