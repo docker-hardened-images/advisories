@@ -83,7 +83,7 @@ We could, but transparency is more valuable. With dual feeds:
 
 **Recommended but not required initially.**
 
-**Option 1 (Simpler)**: Use comprehensive VEX feed from GitHub  
+**Option 1 (Simpler)**: Use comprehensive VEX feed from GitHub
 **Option 2 (Better)**: Use OCI referrers for image-specific SBOM/VEX
 
 Most partners start with Option 1, add Option 2 later.
@@ -220,7 +220,7 @@ Only trust the OSV feed for `pkg:dhi/*`.
 }
 ```
 
-**Matches**: `pkg:dhi/python@3.13.1`  
+**Matches**: `pkg:dhi/python@3.13.1`
 **Doesn't match**: `pkg:dhi/python@3.13.2` (version differs)
 
 ### What if VEX and CVE database conflict?

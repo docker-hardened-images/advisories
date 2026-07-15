@@ -11,7 +11,7 @@ Tests are organized into 4 levels:
 - **Level 3**: Derived Images
 - **Level 4**: Edge Cases
 
-Exact CVE IDs and some package versions change over time as advisory data evolves.  
+Exact CVE IDs and some package versions change over time as advisory data evolves.
 The validation target is scanner behavior (routing, matching, suppression), not a fixed CVE list.
 The reference harness defaults to `linux/arm64` and pins arm64 manifest digests for its built-in validation images.
 

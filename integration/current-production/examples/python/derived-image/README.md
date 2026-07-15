@@ -121,6 +121,6 @@ Your scanner should:
 - ✅ Understand derivation? Check [FAQ](../../../docs/faq.md)
 - 📖 See [Decision Trees](../../../docs/decision-trees.md) for detailed flow
 
---- 
+---
 
 **Docker Hardened Images** - Building secure containers, together.
