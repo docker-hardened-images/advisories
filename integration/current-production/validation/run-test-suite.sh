@@ -8,7 +8,7 @@ VEX_IMAGE_ARM64="dhi.io/bash:5@sha256:55ca1da07f8332342db5224144e7455d68a2864645
 VEX_IMAGE_AMD64="dhi.io/bash:5@sha256:a62c945bf730a72efafd468533b8d73478dfe30a35f408aff7928a7f2cc5c20a"
 BASE_IMAGE_DEFAULT="$BASE_IMAGE_ARM64"
 VEX_IMAGE_DEFAULT="$VEX_IMAGE_ARM64"
-DERIVED_IMAGE_DEFAULT="test-derived-python"
+DERIVED_IMAGE_DEFAULT="dhi-validation-derived-$$-${RANDOM}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DERIVED_CONTEXT_DEFAULT="$SCRIPT_DIR/../examples/python/derived-image"
 
@@ -59,6 +59,9 @@ tmp_vex_file() {
 
 cleanup() {
   if command -v docker >/dev/null 2>&1; then
+    if [[ "$derived_built" -eq 1 ]]; then
+      docker image rm -f "$DERIVED_IMAGE" >/dev/null 2>&1 || true
+    fi
     if [[ "$edge41_built" -eq 1 ]]; then
       docker image rm -f "$EDGE41_IMAGE" >/dev/null 2>&1 || true
     fi
@@ -77,11 +80,11 @@ Usage: ./run-test-suite.sh [options]
 Options:
   --level N[,N...]     Run only selected levels (1,2,3,4). Example: --level 1,3
   --output PATH        Write JSON report to PATH
-  --adapter PATH       Load scanner adapter file (default: validation/adapters/docker-scout-adapter.sh)
+  --adapter PATH       Load scanner adapter file (default: adapters/docker-scout-adapter.sh)
   --platform OS/ARCH   Target platform for index resolution and local fixture builds
   --base-image REF     Override base DHI image reference
   --vex-image REF      Override OCI image used to validate VEX referrer loading
-  --derived-image TAG  Override local derived image tag (default: test-derived-python)
+  --derived-image TAG  Override the unique per-run derived image tag
   --help               Show this help
 
 Notes:
@@ -159,14 +162,71 @@ run_capture() {
   local var_name="$1"
   shift
   local captured=""
+  local diagnostics=""
+  local stderr_file=""
   local code=0
-  if captured="$($@ 2>&1)"; then
+
+  if ! stderr_file="$(mktemp "$WORK_DIR/stderr.XXXXXX")"; then
+    printf -v "$var_name" "%s" "failed to create a temporary diagnostics file"
+    return 1
+  fi
+
+  if captured="$("$@" 2>"$stderr_file")"; then
     code=0
   else
     code=$?
   fi
+
+  diagnostics="$(<"$stderr_file")"
+  rm -f "$stderr_file"
+
+  if [[ "$code" -ne 0 && -n "$diagnostics" ]]; then
+    if [[ -n "$captured" ]]; then
+      captured="${captured}"$'\n'"${diagnostics}"
+    else
+      captured="$diagnostics"
+    fi
+  elif [[ -n "$diagnostics" ]]; then
+    printf "%s\n" "$diagnostics" >&2
+  fi
+
   printf -v "$var_name" "%s" "$captured"
   return "$code"
+}
+
+write_json_atomically() {
+  local output_path="$1"
+  local json="$2"
+  local output_dir=""
+  local output_name=""
+  local temporary_path=""
+
+  output_dir="$(dirname "$output_path")"
+  output_name="$(basename "$output_path")"
+
+  if [[ ! -d "$output_dir" ]]; then
+    echo "error: report output directory does not exist: $output_dir" >&2
+    return 1
+  fi
+  if [[ -d "$output_path" ]]; then
+    echo "error: report output path is a directory: $output_path" >&2
+    return 1
+  fi
+  if ! temporary_path="$(mktemp "$output_dir/.${output_name}.tmp.XXXXXX")"; then
+    echo "error: could not create temporary report beside $output_path" >&2
+    return 1
+  fi
+
+  if ! printf "%s\n" "$json" | jq '.' > "$temporary_path"; then
+    rm -f "$temporary_path"
+    echo "error: could not render report JSON" >&2
+    return 1
+  fi
+  if ! mv -f "$temporary_path" "$output_path"; then
+    rm -f "$temporary_path"
+    echo "error: could not replace report at $output_path" >&2
+    return 1
+  fi
 }
 
 record_result() {
@@ -416,8 +476,8 @@ ensure_derived_flask_facts() {
 #
 # R1: VEX loaded from OCI referrer attestation on image digest.
 #   - Covered by test 1.3.
-# R2: DHI scans include DHI OSV consideration for all packages.
-#   - Covered by tests 2.1 and 2.2 (observable proxy assertions).
+# R2: Current-production pkg:dhi packages route exclusively to DHI OSV.
+#   - Covered by test 2.1.
 # R3: Distro package handling combines upstream routing + DHI VEX.
 #   - Covered by tests 2.2 and 3.3.
 # R4: Referrers use image digest; chainID is boundary classification only.
@@ -535,7 +595,7 @@ run_test_2_2() {
   fi
 
   if cve_has_vex_not_affected "$with_vex_output" "$BASE_OPENSSL_CVE"; then
-    record_result 2 "2.2" "Route distro package with upstream+VEX" "passed" "Found Alpine upstream routing and VEX application for $BASE_OPENSSL_CVE (observable R2/R3 behavior)."
+    record_result 2 "2.2" "Route distro package with upstream+VEX" "passed" "Found Alpine upstream routing and VEX application for $BASE_OPENSSL_CVE (observable R3 behavior)."
   else
     record_result 2 "2.2" "Route distro package with upstream+VEX" "failed" "Upstream routing found, but VEX status was not applied for $BASE_OPENSSL_CVE."
   fi
@@ -988,7 +1048,9 @@ echo "  Executed -> $executed_tests/$expected_tests"
 echo "  Overall -> $overall"
 
 if [[ -n "$OUTPUT_PATH" ]]; then
-  echo "$report_json" | jq '.' > "$OUTPUT_PATH"
+  if ! write_json_atomically "$OUTPUT_PATH" "$report_json"; then
+    exit 1
+  fi
   echo
   echo "Wrote report to $OUTPUT_PATH"
 else

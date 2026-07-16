@@ -1,7 +1,7 @@
 # VEX Context
 
 Generated DHI VEX data gives scanners DHI assessment context to present with
-findings produced by DHI OSV matching.
+findings produced by DHI or upstream advisory matching.
 
 ## OSV And VEX By Model
 
@@ -14,7 +14,7 @@ product context.
 | `affected` | Creates a candidate finding from upstream or DHI advisory data. | Confirms DHI assessment and adds status/action context. | Report finding with DHI context. |
 | `under_investigation` | Creates a candidate finding from upstream or DHI advisory data. | Marks DHI assessment as unresolved and adds status context. | Report finding with under-investigation context. |
 | `not_affected` | May create a candidate finding from upstream advisory data. | Marks matching DHI product as not affected. | Suppress or annotate finding as not affected. |
-| `fixed` | Advisory data may show a fix version for a vulnerable installed package. | Marks exact matching DHI product versions as fixed. | Report vulnerable installed versions as fixable; do not infer fixed VEX across versions. |
+| `fixed` | May create a candidate for a vulnerable installed version; advisory range data may identify a fixed version. | Marks only an exactly matching DHI product as fixed. It does not apply to older or different product versions. | Exact fixed product: no active finding. Older vulnerable product: report the finding and show advisory-based upgrade guidance when available. |
 
 In the upcoming `ID=dhi` model, generated DHI OSV already represents Docker's
 current advisory state. VEX adds DHI assessment context, but `not_affected` and
@@ -55,9 +55,9 @@ model, not the upcoming `pkg:(apk|deb)/dhi/...` OS package model.
 
 | Status | Example |
 | --- | --- |
-| `not_affected` | `advisories/vex/aws-privateca-issuer/dhi-aws-privateca-issuer.vex.json` contains `CVE-2026-6238` for `pkg:deb/debian/glibc-source` with justification `vulnerable_code_not_in_execute_path`. |
-| `under_investigation` | The same file contains `CVE-2025-70873` for `pkg:deb/debian/libsqlite3-0` with status notes indicating it is waiting for an upstream fix. |
-| `affected` | `advisories/vex/python/dhi-python.vex.json` contains `CVE-2025-12781` for `pkg:dhi/python@3.9.23` with an action statement explaining why the fix was not ported. |
+| `not_affected` | Pinned [`aws-privateca-issuer` VEX](https://github.com/docker-hardened-images/advisories/blob/67b6c12a121bc04c225e9c4707912abcc4b022c2/vex/aws-privateca-issuer/dhi-aws-privateca-issuer.vex.json) contains `CVE-2026-6238` for `pkg:deb/debian/glibc-source` with justification `vulnerable_code_cannot_be_controlled_by_adversary`. |
+| `under_investigation` | Pinned [`bash` VEX](https://github.com/docker-hardened-images/advisories/blob/67b6c12a121bc04c225e9c4707912abcc4b022c2/vex/bash/dhi-bash.vex.json) contains `CVE-2026-7017` for Debian Perl products, with status notes indicating that Docker is waiting for upstream and Debian analysis or a fix. |
+| `affected` | Pinned [`python` VEX](https://github.com/docker-hardened-images/advisories/blob/67b6c12a121bc04c225e9c4707912abcc4b022c2/vex/python/dhi-python.vex.json) contains an `affected` statement for `CVE-2025-12781` and `pkg:dhi/python@3.9.23`, with an action statement explaining why the fix was not ported. |
 
 Observed current-production `not_affected` justifications include:
 

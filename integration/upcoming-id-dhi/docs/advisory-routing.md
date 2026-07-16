@@ -37,6 +37,14 @@ Derived-image integrations need layer attribution, DHI base SBOM membership,
 package provenance, or equivalent product membership evidence before applying
 generated DHI advisory data.
 
+The [derived-image fixture](../examples/e2e-alpine-layer-package-namespace/README.md)
+demonstrates this boundary with two packages in one final `ID=dhi` image.
+`coreutils` is present in the pinned DHI base SBOM and is eligible for generated
+DHI OSV matching. `jq` is the sole package added by the derived image and is not
+eligible without separate DHI provenance, even though the scanner emits a
+`pkg:apk/dhi/jq@...` PURL. Production integrations must obtain the base package
+membership data from a trusted DHI artifact or attestation.
+
 DHI advisories can still carry component context. For example, a DHI OS package
 advisory may be matched through `pkg:apk/dhi/python-3.12@...` while referencing
 an embedded language package such as `pkg:pypi/setuptools@...`. That component

@@ -21,7 +21,7 @@ security scanners with Docker Hardened Images (DHI).
 
 ## 🚀 Reference Implementation
 
-- **Go**: [`reference-implementations/go/`](reference-implementations/go/)
+- **Go**: `reference-implementations/go/`
 
 ## 📄 Resources
 

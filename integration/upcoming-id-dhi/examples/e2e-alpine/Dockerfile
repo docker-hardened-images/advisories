@@ -1,4 +1,4 @@
-ARG SOURCE_IMAGE=dhi.io/bash:5-alpine3.24
+ARG SOURCE_IMAGE=dhi.io/bash:5-alpine3.24@sha256:e2b67997780c37dc8352fb3e1bae077497216767cd5edb25c710e3a0fef232ec
 FROM ${SOURCE_IMAGE}
 
 USER 0

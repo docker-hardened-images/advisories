@@ -6,11 +6,20 @@ Documentation and reference fixtures for integrating third-party security
 scanners with Docker Hardened Images (DHI) after cutover images identify
 themselves with `/etc/os-release` `ID=dhi`.
 
-> Migration note: this directory describes the upcoming model. The current
-> production model is documented in
+> **Work in progress:** This directory describes the upcoming model. Cutover
+> will happen gradually, image by image, so scanners must continue to route
+> each image according to the model it actually reports. The current production
+> model is documented in
 > [`../current-production`](../current-production/README.md). For a short
 > overview of the upcoming scanner changes, start with the
-> [one-page overview](../dhi-scanner-integration-upcoming-changes.md).
+> [one-page overview](../dhi-scanner-integration-upcoming-changes.md). This
+> guide will receive further updates as the rollout progresses.
+
+> **Pre-cutover fixture note:** The local Dockerfiles in this guide rewrite
+> `/etc/os-release` to simulate the identity that cutover images will ship.
+> This mutation exists only so the upcoming scanner behavior can be tested
+> before those production images are published. Scanner integrations must not
+> rewrite image metadata; cutover images will report `ID=dhi` themselves.
 
 ## 🎯 Quick Start
 
@@ -69,6 +78,8 @@ advisory data.
 
 - **Alpine example**: [examples/e2e-alpine/](examples/e2e-alpine/README.md)
 - **Debian example**: [examples/e2e-debian/](examples/e2e-debian/README.md)
+- **Derived-image routing example**:
+  [examples/e2e-alpine-layer-package-namespace/](examples/e2e-alpine-layer-package-namespace/README.md)
 - **Scenario fixtures**: [examples/scenarios/](examples/scenarios/)
 - **Validation harness**:
   [validation/run-fixture-suite.sh](validation/run-fixture-suite.sh)

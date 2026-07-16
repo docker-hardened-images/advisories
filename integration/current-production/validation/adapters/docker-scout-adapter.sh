@@ -28,27 +28,27 @@ platform_docker_run() {
 
 scanner_sbom_list() {
   local target="$1"
-  scout sbom "$target" --format list 2>/dev/null
+  scout sbom "$target" --format list
 }
 
 scanner_sbom_json() {
   local target="$1"
-  scout sbom "$target" --format json 2>/dev/null
+  scout sbom "$target" --format json
 }
 
 scanner_cves() {
-  scout cves --format packages "$@" 2>/dev/null
+  scout cves --format packages "$@"
 }
 
 scanner_cves_with_vex() {
   local vex_file="$1"
   shift
-  scout cves --format packages --vex-location "$vex_file" "$@" 2>/dev/null
+  scout cves --format packages --vex-location "$vex_file" "$@"
 }
 
 scanner_vex_get() {
   local target="$1"
-  scout vex get "$target" 2>/dev/null
+  scout vex get "$target"
 }
 
 scanner_detect_dhi() {

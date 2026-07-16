@@ -24,14 +24,14 @@ Use the certification requirements below to determine DHI Scanner Certification 
 The following are the required behaviors this validation suite checks:
 
 - **R1**: VEX must be loaded from OCI referrer attestations on the image digest.
-- **R2**: When scanning a DHI image, scanner logic must include DHI OSV consideration for all packages (not only `pkg:dhi/*`).
+- **R2**: Current-production `pkg:dhi/*` packages must use DHI OSV rather than upstream package advisory sources.
 - **R3**: For distro packages in DHI images, scanner behavior must combine upstream advisory routing with DHI VEX application.
 - **R4**: Referrers are looked up via image digest; chainID is used only for base-boundary classification (not as a referrer lookup key).
 
 **Requirement-to-Test Mapping**:
 
 - **R1**: Test 1.3
-- **R2**: Tests 2.1 and 2.2
+- **R2**: Test 2.1
 - **R3**: Tests 2.2 and 3.3
 - **R4**: Tests 1.3, 3.1, and 3.2
 
@@ -134,11 +134,10 @@ pkg:dhi/python@3.13.1
 **Steps**:
 1. Scanner identifies package namespace as `dhi`
 2. Scanner queries DHI OSV feed
-3. Scanner also checks DHI OSV feed for all packages when scanning a DHI image
-4. Scanner does NOT check Debian/Alpine/PyPI databases for `pkg:dhi/*`
+3. Scanner does NOT check Debian/Alpine/PyPI databases for `pkg:dhi/*`
 
 **Expected**: Scanner uses:
-- `https://github.com/docker-hardened-images/advisories/osv/python/`
+- [DHI Python OSV feed](https://github.com/docker-hardened-images/advisories/tree/main/osv/python/)
 
 **Validation**:
 ```bash
@@ -168,7 +167,7 @@ pkg:dhi/python@3.13.1
 ```
 
 **Validation**: Upstream routing marker is present and VEX status is applied to the discovered CVE.
-This is the required observable behavior for distro package handling in DHI scans (R2/R3), even though scanner-internal feed query ordering is implementation-specific.
+This is the required observable behavior for distro package handling in DHI scans (R3), even though scanner-internal feed query ordering is implementation-specific.
 
 ---
 
@@ -393,11 +392,11 @@ $ curl https://.../osv/bash/
 
 ## Automated Validation
 
-`validation/run-test-suite.sh` is a **reference harness** that uses Docker Scout by default.
+`integration/current-production/validation/run-test-suite.sh` is a **reference harness** that uses Docker Scout by default.
 
 Scanner behavior is provided by an adapter file.
 
-- Default adapter: `validation/adapters/docker-scout-adapter.sh`
+- Default adapter: `integration/current-production/validation/adapters/docker-scout-adapter.sh`
 - Required local commands to run the harness as-is: `docker` and `jq`
 - Additional requirement for default adapter: `docker scout`
 
@@ -415,11 +414,17 @@ Required adapter functions:
 - `scanner_vex_get`
 
 The harness exports `DHI_TARGET_PLATFORM` to adapters. The default Scout adapter also passes that platform to `docker scout --platform`.
+Scanner stdout remains separate from diagnostics so structured output stays
+parseable; diagnostics from failed commands are retained in the corresponding
+test result. The harness uses unique per-run tags and removes images it builds
+during cleanup.
 
 ### Run Full Test Suite
 
+From the repository root:
+
 ```bash
-cd validation
+cd integration/current-production/validation
 ./run-test-suite.sh
 ```
 
@@ -443,6 +448,9 @@ This switches the harness's built-in validation image references to the matching
 ```bash
 ./run-test-suite.sh --output report.json
 ```
+
+The report is formatted in a temporary file beside the destination and replaces
+the requested path atomically only after rendering succeeds.
 
 ### Run With Custom Adapter
 

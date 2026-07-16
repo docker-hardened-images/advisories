@@ -7,6 +7,11 @@ security scanners with Docker Hardened Images (DHI). This page explains how the
 current production scanner model and the upcoming `/etc/os-release` `ID=dhi`
 model coexist during the migration.
 
+> **Work in progress:** The cutover will happen gradually, image by image, not
+> as a single global switch. Both models will remain live during the rollout,
+> and this guide will receive further updates as images move to `ID=dhi` and
+> the generated advisory surfaces become available.
+
 Start with the [one-page overview](dhi-scanner-integration-upcoming-changes.md)
 for a concise summary of the upcoming scanner integration changes, then use the
 model-specific guides below for implementation details.

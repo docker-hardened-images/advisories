@@ -4,6 +4,10 @@ scanner_name() {
   printf '%s\n' "docker-scout"
 }
 
+scanner_version() {
+  docker scout version | awk -F': ' '/^version:/ {print "docker scout " $2}'
+}
+
 scanner_preflight() {
   command -v docker >/dev/null 2>&1 || {
     echo "docker is required for the docker scout adapter" >&2

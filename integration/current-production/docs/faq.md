@@ -312,7 +312,7 @@ Example: `pkg:dhi/bash` might have no known CVEs.
 - ✅ Listed on Docker's partner page
 - ✅ Joint go-to-market opportunities
 
-See [Certification Requirements](../validation/test-suite.md#certification-requirements).
+See the [Validation Requirements](../validation/test-suite.md#validation-requirements).
 
 ### What's the partner benefit?
 

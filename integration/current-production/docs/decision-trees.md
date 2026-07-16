@@ -109,15 +109,13 @@ graph TD
     D2 -->|Yes| D4[Load CVEs from OSV]
     D4 --> D5[Do NOT check upstream databases]
     
-    E --> E0[Also Consider DHI OSV<br/>for DHI image scans]
-    E0 --> E1[Match Against Upstream CVE DB]
+    E --> E1[Match Against Upstream CVE DB]
     E1 --> E2[Debian Security Tracker<br/>or Alpine Security]
     E2 --> E3[Get all CVEs]
     E3 --> E4[Then Check VEX for 'not_affected']
     E4 --> E5[Apply VEX Status]
     
-    F --> F0[Also Consider DHI OSV<br/>for DHI image scans]
-    F0 --> F1[Use Standard Scanner Logic]
+    F --> F1[Use Standard Scanner Logic]
     F1 --> F2[Query appropriate upstream<br/>PyPI, npm, RubyGems, etc.]
     F2 --> F3[Check GitHub Advisories]
     F3 --> F4[Then Check VEX for matching PURLs<br/>if package is from DHI base]
@@ -217,10 +215,10 @@ graph TD
 |---------------------|----------------|------------|-----------|-------|
 | `pkg:dhi/python@*` | DHI OSV **ONLY** | DHI VEX | ✅ Always | Never check upstream |
 | `pkg:dhi/node@*` | DHI OSV **ONLY** | DHI VEX | ✅ Always | Never check upstream |
-| `pkg:deb/debian/openssl@*` | DHI OSV + Debian Security Tracker | DHI VEX | ✅ For DHI images | Upstream + DHI OSV + VEX overlay |
-| `pkg:apk/alpine/musl@*` | DHI OSV + Alpine Security | DHI VEX | ✅ For DHI images | Upstream + DHI OSV + VEX overlay |
-| `pkg:pypi/flask@*` (customer) | DHI OSV + PyPI, GitHub | DHI VEX (if in base SBOM) | ✅ If from DHI base | DHI scans include OSV consideration for all packages |
-| `pkg:npm/express@*` (customer) | DHI OSV + npm, GitHub | DHI VEX (if in base SBOM) | ✅ If from DHI base | DHI scans include OSV consideration for all packages |
+| `pkg:deb/debian/openssl@*` | Debian Security Tracker | DHI VEX | ✅ If from DHI base | Upstream discovery + DHI VEX overlay |
+| `pkg:apk/alpine/musl@*` | Alpine Security | DHI VEX | ✅ If from DHI base | Upstream discovery + DHI VEX overlay |
+| `pkg:pypi/flask@*` (customer) | PyPI, GitHub | Customer VEX | ❌ DHI VEX | Scan as a customer package |
+| `pkg:npm/express@*` (customer) | npm, GitHub | Customer VEX | ❌ DHI VEX | Scan as a customer package |
 
 ### VEX Status Actions
 
