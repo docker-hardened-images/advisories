@@ -80,8 +80,8 @@ live in OSV ranges, not in the affected package PURL:
 
 ## Scanner-Observed PURLs
 
-Scanner output may include scanner-specific qualifiers. The cutover tooling in
-`definitions/test/dhi-os-release-migration` observed Grype/Syft package PURLs
+Scanner output may include scanner-specific qualifiers. Docker's internal DHI
+cutover tooling observed Grype/Syft package PURLs
 like:
 
 ```text
