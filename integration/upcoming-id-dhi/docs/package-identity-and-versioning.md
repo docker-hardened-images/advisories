@@ -40,10 +40,10 @@ are the authoritative input for deriving the OSV ecosystem variant.
 
 ### APK
 
-DHI APK packages retain APK versions and revisions. For example, current DHI
-`coreutils` package definitions build version `9.11` with package revision
-`r0`, producing installed version `9.11-r0`. A later DHI package rebuild can
-produce `9.11-r1` without changing the upstream release.
+DHI APK packages retain native APK version semantics. Current DHI `coreutils`
+definitions read `pkgver` and `pkgrel` from Alpine's `APKBUILD`; `pkgver=9.11`
+and `pkgrel=0` produce installed version `9.11-r0`. `pkgrel` is APK's package
+release number, not a DHI-specific suffix.
 
 APK ordering must determine that:
 
@@ -52,17 +52,20 @@ APK ordering must determine that:
 ```
 
 Implementations must also preserve APK's native handling of pre-release
-markers and package revisions. These versions must not be interpreted as
-SemVer.
+markers and `pkgrel`. These versions must not be interpreted as SemVer.
 
 ### Debian
 
-DHI Debian packages retain Debian versions. For example, current DHI
-`coreutils` definitions build Debian version `9.7-3` with DHI revision `3`,
-producing installed version `9.7-3+dhi3`.
+DHI Debian packages retain native dpkg version semantics. Debian-source-derived
+DHI definitions commonly append a DHI package-release suffix, `+dhiN`, to the
+Debian version. Current `coreutils` appends `+dhi3` to Debian version `9.7-3`,
+producing installed version `9.7-3+dhi3`. Not every DHI Debian package uses
+this convention, so consumers must implement complete dpkg version semantics
+rather than depend on this suffix.
 
 Debian ordering must handle the complete `[epoch:]upstream-version[-revision]`
-shape, including `~`, Debian revisions, and DHI rebuild suffixes. For example:
+shape, including `~`, Debian revisions, and DHI package-release suffixes such
+as `+dhiN`. For example:
 
 ```text
 9.7-3 < 9.7-3+dhi1 < 9.7-3+dhi3
