@@ -21,19 +21,6 @@ The ecosystem suffix has two roles:
 - the final segment, such as `3.24` or `13`, partitions matching by base
   release.
 
-The package format is not a sufficient ecosystem partition. `apk` does not
-inherently mean Alpine, and `deb` does not inherently mean Debian. Future DHI
-bases could share a package format while requiring different package lineage
-or vulnerability treatment. More immediately, two Alpine or Debian releases
-can contain the same package name and version while requiring different
-advisory treatment.
-
-`Docker Hardened Images` without a suffix identifies the registered feed
-family and OSV datasource filter. It is not a package ecosystem to use in an
-OSV affected entry or package query. Lineage-only variants such as
-`Docker Hardened Images:Alpine` are also incomplete. `pkg:dhi/...` is not a
-package identity in the upcoming model.
-
 ## Image And Package Identity
 
 Cutover images report:
@@ -48,15 +35,6 @@ VERSION_ID=<underlying distribution version>
 base lineage and release. The canonical package PURL carries the same values in
 `os_distro` and `os_version`; those qualifiers, together with the PURL type,
 are the authoritative input for deriving the OSV ecosystem variant.
-
-The OSV affected package PURL omits `@version`. Concrete installed versions
-come from the package database or SBOM and appear in the scanner's versioned
-PURL. OSV range events and, when available, `affected[].versions` carry the
-version data used to decide whether that installed package is affected.
-
-A DHI PURL is package identity, not proof of product membership. Derived-image
-integrations still need DHI base-SBOM membership, layer attribution,
-provenance, or equivalent evidence before applying generated DHI advisory data.
 
 ## Native Version Semantics
 
@@ -124,14 +102,6 @@ pkg:deb/dhi/coreutils@9.7-3%2Bdhi3?arch=arm64&distro=dhi-13
   -> dpkg comparator
 ```
 
-If canonical and scanner qualifier forms are both present, they must agree.
-Missing release context or conflicting type, lineage, or release values is a
-contract error.
-
-Do not retry a failed native parse with SemVer or lexical string comparison.
-An unsupported family, ecosystem/PURL mismatch, or invalid native version is a
-contract error and must be surfaced rather than interpreted as unaffected.
-
 ## OSV Examples
 
 APK affected entry:
@@ -173,16 +143,3 @@ Debian affected entry:
   "versions": ["9.7-3+dhi3"]
 }
 ```
-
-## Producer And Consumer Requirements
-
-Feed producers must derive the public ecosystem variant from the canonical
-package PURL, validate that any stored package-family hint agrees with its type
-and lineage, require release context, validate native versions and ranges, and
-serialize affected entries deterministically.
-
-Consumers must preserve the PURL type and namespace, query by the exact
-ecosystem variant or canonical PURL, and use the native comparator selected by
-that identity. They must not discard release context while constructing package
-query identity. The unsuffixed feed-family name must not fan out implicitly to
-all package lineages or releases during a package query.
