@@ -70,12 +70,15 @@ After cutover, DHI images report:
 ```text
 ID=dhi
 ID_LIKE=alpine   # or ID_LIKE=debian, depending on base
+VERSION_ID=3.24  # or the corresponding Debian base release
 ```
 
 Integration expectations:
 
 - Detect DHI images by checking `ID=dhi`.
 - Use `ID_LIKE` when the scanner needs the underlying package manager family.
+- Preserve `VERSION_ID` as the base release used to partition DHI advisory
+  matching.
 - Do not depend on `PRETTY_NAME` for DHI detection.
 
 ### DHI OS Package PURLs
@@ -94,6 +97,16 @@ provides package-family context, not the advisory namespace for DHI-owned OS
 packages. DHI advisory coverage still requires DHI product membership or
 equivalent provenance; the PURL namespace alone is not enough for derived-image
 package ownership.
+
+Generated OSV affected entries use a release-scoped ecosystem variant, such as
+`Docker Hardened Images:Alpine:3.24` or
+`Docker Hardened Images:Debian:13`. The lineage selects the
+package-manager-native ordering and the release prevents cross-release
+advisory matches. Scanner PURLs with `distro=dhi-<release>` must normalize to
+the same variant as canonical feed PURLs with `os_version=<release>`. These
+`ECOSYSTEM` ranges must not fall back to SemVer. See
+[Package identity and versioning](upcoming-id-dhi/docs/package-identity-and-versioning.md)
+for the complete contract.
 
 ### DHI OSV Feed
 

@@ -71,11 +71,16 @@ that image state.
 The generated DHI OSV examples in this guide are scanner-facing advisories for
 DHI OS packages. Their `affected[].package.purl` values use
 `pkg:apk/dhi/...` or `pkg:deb/dhi/...`, and their affected ranges use OSV
-`ECOSYSTEM` ranges for the DHI OS package version.
+`ECOSYSTEM` ranges for the DHI OS package version. Static validation derives
+the required `Docker Hardened Images:Alpine:<release>` or
+`Docker Hardened Images:Debian:<release>` ecosystem from each canonical PURL,
+rejects type/lineage mismatches, and checks that scanner
+`distro=dhi-<release>` resolves to the same release as canonical
+`os_version=<release>`.
 
 Embedded language package PURLs, such as `pkg:pypi/...` or `pkg:npm/...`, are
 component provenance for these examples. Component advisory range matching
-happens before DHI feed generation, when the DHI advisory generation pipeline identifies affected DHI
+happens before DHI feed generation, when Packit identifies affected DHI
 packages from package-component associations. This harness therefore validates
 that component PURLs are carried through OSV context, VEX subcomponents, and the
 example SBOM parent-child relationship, but it does not evaluate component
@@ -105,7 +110,7 @@ data is available through the production advisory pipeline.
 - Generated OSV affected package PURLs are versionless.
 - Generated VEX product PURLs are versioned.
 - The `os_distro` qualifier is validated as part of the fixture and generated
-  feed shape; it is not a claim that the advisory pipeline currently uses `os_distro` as an
+  feed shape; it is not a claim that Packit currently uses `os_distro` as an
   advisory lookup key.
 - Static validation derives expected findings from OSV affected ranges and the
   scenario package version instead of trusting fixture metadata alone.

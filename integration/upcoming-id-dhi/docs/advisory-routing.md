@@ -4,13 +4,16 @@ The upcoming model routes DHI base-layer OS packages to generated DHI advisory
 data. `ID_LIKE` identifies the Alpine or Debian package family behind the DHI
 image, but it is not the advisory namespace for DHI-owned packages.
 
+The exact ecosystem and version-dispatch contract is defined in
+[Package identity and versioning](package-identity-and-versioning.md).
+
 ## Routing Inputs
 
 | Input | Meaning |
 | --- | --- |
 | `/etc/os-release` `ID=dhi` | The image is using the new DHI OS identity model. |
 | `/etc/os-release` `ID_LIKE=alpine` or `debian` | The underlying package manager family and version semantics. |
-| `/etc/os-release` `VERSION_ID` | The underlying Alpine or Debian distribution version, for example `3.24` or `13`. |
+| `/etc/os-release` `VERSION_ID` | The underlying Alpine or Debian distribution version, for example `3.24` or `13`; this release partitions the OSV ecosystem. |
 | SBOM package PURL | The concrete package identity that scanner findings and VEX products must match. |
 | Product membership or provenance | Evidence that a scanner-observed DHI package PURL is part of a DHI-assessed product, such as DHI base SBOM membership, layer attribution, or equivalent scanner provenance. |
 
@@ -56,13 +59,13 @@ separate package ownership guidance.
 ## OSV Shape
 
 OSV records use the `DHI-` advisory ID prefix. Affected package entries use the
-schema ecosystem name `Docker Hardened Images` and a DHI package PURL. Versions
-live in OSV ranges, not in the affected package PURL:
+exact DHI ecosystem variant derived from PURL type, lineage, and release.
+Package versions live in OSV ranges, not in the affected package PURL:
 
 ```json
 {
   "package": {
-    "ecosystem": "Docker Hardened Images",
+    "ecosystem": "Docker Hardened Images:Alpine:3.24",
     "name": "coreutils",
     "purl": "pkg:apk/dhi/coreutils?os_distro=alpine&os_name=dhi&os_version=3.24"
   },
@@ -80,18 +83,20 @@ live in OSV ranges, not in the affected package PURL:
 
 ## Scanner-Observed PURLs
 
-Scanner output may include scanner-specific qualifiers. Docker's internal DHI
-cutover tooling observed Grype/Syft package PURLs
+Scanner output may include scanner-specific qualifiers. The cutover tooling in
+`definitions/test/dhi-os-release-migration` observed Grype/Syft package PURLs
 like:
 
 ```text
 pkg:apk/dhi/coreutils@9.11-r0?arch=aarch64&distro=dhi-3.24
 ```
 
-Generated OSV/VEX output and scanner integrations need an explicit
-canonicalization rule, or VEX products need to use the scanner-observed PURL for
-exact matching. The validation harness keeps that as a visible check instead of
-assuming qualifier differences are harmless.
+For OSV package queries, this scanner form normalizes to the same
+`Docker Hardened Images:Alpine:3.24` ecosystem as the canonical feed PURL with
+`os_distro=alpine`, `os_name=dhi`, and `os_version=3.24`. The package type and
+release must agree across both forms. VEX still uses exact product PURLs; its
+canonicalization and matching rules are described separately in
+[VEX context](vex-context.md).
 
 ## Advisory Availability
 

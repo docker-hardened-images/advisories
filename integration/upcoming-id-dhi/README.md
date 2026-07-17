@@ -23,12 +23,13 @@ themselves with `/etc/os-release` `ID=dhi`.
 
 ## 🎯 Quick Start
 
-1. Review [Advisory routing](docs/advisory-routing.md)
-2. Review [VEX context](docs/vex-context.md)
-3. Use the [Decision trees](docs/decision-trees.md)
-4. Try the [Alpine](examples/e2e-alpine/README.md) and
+1. Review [Package identity and versioning](docs/package-identity-and-versioning.md)
+2. Review [Advisory routing](docs/advisory-routing.md)
+3. Review [VEX context](docs/vex-context.md)
+4. Use the [Decision trees](docs/decision-trees.md)
+5. Try the [Alpine](examples/e2e-alpine/README.md) and
    [Debian](examples/e2e-debian/README.md) end-to-end examples
-5. Validate using the [Validation harness](validation/README.md)
+6. Validate using the [Validation harness](validation/README.md)
 
 ## Model Summary
 
@@ -49,9 +50,18 @@ pkg:apk/dhi/<package>@<apk-version>...
 pkg:deb/dhi/<package>@<deb-version>...
 ```
 
-`pkg:apk/dhi/...` uses APK version ordering, and `pkg:deb/dhi/...` uses Debian
-version ordering. `ID_LIKE` identifies the package manager family; it is not the
-advisory namespace for DHI-owned OS packages.
+> **Package identity contract:** The cutover changes package namespace, not
+> package version semantics. Generated records use release-scoped ecosystems,
+> such as `Docker Hardened Images:Alpine:3.24` for `pkg:apk/dhi/...` and
+> `Docker Hardened Images:Debian:13` for `pkg:deb/dhi/...`. The lineage selects
+> APK or dpkg ordering, and the release prevents matching across DHI base
+> releases. Implementations must preserve the release from the package PURL,
+> use versions from the installed package database or SBOM PURL, and must not
+> fall back to SemVer. See
+> [Package identity and versioning](docs/package-identity-and-versioning.md).
+
+`ID_LIKE` identifies the package manager family; it is not the advisory
+namespace for DHI-owned OS packages.
 
 Generated DHI OSV records are authoritative for DHI base-layer OS package
 findings. Generated DHI VEX records provide assessment context for matching
@@ -93,6 +103,8 @@ integration/upcoming-id-dhi/validation/run-fixture-suite.sh
 
 ## 📄 Resources
 
+- **Package identity and versioning**:
+  [docs/package-identity-and-versioning.md](docs/package-identity-and-versioning.md)
 - **Advisory routing**: [docs/advisory-routing.md](docs/advisory-routing.md)
 - **VEX context**: [docs/vex-context.md](docs/vex-context.md)
 - **Decision trees**: [docs/decision-trees.md](docs/decision-trees.md)

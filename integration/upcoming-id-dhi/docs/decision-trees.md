@@ -9,7 +9,7 @@ flowchart TD
   B -->|No| D{ID=alpine or ID=debian with DHI image evidence?}
   D -->|Yes| E[Use current-production DHI model]
   D -->|No| F[Use normal scanner model]
-  C --> G[Use APK or Debian version rules from package type and ID_LIKE]
+  C --> G[Use PURL type, ID_LIKE, and VERSION_ID to derive lineage and release]
   E --> H[Use current DHI detection and VEX overlay guide]
 ```
 
@@ -22,10 +22,12 @@ flowchart TD
   B -->|pkg:deb/dhi| D{DHI product membership?}
   B -->|pkg:apk/alpine or pkg:deb/debian| E[Normal upstream distro matching]
   B -->|other PURL type| F[Use normal scanner matching]
-  C -->|Yes| G[DHI OSV, APK version rules]
+  C -->|Yes| K[Resolve Alpine release from os_version or distro qualifier]
   C -->|No| J[Do not apply DHI advisory data from namespace alone]
-  D -->|Yes| H[DHI OSV, Debian version rules]
+  D -->|Yes| L[Resolve Debian release from os_version or distro qualifier]
   D -->|No| J
+  K --> G[Exact DHI Alpine release ecosystem, APK version rules]
+  L --> H[Exact DHI Debian release ecosystem, dpkg version rules]
   G --> I[Apply DHI VEX context]
   H --> I
 ```

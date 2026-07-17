@@ -100,6 +100,8 @@ FIXTURE_KINDS = {"scanner-snapshot", "static-contract"}
 PINNED_IMAGE = re.compile(r"^.+@sha256:[0-9a-f]{64}$")
 PLATFORM = re.compile(r"^linux/(amd64|arm64)$")
 SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
+LINEAGE_BY_PURL_TYPE = {"apk": "alpine", "deb": "debian"}
+ECOSYSTEM_LINEAGE_BY_PURL_TYPE = {"apk": "Alpine", "deb": "Debian"}
 
 
 def fail(where: str, message: str) -> None:
@@ -150,11 +152,59 @@ def parse_dhi_purl(
     if parsed_qualifiers.get("os_name") != "dhi":
         fail(where, f"{field} must use os_name=dhi: {purl}")
 
+    purl_type = match.group("type")
+    expected_distro = LINEAGE_BY_PURL_TYPE[purl_type]
+    if parsed_qualifiers.get("os_distro") != expected_distro:
+        fail(
+            where,
+            f"{field} type {purl_type} must use os_distro={expected_distro}: {purl}",
+        )
+
     return {
-        "type": match.group("type"),
+        "type": purl_type,
         "name": match.group("name"),
         "version": version[1:] if version else None,
         "qualifiers": parsed_qualifiers,
+    }
+
+
+def expected_ecosystem(parsed: dict[str, object]) -> str:
+    qualifiers = parsed["qualifiers"]
+    assert isinstance(qualifiers, dict)
+    return (
+        "Docker Hardened Images:"
+        f"{ECOSYSTEM_LINEAGE_BY_PURL_TYPE[str(parsed['type'])]}:"
+        f"{qualifiers.get('os_version', '')}"
+    )
+
+
+def parse_scanner_dhi_purl(where: str, purl: str) -> dict[str, str] | None:
+    match = DHI_PURL.match(purl)
+    if match is None or match.group("version") is None:
+        fail(where, f"scanner-observed PURL must be a versioned DHI PURL: {purl}")
+        return None
+
+    qualifiers = parse_qs(match.group("query") or "", keep_blank_values=True)
+    distro_values = qualifiers.get("distro", [])
+    if len(distro_values) != 1 or not distro_values[0].startswith("dhi-"):
+        fail(where, f"scanner-observed PURL must include distro=dhi-<release>: {purl}")
+        return None
+
+    release = distro_values[0][len("dhi-"):]
+    if not release:
+        fail(where, f"scanner-observed PURL distro release must not be empty: {purl}")
+        return None
+
+    purl_type = match.group("type")
+    return {
+        "type": purl_type,
+        "name": match.group("name"),
+        "version": match.group("version")[1:],
+        "release": release,
+        "ecosystem": (
+            "Docker Hardened Images:"
+            f"{ECOSYSTEM_LINEAGE_BY_PURL_TYPE[purl_type]}:{release}"
+        ),
     }
 
 
@@ -434,6 +484,11 @@ for scenario in scenarios:
         observed_purls = observed_purls_value
     if observed and observed not in observed_purls:
         fail(where, "scanner_observed_package_purls must include scanner_observed_package_purl")
+    observed_parsed = {
+        purl: parsed
+        for purl in observed_purls
+        if (parsed := parse_scanner_dhi_purl(where, purl)) is not None
+    }
     canonical = str(scenario.get("canonical_package_purl", ""))
     upstream = str(scenario.get("upstream_like_package_purl", ""))
     canonical_parsed = None
@@ -454,6 +509,32 @@ for scenario in scenarios:
             assert isinstance(canonical_q, dict)
             if canonical_q.get("os_distro") != scenario.get("family"):
                 fail(where, "canonical_package_purl os_distro must match scenario family")
+            primary_observed = observed_parsed.get(observed)
+            if primary_observed is not None:
+                canonical_identity = (
+                    canonical_parsed["type"],
+                    canonical_parsed["name"],
+                    canonical_parsed["version"],
+                    canonical_q.get("os_version"),
+                )
+                observed_identity = (
+                    primary_observed["type"],
+                    primary_observed["name"],
+                    primary_observed["version"],
+                    primary_observed["release"],
+                )
+                if observed_identity != canonical_identity:
+                    fail(
+                        where,
+                        "scanner-observed and canonical package PURLs must map to "
+                        "the same type, name, version, and release",
+                    )
+                if primary_observed["ecosystem"] != expected_ecosystem(canonical_parsed):
+                    fail(
+                        where,
+                        "scanner-observed and canonical package PURLs must derive "
+                        "the same release-scoped ecosystem",
+                    )
     else:
         if observed:
             if not DHI_VERSIONED.match(observed):
@@ -746,9 +827,13 @@ for scenario in scenarios:
                 require_version=False,
                 field=f"OSV affected[{index}].package.purl",
             )
-            if package.get("ecosystem") != "Docker Hardened Images":
-                fail(where, f"OSV affected[{index}].package.ecosystem must be Docker Hardened Images")
             if parsed_purl is not None:
+                required_ecosystem = expected_ecosystem(parsed_purl)
+                if package.get("ecosystem") != required_ecosystem:
+                    fail(
+                        where,
+                        f"OSV affected[{index}].package.ecosystem must be {required_ecosystem}",
+                    )
                 if package.get("name") != parsed_purl["name"]:
                     fail(where, f"OSV affected[{index}].package.name must match package.purl")
                 if (
