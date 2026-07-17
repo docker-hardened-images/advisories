@@ -105,7 +105,7 @@ data is available through the production advisory pipeline.
 - Generated OSV affected package PURLs are versionless.
 - Generated VEX product PURLs are versioned.
 - The `os_distro` qualifier is validated as part of the fixture and generated
-  feed shape; it is not a claim that Packit currently uses `os_distro` as an
+  feed shape; it is not a claim that the advisory pipeline currently uses `os_distro` as an
   advisory lookup key.
 - Static validation derives expected findings from OSV affected ranges and the
   scenario package version instead of trusting fixture metadata alone.
