@@ -75,7 +75,7 @@ DHI OS packages. Their `affected[].package.purl` values use
 
 Embedded language package PURLs, such as `pkg:pypi/...` or `pkg:npm/...`, are
 component provenance for these examples. Component advisory range matching
-happens before DHI feed generation, when Packit identifies affected DHI
+happens before DHI feed generation, when the DHI advisory generation pipeline identifies affected DHI
 packages from package-component associations. This harness therefore validates
 that component PURLs are carried through OSV context, VEX subcomponents, and the
 example SBOM parent-child relationship, but it does not evaluate component
