@@ -2,30 +2,68 @@
 
 # Docker Hardened Images - Scanner Integration Guide
 
-Documentation and reference implementations for integrating third-party security scanners with Docker Hardened Images (DHI). This repository serves as a guide for scanner vendors and teams looking to support DHI in their vulnerability scanning workflows.
+Documentation and reference implementations for integrating third-party
+security scanners with Docker Hardened Images (DHI). This page explains how the
+current production scanner model and the upcoming `/etc/os-release` `ID=dhi`
+model coexist during the migration.
 
-## 🎯 Quick Start
+> **Work in progress:** The cutover will happen gradually, image by image, not
+> as a single global switch. Both models will remain live during the rollout,
+> and this guide will receive further updates as images move to `ID=dhi` and
+> the generated advisory surfaces become available.
 
-1. Review the [Decision Trees](docs/decision-trees.md)
-2. Read the DHI docs to explore or get real images:
-   - [Explore DHI images](https://docs.docker.com/dhi/how-to/explore/)
-   - [Mirror DHI images](https://docs.docker.com/dhi/how-to/mirror/)
-3. Run the [Go Reference Implementation](reference-implementations/go/)
-4. Try the [Example Images](examples/)
-5. Validate using the [Test Suite](validation/test-suite.md)
+Start with the [one-page overview](dhi-scanner-integration-upcoming-changes.md)
+for a concise summary of the upcoming scanner integration changes, then use the
+model-specific guides below for implementation details.
 
-## 🚀 Reference Implementation
+## Which Guide Should I Read?
 
-- **Go**: `reference-implementations/go/`
+| Guide | When to use it | Advisory model |
+| --- | --- | --- |
+| [current-production](current-production/README.md) | For images and advisory artifacts that are live before the `ID=dhi` cutover. | DHI images still identify as `ID=alpine` or `ID=debian`; scanners need DHI-specific detection and VEX overlay behavior. |
+| [upcoming-id-dhi](upcoming-id-dhi/README.md) | For images that identify with `/etc/os-release` `ID=dhi`. | DHI OS packages use `pkg:(apk\|deb)/dhi/...` package identity and generated DHI OSV determines whether a finding exists. |
 
-## 📄 Resources
+The guides intentionally coexist during the migration. Scanner integrations
+should route by the image model they actually observe, not by an assumed global
+cutover date. See [migration notes](migration/README.md) for production
+reference anchors used by the examples in this guide.
 
-- **Integration FAQ**: [docs/faq.md](docs/faq.md)
-- **OSV Feed**: `https://github.com/docker-hardened-images/advisories/tree/main/osv/`
-- **VEX Feed**: `https://github.com/docker-hardened-images/advisories/tree/main/vex/`
-- **OpenVEX Spec**: `https://openvex.dev/`
-- **OCI Referrers**: `https://github.com/opencontainers/distribution-spec/blob/main/spec.md#listing-referrers`
+The model-specific guides define the integration contract. The one-page
+overview is explanatory and should not be used as a separate routing contract.
 
---- 
+## New Model Summary
 
-**Docker Hardened Images** - Building secure containers, together.
+Cutover images use:
+
+```text
+ID=dhi
+ID_LIKE=alpine|debian
+VERSION_ID=<upstream distro version>
+```
+
+For OS packages in the DHI base layer, SBOM package PURLs use the DHI namespace:
+
+```text
+pkg:apk/dhi/<package>@<apk-version>...
+pkg:deb/dhi/<package>@<deb-version>...
+```
+
+`ID_LIKE` still identifies the underlying package manager family for version
+comparison, but it is not the advisory namespace for DHI-owned OS packages.
+
+## Migration Stages
+
+| Stage | Image state | Advisory state | Scanner expectation |
+| --- | --- | --- | --- |
+| Before first cutover | All production images use the current-production model. | Existing advisories repo artifacts remain live. | Use the current-production guide. Upcoming examples are local-only fixtures. |
+| First family cutover | One or more image families report `ID=dhi`. | Generated DHI OSV and VEX data starts feeding the advisory surfaces for those package identities. | Route packages to DHI advisory data only when DHI product membership or equivalent provenance is established; namespace alone is insufficient. Keep current-production handling for non-cutover families. |
+| Mixed production | Both models are live. | The advisory surfaces contain enough generated data to support cutover families. | Detect per image and per package, and retain the product-membership check for DHI advisory routing. Do not assume all DHI images have moved. |
+| Completed cutover | DHI base layers consistently report `ID=dhi`. | Generated DHI OSV and VEX data is the normal advisory surface. | Retire current-production-only detection and VEX overlay assumptions. |
+
+## Resources
+
+- [One-page overview: DHI scanner integration upcoming changes](dhi-scanner-integration-upcoming-changes.md)
+- [Current production guide](current-production/README.md)
+- [Upcoming `ID=dhi` guide](upcoming-id-dhi/README.md)
+- [OpenVEX Spec](https://openvex.dev/)
+- [OCI Referrers](https://github.com/opencontainers/distribution-spec/blob/main/spec.md#listing-referrers)

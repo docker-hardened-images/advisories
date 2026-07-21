@@ -1,0 +1,54 @@
+{
+  "scenario": "alpine-layer-package-namespace",
+  "model": "id-dhi",
+  "family": "alpine",
+  "package_routing": "non-dhi-owned-os-package",
+  "fixture_kind": "scanner-snapshot",
+  "image_snapshot": true,
+  "source_image": "dhi.io/bash:5-alpine3.24@sha256:e2b67997780c37dc8352fb3e1bae077497216767cd5edb25c710e3a0fef232ec",
+  "upstream_source_image": "alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b",
+  "platform": "linux/arm64",
+  "scanner_observed_dhi_namespace": true,
+  "requires_dhi_product_membership": true,
+  "dhi_osv_used": false,
+  "expected_finding": null,
+  "expected_advisory_source": "requires-dhi-product-membership",
+  "expected_vex_source": "not-generated-dhi-vex",
+  "base_membership": {
+    "example_dir": "../e2e-alpine",
+    "sbom": "../e2e-alpine/sbom.json",
+    "inherited_package_purls": [
+      "pkg:apk/dhi/coreutils@9.11-r0?arch=aarch64&distro=dhi-3.24"
+    ],
+    "added_package_purls": [
+      "pkg:apk/dhi/jq@1.8.1-r0?arch=aarch64&distro=dhi-3.24"
+    ]
+  },
+  "package_routes": [
+    {
+      "purl": "pkg:apk/dhi/coreutils@9.11-r0?arch=aarch64&distro=dhi-3.24",
+      "membership_evidence": "present-in-dhi-base-sbom",
+      "dhi_osv_used": true,
+      "osv": "../e2e-alpine/osv/DHI-CVE-2016-2781-coreutils.json",
+      "vex": "../e2e-alpine/vex/DHI-CVE-2016-2781-coreutils.json"
+    },
+    {
+      "purl": "pkg:apk/dhi/jq@1.8.1-r0?arch=aarch64&distro=dhi-3.24",
+      "membership_evidence": "absent-from-dhi-base-sbom",
+      "dhi_osv_used": false,
+      "osv": null,
+      "vex": null
+    }
+  ],
+  "scanner_snapshot": {
+    "observed_at": "2026-07-16",
+    "syft_version": "1.46.0",
+    "grype_version": "0.115.0",
+    "package": "jq@1.8.1-r0"
+  },
+  "scanner_notes": [
+    "Current scanner behavior emits a DHI APK PURL for an APK package visible in the final package database when /etc/os-release reports ID=dhi.",
+    "The DHI PURL namespace is scanner-observed identity, not sufficient evidence that Docker built or assessed the package.",
+    "The trusted DHI base SBOM makes coreutils eligible for DHI OSV matching and excludes the later-layer jq package unless separate DHI provenance exists."
+  ]
+}
