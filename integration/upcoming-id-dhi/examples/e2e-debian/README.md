@@ -30,6 +30,12 @@ This fixture does not claim to represent current production. The image digest,
 platform, advisory commit, package inventory, and observation date define the
 snapshot.
 
+The checked-in `sbom.json` is a scanner snapshot used to exercise package
+matching. It is not the Docker-issued membership SBOM and does not test OCI
+referrer retrieval. In production, compare its observed package identity with
+the full SPDX or CycloneDX SBOM attestation attached to the resolved DHI
+platform-manifest digest.
+
 ## Files
 
 | File | Purpose |

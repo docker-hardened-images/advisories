@@ -32,8 +32,14 @@ The DHI OSV feed becomes the authoritative source of truth for vulnerabilities
 in DHI OS packages, including APK and Debian package formats. When scanning a
 DHI image, use the DHI OSV feed to determine which vulnerabilities affect its
 DHI OS packages. If an OS package from the image is listed in the feed as
-affected, treat it as affected. If it is absent from the affected ranges, it has
-no known vulnerability in the DHI context.
+affected, treat it as affected. If no affected range matches the package and
+version, interpret that as no matching vulnerability in the DHI context.
+
+Publication of an official image with `ID=dhi` is the readiness signal for this
+model. Docker will not publish the cutover image until generated DHI advisory
+data is available for the image and its contents. Scanners do not need a
+separate feed-readiness marker or fallback to current-production matching for a
+published `ID=dhi` image.
 
 For other package types found in the image or SBOM, such as language ecosystem
 packages from npm, PyPI, Go, or RubyGems, scanners should continue to consult
@@ -42,10 +48,19 @@ handling may receive additional scanner guidance as package ownership and
 advisory routing rules are finalized.
 
 The DHI PURL namespace is scanner-observed package identity, not proof of DHI
-ownership by itself. When scanning derived images, integrations need DHI product
-membership, DHI base SBOM membership, layer attribution, package provenance, or
-equivalent evidence before applying generated DHI advisory data to an OS
-package.
+ownership by itself. For official images, integrations establish membership by
+matching exact package and version identities against the full SPDX or
+CycloneDX OCI-referrer SBOM attached to the resolved DHI platform-manifest
+digest. The embedded `/opt/docker/sbom/.spdx.json` product shim and
+scanner-generated inventories are not substitutes for that membership SBOM.
+
+For derived images, integrations can establish DHI package origin using the
+existing DHI chain-ID boundary and package layer attribution, or by exact
+package-and-version comparison with the Docker-issued SBOM for a known DHI base
+image. If a package is not attributed to DHI, normalize it to the corresponding
+upstream Alpine or Debian identity and use normal upstream advisory coverage
+with native APK or dpkg version semantics. Namespace alone remains insufficient
+to select DHI advisory data.
 
 DHI's internal triage workflow produces the assessments that populate the OSV
 feed. The feed uses [OSV format](https://ossf.github.io/osv-schema/), the same
@@ -94,9 +109,10 @@ pkg:deb/dhi/<package>@<deb-version>...
 The package type still matters. `pkg:apk/dhi/...` uses APK version comparison,
 and `pkg:deb/dhi/...` uses Debian package version comparison. `ID_LIKE`
 provides package-family context, not the advisory namespace for DHI-owned OS
-packages. DHI advisory coverage still requires DHI product membership or
-equivalent provenance; the PURL namespace alone is not enough for derived-image
-package ownership.
+packages. For derived images, DHI advisory coverage requires chain-ID/layer
+attribution to the DHI base or an exact package-and-version match against the
+Docker-issued SBOM for a known base image; the PURL namespace alone is not
+enough.
 
 Generated OSV affected entries use a release-scoped ecosystem variant, such as
 `Docker Hardened Images:Alpine:3.24` or
