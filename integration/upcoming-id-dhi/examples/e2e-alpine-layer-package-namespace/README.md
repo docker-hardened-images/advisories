@@ -24,22 +24,26 @@ by itself, to establish DHI product membership or advisory coverage.
 
 ## Package Membership Trace
 
-The pinned DHI base SBOM contains `coreutils@9.11-r0` but not `jq@1.8.1-r0`.
-In the recorded scanner-backed observation, the derived SBOM contains 44 APK
-packages instead of the base's 43; `jq` is the only addition.
+The recorded scanner snapshot for the pinned DHI base contains
+`coreutils@9.11-r0` but not `jq@1.8.1-r0`. It stands in for a known base's
+Docker-issued membership SBOM during local validation; the fixture does not
+retrieve an OCI referrer or verify its attachment to a platform-manifest
+digest. In the recorded scanner-backed observation, the derived SBOM contains
+44 APK packages instead of the base's 43; `jq` is the only addition.
 
 | Package | Scanner PURL | Membership evidence | Advisory routing |
 | --- | --- | --- | --- |
-| `coreutils@9.11-r0` | `pkg:apk/dhi/coreutils@9.11-r0?...` | Present in the pinned DHI base SBOM. | Apply generated DHI OSV and matching VEX context. |
-| `jq@1.8.1-r0` | `pkg:apk/dhi/jq@1.8.1-r0?...` | Absent from the DHI base SBOM and added by the derived image. | Do not apply generated DHI OSV without separate DHI provenance. |
+| `coreutils@9.11-r0` | `pkg:apk/dhi/coreutils@9.11-r0?...` | Present in the recorded base snapshot, with package-file evidence in the base-layer prefix. | Apply generated DHI OSV and matching VEX context. |
+| `jq@1.8.1-r0` | `pkg:apk/dhi/jq@1.8.1-r0?...` | Absent from the recorded base snapshot, with package-file evidence in later layers. | Normalize to `pkg:apk/alpine/jq@1.8.1-r0?...` and use normal upstream Alpine coverage. |
 
 Syft discovers both package records through the final
 `/lib/apk/db/installed`, so both package artifacts point at the final metadata
 layer. That location alone does not establish ownership. Syft's package-file
 relationships retain more specific layer evidence: `/bin/coreutils` remains in
 the DHI base package layer, while `/usr/bin/jq` comes from a later copy layer.
-The fixture uses pinned base-SBOM membership as the primary routing evidence;
-the file-layer trace explains and corroborates the result.
+The fixture exercises both exact package-and-version comparison with a recorded
+base snapshot and package layer attribution. It uses the pinned base-layer
+prefix in place of processing a `com.docker.dhi.chain-id` label.
 
 The derived image's first five recorded layer digests exactly match the
 simulated DHI base snapshot. The remaining layers stage `jq` package metadata,
@@ -47,13 +51,17 @@ copy the `jq` binary, and update the final APK catalog. The compact SBOM records
 those layers in order with factual roles derived from image history, and every
 package evidence reference resolves to one of them.
 
-In production, the base SBOM or equivalent membership data must come from a
-trusted DHI artifact or attestation. A scanner must not trust an arbitrary SBOM
-supplied with a derived image as proof of DHI product membership.
+In production, a scanner can establish DHI package origin by resolving the
+`com.docker.dhi.chain-id` boundary and attributing packages to DHI base layers.
+If the exact base image is already known, the scanner can instead compare
+against the Docker-issued SPDX or CycloneDX SBOM attached to that base's
+resolved platform-manifest digest. A scanner must not treat an arbitrary SBOM
+supplied with the derived image as a Docker-issued base SBOM.
 
-"Later layer" is not a universal exclusion rule. A later package with trusted
-DHI provenance could still be covered. This fixture excludes `jq` because it
-has no such evidence, not merely because it was added later.
+This fixture excludes `jq` because it is absent from the recorded base snapshot
+and its package-file evidence is in later layers. Both observations classify it
+as customer-added. Its DHI namespace is scanner-observed identity only; advisory
+routing uses the corresponding upstream Alpine identity and coverage.
 
 ## Files
 
@@ -61,4 +69,4 @@ has no such evidence, not merely because it was added later.
 | --- | --- |
 | `Dockerfile` | Builds a local image from a DHI Alpine base and adds later-layer APK package metadata. |
 | `sbom.json` | Compact derived-image snapshot with the base-layer prefix, added layers, and package catalog/file evidence. |
-| `expected.json` | Per-package routing: DHI OSV applies to inherited `coreutils`, but not to `jq` without separate DHI provenance. |
+| `expected.json` | Per-package routing: DHI OSV applies to base-attributed `coreutils`, but not to customer-added `jq`. |

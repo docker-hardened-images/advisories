@@ -31,10 +31,11 @@ ID_LIKE=alpine   # or debian
 VERSION_ID=<underlying distribution version>
 ```
 
-`ID=dhi` identifies the image as DHI. `ID_LIKE` and `VERSION_ID` describe the
-base lineage and release. The canonical package PURL carries the same values in
-`os_distro` and `os_version`; those qualifiers, together with the PURL type,
-are the authoritative input for deriving the OSV ecosystem variant.
+`ID=dhi` identifies the image as DHI. `ID_LIKE` and `VERSION_ID` supply the
+base lineage and release. Scanners carry those values into the normalized
+package identity as `os_distro` and `os_version`. The package PURL type,
+lineage, and release then select the release-scoped OSV ecosystem and native
+version comparator.
 
 ## Native Version Semantics
 
@@ -75,19 +76,27 @@ as `+dhiN`. For example:
 
 For each scanner-observed OS package:
 
-1. Establish that the package belongs to the DHI product being assessed.
+1. Establish DHI product membership. For an official image, confirm that the
+   exact package and version appear in the Docker-issued OCI-referrer SBOM. For
+   a derived image, use DHI chain-ID/layer attribution or exact comparison with
+   the Docker-issued SBOM for a known DHI base image. If membership is not
+   established, normalize the package to the upstream family and release from
+   `ID_LIKE` and `VERSION_ID`, use normal upstream advisory coverage with native
+   APK or dpkg version semantics, and stop this DHI matching process.
 2. Parse the PURL and require namespace `dhi`.
-3. Normalize scanner qualifier `distro=dhi-<release>` to the canonical
-   `os_name=dhi` and `os_version=<release>` values.
-4. Require `apk` with `os_distro=alpine`, or `deb` with
-   `os_distro=debian`.
-5. Derive `Docker Hardened Images:Alpine:<release>` or
-   `Docker Hardened Images:Debian:<release>`.
-6. Match an OSV affected package with the same exact ecosystem variant and
+3. Read the base lineage and release from `ID_LIKE` and `VERSION_ID`.
+4. Require PURL type `apk` for Alpine or `deb` for Debian.
+5. Normalize the query PURL with `os_name=dhi`, the corresponding `os_distro`,
+   and `os_version=<VERSION_ID>`. A scanner-specific
+   `distro=dhi-<release>` qualifier is another representation of that release.
+6. Construct the release-scoped OSV ecosystem key:
+   `Docker Hardened Images:Alpine:<release>` for APK packages or
+   `Docker Hardened Images:Debian:<release>` for Debian packages.
+7. Match an OSV affected package with the same exact ecosystem variant and
    package identity.
-7. Evaluate its `ECOSYSTEM` range with the corresponding APK or dpkg version
+8. Evaluate its `ECOSYSTEM` range with the corresponding APK or dpkg version
    comparator.
-8. Report a finding only when the installed version falls inside the affected
+9. Report a finding only when the installed version falls inside the affected
    range.
 
 Canonical feed PURLs and scanner-observed PURLs therefore map to the same
@@ -103,6 +112,14 @@ pkg:deb/dhi/coreutils?os_distro=debian&os_name=dhi&os_version=13
 pkg:deb/dhi/coreutils@9.7-3%2Bdhi3?arch=arm64&distro=dhi-13
   -> Docker Hardened Images:Debian:13
   -> dpkg comparator
+```
+
+The OSV package query identity is versionless. For VEX product matching, use
+the same normalized type, namespace, name, lineage, and release, and retain the
+exact installed package version:
+
+```text
+pkg:apk/dhi/coreutils@9.11-r0?os_distro=alpine&os_name=dhi&os_version=3.24
 ```
 
 ## OSV Examples

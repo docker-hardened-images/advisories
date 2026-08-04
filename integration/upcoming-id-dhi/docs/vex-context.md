@@ -1,73 +1,61 @@
 # VEX Context
 
-Generated DHI VEX data gives scanners DHI assessment context to present with
-findings produced by DHI or upstream advisory matching.
+[Back to the upcoming `ID=dhi` guide](../README.md)
 
-## OSV And VEX By Model
+This page defines VEX behavior for cutover `ID=dhi` images. In the
+[current-production model](../../current-production/README.md), VEX may change
+or suppress findings produced by upstream advisory matching. In the upcoming
+model, generated DHI OSV determines whether a finding exists and generated DHI
+VEX supplies additional assessment context.
 
-Current production DHI scanning has two steps: advisory matching creates
-candidate findings, then DHI VEX can change or explain the result for Docker's
-product context.
+## OSV And VEX For `ID=dhi`
 
-| Assessment state | Advisory matching | VEX role | Scanner result |
-| --- | --- | --- | --- |
-| `affected` | Creates a candidate finding from upstream or DHI advisory data. | Confirms DHI assessment and adds status/action context. | Report finding with DHI context. |
-| `under_investigation` | Creates a candidate finding from upstream or DHI advisory data. | Marks DHI assessment as unresolved and adds status context. | Report finding with under-investigation context. |
-| `not_affected` | May create a candidate finding from upstream advisory data. | Marks matching DHI product as not affected. | Suppress or annotate finding as not affected. |
-| `fixed` | May create a candidate for a vulnerable installed version; advisory range data may identify a fixed version. | Marks only an exactly matching DHI product as fixed. It does not apply to older or different product versions. | Exact fixed product: no active finding. Older vulnerable product: report the finding and show advisory-based upgrade guidance when available. |
+Every generated DHI advisory that Docker publishes includes a VEX document.
+Docker also publishes an OSV document whenever the advisory must produce a
+scanner finding; a fully `not_affected` advisory can therefore be VEX-only.
+VEX publication is not optional. Scanner consumption of the published VEX
+context is.
 
-In the upcoming `ID=dhi` model, generated DHI OSV already represents Docker's
-current advisory state. VEX adds DHI assessment context, but `not_affected` and
-`fixed` should normally be handled by OSV range generation rather than
-post-match suppression.
+Generated DHI OSV represents Docker's current advisory state. VEX adds DHI
+assessment context, but OSV range generation handles `not_affected` and `fixed`
+rather than relying on post-match VEX suppression.
 
 | Assessment state | Generated DHI OSV role | Generated DHI VEX role | Scanner result |
 | --- | --- | --- | --- |
 | `affected` | Creates a finding by including the DHI package/version range. | Confirms DHI assessment and adds status/action context. | Report finding with DHI context. |
-| `under_investigation` | Creates a finding by including the DHI package/version range. | Marks DHI assessment as unresolved and adds status context. | Report finding with under-investigation context. |
-| `not_affected` | Prevents a finding by excluding the DHI package/version range. | Optional: explains the assessment for exact product matches. | No finding. |
-| `fixed` | Prevents a finding by ending the affected range before the fixed version. | Optional: marks exact DHI product versions as fixed. | No finding for fixed versions. |
+| `under_investigation` | Creates a finding with conservative affected coverage for every applicable DHI package version still under investigation. | Marks the matching DHI product assessment as unresolved and adds status context. | Report the finding even without VEX; when VEX is consumed, show the under-investigation context. |
+| `not_affected` | Prevents a finding by excluding the DHI package/version range. | Explains the assessment for exact product matches and remains the published advisory artifact when the advisory is VEX-only. | No finding. |
+| `fixed` | Prevents a finding by ending the affected range before the fixed version. | Marks exact DHI product versions as fixed. | No finding for fixed versions. |
 
-The optional `fixed` VEX context is exact product context, not a range. A scanner
-should not show a `fixed` statement for `pkg:apk/dhi/foo@1.23` as applying to an
-image that contains only `pkg:apk/dhi/foo@1.23.1`. To make `fixed` VEX visible
-for `foo@1.23.1`, publish a `fixed` VEX statement for the exact `foo@1.23.1`
-product PURL, or let scanners derive fixed-version context from OSV ranges.
+`under_investigation` is deliberately fail-closed for vulnerability discovery.
+The conservative OSV coverage is scoped to the applicable DHI package,
+lineage, and release and remains until Docker resolves the assessment. Resolution
+replaces that coverage with the determined `affected` or `fixed` range, or
+removes it for `not_affected`. An OSV-only consumer must therefore see the
+unresolved package/version as a finding rather than interpreting an omitted
+entry as clear.
+
+The `fixed` VEX context is exact product context, not a range. A scanner should
+not show a `fixed` statement for `pkg:apk/dhi/foo@1.23` as applying to an image
+that contains only `pkg:apk/dhi/foo@1.23.1`. To make `fixed` VEX visible for
+`foo@1.23.1`, the generated VEX statement must identify the exact
+`foo@1.23.1` product PURL, or scanners can derive fixed-version context from
+OSV ranges.
 
 ## Status Semantics
 
 | VEX status | Scanner behavior | User-facing meaning |
 | --- | --- | --- |
-| `not_affected` | In the upcoming model, should normally have no active finding because OSV excludes the package/version. | Docker has assessed that the package/version is not affected in DHI context. |
-| `fixed` | In the upcoming model, should normally have no active finding because OSV ends the affected range before the fixed version. | The DHI package has remediated the issue. |
+| `not_affected` | No active finding: generated DHI OSV excludes the package/version. | Docker has assessed that the package/version is not affected in DHI context. |
+| `fixed` | No active finding for the fixed package version: generated DHI OSV ends the affected range before that version. | The DHI package has remediated the issue. |
 | `affected` | Report the vulnerability and include DHI notes. | Docker has assessed the product as affected. |
-| `under_investigation` | Report the vulnerability and include DHI notes. | Assessment is not complete or is waiting on upstream/remediation context. |
+| `under_investigation` | Report the vulnerability from the conservative OSV affected coverage; include DHI notes when matching VEX is consumed. | Assessment is not complete or is waiting on upstream/remediation context. |
 
-Current production VEX artifacts already contain `not_affected`,
-`under_investigation`, and `affected` examples. `fixed` is part of the target
-status model even though it was not present in the sampled production corpus.
+If generated DHI OSV produces a finding for an exact product whose paired VEX
+status is `not_affected` or `fixed`, report a feed-integrity error. Do not use
+the VEX status to suppress the contradictory OSV finding.
 
-## Production Examples Used For This Guide
-
-These examples are from the current production advisories repository and are
-used as status-shape anchors. Their product PURLs use the current production
-model, not the upcoming `pkg:(apk|deb)/dhi/...` OS package model.
-
-| Status | Example |
-| --- | --- |
-| `not_affected` | Pinned [`aws-privateca-issuer` VEX](https://github.com/docker-hardened-images/advisories/blob/67b6c12a121bc04c225e9c4707912abcc4b022c2/vex/aws-privateca-issuer/dhi-aws-privateca-issuer.vex.json) contains `CVE-2026-6238` for `pkg:deb/debian/glibc-source` with justification `vulnerable_code_cannot_be_controlled_by_adversary`. |
-| `under_investigation` | Pinned [`bash` VEX](https://github.com/docker-hardened-images/advisories/blob/67b6c12a121bc04c225e9c4707912abcc4b022c2/vex/bash/dhi-bash.vex.json) contains `CVE-2026-7017` for Debian Perl products, with status notes indicating that Docker is waiting for upstream and Debian analysis or a fix. |
-| `affected` | Pinned [`python` VEX](https://github.com/docker-hardened-images/advisories/blob/67b6c12a121bc04c225e9c4707912abcc4b022c2/vex/python/dhi-python.vex.json) contains an `affected` statement for `CVE-2025-12781` and `pkg:dhi/python@3.9.23`, with an action statement explaining why the fix was not ported. |
-
-Observed current-production `not_affected` justifications include:
-
-- `component_not_present`
-- `inline_mitigations_already_exist`
-- `vulnerable_code_cannot_be_controlled_by_adversary`
-- `vulnerable_code_not_in_execute_path`
-- `vulnerable_code_not_present`
-
-## Upcoming Package Product Shape
+## VEX Product Identity
 
 For cutover images, generated VEX statements for OS packages should include
 concrete DHI package product PURLs:
@@ -88,21 +76,32 @@ concrete DHI package product PURLs:
 }
 ```
 
-Scanner adapters also need to verify whether exact PURL qualifiers matter. The
-Grype cutover exploration showed that a VEX statement using the DHI artifact
-PURL matched the target finding in Grype's VEX handling, while a statement using
-the upstream `ID_LIKE` PURL did not. It also showed that a package listed only
-as a subcomponent was not enough for that tested Grype behavior.
+Scanner integrations must construct the VEX product match key from the
+normalized DHI package identity defined in
+[Package identity and versioning](package-identity-and-versioning.md), retaining
+the exact installed package version. Do not substitute an upstream `ID_LIKE`
+package PURL or treat a subcomponent PURL as the product match key.
 
 ## VEX Is Context, Not The Source Of Discovery
 
 In the upcoming model, DHI OSV records are the vulnerability discovery source
 for DHI base-layer OS package PURLs. VEX records carry DHI assessment context
-for those advisory/package combinations.
+for those advisory/package combinations. Docker always publishes the generated
+VEX record, but scanners are not required to consume it to determine whether a
+finding exists. In particular, an `under_investigation` result is discoverable
+from OSV alone; VEX explains why that result is unresolved.
+
+When a scanner does consume VEX, every generated OSV affected package is
+expected to have a matching product in the paired VEX document using that
+normalized identity and exact version. A missing document or product match is a
+feed integrity error, not a normal no-context path. Continue to report the OSV
+finding and surface the integrity error; do not suppress the finding.
 
 Scanners should not need to query upstream Alpine or Debian OSV feeds for a
 DHI-owned base-layer package after generated DHI OSV data exists. When scanning
 derived images, a DHI package PURL does not by itself prove DHI ownership.
-Scanners need product membership, layer attribution, base SBOM membership, or
-equivalent provenance before applying generated DHI OSV/VEX data to OS packages
-introduced outside the DHI product.
+Apply generated DHI OSV/VEX data only when chain-ID/layer attribution places
+the package in the DHI base, or when its exact package and version match the
+Docker-issued SBOM for a known DHI base image. Otherwise, normalize the package
+to its upstream Alpine or Debian identity and use normal upstream advisory
+coverage without DHI VEX.

@@ -55,6 +55,12 @@ the ordered base layer digests must be an exact prefix of the derived layer
 digests, inherited package files must retain base-layer evidence, and added
 package files must have evidence outside the base.
 
+These scanner snapshots are fixture inputs, not Docker-issued membership SBOMs.
+The harness does not retrieve OCI referrers or validate attachment to a DHI
+platform-manifest digest. For official production images, membership uses the
+full SPDX or CycloneDX OCI-referrer SBOM. The fixtures use recorded snapshots
+to exercise the subsequent package comparison and routing behavior.
+
 Scanner vulnerability databases remain live inputs. Scanner-backed runs print
 the UTC observation time and adapter-reported tool versions, and scanner result
 formats may include additional database metadata. Retain the run log when using
@@ -66,7 +72,7 @@ exercise OSV/VEX and routing contracts from checked-in data; any mutable image
 name is contextual source material, not a claim that the fixture can replay
 that image state.
 
-## Range And Provenance Responsibility
+## Range And Membership Responsibility
 
 The generated DHI OSV examples in this guide are scanner-facing advisories for
 DHI OS packages. Their `affected[].package.purl` values use
@@ -79,12 +85,12 @@ rejects type/lineage mismatches, and checks that scanner
 `os_version=<release>`.
 
 Embedded language package PURLs, such as `pkg:pypi/...` or `pkg:npm/...`, are
-component provenance for these examples. Component advisory range matching
-happens before DHI feed generation, when Packit identifies affected DHI
-packages from package-component associations. This harness therefore validates
-that component PURLs are carried through OSV context, VEX subcomponents, and the
-example SBOM parent-child relationship, but it does not evaluate component
-ecosystem version ranges.
+component context for these examples. Component advisory range matching
+happens before DHI feed generation, when the DHI advisory generation pipeline
+identifies affected DHI packages from package-component associations. This
+harness therefore validates that component PURLs are carried through OSV
+context, VEX subcomponents, and the example SBOM parent-child relationship, but
+it does not evaluate component ecosystem version ranges.
 
 Scanner-backed mode builds each scanner-backed fixture image, runs the adapter
 SBOM command, asserts that the output contains the expected DHI package PURL
@@ -107,31 +113,48 @@ data is available through the production advisory pipeline.
 - OS packages observed under final `ID=dhi` can use `pkg:(apk|deb)/dhi/...`.
 - DHI package namespace is scanner-observed identity, not proof of DHI product
   membership.
+- For official images, the membership source is the full SPDX or CycloneDX
+  OCI-referrer SBOM attached to the resolved DHI platform-manifest digest, not
+  `/opt/docker/sbom/.spdx.json` or a scanner-generated inventory.
 - Generated OSV affected package PURLs are versionless.
 - Generated VEX product PURLs are versioned.
+- Every fixture that represents a published generated DHI advisory includes a
+  VEX document. An OSV document may be absent for a fully `not_affected`
+  advisory; negative routing fixtures do not represent published DHI
+  advisories.
+- Fixture source evidence and production anchors belong in `expected.json` or
+  the scenario manifest, not in target-shape OSV or VEX payload fields.
 - The `os_distro` qualifier is validated as part of the fixture and generated
-  feed shape; it is not a claim that Packit currently uses `os_distro` as an
-  advisory lookup key.
+  feed shape; it is not a claim that the advisory generation pipeline currently
+  uses `os_distro` as an advisory lookup key.
 - Static validation derives expected findings from OSV affected ranges and the
   scenario package version instead of trusting fixture metadata alone.
 - Generated VEX statements must point at the scenario package and, when an OSV
   fixture exists, the same DHI advisory.
-- Component package PURLs are provenance: when declared, they must appear in
+- Component package PURLs provide context: when declared, they must appear in
   OSV `database_specific.component_packages`, VEX product `subcomponents`, and
   the example SBOM with the DHI OS package as parent.
 - DHI-layer packages do not require upstream Alpine/Debian OSV lookup once DHI
   OSV data exists.
-- Active generated DHI OSV scenarios include `affected` and
-  `under_investigation` VEX context.
+- Both `affected` and `under_investigation` assessments produce active
+  generated DHI OSV findings. The `under_investigation` fixture matches
+  conservative OSV affected coverage before VEX is applied; VEX supplies the
+  unresolved assessment context.
 - `fixed` and `not_affected` scenarios do not rely on post-match VEX
   suppression; the generated DHI OSV state should already produce no finding.
 - DHI OS package advisories may reference language ecosystem component PURLs,
   but the scanner match key remains the DHI OS package PURL.
 - Non-DHI-owned OS packages do not route to generated DHI OSV data from PURL
-  namespace alone; product membership or provenance is required.
-- In the derived-image fixture, base-SBOM membership routes inherited
-  `coreutils` to DHI OSV while excluding the added `jq` package absent separate
-  DHI provenance, even though both scanner PURLs use the DHI namespace.
+  namespace alone. They are normalized to the corresponding upstream Alpine or
+  Debian identity and use normal upstream advisory coverage with native APK or
+  dpkg version semantics.
+- For derived images, membership can be established through DHI chain-ID/layer
+  attribution or exact package-and-version comparison with a known base's
+  Docker-issued OCI-referrer SBOM.
+- In the derived-image fixture, recorded base membership and base-layer package
+  evidence route inherited `coreutils` to DHI OSV while customer-added `jq`
+  routes to upstream Alpine coverage, even though both scanner PURLs use the DHI
+  namespace.
 - Scanner snapshot layer catalogs are ordered and self-contained: package
   evidence cannot reference an undeclared layer, and the derived base digest
   prefix must match the standalone base snapshot exactly.

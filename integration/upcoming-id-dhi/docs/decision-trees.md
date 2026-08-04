@@ -18,32 +18,44 @@ flowchart TD
 ```mermaid
 flowchart TD
   A[Package from SBOM] --> B{PURL namespace}
-  B -->|pkg:apk/dhi| C{DHI product membership?}
-  B -->|pkg:deb/dhi| D{DHI product membership?}
+  B -->|pkg:apk/dhi or pkg:deb/dhi| C{Image kind}
   B -->|pkg:apk/alpine or pkg:deb/debian| E[Normal upstream distro matching]
   B -->|other PURL type| F[Use normal scanner matching]
-  C -->|Yes| K[Resolve Alpine release from os_version or distro qualifier]
-  C -->|No| J[Do not apply DHI advisory data from namespace alone]
-  D -->|Yes| L[Resolve Debian release from os_version or distro qualifier]
-  D -->|No| J
+  C -->|Official DHI| M{Exact package and version in attached Docker-issued SBOM?}
+  C -->|Derived DHI| N{DHI origin established?}
+  M -->|No| J[Normalize to upstream Alpine or Debian package identity]
+  M -->|Yes| D{PURL type}
+  N -->|No| J
+  N -->|Chain-ID/layer attribution or known base SBOM match| D
+  J --> R[Use normal upstream matching with APK or dpkg version rules]
+  D -->|apk| K[Resolve Alpine release from os_version or distro qualifier]
+  D -->|deb| L[Resolve Debian release from os_version or distro qualifier]
   K --> G[Exact DHI Alpine release ecosystem, APK version rules]
   L --> H[Exact DHI Debian release ecosystem, dpkg version rules]
-  G --> I[Apply DHI VEX context]
-  H --> I
+  G --> O{DHI OSV affected entry matches?}
+  H --> O
+  O -->|No| P[No matching vulnerability; no upstream fallback]
+  O -->|Yes| I[Report DHI OSV finding]
+  I --> Q[Published paired VEX is optional to consume]
 ```
 
 ## VEX Context
 
 ```mermaid
 flowchart TD
-  A[Finding matched from DHI OSV] --> B[Find VEX statement for advisory]
-  B --> C{Product PURL matches scanner artifact?}
-  C -->|No| D[Report finding without matching DHI VEX context]
-  C -->|Yes| E{Status}
-  E -->|affected| F[Report vulnerable with DHI status notes]
-  E -->|under_investigation| G[Report under investigation with DHI status notes]
-  E -->|not_affected or fixed| H[Report OSV/VEX state mismatch for generated data]
+  A[Finding matched from DHI OSV] --> B{Consume paired VEX context?}
+  B -->|No| C[Report the OSV finding]
+  B -->|Yes| D{Product PURL matches after canonicalization?}
+  D -->|No| E[Report OSV finding and feed-integrity error]
+  D -->|Yes| F{Status}
+  F -->|affected| G[Report vulnerable with DHI status notes]
+  F -->|under_investigation| H[Report under investigation with DHI status notes]
+  F -->|not_affected or fixed| I[Report OSV/VEX state mismatch for generated data]
 ```
+
+An `under_investigation` assessment already has conservative affected coverage
+in generated DHI OSV. The VEX branch labels that existing finding as unresolved;
+it does not create the finding.
 
 ## Mixed Production Cutover
 
