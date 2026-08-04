@@ -1,0 +1,39 @@
+{
+  "modified": "2026-07-24T12:53:05Z",
+  "published": "2026-07-24T12:53:05Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-69hh-55g9-hx9g",
+  "details": "**Impact**\r\n\r\nConnaisseur's Cosign validator supports multi-signature policies using `trustRoot: \"*\"` with either an explicit `threshold` or an implicit require-all policy.\r\n\r\nAffected versions count the total number of valid signature layers when evaluating this threshold, rather than the number of distinct trust roots that produced a valid signature. Because one signing key can attach multiple valid signatures to the same image, repeated signatures from a single trust root can satisfy a threshold intended to require multiple independent trust roots.\r\n\r\nAn attacker can therefore cause an image to be admitted without obtaining the intended signer quorum. Exploitation requires:\r\n\r\n- A Cosign validator configured with `trustRoot: \"*\"` and an explicit threshold, or an implicit require-all policy.\r\n- Control of at least one configured trust root's signing key.\r\n- Permission to attach multiple signatures to the affected image.\r\n\r\nPolicies using a single trust root are not affected. Policies using the `required` option are also not affected because that check evaluates distinct trust-root names.\r\n\r\n**Patches**\r\n\r\nThe issue is fixed in Connaisseur `3.11.1`.\r\n\r\nThe threshold check now counts distinct trust roots that successfully validated at least one signature. Multiple signatures produced by the same trust root therefore contribute only once toward the configured threshold.\r\n\r\nUsers of affected Cosign multi-signature configurations should upgrade to `3.11.1` or later.\r\n\r\n**Workarounds**\r\n\r\nWhere an immediate upgrade is not possible, avoid Cosign threshold policies using `trustRoot: \"*\"`.\r\n\r\nThe `required` option can be used to name every trust root whose signature must be present. This option is not affected by the vulnerability because it checks distinct trust-root identities. For example:\r\n\r\n```yaml\r\ntrustRoot: \"*\"\r\nrequired:\r\n  - alice\r\n  - bob\r\n  - charlie\r\n```\r\n\r\nThis workaround enforces that every listed trust root signs the image. There is no equivalent safe configuration for a general $k$-of-$N$ threshold in affected versions. Such users should upgrade before relying on threshold enforcement.\r\n\r\nPolicies pinned to one specific `trustRoot` are not affected by this threshold bypass.\r\n\r\n**References**\r\n\r\n- Security policy: https://github.com/sse-secure-systems/connaisseur/blob/master/docs/SECURITY.md\r\n- Cosign validator documentation: https://github.com/sse-secure-systems/connaisseur/blob/master/docs/validators/sigstore_cosign.md\r\n- Fixed release: `https://github.com/sse-secure-systems/connaisseur/releases/tag/v3.11.1`\r\n- Fix commit: `https://github.com/sse-secure-systems/connaisseur/commit/1410707c2a3ed369ab1d354a6e3f493a1c32bc4c`\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "connaisseur",
+        "purl": "pkg:dhi/connaisseur"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.11.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "connaisseur"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/sse-secure-systems/connaisseur/security/advisories/GHSA-69hh-55g9-hx9g"
+    }
+  ]
+}
