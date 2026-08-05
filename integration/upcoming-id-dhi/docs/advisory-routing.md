@@ -109,7 +109,8 @@ advisory coverage from the component relationship.
 
 OSV records use the `DHI-` advisory ID prefix. Affected package entries use the
 exact DHI ecosystem variant derived from PURL type, lineage, and release.
-Package versions live in OSV ranges, not in the affected package PURL:
+The affected package PURL is versionless. Coverage can enumerate exact
+`versions`, provide native `ECOSYSTEM` `ranges`, or provide both:
 
 ```json
 {
@@ -126,16 +127,18 @@ Package versions live in OSV ranges, not in the affected package PURL:
         { "fixed": "9.11-r1" }
       ]
     }
-  ]
+  ],
+  "versions": ["9.11-r0"]
 }
 ```
 
 For an `under_investigation` assessment, the generated affected entry
-conservatively covers every applicable DHI package version still within the
-investigation's scope. That coverage remains limited to the exact DHI package
-identity, lineage, and release; it must not broaden the result to another DHI
-package or base release. A scanner reports the OSV match even if it does not
-consume the paired VEX record.
+enumerates every producer-known exact DHI package version currently within the
+investigation's scope in `affected[].versions` and does not fabricate a
+semantic range. That coverage remains limited to the exact DHI package
+identity, lineage, release, and listed versions; it must not broaden the result
+to an adjacent version, another DHI package, or another base release. A scanner
+reports the OSV match even if it does not consume the paired VEX record.
 
 ## Scanner-Observed PURLs
 
@@ -162,12 +165,13 @@ and advisory availability are therefore atomic from the scanner integration's
 perspective; scanners do not need a separate readiness marker.
 
 For an eligible DHI package, query the release-scoped DHI ecosystem and evaluate
-the package version against the generated affected ranges. If no affected range
-matches, interpret the result as no matching vulnerability. Do not fall back to
-current-production or upstream Alpine or Debian matching for that DHI package.
-Docker publishes conservative affected coverage while an applicable assessment
-is `under_investigation`, so absence of a matching range is not an unresolved
-state.
+the package version against the generated affected entry. A version is affected
+if it is listed in `affected[].versions` or falls within any
+`affected[].ranges`. If neither matches, interpret the result as no matching
+vulnerability. Do not fall back to current-production or upstream Alpine or
+Debian matching for that DHI package. Docker explicitly enumerates the
+producer-known versions covered while an assessment is `under_investigation`,
+so absence from that list is not an unresolved-state wildcard.
 
 Before a production image cuts over, this repository provides local fixtures
 for the expected OSV and VEX shape. After cutover, scanners should use the
@@ -180,7 +184,7 @@ Official DHI image
   -> resolve platform-manifest digest
   -> retrieve attached SPDX or CycloneDX OCI-referrer SBOM
   -> pkg:(apk|deb)/dhi/... package PURLs
-  -> generated DHI OSV range evaluation
+  -> generated DHI OSV exact-version and range evaluation
   -> finding or no finding
   -> matching generated DHI VEX context for findings
 

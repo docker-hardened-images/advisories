@@ -272,11 +272,10 @@ def version_in_events(version: str, events: object) -> bool:
     return affected
 
 
-def entry_matches_version(entry: dict[str, object], version: str) -> bool:
-    ranges = entry.get("ranges")
+def entry_ranges_match_version(entry: dict[str, object], version: str) -> bool:
+    ranges = entry.get("ranges", [])
     if not isinstance(ranges, list):
         return False
-
     for version_range in ranges:
         if (
             isinstance(version_range, dict)
@@ -285,6 +284,14 @@ def entry_matches_version(entry: dict[str, object], version: str) -> bool:
         ):
             return True
     return False
+
+
+def entry_matches_version(entry: dict[str, object], version: str) -> bool:
+    versions = entry.get("versions", [])
+    return (
+        isinstance(versions, list)
+        and version in versions
+    ) or entry_ranges_match_version(entry, version)
 
 
 def osv_component_purls(osv: dict[str, object]) -> set[str]:
@@ -844,10 +851,24 @@ for scenario in scenarios:
                 ):
                     matching_affected_entries.append(entry)
 
+            versions = entry.get("versions", [])
+            if not isinstance(versions, list):
+                fail(where, f"OSV affected[{index}].versions must be an array")
+                versions = []
+            elif not all(isinstance(version, str) and version for version in versions):
+                fail(where, f"OSV affected[{index}].versions must contain non-empty strings")
+            elif len(versions) != len(set(versions)):
+                fail(where, f"OSV affected[{index}].versions must not contain duplicates")
+
             ranges = entry.get("ranges", [])
-            if not isinstance(ranges, list) or not ranges:
-                fail(where, f"OSV affected[{index}].ranges must contain at least one range")
-                continue
+            if not isinstance(ranges, list):
+                fail(where, f"OSV affected[{index}].ranges must be an array")
+                ranges = []
+            if not versions and not ranges:
+                fail(
+                    where,
+                    f"OSV affected[{index}] must contain exact versions, ranges, or both",
+                )
             for range_index, version_range in enumerate(ranges):
                 if not isinstance(version_range, dict):
                     fail(where, f"OSV affected[{index}].ranges[{range_index}] must be an object")
@@ -884,15 +905,73 @@ for scenario in scenarios:
                 )
 
         if routing == "dhi-os-package" and canonical_parsed is not None:
+            installed_version = str(canonical_parsed["version"])
             if not matching_affected_entries:
                 fail(where, "OSV affected packages must include the scenario canonical_package_purl identity")
                 derived_expected_finding = False
             else:
-                installed_version = str(canonical_parsed["version"])
                 derived_expected_finding = any(
                     entry_matches_version(entry, installed_version)
                     for entry in matching_affected_entries
                 )
+
+            expected_status = expected_behavior.get("vex_status")
+            if expected_status == "under_investigation":
+                ui_versions: set[str] = set()
+                for entry in matching_affected_entries:
+                    versions = entry.get("versions", [])
+                    ranges = entry.get("ranges", [])
+                    if not isinstance(versions, list) or not versions:
+                        fail(where, "under_investigation OSV coverage must enumerate exact versions")
+                    else:
+                        ui_versions.update(str(version) for version in versions)
+                    if isinstance(ranges, list) and ranges:
+                        fail(where, "under_investigation OSV coverage must not fabricate a range")
+                if ui_versions != {installed_version}:
+                    fail(
+                        where,
+                        "under_investigation OSV versions must equal the fixture's exact "
+                        f"producer-known version ({installed_version})",
+                    )
+            elif expected_status in {"affected", "fixed"}:
+                for entry in matching_affected_entries:
+                    versions = entry.get("versions", [])
+                    ranges = entry.get("ranges", [])
+                    if not isinstance(versions, list) or not versions:
+                        fail(where, f"{expected_status} OSV fixture must enumerate resolved versions")
+                    if not isinstance(ranges, list) or not ranges:
+                        fail(where, f"{expected_status} OSV fixture must retain its native range")
+                    if isinstance(versions, list):
+                        for version in versions:
+                            if isinstance(version, str) and not entry_ranges_match_version(entry, version):
+                                fail(
+                                    where,
+                                    f"{expected_status} resolved version {version} must fall "
+                                    "within the fixture's native range",
+                                )
+
+            non_matching_versions = expected_behavior.get("non_matching_versions", [])
+            if expected_status == "under_investigation" and not non_matching_versions:
+                fail(
+                    where,
+                    "under_investigation expected_behavior.non_matching_versions "
+                    "must include an adjacent negative case",
+                )
+            if not isinstance(non_matching_versions, list) or not all(
+                isinstance(version, str) and version for version in non_matching_versions
+            ):
+                fail(where, "expected_behavior.non_matching_versions must contain strings")
+            else:
+                for non_matching_version in non_matching_versions:
+                    if any(
+                        entry_matches_version(entry, non_matching_version)
+                        for entry in matching_affected_entries
+                    ):
+                        fail(
+                            where,
+                            "expected non-matching version is covered by OSV: "
+                            f"{non_matching_version}",
+                        )
     elif routing == "dhi-os-package":
         derived_expected_finding = False
 
@@ -906,7 +985,7 @@ for scenario in scenarios:
         ):
             fail(
                 where,
-                "expected_behavior.expected_finding must match the OSV range result "
+                "expected_behavior.expected_finding must match the OSV versions/ranges result "
                 f"for canonical_package_purl ({derived_expected_finding})",
             )
 
