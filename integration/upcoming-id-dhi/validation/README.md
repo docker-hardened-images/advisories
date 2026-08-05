@@ -141,11 +141,11 @@ data is available through the production advisory pipeline.
   OSV data exists.
 - Both `affected` and `under_investigation` assessments produce active
   generated DHI OSV findings. The `under_investigation` fixture matches
-  a producer-known exact version with no fabricated range before VEX is
-  applied, and rejects an adjacent unlisted version; VEX supplies the
-  unresolved assessment context.
-- `affected` and `fixed` fixtures retain meaningful native ranges and also
-  enumerate resolved exact affected versions.
+  the exact version covered by the current assessment before VEX is applied.
+  Because the entry has no `affected[].ranges`, an unlisted version does not
+  match; VEX supplies the unresolved assessment context.
+- `affected` and `fixed` fixtures retain native ranges and also enumerate
+  affected versions.
 - `fixed` and `not_affected` scenarios do not rely on post-match VEX
   suppression; the generated DHI OSV state should already produce no finding.
 - DHI OS package advisories may reference language ecosystem component PURLs,

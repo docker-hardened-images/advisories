@@ -92,12 +92,11 @@ a scanner finding; a fully `not_affected` advisory can therefore be VEX-only.
 Scanners may consume generated DHI VEX records for assessment context, but VEX
 consumption is not required to determine whether a finding exists.
 
-Docker includes an `under_investigation` assessment in generated DHI OSV as
-conservative affected coverage by enumerating the applicable producer-known
-exact package versions. This ensures an OSV-only scanner reports a finding for
-a listed version without inventing a broader range. The paired VEX record
-supplies the unresolved assessment status and any available notes; consuming
-VEX is not required to discover the finding.
+When a DHI assessment has status `under_investigation`, Docker publishes an OSV
+affected entry listing the exact package versions covered by the assessment in
+`affected[].versions`. An OSV-only scanner reports each listed version as
+affected. The paired VEX record conveys the `under_investigation` status and
+any available notes.
 
 A DHI package PURL is scanner-observed package identity, not proof of DHI
 product membership by itself.
@@ -107,9 +106,10 @@ package version against the generated DHI OSV entry. A version is affected when
 it is explicitly listed in `affected[].versions` or falls within any
 `affected[].ranges`. If neither matches, the result is no matching
 vulnerability; do not fall back to current-production or upstream distribution
-matching for that DHI package. An `under_investigation` assessment enumerates
-the producer-known exact versions within its current scope rather than
-fabricating a semantic range, so adjacent versions are not implied.
+matching for that DHI package. For an `under_investigation` assessment, the OSV
+affected entry has no `affected[].ranges`, so a package version matches only if
+it appears in `affected[].versions`; other unlisted versions do not match the
+entry.
 
 > **Derived images:** Treat a package as covered by generated DHI advisory data
 > when chain-ID/layer attribution places it in the DHI base, or when its exact

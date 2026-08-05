@@ -16,26 +16,27 @@ scanner finding; a fully `not_affected` advisory can therefore be VEX-only.
 VEX publication is not optional. Scanner consumption of the published VEX
 context is.
 
-Generated DHI OSV represents Docker's current advisory state. VEX adds DHI
-assessment context, but OSV affected-version coverage handles `not_affected`
-and `fixed` rather than relying on post-match VEX suppression. OSV consumers
-match the union of exact `affected[].versions` and `affected[].ranges`.
+Generated DHI OSV determines whether a DHI package version is reported as
+affected. VEX provides Docker's assessment status and additional context;
+scanners do not need VEX to determine whether an OSV entry matches. Under OSV
+semantics, a package version is affected if it is listed in
+`affected[].versions` or falls within any range in `affected[].ranges`.
 
 | Assessment state | Generated DHI OSV role | Generated DHI VEX role | Scanner result |
 | --- | --- | --- | --- |
-| `affected` | Creates a finding through native ranges and producer-known exact affected versions. | Confirms DHI assessment and adds status/action context. | Report finding with DHI context. |
-| `under_investigation` | Creates a finding by enumerating every producer-known exact DHI package version currently within the investigation's scope; it does not invent a range. | Marks the matching DHI product assessment as unresolved and adds status context. | Report an explicitly listed version even without VEX; when VEX is consumed, show the under-investigation context. |
+| `affected` | Creates a finding through native ranges and enumerated affected versions. | Confirms DHI assessment and adds status/action context. | Report finding with DHI context. |
+| `under_investigation` | Creates a finding for each exact DHI package version covered by the current assessment and listed in `affected[].versions`; no affected interval is defined. | Marks the matching DHI product assessment as unresolved and adds status context. | Report an explicitly listed version even without VEX; when VEX is consumed, show the under-investigation context. |
 | `not_affected` | Prevents a finding by omitting positive OSV coverage for the DHI package/version. | Explains the assessment for exact product matches and remains the published advisory artifact when the advisory is VEX-only. | No finding. |
 | `fixed` | Prevents a finding by ending the affected range before the fixed version. | Marks exact DHI product versions as fixed. | No finding for fixed versions. |
 
-`under_investigation` is deliberately fail-closed for vulnerability discovery.
-The conservative OSV coverage is scoped to the applicable DHI package,
-lineage, release, and exact producer-known versions and remains until Docker
-resolves the assessment. Resolution replaces that coverage with the determined
-`affected` or `fixed` coverage, or removes it for `not_affected`. An OSV-only
-consumer must therefore see an explicitly listed unresolved package/version as
-a finding. The exact list does not imply an adjacent version or an open-ended
-range.
+For vulnerability discovery, scanners treat each listed
+`under_investigation` version as affected until Docker resolves the assessment.
+The OSV coverage is scoped to the applicable DHI package, lineage, release, and
+exact versions listed in `affected[].versions`. Resolution replaces that
+coverage with the determined `affected` or `fixed` coverage, or removes it for
+`not_affected`. An OSV-only consumer therefore reports an explicitly listed
+package version as a finding. Because the entry has no `affected[].ranges`,
+other unlisted versions do not match it.
 
 The `fixed` VEX context is exact product context, not a range. A scanner should
 not show a `fixed` statement for `pkg:apk/dhi/foo@1.23` as applying to an image

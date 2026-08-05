@@ -132,13 +132,14 @@ The affected package PURL is versionless. Coverage can enumerate exact
 }
 ```
 
-For an `under_investigation` assessment, the generated affected entry
-enumerates every producer-known exact DHI package version currently within the
-investigation's scope in `affected[].versions` and does not fabricate a
-semantic range. That coverage remains limited to the exact DHI package
-identity, lineage, release, and listed versions; it must not broaden the result
-to an adjacent version, another DHI package, or another base release. A scanner
-reports the OSV match even if it does not consume the paired VEX record.
+For an `under_investigation` assessment, the generated affected entry lists the
+exact DHI package versions covered by the current assessment in
+`affected[].versions`. It omits `affected[].ranges` because the assessment does
+not define an affected interval. Coverage remains limited to the exact DHI
+package identity, lineage, release, and listed versions. The entry does not
+apply to unlisted versions, other DHI packages, or other base releases. A
+scanner reports the OSV match even if it does not consume the paired VEX
+record.
 
 ## Scanner-Observed PURLs
 
@@ -169,9 +170,9 @@ the package version against the generated affected entry. A version is affected
 if it is listed in `affected[].versions` or falls within any
 `affected[].ranges`. If neither matches, interpret the result as no matching
 vulnerability. Do not fall back to current-production or upstream Alpine or
-Debian matching for that DHI package. Docker explicitly enumerates the
-producer-known versions covered while an assessment is `under_investigation`,
-so absence from that list is not an unresolved-state wildcard.
+Debian matching for that DHI package. Versions not listed in
+`affected[].versions` are not implicitly covered by an `under_investigation`
+assessment.
 
 Before a production image cuts over, this repository provides local fixtures
 for the expected OSV and VEX shape. After cutover, scanners should use the

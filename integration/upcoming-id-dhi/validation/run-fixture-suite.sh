@@ -926,12 +926,12 @@ for scenario in scenarios:
                     else:
                         ui_versions.update(str(version) for version in versions)
                     if isinstance(ranges, list) and ranges:
-                        fail(where, "under_investigation OSV coverage must not fabricate a range")
+                        fail(where, "under_investigation OSV coverage must omit affected ranges")
                 if ui_versions != {installed_version}:
                     fail(
                         where,
-                        "under_investigation OSV versions must equal the fixture's exact "
-                        f"producer-known version ({installed_version})",
+                        "under_investigation OSV versions must equal the exact version "
+                        f"covered by the fixture assessment ({installed_version})",
                     )
             elif expected_status in {"affected", "fixed"}:
                 for entry in matching_affected_entries:
@@ -955,7 +955,7 @@ for scenario in scenarios:
                 fail(
                     where,
                     "under_investigation expected_behavior.non_matching_versions "
-                    "must include an adjacent negative case",
+                    "must include at least one unlisted negative test version",
                 )
             if not isinstance(non_matching_versions, list) or not all(
                 isinstance(version, str) and version for version in non_matching_versions

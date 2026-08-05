@@ -53,9 +53,9 @@ flowchart TD
   F -->|not_affected or fixed| I[Report OSV/VEX state mismatch for generated data]
 ```
 
-An `under_investigation` assessment already has conservative affected coverage
-for producer-known exact versions in generated DHI OSV. The VEX branch labels
-that existing finding as unresolved; it does not create the finding.
+For an `under_investigation` assessment, generated DHI OSV lists the exact
+package versions covered by the current assessment. The VEX branch labels an
+existing OSV finding as unresolved; it does not create the finding.
 
 ## Mixed Production Cutover
 

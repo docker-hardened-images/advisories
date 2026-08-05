@@ -14,9 +14,9 @@ an image has cut over to `/etc/os-release` `ID=dhi`.
 | Alpine 3.24 | `Docker Hardened Images:Alpine:3.24` | `pkg:apk/dhi/<name>?os_distro=alpine&os_name=dhi&os_version=3.24` | `pkg:apk/dhi/<name>@<version>?...` | APK |
 | Debian 13 | `Docker Hardened Images:Debian:13` | `pkg:deb/dhi/<name>?os_distro=debian&os_name=dhi&os_version=13` | `pkg:deb/dhi/<name>@<version>?...` | Debian/dpkg |
 
-Generated DHI OSV records enumerate exact affected versions and use
-`ECOSYSTEM` ranges when meaningful range evidence is available. A version is
-affected if it is listed in `affected[].versions` or falls within any
+Generated DHI OSV records enumerate affected versions and include `ECOSYSTEM`
+ranges when the assessment defines an affected interval. A version is affected
+if it is listed in `affected[].versions` or falls within any
 `affected[].ranges`, matching the
 [OSV evaluation algorithm](https://ossf.github.io/osv-schema/#affected-fields).
 The ecosystem suffix has two roles:
@@ -133,8 +133,9 @@ pkg:apk/dhi/coreutils@9.11-r0?os_distro=alpine&os_name=dhi&os_version=3.24
 `affected[].versions` and `affected[].ranges` have union semantics. Exact
 versions remain useful alongside `ECOSYSTEM` ranges because consumers without
 the package manager's native comparator can still perform precise equality
-matching. An `under_investigation` entry uses exact `versions` only when there
-is no honest semantic range to publish.
+matching. For an `under_investigation` assessment, generated DHI OSV uses
+`affected[].versions` and omits `affected[].ranges` because the assessment does
+not define an affected interval.
 
 APK affected entry:
 
@@ -176,7 +177,8 @@ Debian affected entry:
 }
 ```
 
-Alpine `under_investigation` entry with exact coverage and no semantic range:
+Alpine `under_investigation` entry with enumerated versions and no
+`affected[].ranges`:
 
 ```json
 {
