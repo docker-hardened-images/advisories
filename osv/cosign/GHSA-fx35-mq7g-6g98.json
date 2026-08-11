@@ -1,0 +1,159 @@
+{
+  "modified": "2026-08-06T01:10:12Z",
+  "published": "2026-08-06T01:10:12Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-fx35-mq7g-6g98",
+  "details": "## Description\r\n\r\nIn `cosign verify-blob` and `cosign verify-blob-attestation`, keyless verification using `--certificate-identity` and `--certificate-oidc-issuer` (or their regular expression equivalents) can be bypassed when a legacy JSON `--bundle` is supplied.\r\n\r\nNote that this does not affect verification with the [newer standardized bundle format](https://docs.sigstore.dev/about/bundle/), the default in Cosign v3.\r\n\r\nWhen reading the `cert` field of a legacy bundle, if the contents failed to parse as an X.509 certificate, Cosign silently fell back to loading the input as a raw public key and populated `co.SigVerifier`. In downstream verification, whenever `co.SigVerifier` is set, X.509 certificate chain validation and policy enforcement (`CheckCertificatePolicy`) are skipped. As a result, `--certificate-identity` and `--certificate-oidc-issuer` flags are ignored, and verification succeeds as long as the signature is cryptographically valid for the embedded public key.\r\n\r\nAdditionally, because the fallback unconditionally assigned to `co.SigVerifier`, if an operator passed an explicitly trusted `--key` alongside a legacy bundle containing a public key, the public key embedded in the bundle would overwrite the key provided via `--key`.\r\n\r\n### Affected Commands \u0026 Formats\r\n\r\n* **Affected**: `cosign verify-blob` and `cosign verify-blob-attestation` when verifying legacy JSON bundles (`LocalSignedPayload`).\r\n* **Not Affected**: \r\n  * OCI container image verification (`cosign verify` and `cosign verify-attestation`).\r\n  * Verification using the modern Sigstore protobuf bundle format (`--new-bundle-format`, e.g., `application/vnd.dev.sigstore.bundle+json`).\r\n \r\n## Impact\r\n\r\nAn attacker can bypass keyless identity and OIDC issuer pinning in `cosign verify-blob` and `cosign verify-blob-attestation` by shipping a legacy bundle whose `cert` field contains an arbitrary bare public key (`-----BEGIN PUBLIC KEY-----`) instead of a Fulcio X.509 certificate. \r\n\r\n* **False assurance of identity enforcement**: Verification completes with exit code `0` and reports `Verified OK`, causing operators or CI/CD pipelines to trust and consume artifacts signed by an unauthorized key.\r\n* **Key override**: If an operator explicitly specifies `--key` while verifying against a legacy bundle containing a bare public key, the attacker's bundle key silently overrides `--key`.\r\n\r\n## Patches\r\n\r\nUpgrade to v3.1.3 or v2.6.5.\r\n\r\n## Workarounds\r\n\r\n**Adopt the Standardized Protobuf Bundle Format**:\r\n\r\nMigrate from legacy JSON bundles to the modern Sigstore protobuf bundle format (`--new-bundle-format`). The protobuf bundle verification engine is not affected by this vulnerability. You can upgrade bundles with `cosign bundle create`.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "cosign",
+        "purl": "pkg:dhi/cosign"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.1.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/sigstore/cosign/v3"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "cosign",
+        "purl": "pkg:dhi/cosign"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.6.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/sigstore/cosign/v2"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/cosign-2",
+        "purl": "pkg:apk/alpine/cosign-2?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.1.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/sigstore/cosign/v3"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/cosign-2",
+        "purl": "pkg:apk/alpine/cosign-2?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.6.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/sigstore/cosign/v2"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/cosign-3",
+        "purl": "pkg:apk/alpine/cosign-3?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.1.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/sigstore/cosign/v3"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/cosign-3",
+        "purl": "pkg:apk/alpine/cosign-3?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.6.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/sigstore/cosign/v2"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-fx35-mq7g-6g98"
+    }
+  ]
+}
