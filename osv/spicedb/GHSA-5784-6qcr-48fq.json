@@ -1,0 +1,63 @@
+{
+  "modified": "2026-08-06T19:14:24Z",
+  "published": "2026-08-06T19:14:24Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-5784-6qcr-48fq",
+  "details": "## Impact\r\n\r\nCustomers that have a schema with a caveat using the `in_cidr` function, such as the following\r\n\r\n```python\r\ncaveat is_valid_ip(user_ip ipaddress, cidr string) {\r\n    user_ip.in_cidr(cidr)\r\n  }\r\n```\r\n\r\ncan get different results for two textual forms of the same IPv4 host. An allow-list (permit when `in_cidr` is true) fails closed for a mapped address; a deny-style check (negating `in_cidr`, or granting extra access for internal ranges) fails open.\r\n\r\nIn other words, the following .zed file fails the second assertion:\r\n\r\n```yaml\r\n---\r\nschema: |+\r\n  definition user {}\r\n\r\n  caveat is_valid_ip(user_ip ipaddress, cidr string) {\r\n    user_ip.in_cidr(cidr)\r\n  }\r\n\r\n  definition document {\r\n  \trelation viewer: user with is_valid_ip\r\n    permission view = viewer\r\n  }\r\n\r\nrelationships: \u003e-\r\n  document:firstdoc#viewer@user:alice[is_valid_ip:{\"cidr\":\"10.0.0.0/8\"}]\r\nassertions:\r\n  assertTrue:\r\n    - 'document:firstdoc#view@user:alice with {\"user_ip\": \"10.1.2.3\"}'\r\n    - 'document:firstdoc#view@user:alice with {\"user_ip\": \"::ffff:a01:203\"}'\r\n\r\n```\r\n\r\n## Patches\r\n\r\nv1.54.1\r\n\r\n## Workarounds\r\n\r\nDo not use the `in_cidr` caveat function.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "spicedb",
+        "purl": "pkg:dhi/spicedb"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.56.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/authzed/spicedb"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "spicedb",
+        "purl": "pkg:dhi/spicedb"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.56.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "docker",
+        "source_package": "authzed/spicedb"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/authzed/spicedb/security/advisories/GHSA-5784-6qcr-48fq"
+    }
+  ]
+}
