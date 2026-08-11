@@ -1,0 +1,39 @@
+{
+  "modified": "2026-08-10T06:47:47Z",
+  "published": "2026-08-10T06:47:47Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-6p2v-8rwg-rjf7",
+  "details": "### Summary\r\n\r\nConnaisseur's Notary (v1) validator normalized the Notary Global Unique Name (GUN) of an image using an unanchored prefix check against Docker Hub's default index host. Registries whose hostname merely *starts with* `index.docker.io` were normalized as well, so trust data was looked up under a different GUN than the image actually belongs to.\r\n\r\n### Details\r\n\r\n`Image.NotaryReference()` in image.go strips the `index.` prefix from image references so that Docker Hub images (`index.docker.io/...`) are resolved against the GUN Notary actually stores them under (`docker.io/...`). The check was implemented as:\r\n\r\n```go\r\nif strings.HasPrefix(i.Context().String(), constants.DefaultDockerRegistry) {\r\n    return strings.TrimPrefix(i.Context().String(), \"index.\")\r\n}\r\n```\r\n\r\nBecause `HasPrefix` was applied to the full reference string rather than the registry host, and was not terminated at a host boundary, references such as:\r\n\r\n* `index.docker.io.attacker.example/repo:tag` → normalized to `docker.io.attacker.example/repo`\r\n* `index.docker.io-attacker.example/repo:tag` → normalized to `docker.io-attacker.example/repo`\r\n\r\nwere also rewritten. As a result, two distinct image references collapse onto the same GUN, and the trust data (and therefore the signatures) of one repository is used to validate images of a different repository.\r\n\r\nThe fix compares the parsed registry host for equality instead of doing a string prefix match:\r\n\r\n```go\r\nif i.Context().RegistryStr() == constants.DefaultDockerRegistry {\r\n    return strings.TrimPrefix(i.Context().String(), \"index.\")\r\n}\r\n```\r\n\r\n### Impact\r\n\r\nThis does **not** allow an attacker to get arbitrary, unsigned images admitted — the signature must still be valid under the trust root configured for the validator. However, the image reference that is validated can differ from the image that is deployed. An attacker with control over the affected registry/Notary namespace can exploit this reference confusion to serve stale but validly signed content, i.e. **freeze and downgrade attacks**, admitting an outdated (potentially vulnerable) image that Connaisseur believes to be the correct one.\r\n\r\nOnly users of `notaryv1` validators are affected. Users of `cosign` or `notation` validators are not affected.\r\n\r\n### Patches\r\n\r\nUpgrade to Connaisseur **3.12.0** (Helm chart 2.12.0) or later.\r\n\r\n### Workarounds\r\n\r\nNone. Restricting image policy rules to explicitly trusted registry hosts (rather than broad wildcard patterns) limits exposure, since the confusion requires an image reference on a lookalike host to pass policy matching in the first place.\r\n\r\n### References\r\n\r\n* Fix commit: `659ab277080a3c4aafef83ee2b4727134da1477a`\r\n* https://github.com/sse-secure-systems/connaisseur/blob/master/docs/SECURITY.md\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "connaisseur",
+        "purl": "pkg:dhi/connaisseur"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.12.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "connaisseur"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/sse-secure-systems/connaisseur/security/advisories/GHSA-6p2v-8rwg-rjf7"
+    }
+  ]
+}
