@@ -1,0 +1,84 @@
+{
+  "modified": "2026-08-12T15:35:21Z",
+  "published": "2026-08-12T15:35:21Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-vh48-r624-p8v7",
+  "details": "### Impact\r\n\r\nOn nodes using VLAN interfaces, Cilium may fail to enforce ingress host policies and L7 network policies for connections from outside the node. Only nodes on which Cilium is attached to both a VLAN interface and its parent are affected. Cilium TCX attachment must also be enabled, as is the case on kernel 6.2 and newer.\r\n\r\nIf these conditions are met, Cilium will incorrectly treat packets received on the VLAN interface as having already passed through the proxy (resp. the host firewall) and skip policy enforcement on the destination endpoint.\r\n\r\nAn attacker with the ability to send traffic to targeted pods could therefore reach those pods even when policies should otherwise deny that traffic. Same-node pod traffic is not known to be affected. Non-host L3 and L4 policies are not affected. Source-side egress policies, if configured to deny the traffic, may still provide protection.\r\n\r\n### Patches\r\n\r\nThis issue affects:\r\n\r\n- Cilium v1.18 between v1.18.0 and v1.18.8 inclusive\r\n- Cilium v1.17 between v1.17.0 and v1.17.14 inclusive\r\n- All versions of Cilium v1.16\r\n\r\nThis issue has been patched in:\r\n\r\n- Cilium v1.18.9\r\n- Cilium v1.7.15\r\n\r\n### Workarounds\r\n\r\n- Users who are unable to upgrade can work around this issue by disabling TCX: `--enable-tcx=false` as an agent flag or `bpf.enableTCX: false` via the Cilium Helm chart. \r\n- Depending on cluster configuration and use cases, it may also be possible to configure egress policies to mitigate this issue.\r\n\r\n### Acknowledgements\r\n\r\nThe Cilium community has worked together with members of Hetzner and Isovalent to prepare these mitigations. Special thanks to @marvin-roesch and @abcdegorov for reporting the issue and @pchaigno for their work on triaging and remediating this issue.\r\n\r\n### For more information\r\n\r\nIf you have any questions or comments about this advisory, please reach out on [Slack](https://docs.cilium.io/en/latest/community/community/).\r\n\r\nIf you think you have found a vulnerability affecting Cilium, we strongly encourage you to report it to our security mailing list at [security@cilium.io](mailto:security@cilium.io). This is a private mailing list for the Cilium security team, and your report will be treated as top priority.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "cilium-clustermesh-apiserver",
+        "purl": "pkg:dhi/cilium-clustermesh-apiserver"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.18.0"
+            },
+            {
+              "fixed": "1.18.9"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "",
+        "source_package": "Cilium"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "cilium-clustermesh-apiserver",
+        "purl": "pkg:dhi/cilium-clustermesh-apiserver"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.17.0"
+            },
+            {
+              "fixed": "1.17.15"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "",
+        "source_package": "Cilium"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "cilium-clustermesh-apiserver",
+        "purl": "pkg:dhi/cilium-clustermesh-apiserver"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.16.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "",
+        "source_package": "Cilium"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/cilium/cilium/security/advisories/GHSA-vh48-r624-p8v7"
+    }
+  ]
+}
