@@ -1,0 +1,39 @@
+{
+  "modified": "2026-08-12T17:47:59Z",
+  "published": "2026-08-12T17:25:29Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-cf57-xf33-fg5h",
+  "details": "### Impact\r\n\r\nRoutes expected to be protected by external authorization are served without enforcement. This occurs when the virtualhost defines its own authorization server with `authPolicy.disabled: true` and individual routes attempt to opt back in with `authPolicy.disabled: false`.\r\n\r\n### Details\r\n\r\nContour supports defining external authorization globally (via [`globalExtAuth`](https://projectcontour.io/docs/1.33/guides/external-authorization/#global-external-authorization) in the Contour config file), allowing individual virtualhosts to opt out by setting `.spec.virtualhost.authorization.authPolicy.disabled: true`. Individual routes can then opt back in by setting `.spec.routes[].authPolicy.disabled: false`. This works correctly with global authorization.\r\n\r\nHowever, if instead of using global authorization, a user defines the authorization server directly on the virtualhost using `.spec.virtualhost.authorization.extensionRef` and simultaneously disables it `.spec.virtualhost.authorization.authPolicy.disabled: true`, the route-level opt-in silently fails, and routes with `authPolicy.disabled: false` are served without authorization enforcement.\r\n\r\nThe following example shows an affected `HTTPProxy`:\r\n\r\n```yaml\r\nkind: HTTPProxy\r\nmetadata:\r\n  name: example\r\nspec:\r\n  virtualhost:\r\n    fqdn: example.projectcontour.io\r\n    tls:\r\n      secretName: example-tls\r\n    authorization:      # Define authorization server, but disable it.\r\n      extensionRef:\r\n        name: extension\r\n        namespace: auth\r\n      authPolicy:\r\n        disabled: true\r\n  routes:\r\n    - conditions:\r\n      - prefix: /protected\r\n      services:\r\n      - name: app-server\r\n        port: 80\r\n      authPolicy:\r\n        disabled: false  # Opt-in silently fails and /protected is served without authorization\r\n    - conditions:\r\n      - prefix: /public\r\n      services:\r\n      - name: app-server\r\n        port: 80\r\n```\r\n\r\nTo list if you have `HTTPProxies` with this configuration run\r\n\r\n```\r\nkubectl get httpproxy -A -o json | jq -r '\r\n  .items[]\r\n  | select(.spec.virtualhost.authorization.extensionRef)\r\n  | select(.spec.virtualhost.authorization.authPolicy.disabled)\r\n  | select(.spec.routes[]?.authPolicy.disabled == false)\r\n  | \"\\(.metadata.namespace)/\\(.metadata.name)\"\r\n'\r\n```\r\n\r\nNote: If you also have `globalExtAuth` configured, the `HTTPProxies` are still protected, but by the global authz server, not the one defined as disabled in the virtualhost's `extensionRef`. \r\n\r\n### Patches\r\nUsers should upgrade to v1.33.6.\r\n\r\n### Workarounds\r\nSet `.spec.virtualhost.authorization.authPolicy.disabled: false` (which is the default if omitted) so that authorization is active by default. Then explicitly disable it only on public routes by setting `.spec.routes[].authPolicy.disabled: true`.\r\n\r\n### References\r\n* https://projectcontour.io/docs/main/config/client-authorization/\r\n* https://projectcontour.io/docs/main/guides/external-authorization/\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "contour",
+        "purl": "pkg:dhi/contour"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.25.0"
+            },
+            {
+              "fixed": "1.33.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "",
+        "source_package": ""
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/projectcontour/contour/security/advisories/GHSA-cf57-xf33-fg5h"
+    }
+  ]
+}
