@@ -81,12 +81,17 @@ We could, but transparency is more valuable. With dual feeds:
 
 ### Do we need to support OCI 1.1 referrers?
 
-**Recommended but not required initially.**
+**Not for a feed-based integration.**
 
-**Option 1 (Simpler)**: Use comprehensive VEX feed from GitHub  
-**Option 2 (Better)**: Use OCI referrers for image-specific SBOM/VEX
+Scanner partners can periodically sync `index.json` and the referenced `pkg/`
+documents rather than query OCI referrers for every image. OCI referrers remain
+available when image-attached SBOM and VEX attestations are useful.
 
-Most partners start with Option 1, add Option 2 later.
+### Which GitHub VEX path should I use?
+
+Use `vex/<image-repository>/` for image-repository lookup. Use `index.json` and
+`pkg/` for package-oriented scanner discovery. Use the scanned image's package
+inventory or SBOM to determine which VEX products apply.
 
 ---
 
@@ -103,7 +108,7 @@ Most partners start with Option 1, add Option 2 later.
 
 **Level 1 (Basic)**:
 - ✅ Detect DHI images via `/etc/os-release`
-- ✅ Load comprehensive VEX feed
+- ✅ Sync VEX documents through `index.json` and `pkg/`
 - ✅ Apply VEX to suppress false positives and record status/justification
 - ✅ Route `pkg:dhi/*` to OSV feed
 
