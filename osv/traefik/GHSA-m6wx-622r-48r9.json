@@ -1,0 +1,39 @@
+{
+  "modified": "2026-08-21T09:45:53Z",
+  "published": "2026-08-21T09:45:53Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-m6wx-622r-48r9",
+  "details": "## Summary\n\nThere is a medium severity vulnerability in Traefik's Kubernetes Ingress provider. The `providers.kubernetesIngress.crossProviderNamespaces` allowlist was enforced for the `router.middlewares` and `service.serverstransport` annotations, but not for the `traefik.ingress.kubernetes.io/service.middlewares` Service annotation, whose value was copied into the generated dynamic service without checking the Service's namespace. A tenant restricted to a namespace excluded from the allowlist could therefore attach an operator-owned middleware from another provider to its own Service, and, when that middleware injects a backend credential, recover the credential at a backend it controls. Only the v3.7 line from v3.7.1 onwards is affected: the `crossProviderNamespaces` option was introduced in v3.7.1, and neither Traefik v2 nor the v3 lines up to v3.6 carry it.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v3.7.11\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\n\n\u003cdetails\u003e\n\u003csummary\u003eOriginal Description\u003c/summary\u003e\n\n### Summary\r\n\r\nThe Kubernetes Ingress provider does not enforce `crossProviderNamespaces` for the documented `traefik.ingress.kubernetes.io/service.middlewares` Service annotation. A namespace-limited tenant excluded from the allowlist can apply an operator-owned middleware from another provider to its own Service. If that middleware injects a backend credential, the tenant can recover the credential at a backend it controls.\r\n\r\n### Details\r\n\r\n`providers.kubernetesIngress.crossProviderNamespaces` is intended to restrict which Kubernetes namespaces may use cross-provider references. Traefik v3.7.10 correctly checks this option for `router.middlewares` and `service.serverstransport`, but `pkg/provider/kubernetes/ingress/kubernetes.go::loadService` copies `svcConfig.Service.Middlewares` into `svc.Middlewares` without checking the Service namespace.\r\n\r\nThe generated dynamic Service therefore retains a reference such as `operator-secret@file`. During request handling, Traefik resolves and executes that middleware before forwarding the request to the tenant backend.\r\n\r\nThis was reproduced on the current stable v3.7.10 (`2a2349356c01b1b1f7ecddb0c17b30c97f5241e7`). Current `master` was also affected when checked on 2026-08-10.\r\n\r\nThis is related to the `crossProviderNamespaces` advisory family, but it is not the same path as GHSA-42cj-m3vj-89wv or GHSA-96qj-4jj5-wcjc: this issue uses the standard Kubernetes Ingress Service middleware annotation and reaches an HTTP middleware executed before a tenant-controlled backend.\r\n\r\n### PoC\r\n[traefik-service-middleware-poc.zip](https://github.com/user-attachments/files/30907045/traefik-service-middleware-poc.zip)\r\n\r\n1. Start Traefik v3.7.10 with `KUBECONFIG` pointing to an isolated test cluster:\r\n\r\n```bash\r\ntraefik --configFile=static.yml\r\n```\r\n\r\n2. Apply the tenant fixture:\r\n\r\n```bash\r\nkubectl apply -f tenant.yml\r\nkubectl -n poc-tenant rollout status deployment/attacker-backend\r\n```\r\n\r\n3. As the namespace-limited tenant ServiceAccount, add the cross-provider Service middleware reference:\r\n\r\n```bash\r\nkubectl --as=system:serviceaccount:poc-tenant:tenant-author \\\r\n  -n poc-tenant annotate service attacker-backend \\\r\n  traefik.ingress.kubernetes.io/service.middlewares=operator-secret@file\r\n```\r\n\r\n4. After the provider reloads, send one request:\r\n\r\n```bash\r\ncurl -sS -H 'Host: poc.local' http://127.0.0.1:18080/\r\n```\r\n\r\nThe tenant backend response contains:\r\n\r\n```text\r\nX-Operator-Secret: candidate-007-canary\r\n```\r\n\r\nNegative control:\r\n\r\n```bash\r\nkubectl --as=system:serviceaccount:poc-tenant:tenant-author \\\r\n  -n poc-tenant annotate service attacker-backend \\\r\n  traefik.ingress.kubernetes.io/service.middlewares-\r\n\r\ncurl -sS -H 'Host: poc.local' http://127.0.0.1:18080/\r\n```\r\n\r\nThe route still returns the backend response, but `X-Operator-Secret` is absent.\r\n\r\n### Impact\r\n\r\nAn excluded Kubernetes tenant can execute a middleware owned by another Traefik provider on requests to its own backend. In deployments where an operator middleware injects an upstream API key, bearer token, or similar credential, the tenant can disclose that credential without access to the operator configuration or Kubernetes Secrets.\r\n\r\nThe proposed severity is Medium. The attack requires low Kubernetes namespace privileges and a pre-existing security-sensitive middleware whose qualified name is known to the tenant.\n\n\u003c/details\u003e\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.7.1"
+            },
+            {
+              "fixed": "3.7.11"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-m6wx-622r-48r9"
+    }
+  ]
+}
