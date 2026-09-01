@@ -1,0 +1,39 @@
+{
+  "modified": "2026-08-31T23:36:20Z",
+  "published": "2026-08-31T23:36:20Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-fq2f-crmw-q97r",
+  "details": "## Impact\r\n\r\nAn attacker who can run scripting commands can free the Lua interpreter\r\nstate out from under the script debugger's cached command table, leaving a\r\ndangling pointer that is dereferenced on the next debugger command. This\r\nyields a reliable crash of the server process, and can be escalated to\r\ncontrol of an indirect call by reclaiming the freed heap chunk with\r\nattacker-controlled bytes.\r\n\r\nThis issue affects the 9.x line. The defect was introduced when the Lua\r\nscripting engine was moved into a Valkey module. The 8.0.x and 8.1.x lines\r\nuse the previous non-module debugger and are not affected.\r\n\r\n## Details\r\n\r\n`ldbGenerateDebuggerCommandsArray` in `src/modules/lua/debug_lua.c` builds\r\nthe interactive debugger command table once and caches it in a file-scope\r\nstatic, binding the then-current `lua_State` pointer into each command\r\ndescriptor's context field. The table is never rebuilt or invalidated.\r\n\r\n`SCRIPT FLUSH ASYNC` recreates the scripting engine, creating the\r\nreplacement interpreter state before freeing the previous one on the\r\nlazyfree thread. Nothing clears the cached command table, so its context\r\nis left pointing at a freed chunk. Any subsequent debugger command\r\ndereferences it.\r\n\r\nBecause the freed chunk lives on the ordinary allocator heap, it can be\r\nreclaimed with attacker-controlled bytes and shaped into a counterfeit\r\ninterpreter state, at which point the next allocation performed by the\r\ninterpreter calls the allocator function pointer stored inside that state.\r\n\r\nA second use-after-free in `ldbLogStackValue` is fixed in the same change:\r\nthe logged module string was freed while the debugger log list still held\r\na reference to it.\r\n\r\n## Mitigation\r\n\r\nYou can mitigate this issue by using Valkey ACLs to restrict the SCRIPT\r\ncommand, in particular `SCRIPT DEBUG`, if your application doesn't intend\r\nto use the script debugger.\r\n\r\n## Credits\r\n\r\nThe defect was independently reported by Trung Nguyen (@everping) of\r\nCyStack, by Phuc Nguyen Dinh (pucagit) of CyStack, and Han Sang-Kyung (toky1219@gmail.com).\r\n\r\nThe fix was authored by https://github.com/Baraa-Hasheesh.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "valkey",
+        "purl": "pkg:dhi/valkey"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "9.1.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "valkey",
+        "source_package": "valkey-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/valkey-io/valkey/security/advisories/GHSA-fq2f-crmw-q97r"
+    }
+  ]
+}
