@@ -1,0 +1,57 @@
+{
+  "modified": "2026-08-31T23:30:18Z",
+  "published": "2026-08-31T23:30:18Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-jcj7-v34w-v9vv",
+  "details": "## Impact\r\n\r\nAn authenticated user can run a command that frees another client's\r\nconnection while the RDMA transport is processing pending data, leaving a\r\ndangling pointer that is dereferenced shortly after. This reliably crashes\r\nthe server process, and the freed heap chunk can be reclaimed with\r\nattacker-influenced bytes.\r\n\r\nThis issue only affects servers built with RDMA support (`USE_RDMA`) and\r\nconfigured with an RDMA listener, which is off by default and requires\r\nRDMA-capable hardware. Builds without RDMA are not affected, and the RDMA\r\ntransport does not exist before 8.0.\r\n\r\n## Details\r\n\r\nThe RDMA pending-data handler walked its connection list with an iterator\r\nthat caches the next entry. Running a client's read handler from inside\r\nthat loop can process a command such as `CLIENT KILL`, which synchronously\r\nfrees a different client's connection, invalidating the cached entry.\r\nSeparately, closing an RDMA connection freed it without removing it from\r\nthe pending list, so a stale entry also persisted into later passes.\r\n\r\nThis is the RDMA equivalent of the TLS issue fixed in GHSA-53mc-f3m3-99vh.\r\n\r\n## Mitigation\r\n\r\nIf you do not need RDMA, build without `USE_RDMA` or do not configure an\r\nRDMA listener. Otherwise, you can mitigate this issue by using Valkey ACLs\r\nto restrict the CLIENT command, in particular `CLIENT KILL`.\r\n\r\n## Credits\r\n\r\nReported by Andreas Gabriel Berbescu (aberbescu@gmail.com",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "valkey",
+        "purl": "pkg:dhi/valkey"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.0.11"
+            },
+            {
+              "introduced": "8.1.0"
+            },
+            {
+              "fixed": "8.1.10"
+            },
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.0.6"
+            },
+            {
+              "introduced": "9.1.0"
+            },
+            {
+              "fixed": "9.1.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "",
+        "source_package": "valkey-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/valkey-io/valkey/security/advisories/GHSA-jcj7-v34w-v9vv"
+    }
+  ]
+}
