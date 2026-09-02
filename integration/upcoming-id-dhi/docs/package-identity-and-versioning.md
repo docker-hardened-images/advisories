@@ -14,7 +14,11 @@ an image has cut over to `/etc/os-release` `ID=dhi`.
 | Alpine 3.24 | `Docker Hardened Images:Alpine:3.24` | `pkg:apk/dhi/<name>?os_distro=alpine&os_name=dhi&os_version=3.24` | `pkg:apk/dhi/<name>@<version>?...` | APK |
 | Debian 13 | `Docker Hardened Images:Debian:13` | `pkg:deb/dhi/<name>?os_distro=debian&os_name=dhi&os_version=13` | `pkg:deb/dhi/<name>@<version>?...` | Debian/dpkg |
 
-Generated DHI OSV records use `ECOSYSTEM` ranges for both package families.
+Generated DHI OSV records enumerate affected versions and include `ECOSYSTEM`
+ranges when the assessment defines an affected interval. A version is affected
+if it is listed in `affected[].versions` or falls within any
+`affected[].ranges`, matching the
+[OSV evaluation algorithm](https://ossf.github.io/osv-schema/#affected-fields).
 The ecosystem suffix has two roles:
 
 - `Alpine` or `Debian` selects the package lineage and native comparator;
@@ -94,10 +98,12 @@ For each scanner-observed OS package:
    `Docker Hardened Images:Debian:<release>` for Debian packages.
 7. Match an OSV affected package with the same exact ecosystem variant and
    package identity.
-8. Evaluate its `ECOSYSTEM` range with the corresponding APK or dpkg version
-   comparator.
-9. Report a finding only when the installed version falls inside the affected
-   range.
+8. Check whether the installed version exactly equals an entry in
+   `affected[].versions`. Independently evaluate every `ECOSYSTEM` range with
+   the corresponding APK or dpkg version comparator.
+9. Report a finding when either exact-version membership or native range
+   inclusion matches. If neither matches, do not report a finding for that
+   advisory/package/version.
 
 Canonical feed PURLs and scanner-observed PURLs therefore map to the same
 package query identity:
@@ -123,6 +129,13 @@ pkg:apk/dhi/coreutils@9.11-r0?os_distro=alpine&os_name=dhi&os_version=3.24
 ```
 
 ## OSV Examples
+
+`affected[].versions` and `affected[].ranges` have union semantics. Exact
+versions remain useful alongside `ECOSYSTEM` ranges because consumers without
+the package manager's native comparator can still perform precise equality
+matching. For an `under_investigation` assessment, generated DHI OSV uses
+`affected[].versions` and omits `affected[].ranges` because the assessment does
+not define an affected interval.
 
 APK affected entry:
 
@@ -161,5 +174,19 @@ Debian affected entry:
     ]
   }],
   "versions": ["9.7-3+dhi3"]
+}
+```
+
+Alpine `under_investigation` entry with enumerated versions and no
+`affected[].ranges`:
+
+```json
+{
+  "package": {
+    "ecosystem": "Docker Hardened Images:Alpine:3.23",
+    "name": "python-3.12",
+    "purl": "pkg:apk/dhi/python-3.12?os_distro=alpine&os_name=dhi&os_version=3.23"
+  },
+  "versions": ["3.12.13-r7"]
 }
 ```
