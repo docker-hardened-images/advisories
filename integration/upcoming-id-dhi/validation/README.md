@@ -72,13 +72,15 @@ exercise OSV/VEX and routing contracts from checked-in data; any mutable image
 name is contextual source material, not a claim that the fixture can replay
 that image state.
 
-## Range And Membership Responsibility
+## Affected Version And Membership Responsibility
 
 The generated DHI OSV examples in this guide are scanner-facing advisories for
 DHI OS packages. Their `affected[].package.purl` values use
-`pkg:apk/dhi/...` or `pkg:deb/dhi/...`, and their affected ranges use OSV
-`ECOSYSTEM` ranges for the DHI OS package version. Static validation derives
-the required `Docker Hardened Images:Alpine:<release>` or
+`pkg:apk/dhi/...` or `pkg:deb/dhi/...`. Affected entries enumerate exact
+versions, provide native OSV `ECOSYSTEM` ranges, or provide both. Static
+validation treats those fields as a union, following the
+[OSV affected-version algorithm](https://ossf.github.io/osv-schema/#affected-fields),
+and derives the required `Docker Hardened Images:Alpine:<release>` or
 `Docker Hardened Images:Debian:<release>` ecosystem from each canonical PURL,
 rejects type/lineage mismatches, and checks that scanner
 `distro=dhi-<release>` resolves to the same release as canonical
@@ -127,8 +129,9 @@ data is available through the production advisory pipeline.
 - The `os_distro` qualifier is validated as part of the fixture and generated
   feed shape; it is not a claim that the advisory generation pipeline currently
   uses `os_distro` as an advisory lookup key.
-- Static validation derives expected findings from OSV affected ranges and the
-  scenario package version instead of trusting fixture metadata alone.
+- Static validation derives expected findings from the union of OSV exact
+  affected versions and affected ranges instead of trusting fixture metadata
+  alone.
 - Generated VEX statements must point at the scenario package and, when an OSV
   fixture exists, the same DHI advisory.
 - Component package PURLs provide context: when declared, they must appear in
@@ -138,8 +141,11 @@ data is available through the production advisory pipeline.
   OSV data exists.
 - Both `affected` and `under_investigation` assessments produce active
   generated DHI OSV findings. The `under_investigation` fixture matches
-  conservative OSV affected coverage before VEX is applied; VEX supplies the
-  unresolved assessment context.
+  the exact version covered by the current assessment before VEX is applied.
+  Because the entry has no `affected[].ranges`, an unlisted version does not
+  match; VEX supplies the unresolved assessment context.
+- `affected` and `fixed` fixtures retain native ranges and also enumerate
+  affected versions.
 - `fixed` and `not_affected` scenarios do not rely on post-match VEX
   suppression; the generated DHI OSV state should already produce no finding.
 - DHI OS package advisories may reference language ecosystem component PURLs,
