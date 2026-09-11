@@ -35,10 +35,13 @@ publish a cutover image before that data is available.
 
 For a derived image, use the existing DHI chain-ID boundary to attribute
 packages to DHI base layers, or compare exact package and version identities
-with the Docker-issued SBOM for a known DHI base image. Packages whose DHI
-origin cannot be established do not route to generated DHI advisory data from
-their PURL namespace alone; normalize them to the corresponding upstream Alpine
-or Debian identity and use normal upstream advisory coverage.
+with a verified Docker-issued base SBOM. The shared
+[base-discovery procedure](../derived-image-base-discovery.md) explains how
+SLSA provenance supplies a candidate base digest and how to verify it against
+the derived rootfs. Packages whose DHI origin cannot be established do not
+route to generated DHI advisory data from their PURL namespace alone; normalize
+them to the corresponding upstream Alpine or Debian identity and use normal
+upstream advisory coverage.
 
 ## 🎯 Quick Start
 
@@ -48,7 +51,8 @@ or Debian identity and use normal upstream advisory coverage.
 4. Use the [Decision trees](docs/decision-trees.md)
 5. Try the standalone [Alpine](examples/e2e-alpine/README.md) and
    [Debian](examples/e2e-debian/README.md) end-to-end examples
-6. If you scan derived images, try the optional
+6. If you scan derived images, review the shared
+   [base-discovery procedure](../derived-image-base-discovery.md) and try the
    [derived-image routing example](examples/e2e-alpine-layer-package-namespace/README.md)
 7. Validate using the [Validation harness](validation/README.md)
 
@@ -111,8 +115,10 @@ package/version.
 
 > **Derived images:** Treat a package as covered by generated DHI advisory data
 > when chain-ID/layer attribution places it in the DHI base, or when its exact
-> package and version appear in the Docker-issued SBOM for a known DHI base
-> image. The DHI package namespace alone does not establish membership.
+> package and version appear in a verified Docker-issued base SBOM. Use
+> [derived-image base discovery](../derived-image-base-discovery.md) to resolve
+> and verify that base from published provenance. The DHI package namespace
+> alone does not establish membership.
 > Packages outside the DHI base use normal upstream Alpine or Debian advisory
 > coverage with native APK or dpkg version semantics.
 
@@ -160,6 +166,8 @@ integration/upcoming-id-dhi/validation/run-fixture-suite.sh
 - **VEX context**: [docs/vex-context.md](docs/vex-context.md)
 - **Decision trees**: [docs/decision-trees.md](docs/decision-trees.md)
 - **Coverage matrix**: [docs/scenarios.md](docs/scenarios.md)
+- **Derived-image base discovery**:
+  [../derived-image-base-discovery.md](../derived-image-base-discovery.md)
 - **Validation harness**: [validation/README.md](validation/README.md)
 - **OSV Schema**: [https://ossf.github.io/osv-schema/](https://ossf.github.io/osv-schema/)
 - **OpenVEX Spec**: [https://openvex.dev/](https://openvex.dev/)

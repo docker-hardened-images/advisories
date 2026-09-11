@@ -116,9 +116,17 @@ This gets you 80% of the value.
 **Steps**:
 1. Detect `com.docker.dhi.chain-id` label
 2. Resolve the base layer boundary by matching the chainID against the layer chain
-3. Retrieve SBOM via OCI referrers (attestation)
-4. Associate SBOM packages to layers (base vs app layers)
-5. Apply VEX only to packages from base layers; scan app layers normally
+3. Resolve a candidate DHI base repository, digest, and platform from SLSA
+   provenance or another supplied base reference
+4. Verify that the base `rootfs.diff_ids` are an exact prefix of the derived
+   image and that the prefix ChainID matches the label
+5. Retrieve the verified base's SBOM via OCI referrers
+6. Associate SBOM packages to layers (base vs app layers)
+7. Apply VEX only to packages from base layers; scan app layers normally
+
+The ChainID is not an image digest and cannot be used for OCI referrer lookup.
+See [Derived-image base discovery](../../derived-image-base-discovery.md) for
+the complete procedure and fallback behavior when provenance is unavailable.
 
 ### What if I can't access GitHub feeds?
 
