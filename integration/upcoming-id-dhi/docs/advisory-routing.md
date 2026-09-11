@@ -73,7 +73,7 @@ DHI origin checks:
    IDs, locate the matching DHI base-layer boundary, and attribute packages to
    layers at or before that boundary.
 2. Resolve a candidate DHI base repository, digest, and platform from the
-   derived image's SLSA provenance or another supplied base identity. Verify
+   derived image's SLSA provenance. Verify
    the base `rootfs.diff_ids` as an exact prefix and require its ChainID to
    match the labeled boundary. Then retrieve its Docker-issued SBOM and compare
    exact package and version identities.
@@ -82,7 +82,7 @@ The chain ID identifies a layer boundary; it is not an image digest or an OCI
 referrer lookup key. Standard OCI image metadata does not provide a parent
 manifest lookup. See the shared
 [derived-image base-discovery procedure](../../derived-image-base-discovery.md)
-for the deterministic provenance path and fallback behavior. If neither method
+for the deterministic provenance path and requirement. If neither method
 establishes DHI origin, normalize the package to the upstream family and release
 from `ID_LIKE` and `VERSION_ID`, then use normal upstream Alpine or Debian
 advisory coverage with the native package manager's version semantics. Do not

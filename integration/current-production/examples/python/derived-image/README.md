@@ -101,7 +101,7 @@ docker run --rm test-derived-python
 
 Your scanner should:
 1. Detect chainID
-2. Resolve the base digest from provenance or supplied base identity
+2. Resolve the base digest from the derived image's provenance
 3. Verify the base rootfs prefix and ChainID
 4. Fetch the base SBOM
 5. Apply VEX only to base packages

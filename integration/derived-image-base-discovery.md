@@ -68,28 +68,16 @@ config carries DHI labels. A digest identifies content, but an OCI Distribution
 API lookup still requires a repository from which the scanner can retrieve the
 manifest and Docker-issued SBOM.
 
-## When Provenance Is Unavailable
+## Provenance Requirement
 
-Without resolved base provenance, a supplied base reference, or an
-authoritative external mapping, a scanner cannot recover the base manifest
-digest from the derived image. The ChainID can locate the claimed boundary,
-but no OCI registry operation resolves a ChainID back to a manifest.
+Deterministic derived-image base-SBOM discovery requires published SLSA
+provenance containing the base repository, digest, and platform. If that
+provenance is unavailable, the scanner cannot perform deterministic base-SBOM
+discovery.
 
-Valid alternatives are:
-
-- receive the exact DHI base reference and platform from the caller or build
-  system, then perform the prefix and ChainID verification above;
-- use other trusted build provenance that records the DHI base repository,
-  digest, and platform; or
-- use a Docker-published mapping from DHI ChainID and platform to canonical
-  base manifests, if such a service or feed becomes available.
-
-If DHI package origin cannot be established, fail safely:
-
-| Scanner model | Behavior |
-| --- | --- |
-| Current production | Do not apply DHI VEX to suppress a finding whose DHI base origin is unproven. |
-| Upcoming `ID=dhi` | Do not select generated DHI advisory data from the package namespace alone; use the upstream routing defined by the upcoming guide. |
+ChainID boundary and package-layer attribution remain a separate package-origin
+method defined by the model-specific guides. They do not discover the base
+manifest digest or its Docker-issued SBOM.
 
 ## Verified Example
 
