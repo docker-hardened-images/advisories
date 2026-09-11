@@ -27,9 +27,24 @@ security scanners with Docker Hardened Images (DHI).
 
 - **Integration FAQ**: [docs/faq.md](docs/faq.md)
 - **OSV Feed**: `https://github.com/docker-hardened-images/advisories/tree/main/osv/`
-- **VEX Feed**: `https://github.com/docker-hardened-images/advisories/tree/main/vex/`
+- **VEX by image repository**: `https://github.com/docker-hardened-images/advisories/tree/main/vex/`
+- **VEX by package**: `https://github.com/docker-hardened-images/advisories/blob/main/index.json`
 - **OpenVEX Spec**: `https://openvex.dev/`
 - **OCI Referrers**: `https://github.com/opencontainers/distribution-spec/blob/main/spec.md#listing-referrers`
+
+## VEX Sources
+
+Scanner integrations can sync `index.json` and the referenced documents under
+`pkg/` for package-oriented VEX discovery.
+
+The repository also provides other views and distribution paths:
+
+- `vex/<image-repository>/dhi-<image-repository>.vex.json` is organized by DHI
+  image repository. It is not tied to one image tag or digest.
+- OCI referrers provide VEX and SBOM attestations attached to an image digest.
+
+Use the scanned image's package inventory or SBOM to determine which VEX
+products apply.
 
 ---
 
