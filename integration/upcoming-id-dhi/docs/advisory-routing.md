@@ -44,7 +44,7 @@ apply generated DHI advisory data from the DHI PURL namespace alone.
 | SBOM package PURL | The concrete package identity that scanner findings and VEX products must match. |
 | Docker-issued SBOM | The full SPDX or CycloneDX OCI-referrer attestation attached to the resolved DHI platform-manifest digest. For an official image, it establishes membership when the exact package and version appear in the SBOM. |
 | DHI chain ID and package layer attribution | For a derived image, identifies the DHI base-layer boundary and packages inherited from those layers. |
-| Known DHI base SBOM | When the exact base image is known, provides another way to establish derived-image membership by exact package-and-version comparison. |
+| Verified DHI base SBOM | Provides another way to establish derived-image membership after the base repository, digest, and platform are resolved and verified against the derived rootfs. |
 
 ## Package Routing
 
@@ -72,16 +72,21 @@ DHI origin checks:
 1. Read `com.docker.dhi.chain-id`, calculate the image's ordered rootfs chain
    IDs, locate the matching DHI base-layer boundary, and attribute packages to
    layers at or before that boundary.
-2. When the exact DHI base image is already known, retrieve its Docker-issued
-   SBOM using its resolved platform-manifest digest and compare exact package
-   and version identities.
+2. Resolve a candidate DHI base repository, digest, and platform from the
+   derived image's SLSA provenance or another supplied base identity. Verify
+   the base `rootfs.diff_ids` as an exact prefix and require its ChainID to
+   match the labeled boundary. Then retrieve its Docker-issued SBOM and compare
+   exact package and version identities.
 
 The chain ID identifies a layer boundary; it is not an image digest or an OCI
-referrer lookup key. If neither method establishes DHI origin, normalize the
-package to the upstream family and release from `ID_LIKE` and `VERSION_ID`, then
-use normal upstream Alpine or Debian advisory coverage with the native package
-manager's version semantics. Do not apply generated DHI advisory data from the
-package namespace alone.
+referrer lookup key. Standard OCI image metadata does not provide a parent
+manifest lookup. See the shared
+[derived-image base-discovery procedure](../../derived-image-base-discovery.md)
+for the deterministic provenance path and fallback behavior. If neither method
+establishes DHI origin, normalize the package to the upstream family and release
+from `ID_LIKE` and `VERSION_ID`, then use normal upstream Alpine or Debian
+advisory coverage with the native package manager's version semantics. Do not
+apply generated DHI advisory data from the package namespace alone.
 
 The [derived-image fixture](../examples/e2e-alpine-layer-package-namespace/README.md)
 demonstrates this boundary with two packages in one final `ID=dhi` image.

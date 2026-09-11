@@ -26,7 +26,7 @@ flowchart TD
   M -->|No| J[Normalize to upstream Alpine or Debian package identity]
   M -->|Yes| D{PURL type}
   N -->|No| J
-  N -->|Chain-ID/layer attribution or known base SBOM match| D
+  N -->|Chain-ID/layer attribution or verified base SBOM match| D
   J --> R[Use normal upstream matching with APK or dpkg version rules]
   D -->|apk| K[Resolve Alpine release from os_version or distro qualifier]
   D -->|deb| L[Resolve Debian release from os_version or distro qualifier]
@@ -38,6 +38,11 @@ flowchart TD
   O -->|Yes| I[Report DHI OSV finding]
   I --> Q[Published paired VEX is optional to consume]
 ```
+
+Resolving a derived image's base SBOM requires more than its ChainID. Follow
+the shared
+[derived-image base-discovery procedure](../../derived-image-base-discovery.md)
+to obtain a candidate digest from provenance and verify the DHI rootfs prefix.
 
 ## VEX Context
 
