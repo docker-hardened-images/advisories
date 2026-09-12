@@ -58,7 +58,7 @@ Should return: `"com.docker.dhi.chain-id": "sha256:ad3d5af2..."`
 - `pkg:pypi/flask@2.3.0` ← Customer added
 - `pkg:pypi/requests@2.31.0` ← Customer added
 
-**Base image SBOM** (fetch via OCI referrers, using the chainID to identify base layers):
+**Base image SBOM** (resolve and verify the base digest, then fetch its OCI referrer):
 - `pkg:dhi/python@3.13.1`
 - `pkg:apk/alpine/musl@1.2.5-r0`
 - ... other DHI packages
@@ -101,9 +101,11 @@ docker run --rm test-derived-python
 
 Your scanner should:
 1. Detect chainID
-2. Fetch base SBOM
-3. Apply VEX only to base packages
-4. Report Flask CVEs normally
+2. Resolve the base digest from the derived image's provenance
+3. Verify the base rootfs prefix and ChainID
+4. Fetch the base SBOM
+5. Apply VEX only to base packages
+6. Report Flask CVEs normally
 
 ## Troubleshooting
 
@@ -114,7 +116,9 @@ Your scanner should:
 **Fix**: Ensure chainID is detected and base SBOM is fetched
 
 **Problem**: Can't fetch base SBOM
-**Fix**: Use OCI referrers for the base image SBOM or map SBOM packages to layers and compare against the chainID boundary (see [Decision Trees](../../../docs/decision-trees.md))
+**Fix**: Follow [Derived-image base discovery](../../../../derived-image-base-discovery.md).
+The ChainID identifies a layer boundary, not the base manifest needed for an
+OCI referrer lookup.
 
 ## Next Steps
 

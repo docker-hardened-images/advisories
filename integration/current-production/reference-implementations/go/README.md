@@ -36,6 +36,10 @@ VEX attestation: https://openvex.dev/ns/v0.2.0
 
 - This is a reference implementation; production scanners should add caching, retries, and richer SBOM/VEX parsing.
 - For derived images, use the chainID boundary to decide which packages are from the DHI base before applying VEX.
+- The implementation locates the DHI layer boundary but does not recover the
+  base manifest digest. Follow
+  [Derived-image base discovery](../../../derived-image-base-discovery.md) to
+  resolve and verify the base before retrieving its Docker-issued SBOM.
 
 --- 
 
