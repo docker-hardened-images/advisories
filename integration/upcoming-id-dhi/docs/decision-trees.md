@@ -32,7 +32,7 @@ flowchart TD
   D -->|deb| L[Resolve Debian release from os_version or distro qualifier]
   K --> G[Exact DHI Alpine release ecosystem, APK version rules]
   L --> H[Exact DHI Debian release ecosystem, dpkg version rules]
-  G --> O{DHI OSV affected entry matches?}
+  G --> O{Exact version or affected range matches?}
   H --> O
   O -->|No| P[No matching vulnerability; no upstream fallback]
   O -->|Yes| I[Report DHI OSV finding]
@@ -53,9 +53,9 @@ flowchart TD
   F -->|not_affected or fixed| I[Report OSV/VEX state mismatch for generated data]
 ```
 
-An `under_investigation` assessment already has conservative affected coverage
-in generated DHI OSV. The VEX branch labels that existing finding as unresolved;
-it does not create the finding.
+For an `under_investigation` assessment, generated DHI OSV lists the exact
+package versions covered by the current assessment. The VEX branch labels an
+existing OSV finding as unresolved; it does not create the finding.
 
 ## Mixed Production Cutover
 

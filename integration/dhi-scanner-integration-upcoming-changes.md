@@ -32,8 +32,10 @@ The DHI OSV feed becomes the authoritative source of truth for vulnerabilities
 in DHI OS packages, including APK and Debian package formats. When scanning a
 DHI image, use the DHI OSV feed to determine which vulnerabilities affect its
 DHI OS packages. If an OS package from the image is listed in the feed as
-affected, treat it as affected. If no affected range matches the package and
-version, interpret that as no matching vulnerability in the DHI context.
+affected and its installed version is explicitly listed in
+`affected[].versions` or falls within any `affected[].ranges`, treat it as
+affected. If neither representation matches, interpret that as no matching
+vulnerability in the DHI context.
 
 Publication of an official image with `ID=dhi` is the readiness signal for this
 model. Docker will not publish the cutover image until generated DHI advisory
@@ -120,16 +122,18 @@ Generated OSV affected entries use a release-scoped ecosystem variant, such as
 package-manager-native ordering and the release prevents cross-release
 advisory matches. Scanner PURLs with `distro=dhi-<release>` must normalize to
 the same variant as canonical feed PURLs with `os_version=<release>`. These
-`ECOSYSTEM` ranges must not fall back to SemVer. See
+entries can enumerate exact affected `versions`, provide native `ECOSYSTEM`
+ranges, or provide both. `ECOSYSTEM` ranges must not fall back to SemVer. See
 [Package identity and versioning](upcoming-id-dhi/docs/package-identity-and-versioning.md)
 for the complete contract.
 
 ### DHI OSV Feed
 
 When scanning a DHI image, query the DHI OSV feed to determine which
-vulnerabilities affect DHI OS packages. If a DHI package/version is included in
-an affected range, report the finding. If it is outside the affected ranges,
-do not report a DHI finding for that advisory/package/version.
+vulnerabilities affect DHI OS packages. Report a finding when a DHI package
+version is explicitly listed in `affected[].versions` or falls within an
+affected range. If neither matches, do not report a DHI finding for that
+advisory/package/version.
 
 The scanner integration guide specifies the target package identity shape and
 the expected OSV/VEX relationship for the migration.
