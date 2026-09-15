@@ -1,0 +1,63 @@
+{
+  "modified": "2026-09-11T18:13:23Z",
+  "published": "2026-09-11T18:12:48Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-jf7w-wx43-32gc",
+  "details": "### Impact\r\nIf you are\r\n- collecting and persisting SpiceDB traces (they are off by default), and\r\n- passing sensitive arguments to `serve` via command arguments (e.g. `spicedb serve -datastore-conn-uri=....` or `spicedb serve --datastore-read-replica-conn-uri=...`)\r\n\r\nthe traces will include process information, which includes the arguments passed to the `serve` command, which will leak those sensitive arguments.\r\n\r\n### Fix\r\n- Upgrade to SpiceDB v1.56.2. \r\n- Rotate the sensitive parameters as described below. \r\n\r\n### Rotating DB Credentials\r\nIf you don't have an established mechanism for this already, it will depend on the datastore you're using, but the basic shape is:\r\n\r\n1. Create a new user/role with a new password\r\n2. Give that user/role the same access that the old user/role had\r\n3. Restart SpiceDB with credentials referencing the new user/role\r\n4. Remove the old user/role\r\n\r\n### Workarounds\r\n- Disable tracing, and delete all traces emitted between those versions.\r\n- Use environment variables for configuration, as they don't show up in the process args that are logged out.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "spicedb",
+        "purl": "pkg:dhi/spicedb"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.54.0"
+            },
+            {
+              "fixed": "1.56.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/authzed/spicedb"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "spicedb",
+        "purl": "pkg:dhi/spicedb"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.54.0"
+            },
+            {
+              "fixed": "1.56.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "docker",
+        "source_package": "authzed/spicedb"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/authzed/spicedb/security/advisories/GHSA-jf7w-wx43-32gc"
+    }
+  ]
+}
