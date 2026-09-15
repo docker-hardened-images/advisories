@@ -30,6 +30,9 @@ reference anchors used by the examples in this guide.
 
 The model-specific guides define the integration contract. The one-page
 overview is explanatory and should not be used as a separate routing contract.
+Both models use the same
+[derived-image base-discovery procedure](derived-image-base-discovery.md) when
+a scanner needs the Docker-issued SBOM for a customer image's DHI base.
 
 ## New Model Summary
 
@@ -56,7 +59,7 @@ comparison, but it is not the advisory namespace for DHI-owned OS packages.
 | Stage | Image state | Advisory state | Scanner expectation |
 | --- | --- | --- | --- |
 | Before first cutover | All production images use the current-production model. | Existing advisories repo artifacts remain live. | Use the current-production guide. Upcoming examples are local-only fixtures. |
-| First family cutover | One or more published image families report `ID=dhi`. Publication of that cutover image is the readiness signal. | Generated DHI advisory data is already available for the image and its contents. | For official images, match packages against the Docker-issued OCI-referrer SBOM attached to the resolved platform digest. For derived images, establish DHI origin through chain-ID/layer attribution or a known base's Docker-issued SBOM. Route packages not attributed to DHI through normal upstream Alpine or Debian coverage. For an eligible DHI package, no matching affected range means no matching vulnerability. Keep current-production handling for non-cutover families. |
+| First family cutover | One or more published image families report `ID=dhi`. Publication of that cutover image is the readiness signal. | Generated DHI advisory data is already available for the image and its contents. | For official images, match packages against the Docker-issued OCI-referrer SBOM attached to the resolved platform digest. For derived images, establish DHI origin through chain-ID/layer attribution or a verified base SBOM resolved through the documented base-discovery procedure. Route packages not attributed to DHI through normal upstream Alpine or Debian coverage. For an eligible DHI package, no matching affected range means no matching vulnerability. Keep current-production handling for non-cutover families. |
 | Mixed production | Both models are live. | Each published `ID=dhi` image has corresponding generated advisory data; existing advisory artifacts remain live for non-cutover images. | Detect per image and per package, and retain the corresponding product-membership check for DHI advisory routing. Do not assume all DHI images have moved. |
 | Completed cutover | DHI base layers consistently report `ID=dhi`. | Generated DHI OSV and VEX data is the normal advisory surface. | Retire current-production-only detection and VEX overlay assumptions. |
 
@@ -65,5 +68,6 @@ comparison, but it is not the advisory namespace for DHI-owned OS packages.
 - [One-page overview: DHI scanner integration upcoming changes](dhi-scanner-integration-upcoming-changes.md)
 - [Current production guide](current-production/README.md)
 - [Upcoming `ID=dhi` guide](upcoming-id-dhi/README.md)
+- [Derived-image base discovery](derived-image-base-discovery.md)
 - [OpenVEX Spec](https://openvex.dev/)
 - [OCI Referrers](https://github.com/opencontainers/distribution-spec/blob/main/spec.md#listing-referrers)

@@ -101,7 +101,8 @@ Scanners should not need to query upstream Alpine or Debian OSV feeds for a
 DHI-owned base-layer package after generated DHI OSV data exists. When scanning
 derived images, a DHI package PURL does not by itself prove DHI ownership.
 Apply generated DHI OSV/VEX data only when chain-ID/layer attribution places
-the package in the DHI base, or when its exact package and version match the
-Docker-issued SBOM for a known DHI base image. Otherwise, normalize the package
-to its upstream Alpine or Debian identity and use normal upstream advisory
-coverage without DHI VEX.
+the package in the DHI base, or when its exact package and version match a
+verified Docker-issued base SBOM resolved through the shared
+[derived-image base-discovery procedure](../../derived-image-base-discovery.md).
+Otherwise, normalize the package to its upstream Alpine or Debian identity and
+use normal upstream advisory coverage without DHI VEX.

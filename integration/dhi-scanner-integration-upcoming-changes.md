@@ -56,11 +56,13 @@ scanner-generated inventories are not substitutes for that membership SBOM.
 
 For derived images, integrations can establish DHI package origin using the
 existing DHI chain-ID boundary and package layer attribution, or by exact
-package-and-version comparison with the Docker-issued SBOM for a known DHI base
-image. If a package is not attributed to DHI, normalize it to the corresponding
-upstream Alpine or Debian identity and use normal upstream advisory coverage
-with native APK or dpkg version semantics. Namespace alone remains insufficient
-to select DHI advisory data.
+package-and-version comparison with a verified Docker-issued base SBOM. The
+[derived-image base-discovery procedure](derived-image-base-discovery.md)
+explains how published SLSA provenance supplies a candidate base digest and how
+the rootfs prefix and ChainID verify it. If a package is not attributed to DHI,
+normalize it to the corresponding upstream Alpine or Debian identity and use
+normal upstream advisory coverage with native APK or dpkg version semantics.
+Namespace alone remains insufficient to select DHI advisory data.
 
 DHI's internal triage workflow produces the assessments that populate the OSV
 feed. The feed uses [OSV format](https://ossf.github.io/osv-schema/), the same

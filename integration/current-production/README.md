@@ -12,12 +12,14 @@ security scanners with Docker Hardened Images (DHI).
 ## 🎯 Quick Start
 
 1. Review the [Decision Trees](docs/decision-trees.md)
-2. Read the DHI docs to explore or get real images:
+2. For derived images, review
+   [base discovery](../derived-image-base-discovery.md)
+3. Read the DHI docs to explore or get real images:
    - [Explore DHI images](https://docs.docker.com/dhi/how-to/explore/)
    - [Mirror DHI images](https://docs.docker.com/dhi/how-to/mirror/)
-3. Run the [Go Reference Implementation](reference-implementations/go/)
-4. Try the [Example Images](examples/)
-5. Validate using the [Test Suite](validation/test-suite.md)
+4. Run the [Go Reference Implementation](reference-implementations/go/)
+5. Try the [Example Images](examples/)
+6. Validate using the [Test Suite](validation/test-suite.md)
 
 ## 🚀 Reference Implementation
 
@@ -26,6 +28,8 @@ security scanners with Docker Hardened Images (DHI).
 ## 📄 Resources
 
 - **Integration FAQ**: [docs/faq.md](docs/faq.md)
+- **Derived-image base discovery**:
+  [../derived-image-base-discovery.md](../derived-image-base-discovery.md)
 - **OSV Feed**: `https://github.com/docker-hardened-images/advisories/tree/main/osv/`
 - **VEX Feed**: `https://github.com/docker-hardened-images/advisories/tree/main/vex/`
 - **OpenVEX Spec**: `https://openvex.dev/`
