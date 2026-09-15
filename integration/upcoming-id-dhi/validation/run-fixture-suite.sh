@@ -294,26 +294,6 @@ def entry_matches_version(entry: dict[str, object], version: str) -> bool:
     ) or entry_ranges_match_version(entry, version)
 
 
-def osv_component_purls(osv: dict[str, object]) -> set[str]:
-    purls = set()
-    affected = osv.get("affected", [])
-    if not isinstance(affected, list):
-        return purls
-    for entry in affected:
-        if not isinstance(entry, dict):
-            continue
-        database_specific = entry.get("database_specific", {})
-        if not isinstance(database_specific, dict):
-            continue
-        component_packages = database_specific.get("component_packages", [])
-        if not isinstance(component_packages, list):
-            continue
-        for component in component_packages:
-            if isinstance(component, dict) and isinstance(component.get("purl"), str):
-                purls.add(component["purl"])
-    return purls
-
-
 def sbom_has_component_parent(sbom: dict[str, object], component_purl: str, parent_purl: str) -> bool:
     packages = sbom.get("packages", [])
     if not isinstance(packages, list):
@@ -851,6 +831,12 @@ for scenario in scenarios:
                 ):
                     matching_affected_entries.append(entry)
 
+            database_specific = entry.get("database_specific", {})
+            if not isinstance(database_specific, dict) or database_specific.get("owner_kind") != "HSP":
+                fail(where, f"OSV affected[{index}].database_specific.owner_kind must be HSP")
+            if isinstance(database_specific, dict) and "component_packages" in database_specific:
+                fail(where, "OSV component provenance belongs in fixture metadata, not component_packages")
+
             versions = entry.get("versions", [])
             if not isinstance(versions, list):
                 fail(where, f"OSV affected[{index}].versions must be an array")
@@ -896,14 +882,6 @@ for scenario in scenarios:
                             f"OSV affected[{index}].ranges[{range_index}]"
                             f".events[{event_index}] has unsupported key {key!r}",
                         )
-        if isinstance(component_purl, str) and component_purl:
-            if component_purl not in osv_component_purls(osv):
-                fail(
-                    where,
-                    "expected component_package_purl must appear in OSV "
-                    "affected[].database_specific.component_packages",
-                )
-
         if routing == "dhi-os-package" and canonical_parsed is not None:
             installed_version = str(canonical_parsed["version"])
             if not matching_affected_entries:
@@ -950,6 +928,32 @@ for scenario in scenarios:
                                     "within the fixture's native range",
                                 )
 
+            range_only_versions = expected_behavior.get("range_only_matching_versions", [])
+            if expected_status in {"affected", "fixed"} and not range_only_versions:
+                fail(where, "affected/fixed fixtures must include range_only_matching_versions")
+            if not isinstance(range_only_versions, list) or not all(
+                isinstance(version, str) and version for version in range_only_versions
+            ):
+                fail(where, "expected_behavior.range_only_matching_versions must contain strings")
+            else:
+                for version in range_only_versions:
+                    if any(
+                        version in entry.get("versions", [])
+                        for entry in matching_affected_entries
+                        if isinstance(entry.get("versions", []), list)
+                    ):
+                        fail(where, f"range-only test version must not be explicitly listed: {version}")
+                    if not any(
+                        entry_ranges_match_version(entry, version)
+                        for entry in matching_affected_entries
+                    ):
+                        fail(where, f"range-only test version must fall within an affected range: {version}")
+                    if not any(
+                        entry_matches_version(entry, version)
+                        for entry in matching_affected_entries
+                    ):
+                        fail(where, f"range-only test version must produce an OSV finding: {version}")
+
             non_matching_versions = expected_behavior.get("non_matching_versions", [])
             if expected_status == "under_investigation" and not non_matching_versions:
                 fail(
@@ -994,11 +998,12 @@ for scenario in scenarios:
         if not isinstance(statements, list) or not statements:
             fail(where, "VEX statements must be non-empty")
         matching_vex_statuses = []
-        matching_vex_component = False
         for index, statement in enumerate(statements):
             if not isinstance(statement, dict):
                 fail(where, f"VEX statements[{index}] must be an object")
                 continue
+            if "subcomponents" in statement:
+                fail(where, f"VEX statements[{index}] must not publish component provenance")
             if statement.get("status") not in VALID_STATUS:
                 fail(where, f"VEX statements[{index}].status is not supported")
             vulnerability = statement.get("vulnerability", {})
@@ -1033,6 +1038,8 @@ for scenario in scenarios:
                 if not isinstance(product, dict):
                     fail(where, f"VEX statements[{index}].products[{pindex}] must be an object")
                     continue
+                if "subcomponents" in product:
+                    fail(where, f"VEX statements[{index}].products[{pindex}] must not publish subcomponents")
                 parsed_product = parse_dhi_purl(
                     where,
                     product.get("@id"),
@@ -1046,17 +1053,6 @@ for scenario in scenarios:
                     == package_key(canonical_parsed, include_version=True)
                 ):
                     statement_matches_scenario = True
-                    subcomponents = product.get("subcomponents", [])
-                    if (
-                        isinstance(component_purl, str)
-                        and isinstance(subcomponents, list)
-                        and any(
-                            isinstance(subcomponent, dict)
-                            and subcomponent.get("@id") == component_purl
-                            for subcomponent in subcomponents
-                        )
-                    ):
-                        matching_vex_component = True
             if statement_matches_scenario:
                 matching_vex_statuses.append(statement.get("status"))
 
@@ -1067,12 +1063,6 @@ for scenario in scenarios:
             if isinstance(expected_status, str) and expected_status:
                 if expected_status not in matching_vex_statuses:
                     fail(where, f"VEX statement for scenario package must include expected status {expected_status}")
-            if isinstance(component_purl, str) and not matching_vex_component:
-                fail(
-                    where,
-                    "expected component_package_purl must appear in VEX "
-                    "subcomponents for the scenario package",
-                )
 
     if isinstance(expected, dict):
         if expected.get("model") != "id-dhi":
@@ -1094,6 +1084,8 @@ for scenario in scenarios:
             fail(where, "expected.json package_routing must match scenario")
         if expected.get("expected_finding") != expected_behavior.get("expected_finding"):
             fail(where, "expected.json expected_finding must match expected_behavior")
+        if expected.get("component_package_purl") != component_purl:
+            fail(where, "expected.json component_package_purl must match expected_behavior")
         if routing == "dhi-os-package":
             if expected.get("upstream_lookup_for_dhi_layer") is not False:
                 fail(where, "expected.json must set upstream_lookup_for_dhi_layer=false")

@@ -94,16 +94,20 @@ coverage. The fixture models membership comparison and layer attribution; it
 does not retrieve an OCI-referrer SBOM or verify its attachment to a
 platform-manifest digest.
 
-## Component Package Context
+## Component Package Provenance
 
-DHI advisories can still carry component context. For example, a DHI OS package
-advisory may be matched through `pkg:apk/dhi/python-3.12@...` while referencing
-an embedded language package such as `pkg:pypi/setuptools@...`. That component
-PURL explains why the DHI package is in scope; it is context only and does not
-replace the DHI OS package PURL as the advisory match key. If the same language
-package also appears independently in the SBOM, evaluate it separately using
-its ecosystem-specific advisory source and version semantics. Do not infer DHI
-advisory coverage from the component relationship.
+An embedded language package such as `pkg:pypi/setuptools@...` can explain why
+the DHI OS package `pkg:apk/dhi/python-3.12@...` is in scope. Generated OSV and
+VEX publish the directly assessed DHI package as the product. They do not
+publish that component provenance as OSV `database_specific.component_packages`
+or VEX `subcomponents`.
+
+The examples retain the component PURL in fixture metadata and the SBOM's
+parent-child relationship. It does not replace the DHI OS package PURL as the
+advisory match key. If the same language package also appears independently in
+the SBOM, evaluate it separately using its ecosystem-specific advisory source
+and version semantics. Do not infer DHI advisory coverage from the component
+relationship.
 
 ## OSV Shape
 
