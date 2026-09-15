@@ -1,0 +1,39 @@
+{
+  "modified": "2026-08-10T06:47:54Z",
+  "published": "2026-08-10T06:47:54Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-rmg7-x46g-xq85",
+  "details": "### Summary\r\n\r\nConnaisseur's Notary (v1) validator did not enforce the path constraints (`paths`) declared for a delegation role. A delegated signer whose authority was intentionally scoped to a subset of target paths could therefore sign — and get admitted — any target within the repository.\r\n\r\n### Details\r\n\r\nNotary/TUF delegations carry a `paths` attribute that restricts which targets a delegation key is authorized to sign. Prior to 3.12.0, `NotaryV1Validator.ValidateImage` resolved the requested tag or digest from the delegation's signed targets file (`searchTargetsForTag` / `searchTargetsForDigest`) without ever consulting the delegation role's path restrictions declared in the canonical `targets` role.\r\n\r\nConsequently, any target entry present in a delegation's signed targets file was accepted, regardless of whether the delegation was authorized for that target path.\r\n\r\nThe fix builds the delegation role from the canonical `targets` role and validates every candidate target against it:\r\n\r\n```go\r\nvar delegationRole *data.DelegationRole\r\nif target != data.CanonicalTargetsRole.String() {\r\n    dr, err := repo.Targets[data.CanonicalTargetsRole.String()].\r\n        BuildDelegationRole(data.RoleName(target))\r\n    if err != nil {\r\n        return \"\", fmt.Errorf(\"error building delegation role %s: %s\", target, err)\r\n    }\r\n    delegationRole = \u0026dr\r\n}\r\n...\r\nif delegationRole != nil \u0026\u0026 !delegationRole.CheckPaths(key) {\r\n    return \"\", fmt.Errorf(\"delegation %s is not authorized to sign target %s\", delegationRole.Name, key)\r\n}\r\n```\r\n\r\nThe canonical `targets` role itself has full authority over the repository and is intentionally exempt from this check.\r\n\r\n### Impact\r\n\r\nAn adversary in possession of a *path-restricted* delegation key could produce signatures for targets outside their intended scope and have the corresponding images admitted by Connaisseur. This defeats the least-privilege separation that path constraints are designed to provide, e.g. a signer scoped to `dev/*` targets could get an image admitted for a `prod/*` target of the same repository.\r\n\r\nOnly users of `notaryv1` validators whose Notary repositories rely on path-constrained delegations are affected. Deployments that use delegations without path restrictions, or that use `cosign`/`notation` validators, are not affected.\r\n\r\n### Patches\r\n\r\nUpgrade to Connaisseur **3.12.0** (Helm chart 2.12.0) or later.\r\n\r\n### Workarounds\r\n\r\nNone. Until upgrading, do not rely on Notary path constraints as a security boundary; treat every delegation key as authorized for the entire repository (GUN) and issue delegation keys accordingly.\r\n\r\n### References\r\n\r\n* Fix commit: `a680c18a14bc4f751d24067e0606266d99efa237`\r\n* https://github.com/sse-secure-systems/connaisseur/blob/master/docs/SECURITY.md\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "connaisseur",
+        "purl": "pkg:dhi/connaisseur"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.12.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "connaisseur"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/sse-secure-systems/connaisseur/security/advisories/GHSA-rmg7-x46g-xq85"
+    }
+  ]
+}

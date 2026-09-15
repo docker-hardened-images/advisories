@@ -1,0 +1,39 @@
+{
+  "modified": "2026-08-10T06:48:03Z",
+  "published": "2026-08-10T06:48:03Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-j5pp-qc6f-hqr9",
+  "details": "### Summary\r\n\r\nConnaisseur selected the registry credentials to use for an image by matching the configured registry string as a plain string prefix of the image reference, without honoring host or path boundaries. An attacker able to submit a workload referencing an attacker-controlled registry hostname that extends a configured registry string could make Connaisseur send the configured credentials to that attacker-controlled host.\r\n\r\n### Details\r\n\r\n`Auth.LookUp` in auth.go picked the longest configured credential key that was a prefix of the image reference:\r\n\r\n```go\r\nfor k := range a.AuthConfigs {\r\n    if len(k) \u003e len(bestHit) {\r\n        if strings.HasPrefix(img, k) {\r\n            bestHit = k\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nSince the match was not anchored to a `/` boundary, a credential configured for `registry.io` also matched image references such as:\r\n\r\n* `registry.io.evil.tld/image:tag`\r\n* `registry.io.evil.tld/path/image:tag`\r\n\r\nWhen Connaisseur subsequently contacted the registry to fetch the image manifest or signature data, it authenticated with the credentials belonging to `registry.io`, disclosing them to the attacker-controlled host.\r\n\r\nThe fix requires an exact match or a match terminated by a path separator:\r\n\r\n```go\r\n// require k to match img exactly or up to a \"/\" boundary, so e.g.\r\n// \"registry.example.com\" doesn't match \"extending\" host\r\n// \"registry.example.com.evil.tld\" (same applies to repo path extensions)\r\nif img == k || strings.HasPrefix(img, k+\"/\") {\r\n    bestHit = k\r\n}\r\n```\r\n\r\n### Impact\r\n\r\nAny principal who can trigger an admission request for an arbitrary image reference (e.g. create a Pod or another validated workload resource in a namespace subject to validation) can cause Connaisseur to leak configured registry credentials — including private registry usernames and passwords / pull tokens — to a host the attacker controls. Depending on the privileges of the leaked credentials, this can lead to disclosure of private images or, where the credentials allow writes, to registry compromise.\r\n\r\nDeployments are affected if at least one validator is configured with registry credentials (`auth`, e.g. via a `dockerconfigjson` secret or `secretName`). Deployments without configured credentials are not affected.\r\n\r\n### Patches\r\n\r\nUpgrade to Connaisseur **3.12.0** (Helm chart 2.12.0) or later.\r\n\r\n### Workarounds\r\n\r\n* Restrict image policy rules and validated namespaces so that only known-good registry hosts reach a validator that carries credentials.\r\n* Scope registry credentials to read-only, least-privilege pull tokens, and rotate any credentials that may have been exposed.\r\n\r\n### References\r\n\r\n* Fix commit: `996fd7f3af922691d13335fed633d0d54c339b63`\r\n* https://github.com/sse-secure-systems/connaisseur/blob/master/docs/SECURITY.md",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "connaisseur",
+        "purl": "pkg:dhi/connaisseur"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.12.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "connaisseur"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/sse-secure-systems/connaisseur/security/advisories/GHSA-j5pp-qc6f-hqr9"
+    }
+  ]
+}

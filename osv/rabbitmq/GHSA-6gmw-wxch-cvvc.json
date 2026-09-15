@@ -1,0 +1,135 @@
+{
+  "modified": "2026-08-18T03:16:38Z",
+  "published": "2026-08-18T03:16:38Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-6gmw-wxch-cvvc",
+  "details": "## Summary\r\n\r\n`GET /api/shovels/vhost/{vhost}/{name}` returns the raw stored dynamic-shovel definition, which contains `src-uri` and `dest-uri` with cleartext credentials for the shovel's source and destination brokers. The endpoint authorizes non-`DELETE` reads with the `monitoring` tag. A read-only monitoring user — who cannot create or manage shovels, and who is denied the equivalent read through the parameters API — can read another operator's external-broker passwords.\r\n\r\n## Details\r\n\r\nThe per-shovel management endpoint returns the stored runtime parameter verbatim, with no redaction, behind monitor-level authorization:\r\n\r\n- `deps/rabbitmq_shovel_management/src/rabbit_shovel_mgmt_shovel.erl`: `is_authorized/2` (`:78-84`) routes non-`DELETE` requests to `rabbit_mgmt_util:is_authorized_monitor` — the `monitoring` (or `administrator`) tag. `to_json/2` (`:73-76`) returns `rabbit_mgmt_format:parameter(Shovel)` where `Shovel` is the raw `rabbit_runtime_parameters:lookup/3` result from `parameter/1` (`:147-156`).\r\n\r\nThe definition is stored unobfuscated. `obfuscate_uris_in_definition/1` is invoked only when a worker spec is built, never on the storage or read path:\r\n\r\n- `deps/rabbitmq_shovel/src/rabbit_shovel_dyn_worker_sup_sup.erl:68,70` — the only call sites of `obfuscate_uris_in_definition/1`.\r\n- `deps/rabbitmq_shovel/src/rabbit_shovel_parameters.erl` — `validate/5` (`:48`) and `notify/5` (`:61`) do not obfuscate; the term is written verbatim.\r\n- `deps/rabbitmq_management_agent/src/rabbit_mgmt_format.erl:214` — `parameter(P) -\u003e pset(value, pget(value, P), P)`, i.e. no redaction.\r\n\r\nThe privilege boundary this crosses: the standard parameters API returns the same credential-bearing definition only to `policymaker`/`administrator`:\r\n\r\n- `deps/rabbitmq_management/src/rabbit_mgmt_wm_parameter.erl` — `is_authorized/2` (`:84-85`) requires `rabbit_mgmt_util:is_authorized_policies`.\r\n\r\nSo `GET /api/parameters/shovel/{vhost}/{name}` denies a `monitoring` user (401), while `GET /api/shovels/vhost/{vhost}/{name}` returns the same cleartext credentials to that same user. The collection endpoint `/api/shovels` is not affected — it serves the credential-stripped shovel status — so this per-shovel endpoint is the gap.\r\n\r\n## Preconditions\r\n\r\n- `rabbitmq_shovel` and `rabbitmq_shovel_management` enabled.\r\n- A dynamic shovel whose URIs embed credentials, in a reporting state (running/starting/terminated) so it appears in shovel status. `resource_exists/2` gates the GET on `get_shovel_node/4` → `rabbit_shovel_mgmt_util:status/2`; a shovel that never reported status returns 404.\r\n- The attacker has the `monitoring` tag and login access to the shovel's vhost. The status list is filtered per-vhost by `filter_vhost_user/3` (`rabbit_shovel_mgmt_util.erl:26-31`), so this is a normal per-vhost monitoring account. It is still strictly below `policymaker`. The boundary here is the tag (`monitoring` vs `policymaker`), not vhost scoping.\r\n\r\n## Proof of concept\r\n\r\nReproduced live on `rabbitmq:4-management` (Docker). \r\n### Full script: [poc-shovel-credential-disclosure.sh](https://github.com/user-attachments/files/30793036/poc-shovel-credential-disclosure.sh)\r\n\r\n\r\nSetup: user `watcher` with tags `[monitoring]` only (not policymaker/administrator) and vhost `/` login access with no resource permissions (`^$ ^$ ^$`). An `administrator` creates a running dynamic shovel `leaky-shovel` whose `src-uri`/`dest-uri` embed `victim:sup3rs3cr3t`.\r\n\r\nAs `watcher`:\r\n\r\n```\r\nGET /api/parameters/shovel/%2F/leaky-shovel\r\n  -\u003e HTTP 401  {\"error\":\"not_authorised\",\"reason\":\"User not authorised to access object\"}\r\n\r\nGET /api/shovels/vhost/%2F/leaky-shovel\r\n  -\u003e HTTP 200\r\n     value.src-uri  = amqp://victim:sup3rs3cr3t@localhost:5672/%2f\r\n     value.dest-uri = amqp://victim:sup3rs3cr3t@localhost:5672/%2f\r\n```\r\n\r\nThe monitoring user recovers the cleartext password despite being denied by the parameters API.\r\n\r\n## Impact\r\n\r\nDisclosure of credentials to external systems (the shovel's source and destination brokers) to a lower-privileged monitoring role. In a multi-operator or multi-tenant deployment this enables lateral movement to those external brokers using an operator's stored credentials, from an account that was only granted read-only observability.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.13.0"
+            },
+            {
+              "fixed": "3.13.19"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.0.24"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.1.0"
+            },
+            {
+              "fixed": "4.1.15"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.10"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-6gmw-wxch-cvvc"
+    }
+  ]
+}
