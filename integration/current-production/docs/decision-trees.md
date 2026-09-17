@@ -64,17 +64,20 @@ graph TD
 
 ```mermaid
 graph TD
-    A[Get VEX Statements] --> B[Option 1: Comprehensive VEX]
-    A --> C[Option 2: OCI Referrers]
-    
-    B --> B1[Fetch from GitHub:<br/>dhi.vex.json]
-    
-    C --> C1[Same as SBOM process]
-    C1 --> C2[Find OpenVEX predicate]
-    
+    A[Get VEX Statements] --> B[Sync GitHub VEX Repository]
+    A --> C[Use OCI Referrers]
+
+    B --> B1[Read index.json and pkg/]
+
+    C --> C1[Resolve Selected Platform Digest]
+    C1 --> C2[Find OpenVEX Predicate]
+
     B1 --> D[VEX Statements Ready]
     C2 --> D
 ```
+
+`vex/<image-repository>/` is also available for image-repository lookup. It is
+not tied to one image tag or digest.
 
 ### Step 3: OSV Feed Access
 
