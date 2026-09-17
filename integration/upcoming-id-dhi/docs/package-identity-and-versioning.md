@@ -79,10 +79,12 @@ For each scanner-observed OS package:
 1. Establish DHI product membership. For an official image, confirm that the
    exact package and version appear in the Docker-issued OCI-referrer SBOM. For
    a derived image, use DHI chain-ID/layer attribution or exact comparison with
-   the Docker-issued SBOM for a known DHI base image. If membership is not
-   established, normalize the package to the upstream family and release from
-   `ID_LIKE` and `VERSION_ID`, use normal upstream advisory coverage with native
-   APK or dpkg version semantics, and stop this DHI matching process.
+   a verified Docker-issued base SBOM resolved through the shared
+   [derived-image base-discovery procedure](../../derived-image-base-discovery.md).
+   If membership is not established, normalize the package to the upstream
+   family and release from `ID_LIKE` and `VERSION_ID`, use normal upstream
+   advisory coverage with native APK or dpkg version semantics, and stop this
+   DHI matching process.
 2. Parse the PURL and require namespace `dhi`.
 3. Read the base lineage and release from `ID_LIKE` and `VERSION_ID`.
 4. Require PURL type `apk` for Alpine or `deb` for Debian.

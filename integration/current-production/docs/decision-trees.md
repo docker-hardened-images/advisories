@@ -60,6 +60,12 @@ graph TD
     D3 --> E
 ```
 
+For a derived image, an SBOM attached to or generated from the customer image
+describes its final contents; it does not prove which packages came from DHI.
+Base-image referrers are not inherited by the derived image. Follow
+[derived-image base discovery](../../derived-image-base-discovery.md) before
+using a Docker-issued base SBOM as package-origin evidence.
+
 ### Step 2: VEX Retrieval
 
 ```mermaid
@@ -182,9 +188,9 @@ graph TD
 graph TD
     A[Derived Image: Need to Validate Package Origin] --> B{Which Method?}
     
-    B -->|Method A: SBOM Comparison| C[Fetch DHI Base SBOM]
-    C --> C1[Use chainID to identify base boundary]
-    C1 --> C2[Compare: Package in base?]
+    B -->|Method A: SBOM Comparison| C[Resolve candidate base digest<br/>from provenance or supplied input]
+    C --> C1[Verify base diff IDs are a prefix<br/>and ChainID matches boundary]
+    C1 --> C2[Fetch base SBOM via referrers]
     C2 --> C3{PURL + Version<br/>match exactly?}
     C3 -->|Yes| D[From DHI Base<br/>Apply VEX]
     C3 -->|No| E[Customer Modified<br/>No VEX]
@@ -204,6 +210,12 @@ graph TD
     style D fill:#90EE90
     style E fill:#FFB6C6
 ```
+
+The ChainID locates the base-layer boundary but does not identify an OCI
+manifest. Follow the shared
+[derived-image base-discovery procedure](../../derived-image-base-discovery.md)
+to recover a candidate base digest from SLSA provenance and verify it before
+retrieving the Docker-issued base SBOM.
 
 ---
 
@@ -257,8 +269,8 @@ graph TD
 
 ```mermaid
 graph TD
-    A[Scanner Detects chainID] --> B[Fetches DHI Base SBOM]
-    B --> C[Compares Package Lists]
+    A[Scanner Detects chainID] --> B[Resolves and verifies<br/>DHI base digest]
+    B --> C[Fetches base SBOM<br/>and compares packages]
     C --> D{Package in<br/>DHI base?}
     D -->|Yes| E[Apply VEX for this package]
     D -->|No| F[Scan normally, no VEX]
