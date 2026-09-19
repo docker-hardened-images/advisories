@@ -1,0 +1,63 @@
+{
+  "modified": "2026-09-18T00:14:45Z",
+  "published": "2026-09-18T00:14:45Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-342v-cj47-c9g8",
+  "details": "### Advisory Details\r\n\r\n**Title**: Cross-vhost Stream consumer virtual-host existence disclosure\r\n\r\n**Description**:\r\n\r\n### Summary\r\n\r\nThe Stream management endpoint `GET /api/stream/consumers/:vhost` allows an authenticated `management` user with no permissions for a target virtual host to distinguish whether that vhost exists. The endpoint performs only general management authentication before checking vhost existence, returning `200 OK` for an existing inaccessible vhost and `404 Not Found` for an absent one. This is a low-severity cross-tenant information disclosure.\r\n\r\n### Details\r\n\r\nThe affected handler is `deps/rabbitmq_stream_management/src/rabbit_stream_consumers_mgmt.erl`. It registers a vhost-scoped route but uses `rabbit_mgmt_util:is_authorized/2`, which verifies general management API access and does not enforce access to the vhost supplied in the URL.\r\n\r\n```erlang\r\nresource_exists(ReqData, Context) -\u003e\r\n    {case rabbit_mgmt_util:vhost(ReqData) of\r\n         not_found -\u003e false;\r\n         none      -\u003e true;\r\n         _         -\u003e true\r\n     end,\r\n     ReqData, Context}.\r\n\r\nis_authorized(ReqData, Context) -\u003e\r\n    rabbit_mgmt_util:is_authorized(ReqData, Context).\r\n```\r\n\r\n`rabbit_mgmt_util:vhost/1` resolves the attacker-controlled `:vhost` path value through `rabbit_vhost:exists/1`. Therefore, the REST resource-existence callback exposes the result of the existence check before a vhost authorization decision is made. Later filtering of consumer records does not remove the response-status oracle.\r\n\r\nThe vhost-aware helper, `rabbit_mgmt_util:is_authorized_vhost/2`, delegates to `user_matches_vhost/2` and `check_vhost_access/4`; this endpoint should use that helper instead.\r\n\r\n### PoC\r\n\r\n#### Prerequisites\r\n\r\n- RabbitMQ Management, Stream, and Stream Management plugins enabled\r\n- A management-tagged user able to authenticate to the management HTTP API\r\n- An existing target vhost to which that user has no permissions\r\n- Docker and Docker Compose for the supplied isolated environment\r\n\r\nThe following secret Gists contain the minimal PoC and environment files:\r\n\r\n- [docker-compose.yml](https://gist.github.com/YLChen-007/e989a48f15109a7476de497a4328519d)\r\n- [enabled_plugins](https://gist.github.com/YLChen-007/69274354989cf929b5ae6fb16067bd81)\r\n- [start_environment.sh](https://gist.github.com/YLChen-007/6b8394faebd152e407008556045fbdd1)\r\n- [verification_test.py](https://gist.github.com/YLChen-007/65ab0decd6574c69f776af51d0c1958d)\r\n- [control-missing-vhost.py](https://gist.github.com/YLChen-007/ea0756c9e6aa8154bd07c8180150fbaa)\r\n- [run_experiment.sh](https://gist.github.com/YLChen-007/9f0934838fc57be4b9b33a9f66f76375)\r\n- [stop_environment.sh](https://gist.github.com/YLChen-007/ec2e61f2bf111fca1a42f16dcacfc87e)\r\n\r\n#### Reproduction Steps\r\n\r\n1. Download the seven PoC files listed above into one directory and preserve their filenames\r\n2. Make the shell and Python files executable, then run `./run_experiment.sh`\r\n3. The runner starts an isolated RabbitMQ container, enables the required plugins, creates `hidden-vhost`, and creates the `limited` management user with no vhost permissions\r\n4. The verification script requests `/api/stream/consumers/hidden-vhost` and `/api/stream/consumers/missing-vhost` with the same `limited` credentials\r\n5. Confirm that the existing inaccessible vhost returns `200 []`, while the missing-vhost control returns `404`\r\n\r\nFor manual execution, run `./start_environment.sh`, send the two requests from the verification script with the `limited` credentials, and run `./stop_environment.sh` afterward.\r\n\r\n### Log of Evidence\r\n\r\nThe end-to-end verification produced:\r\n\r\n```text\r\nexisting_inaccessible_vhost:\r\n  status: 200\r\n  body: []\r\n\r\nmissing_vhost:\r\n  status: 404\r\n  body: {\"error\":\"Object Not Found\",\"reason\":\"Not Found\"}\r\n\r\n[DEFECT-CONFIRMED] End-to-End vhost existence oracle reproduced.\r\n[CONTROL-PASSED] Missing vhost does not produce the successful response.\r\n```\r\n\r\nIndependent observations confirmed that the `limited` user had an empty permissions list, and the required `rabbitmq_management`, `rabbitmq_stream`, and `rabbitmq_stream_management` plugins were running.\r\n\r\n### Impact\r\n\r\nAn authenticated management user can enumerate known or guessable vhost names belonging to other tenants or business environments. The PoC does not read Stream consumer details, messages, credentials, or perform unauthorized vhost operations. The demonstrated impact is limited to vhost-name existence disclosure, which can reveal tenant, project, regional, or production-environment naming information.\r\n\r\n### Affected products\r\n\r\n- **Ecosystem**: Other\r\n- **Package name**: rabbitmq-server\r\n- **Affected versions**: \u003e= 3.8.10, \u003c= 4.3.2\r\n- **Patched versions**: \u003cNone known for this Stream consumers variant\u003e\r\n\r\n`v4.3.2` is the highest affected GitHub release verified for this report. The endpoint was also verified in `v3.8.10`, where the same route, general authorization call, and vhost-existence callback are present.\r\n\r\n### Severity\r\n\r\n- **Severity**: Low\r\n- **Vector string**: CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:N/A:N\r\n\r\n### Weaknesses\r\n\r\n- **CWE**: CWE-200: Exposure of Sensitive Information to an Unauthorized Actor\r\n\r\n### Occurrences\r\n\r\n| Permalink | Description |\r\n| :--- | :--- |\r\n| [https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stream_management/src/rabbit_stream_consumers_mgmt.erl#L38-L47](https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stream_management/src/rabbit_stream_consumers_mgmt.erl#L38-L47) | `resource_exists/2` converts the attacker-controlled path vhost into an observable exists versus not-found REST decision |\r\n| [https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stream_management/src/rabbit_stream_consumers_mgmt.erl#L71-L72](https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stream_management/src/rabbit_stream_consumers_mgmt.erl#L71-L72) | `is_authorized/2` invokes general management authorization instead of the vhost-aware authorization helper |",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.11"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-342v-cj47-c9g8"
+    }
+  ]
+}
