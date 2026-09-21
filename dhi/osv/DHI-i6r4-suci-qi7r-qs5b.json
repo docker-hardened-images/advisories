@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-i6r4-suci-qi7r-qs5b",
+  "modified": "2026-09-21T15:03:27Z",
+  "published": "2026-09-21T15:03:27Z",
+  "upstream": [
+    "GHSA-2ph8-5cr8-hr33"
+  ],
+  "summary": "On Unix platforms handled by `src/unix.rs`, affected versions substitute the",
+  "details": "On Unix platforms handled by `src/unix.rs`, affected versions substitute the\ncaller-supplied URL into the `BROWSER` environment-variable template before\ntokenizing the resulting string with `split_ascii_whitespace()`. If an\napplication passes an attacker-controlled non-HTTP(S) URL whose parsed form\nretains spaces and the effective `BROWSER` template contains `%s`, text that\nshould remain within one URL argument becomes additional browser arguments.\n\nThe issue was reproduced with Chromium by injecting\n`--remote-debugging-port`, which exposed a local DevTools endpoint, and\n`--proxy-server`, which redirected browser traffic through an\nattacker-controlled proxy. The available arguments and resulting impact depend\non the browser launched by the affected application.\n\nVersion 1.2.2 fixes the issue by tokenizing the `BROWSER` template before\nsubstituting the URL, preserving the URL as part of a single argument. Users\nshould upgrade to version 1.2.2 or later. Applications that only need HTTP(S)\nURLs can also enable the crate's `hardened` feature as defense in depth.\n\nThis issue was reported by\n[@dywzju09-blip](https://github.com/dywzju09-blip).",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "vector",
+        "purl": "pkg:docker/dhi/vector?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "0.57.0-debian13",
+        "0.57.0-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-i6r4-suci-qi7r-qs5b"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0257"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0257.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/amodm/webbrowser-rs/security/advisories/GHSA-2ph8-5cr8-hr33"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/amodm/webbrowser-rs/commit/31d1b924885551c0e553909d27c738ca6958a0f3"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/amodm/webbrowser-rs/releases/tag/v1.2.2"
+    }
+  ]
+}
