@@ -1,0 +1,152 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-z2an-pbs2-cckp-6o27",
+  "modified": "2026-09-21T19:01:33Z",
+  "published": "2026-09-21T19:01:33Z",
+  "upstream": [
+    "GHSA-3f7w-8rr8-f37f"
+  ],
+  "summary": "**Target:** gitpython-developers/GitPython",
+  "details": "**Target:** gitpython-developers/GitPython\n**Tested:** HEAD `07e80555` (2026-07-25), latest release 3.1.55, `git version 2.50.1`\n**Reported instances:** 2 exploitable, from a sweep of 14 unguarded call sites\n\n## Summary\n\nGitPython blocks dangerous git options through `Git.check_unsafe_options()`, gated per method by an `allow_unsafe_options` parameter. That guard is applied **per call site**, so any API that forwards `**kwargs` into a git command without calling it passes caller-controlled options straight to git.\n\nA mechanical sweep of every method that forwards `**kwargs` into a `.git.<command>(...)` call found **14 sites with no guard**. Two reach a git option that takes a filesystem path:\n\n| # | Call site | git option | Impact |\n|---|---|---|---|\n| 1 | `IndexFile.checkout()` → `git checkout-index` | `--prefix=<path>` | arbitrary file **overwrite** with repository-controlled content |\n| 2 | `TagReference.create()` → `git tag` | `-F <file>` / `--file=<file>` | arbitrary file **read**, returned in-band |\n\nThis is the same defect class already fixed in `Commit.count()` (GHSA-p538-c434-8v24), `Repo.archive()` and `Git.ls_remote()` (GHSA-956x-8gvw-wg5v). Both instances below are still present at HEAD.\n\n---\n\n## Instance 1 — `IndexFile.checkout()`: arbitrary file overwrite\n\n`git/index/base.py:1210` accepts `**kwargs` and forwards them with no guard:\n\n```python\ndef checkout(self, paths=None, force=False, fprogress=lambda *args: None, **kwargs):\n    ...\n    proc = self.repo.git.checkout_index(*args, **kwargs)   # line 1331\n    ...\n    proc = self.repo.git.checkout_index(args, **kwargs)    # line 1349\n```\n\nThere is no `allow_unsafe_options` parameter and no `check_unsafe_options()` call in the method.\n\n`git checkout-index` accepts `--prefix=<string>`, prepended to every output path. It is not confined to the working tree, so an absolute prefix writes tracked file contents anywhere the process can write, and `-f` overwrites what is already there.\n\n### Reproduction\n\n```python\nfrom git import Repo\nRepo(\"/path/to/repo\").index.checkout(prefix=\"/tmp/target_dir/\", a=True, f=True)\n```\n\nObserved (`poc/poc_checkout_index.py`) — no exception raised, files land outside the repository:\n\n```\n[ALLOWED] no UnsafeOptionError raised\nfiles written outside the repo: ['f.txt']\n  f.txt: 'hi\\n'\n```\n\nOverwrite of a pre-existing file (`poc/poc_ci_overwrite.py`) — the victim file held `ORIGINAL-DO-NOT-CLOBBER\\n` before the call:\n\n```\n[ALLOWED] no exception\nvictim content now: 'hi\\n'\nOVERWRITTEN: True\n```\n\n### Why this rates High\n\nBoth halves of the write are attacker-influenced:\n\n- **Destination** — the `prefix` kwarg.\n- **Content** — the bytes written are repository blobs, so anyone who can land a file in the repository (a pull-request branch, a mirrored or untrusted repository, an agent-cloned repository) controls exactly what is written.\n\nCommit a file named `authorized_keys`, `.bashrc`, `config` or `post-checkout`, choose the matching prefix (`~/.ssh/`, `~/`, `.git/hooks/`), and the write becomes code execution as the service account.\n\nFor comparison within this project: GHSA-fjr4-x663-mwxc (arbitrary file overwrite via `git diff --output`) is rated High, and GHSA-p538-c434-8v24 (arbitrary file *truncation* via `git rev-list --output`) is rated Medium. `--prefix` supplies full content control, so it sits at or above the former.\n\n---\n\n## Instance 2 — `TagReference.create()`: arbitrary file read\n\n`git/refs/tag.py:88` forwards `**kwargs` into `git tag` with no guard, and the signature advertises the passthrough:\n\n```python\ndef create(cls, repo, path, reference=\"HEAD\", logmsg=None, force=False, **kwargs):\n    \"\"\"...\n    :param kwargs:\n        Additional keyword arguments to be passed to :manpage:`git-tag(1)`.\n    \"\"\"\n```\n\n`git tag` accepts `-F <file>` / `--file=<file>`, which reads the tag message from an arbitrary path. The annotated tag object stores that content and GitPython returns it to the caller via `TagReference.tag.message`, so the file contents come back in-band.\n\n### Reproduction\n\n```python\nfrom git import Repo\nfrom git.refs.tag import TagReference\n\nt = TagReference.create(Repo(\"/path/to/repo\"), \"x\", force=True, a=True, F=\"/etc/passwd\")\nprint(t.tag.message)\n```\n\nObserved (`poc/poc_tag_F.py`), reading a canary file outside the repository:\n\n```\n[ALLOWED] no UnsafeOptionError raised\n>>> tag message recovered from arbitrary path: 'TAG-READ-CANARY-98765\\nsecond-line-secret'\n```\n\nImpact is a read at the privileges of the process. I am not claiming code execution for this instance. The signing options (`-s`, `-u`/`--local-user`) do invoke gpg from the same unguarded kwargs, but I did not develop that into command execution and make no claim about it.\n\n---\n\n## Sweep results — the other 12 sites\n\nReported so the fix can be scoped once rather than per report. `poc/sweep.py` reproduces this list.\n\n| Call site | git command | Assessment |\n|---|---|---|\n| `IndexFile.from_tree()` | `read-tree` | `--index-output=<path>` looked reachable but is **neutralised**: GitPython appends its own `--index-output` after the caller's kwargs and git honours the last occurrence. Verified — victim file unchanged (`poc/poc_readtree.py`) |\n| `IndexFile.remove()` | `rm` | `--pathspec-from-file` only reads a pathspec; no write or disclosure primitive found |\n| `IndexFile.move()` | `mv` | same |\n| `HEAD.reset()` | `reset` | same |\n| `HEAD.checkout()` | `checkout` | same |\n| `Head.delete()`, `RemoteReference.delete()` | `branch` | no path-taking option found |\n| `Repo.merge_base()` | `merge-base` | no path-taking option found |\n| `Repo._get_untracked_files()` | `status` | no path-taking option found |\n| `Remote.set_url()`, `Remote.create()`, `Remote.update()` | `remote` | URL handling already addressed by GHSA-94p4-4cq8-9g67 |\n\n## Suggested remediation\n\n**Immediate:** add `allow_unsafe_options: bool = False` to both methods and gate `Git._option_candidates(args, kwargs)` against new lists — `unsafe_git_checkout_index_options = [\"--prefix\"]` (consider `--temp`) and `unsafe_git_tag_options = [\"--file\", \"-F\"]` (consider `-s`, `-u`/`--local-user`, `--cleanup`) — matching the pattern used in `Repo.archive()` and `Commit.count()`.\n\n**Structural:** this defect has now been fixed four times in four places (`Repo.archive()`, `Git.ls_remote()`, `Commit.count()`, and the two here), because the guard is opt-in per method: every new `**kwargs`-forwarding API starts unguarded and stays that way until someone reports it. Enforcing the check centrally in `Git._call_process()` — each git invocation consults a per-command unsafe-option table unless the caller opts out — would make new call sites safe by default rather than by review, and would close the remaining sites in the table above at the same time.\n\n## Disclosure\n\nReported privately via GitHub private vulnerability reporting.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:H"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "airflow",
+        "purl": "pkg:docker/dhi/airflow?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.0.6-python3.12-debian13-compat",
+        "3.1.0-python3.12-debian13-compat",
+        "3.1.1-python3.12-debian13-compat",
+        "3.1.2-python3.12-debian13-compat",
+        "3.1.2-python3.12-debian13-compat-fips",
+        "3.1.3-python3.12-debian13-compat",
+        "3.1.3-python3.12-debian13-compat-fips",
+        "3.1.5-python3.12-debian13-compat",
+        "3.1.5-python3.12-debian13-compat-fips",
+        "3.1.6-python3.12-debian13-compat",
+        "3.1.6-python3.12-debian13-compat-fips",
+        "3.1.7-python3.12-debian13-compat",
+        "3.1.7-python3.12-debian13-compat-fips",
+        "3.1.8-python3.12-debian13-compat",
+        "3.1.8-python3.12-debian13-compat-fips",
+        "3.2.0-python3.13-debian13-compat",
+        "3.2.0-python3.13-debian13-compat-fips",
+        "3.2.1-python3.13-debian13-compat",
+        "3.2.1-python3.13-debian13-compat-fips",
+        "3.2.2-python3.13-debian13-compat",
+        "3.2.2-python3.13-debian13-compat-fips",
+        "3.3.0-python3.13-debian13-compat",
+        "3.3.0-python3.13-debian13-compat-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datahub-ingestion",
+        "purl": "pkg:docker/dhi/datahub-ingestion?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.5.0.7-debian13",
+        "1.5.0.7-debian13-dev",
+        "1.5.0.7-debian13-fips",
+        "1.5.0.7-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datascience-notebook",
+        "purl": "pkg:docker/dhi/datascience-notebook?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2026-05-11-debian13",
+        "2026-05-11-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "git-mcp",
+        "purl": "pkg:docker/dhi/git-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2025.11.25-debian13",
+        "2025.12.18-debian13",
+        "2026.1.14-debian13",
+        "2026.1.26-debian13",
+        "2026.6.16-debian13",
+        "2026.6.3-debian13",
+        "2026.7.10-debian13",
+        "2026.7.4-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "mlflow",
+        "purl": "pkg:docker/dhi/mlflow?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.14.0-debian13",
+        "3.14.0-debian13-fips",
+        "3.15.0-debian13",
+        "3.15.0-debian13-fips",
+        "3.15.1-debian13",
+        "3.15.1-debian13-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-z2an-pbs2-cckp-6o27"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-3f7w-8rr8-f37f"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/gitpython-developers/GitPython/security/advisories/GHSA-3f7w-8rr8-f37f"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/pull/2193"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/commit/3af0c2516c5e18c829da30338614688f6b69b49c"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/gitpython-developers/GitPython/releases/tag/3.1.57"
+    }
+  ]
+}
