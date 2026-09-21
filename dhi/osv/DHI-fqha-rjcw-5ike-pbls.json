@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-fqha-rjcw-5ike-pbls",
+  "modified": "2026-09-21T14:35:17Z",
+  "published": "2026-09-21T14:35:17Z",
+  "upstream": [
+    "GHSA-q382-vc8q-7jhj"
+  ],
+  "summary": "The Go SDK recently transitioned to the `segmentio/encoding` library for JSON parsing in version 1.3.1. While this…",
+  "details": "The Go SDK recently transitioned to the `segmentio/encoding` library for JSON parsing in version 1.3.1. While this change addressed both case-insensitivity and ASCII folding issues, the new parser implemented aggressive key matching that treated keys with `null` Unicode characters appended at the end as equivalent to their base strings.\n\n#### Impact\n\nWhen combined with duplicate keys, the described behavior leads to a \"last key wins\" resolution that could override the intended MCP message. This had the potential for:\n  - **Bypassing intermediary inspection:** Proxies or policy layers that matched on exact field names may have failed to detect or filter these messages.\n  - **Cross-implementation inconsistency:** Other MCP SDKs (TypeScript, Python) use case-sensitive parsing and would reject the same messages, creating potential security-boundary confusion.\n\n####  Fix:\n\nThe `segmentio/encoding` package was patched with a fix in https://github.com/segmentio/encoding/commit/7d5a25dbc5da13aed3cb047a127e4d0e96f536fb and a new version of the package was released (`v0.5.4`). The SDK switched to the patched version of the dependency in 724dd47aa. Users are advised to update to v1.4.1 to resolve this issue.\n\n#### Credits:\nThank you to Francesco Lacerenza (Doyensec) for reporting this issue.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:L/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "github-mcp",
+        "purl": "pkg:docker/dhi/github-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "0.24.1-debian13",
+        "0.25.0-debian13",
+        "0.26.2-debian13",
+        "0.26.3-debian13",
+        "0.27.0-debian13",
+        "0.28.1-debian13",
+        "0.29.0-debian13",
+        "0.30.1-debian13",
+        "0.30.2-debian13",
+        "0.30.3-debian13",
+        "0.31.0-debian13",
+        "0.33.0-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-fqha-rjcw-5ike-pbls"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-q382-vc8q-7jhj"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/modelcontextprotocol/go-sdk/security/advisories/GHSA-q382-vc8q-7jhj"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/segmentio/encoding/commit/7d5a25dbc5da13aed3cb047a127e4d0e96f536fb"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/modelcontextprotocol/go-sdk/commit/724dd47aa3431b9d4cf9ac2eebbf7b38a629afca"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-4770"
+    }
+  ]
+}
