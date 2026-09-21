@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-smnj-63vs-sz7d-keti",
+  "modified": "2026-09-21T17:03:03Z",
+  "published": "2026-09-21T17:03:03Z",
+  "upstream": [
+    "CVE-2026-55153"
+  ],
+  "summary": "### Impact",
+  "details": "### Impact\nPrior to version 0.6.0, mchange-commons-java includes a JNDI `ObjectFactory` implementation (`com.mchange.v2.naming.JavaBeanObjectFactory`) willing to construct objects of arbitrary classes and initialize \"JavaBean\"-style properties. There are classes for which this kind of initialization is unsafe. For example, setting the \"contentType\" property of a Swing `JEditorPane` to `text/html` and the \"text\" property to HTML containing a stylesheet &lt;link&gt; will provoke an HTTP GET on an arbitrary URL, potentially from within a trusted security domain. This issue is aggravated by mchange-commons-java's `ReferenceIndirector`, by which malicious JNDI `Reference` objects could be smuggled in for dereferencing by applications anywhere a Java-serialized object might be read. \n\nPrior to version 0.5.0, the same mchange-commons-java `ObjectFactory` would interpret `BinaryRefAddress` elements as Java-serialized objects, and deserialize unexpected objects that potentially execute malicious behavior on initialization. Although this author is unaware of any code within mchange-commons-java itself that can be abused to execute code on deserialization, this mechanism can be used to trigger well-known \"deserialization gadget chains\" involving other libraries. For example, in JVMs prior to Java 16 with Apache libraries [`commons-beanutils`](https://commons.apache.org/proper/commons-beanutils/) and [`commons-collections`](https://commons.apache.org/proper/commons-collections/) on the application `CLASSPATH`, [objects can be crafted](https://gist.github.com/frohoff/9eb8811761ff989b3ac0) that will execute arbitrary commands on deserialization. (Thanks to Valerio Mulas for a proof-of-concept.)\n\n### Patches\nmchange-commons-java v0.5.0 eliminates all support for deserializing Java objects in `com.mchange.v2.naming.JavaBeanObjectFactory`, unless an application explicitly extends that class to restore it. This prevents mchange-commons-java from enabling JNDI injection to trigger common \"deserialization gadgets\".\n\nmchange-commons-java v0.6.0 imposes a whitelist upon what classes `com.mchange.v2.naming.JavaBeanObjectFactory` consents to materialize, preventing the use of maliciously constructed `Reference` instances to initialize arbitrary, potentially malicious, objects.\n\nmchange-commons-java v0.6.0 disables the `ReferenceIndirector` mechanism by default. This mechanism has been abused by attackers to inject dangerous JNDI `Reference` objects by causing an application to deserialize a malicious Java-serialized object. (The functionality remains for applications that need it, gated behind a restrictive configuration parameter. This is \"defense-in-depth\"; the hardening of `JavaBeanObjectFactory` on its own should be sufficient to prevent known `Reference`-based attacks. But perhaps there are other insecure `ObjectFactory` implementations on the `CLASSPATH` or vulnerabilities as-yet-unknown.)\n\n### Workarounds\nUpgrading to the current version of mchange-commons-java is strongly recommended. Most applications that install mchange-commons-java do so to support the c3p0 JDBC Connection pooling library. When upgrading mchange-commons-java, be sure to update c3p0 as well, or better yet, upgrade to c3p0 >=v0.14.0 and bring in a patched mchange-commons-java transitively.\n\nMaintaining rigorous serialization filters can prevent many attacks (but not attacks requiring only construction of a named class and initialization of simple JavaBeans properties, as described for `JEditorPane` above).\n\nThe vulnerabilities that this advisory addresses all begin with arranging for an application to lookup a malicious JNDI `Reference` or deserialize a malicious Java-serialized object. Assiduously preventing an application from ever encountering such a `Reference` or serialized object is hypothetically a workaround. But relying upon perfection is usually bad planning.\n\nThe most common known attacks rely upon JVM-internal XSLT code that has been made inaccessible on Java 16 and beyond. Running on a more recent JVM is a mitigating workaround.\n\n### Resources\nThe vulnerabilities and security upgrades are documented in c3p0's manual. Please see c3p0's [Security Note](https://www.mchange.com/projects/c3p0/#security-note) and [Configuring Security](https://www.mchange.com/projects/c3p0/#configuring_security).\n\n### Credits\nmchange-commons-java thanks 4ra1n and unam4 on Github for a proof-of-concept.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:A/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "openmetadata",
+        "purl": "pkg:docker/dhi/openmetadata?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.12.13-debian13",
+        "1.12.13-debian13-dev",
+        "1.12.14-debian13",
+        "1.12.14-debian13-dev",
+        "1.13.1-debian13",
+        "1.13.1-debian13-dev",
+        "1.13.3-debian13",
+        "1.13.3-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-smnj-63vs-sz7d-keti"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-h84g-69h7-mw6v"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-55153"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/swaldman/mchange-commons-java/security/advisories/GHSA-h84g-69h7-mw6v"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-55153"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-55153\nhttps://nvd.nist.gov/vuln/detail/CVE-2026-55153\nhttps://github.com/swaldman/mchange-commons-java/security/advisories/GHSA-h84g-69h7-mw6v"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-55153"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-55153"
+    }
+  ]
+}
