@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-wz5b-o4y5-xmtn-d5n7",
+  "modified": "2026-09-21T18:17:13Z",
+  "published": "2026-09-21T18:17:13Z",
+  "upstream": [
+    "GHSA-6xpg-rfmh-grhq"
+  ],
+  "summary": "## Vulnerability",
+  "details": "## Vulnerability\r\n\r\nIn `rabbit_stomp.hrl` (lines 60-61), two frame size constants are defined:\r\n\r\n```erlang\r\n-define(DEFAULT_MAX_FRAME_SIZE, 4 * 1024 * 1024).            %% 4MB\r\n-define(DEFAULT_MAX_FRAME_SIZE_UNAUTHENTICATED, 65536).      %% 64KB\r\n```\r\n\r\nThe intent is clearly to limit unauthenticated STOMP connections to 64KB frames while allowing authenticated connections up to 4MB. However, `DEFAULT_MAX_FRAME_SIZE_UNAUTHENTICATED` is **never referenced** anywhere in the codebase.\r\n\r\nIn `rabbit_stomp_reader.erl` (line 98), only the 4MB limit is applied to ALL connections regardless of authentication state:\r\n\r\n```erlang\r\nMaxFrameSize = application:get_env(rabbitmq_stomp, max_frame_size, ?DEFAULT_MAX_FRAME_SIZE),\r\n```\r\n\r\nA grep of the entire `rabbitmq_stomp` directory confirms zero references to `DEFAULT_MAX_FRAME_SIZE_UNAUTHENTICATED` outside its definition in the `.hrl` file.\r\n\r\n## Impact\r\n\r\n- **Pre-authentication resource exhaustion**: Unauthenticated STOMP clients can send frames up to 4MB (should be capped at 64KB)\r\n- **Memory amplification**: An attacker opening many unauthenticated connections, each sending 4MB frames, can exhaust server memory\r\n- **Defense-in-depth failure**: The intended security control exists as dead code, providing a false sense of security\r\n\r\nNote: This is a lower-severity finding since 4MB per connection alone is not sufficient for OOM on most systems. The risk increases with many concurrent unauthenticated connections.\r\n\r\n## Comparison with MQTT\r\n\r\nThe MQTT plugin correctly implements separate limits:\r\n- `mqtt.max_packet_size_unauthenticated = 65536` (enforced for CONNECT packets)\r\n- `mqtt.max_packet_size_authenticated = 16777216` (enforced for post-auth packets)\r\n\r\nBoth are actively checked in `rabbit_mqtt_packet.erl` via `check_max_packet_size/2`. The STOMP plugin should follow the same pattern.\r\n\r\n## Affected Code\r\n\r\n- `deps/rabbitmq_stomp/include/rabbit_stomp.hrl:61` — dead constant definition\r\n- `deps/rabbitmq_stomp/src/rabbit_stomp_reader.erl:98` — only uses `DEFAULT_MAX_FRAME_SIZE`\r\n\r\n## Suggested Fix\r\n\r\nAdd a separate frame size check for unauthenticated connections in `rabbit_stomp_reader.erl`:\r\n\r\n```erlang\r\n%% Before authentication completes, use the unauthenticated limit\r\nMaxFrameSizeUnauth = application:get_env(rabbitmq_stomp,\r\n    max_frame_size_unauthenticated,\r\n    ?DEFAULT_MAX_FRAME_SIZE_UNAUTHENTICATED),\r\nMaxFrameSizeAuth = application:get_env(rabbitmq_stomp,\r\n    max_frame_size, ?DEFAULT_MAX_FRAME_SIZE),\r\n```\r\n\r\nThen switch from `MaxFrameSizeUnauth` to `MaxFrameSizeAuth` after successful CONNECT/authentication.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "rabbitmq",
+        "purl": "pkg:docker/dhi/rabbitmq?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.2.9-debian13",
+        "4.2.9-debian13-dev",
+        "4.2.9-debian13-fips",
+        "4.2.9-debian13-fips-dev",
+        "4.3.4-debian13",
+        "4.3.4-debian13-dev",
+        "4.3.4-debian13-fips",
+        "4.3.4-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-wz5b-o4y5-xmtn-d5n7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-6xpg-rfmh-grhq"
+    }
+  ]
+}
