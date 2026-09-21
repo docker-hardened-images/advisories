@@ -1,0 +1,310 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-bblo-hsi6-i2gc-noi2",
+  "modified": "2026-09-21T13:43:13Z",
+  "published": "2026-09-21T13:43:13Z",
+  "upstream": [
+    "CVE-2026-65902"
+  ],
+  "summary": "# Hook mutation of `data.allowedTags` / `data.allowedAttributes` permanently pollutes `DEFAULT_ALLOWED_TAGS` /…",
+  "details": "# Hook mutation of `data.allowedTags` / `data.allowedAttributes` permanently pollutes `DEFAULT_ALLOWED_TAGS` / `DEFAULT_ALLOWED_ATTR`\n\n**CWE**: CWE-501 (Trust Boundary Violation — hook-scoped mutation leaks to global default sets) via CWE-693 (Protection Mechanism Failure — the default allow-list is silently widened for all subsequent sanitize calls)\n\n## Summary\n\nThe `data.allowedTags` and `data.allowedAttributes` fields passed to `uponSanitizeElement` and `uponSanitizeAttribute` hooks are **direct references** to the library's live `ALLOWED_TAGS` / `ALLOWED_ATTR` sets. For sanitize calls that don't supply an explicit `cfg.ALLOWED_TAGS` / `cfg.ALLOWED_ATTR` array, those live sets are themselves direct references to the module-level `DEFAULT_ALLOWED_TAGS` / `DEFAULT_ALLOWED_ATTR` constants. A hook that mutates these fields — a natural-looking pattern for \"allow `X` for this iteration\" — permanently writes new entries into the default constants for the DOMPurify instance's lifetime. Every subsequent sanitize call that doesn't override the config inherits the widened defaults, so an attacker payload that uses the poisoned tag/attribute name survives sanitization. `removeAllHooks()`, `clearConfig()`, and even passing a fresh `cfg: {}` do not recover; only constructing a new DOMPurify instance does.\n\nThe maintainer's existing defense at `src/purify.ts:696-700` explicitly clones `DEFAULT_ALLOWED_TAGS` before mutating it via `cfg.ADD_TAGS` (array form), demonstrating awareness of this exact class. The hook path remained uncovered.\n\n## Affected\n\n- DOMPurify ≤ 3.4.5, including `main` at `7996f1dc78eb8b7922388aed75d94a9f8fad9a36`\n- Any application that installs a hook on `uponSanitizeElement` or `uponSanitizeAttribute` that writes to `data.allowedTags[...] = true` or `data.allowedAttributes[...] = true` and later sanitizes attacker-influenced content with default config (no explicit `cfg.ALLOWED_TAGS` / `cfg.ALLOWED_ATTR` array)\n\n## Vulnerability details\n\n### [A] — `data.allowedTags` is a reference to `ALLOWED_TAGS`\n\n`src/purify.ts:1206-1209`:\n\n```ts\n_executeHooks(hooks.uponSanitizeElement, currentNode, {\n  tagName,\n  allowedTags: ALLOWED_TAGS,         // [A] direct reference; hook mutation\n                                      //     mutates the very ALLOWED_TAGS the\n                                      //     library checks on the next element\n});\n```\n\n`src/purify.ts:1494-1500` (the matching attribute hook):\n\n```ts\nconst hookEvent = {\n  attrName: '',\n  attrValue: '',\n  keepAttr: true,\n  allowedAttributes: ALLOWED_ATTR,    // [A'] same pattern\n  forceKeepAttr: undefined,\n};\n```\n\n### [B] — `ALLOWED_TAGS = DEFAULT_ALLOWED_TAGS` for default-cfg sanitize calls\n\n`src/purify.ts:527-531`:\n\n```ts\nALLOWED_TAGS =\n  objectHasOwnProperty(cfg, 'ALLOWED_TAGS') &&\n  arrayIsArray(cfg.ALLOWED_TAGS)\n    ? addToSet({}, cfg.ALLOWED_TAGS, transformCaseFunc)\n    : DEFAULT_ALLOWED_TAGS;            // [B] reference assignment; ALLOWED_TAGS\n                                       //     IS the DEFAULT_ALLOWED_TAGS object\n```\n\n(The `ALLOWED_ATTR = DEFAULT_ALLOWED_ATTR` path at `:532-536` is symmetric.)\n\n### The mismatch\n\nA hook author who writes `data.allowedTags['script'] = true` reasonably expects per-call scope — the API name is *\"data\"*, suggesting per-event payload. But [A] makes this a direct reference, and [B] makes that reference equal to the module-level default for the common default-cfg path. The hook's mutation therefore writes to a *constant* that every subsequent default-cfg sanitize call rebinds to.\n\nThe maintainer already recognized this class for the `ADD_TAGS` array path — `src/purify.ts:696-700`:\n\n```ts\n} else if (arrayIsArray(cfg.ADD_TAGS)) {\n  if (ALLOWED_TAGS === DEFAULT_ALLOWED_TAGS) {\n    ALLOWED_TAGS = clone(ALLOWED_TAGS);   // explicitly clone DEFAULT before\n                                          // mutating to avoid this pollution\n  }\n  addToSet(ALLOWED_TAGS, cfg.ADD_TAGS, transformCaseFunc);\n}\n```\n\nThe same defensive clone is missing from the hook code paths.\n\n## Proof of concept\n\n```js\n// 1) fresh DOMPurify, default config — script is blocked\nDOMPurify.sanitize('<svg><script>alert(1)</script></svg>');\n// → \"<svg></svg>\"\n\n// 2) install a hook that mutates data.allowedTags (natural-looking pattern)\nDOMPurify.addHook('uponSanitizeElement', (node, data) => {\n  data.allowedTags['script'] = true;\n});\n\n// 3) one sanitize call WITH the hook — script survives (expected during the hook)\nDOMPurify.sanitize('<svg><script>alert(1)</script></svg>');\n// → \"<svg><script>alert(1)</script></svg>\"\n\n// 4) remove the hook\nDOMPurify.removeAllHooks();\nDOMPurify.clearConfig();\n\n// 5) sanitize attacker content with default config — POLLUTION PERSISTS\nDOMPurify.sanitize('<svg><script>alert(1)</script></svg>');\n// → \"<svg><script>alert(1)</script></svg>\"  ← script survived without any hook\n\n// 6) the only recovery: create a fresh DOMPurify instance\nconst fresh = DOMPurify(window);\nfresh.sanitize('<svg><script>alert(1)</script></svg>');\n// → \"<svg></svg>\"  ← clean\n```\n\nObserved (Chromium 148.0.7778.96, DOMPurify HEAD `7996f1d`):\n\n| step | input | output | bypass? |\n|---|---|---|---|\n| 1 fresh baseline | `<svg><script>__</script></svg>` | `<svg></svg>` | no |\n| 1b fresh baseline | `<a onclick=__>x</a>` | `<a>x</a>` | no |\n| 2 with hook (script) | `<svg><script>__</script></svg>` | `<svg><script>__</script></svg>` | yes (expected) |\n| 2b with hook (onclick) | `<a onclick=__>x</a>` | `<a onclick=\"__\">x</a>` | yes (expected) |\n| 3 after `removeAllHooks()` | same | `<svg><script>__</script></svg>` | **YES (pollution)** |\n| 3b after `removeAllHooks()` | same | `<a onclick=\"__\">x</a>` | **YES (pollution)** |\n| 4 after `clearConfig()` | same | `<svg><script>__</script></svg>` | **YES** |\n| 4b after `clearConfig()` | same | `<a onclick=\"__\">x</a>` | **YES** |\n| 5 explicit restrictive `cfg.ALLOWED_TAGS=['svg']` | same | `<svg></svg>` | no (cloned set) |\n| 6 back to no cfg | same | `<svg><script>__</script></svg>` | **YES** |\n| 6b back to no cfg | same | `<a onclick=\"__\">x</a>` | **YES** |\n| 7 fresh `DOMPurify(window)` instance | same | `<svg></svg>` | no |\n| 7b fresh instance | `<a onclick=__>x</a>` | `<a>x</a>` | no |\n\n## Impact\n\n### Direct\n\nAny application using `DOMPurify` that has any registered hook with the pattern `data.allowedTags[...] = true` or `data.allowedAttributes[...] = true`. The hook need not be designed to be permissive — it might be intended to *temporarily* allow a custom tag for one specific element shape. After the hook has executed even once, every subsequent default-config sanitize call carries the widened defaults, including:\n\n- attacker content rendered via separate code paths (e.g., the same library serving a comments section and a profile bio, where the bio uses the hook and the comments use plain `DOMPurify.sanitize(text)`)\n- third-party libraries that call `DOMPurify.sanitize` on the same instance\n\nThe bypass survives `DOMPurify.removeAllHooks()` and `DOMPurify.clearConfig()` — the obvious \"reset\" calls a dev would reach for. Detection requires reading the `DEFAULT_ALLOWED_TAGS` / `DEFAULT_ALLOWED_ATTR` sets directly, which are not part of the public API.\n\n### Indirect / second-order\n\n- **Editor / preview libraries** that compose with DOMPurify — if any consumer registers a hook that mutates `data.allowedTags`, every other consumer's sanitize calls inherit the widening.\n- **Test suites** that exercise multiple sanitize configurations — once a test's hook pollutes the defaults, later tests that assume default behavior may pass with widened defaults and miss real regressions.\n- **Long-running servers** (SSR, edge functions) that reuse a single DOMPurify instance — pollution accumulates over the process lifetime.\n\n### Why the existing maintainer defense for `ADD_TAGS` doesn't catch this\n\n`src/purify.ts:696-700` already documents awareness:\n\n```ts\n} else if (arrayIsArray(cfg.ADD_TAGS)) {\n  if (ALLOWED_TAGS === DEFAULT_ALLOWED_TAGS) {\n    ALLOWED_TAGS = clone(ALLOWED_TAGS);\n  }\n  addToSet(ALLOWED_TAGS, cfg.ADD_TAGS, transformCaseFunc);\n}\n```\n\nThe clone-before-mutate pattern is exactly what's needed at the hook callsites (`:1206-1209` and `:1494-1500`) but was not extended there. The new entries this report's bypass adds to the defaults survive the same way `ADD_TAGS` array entries would have survived before that fix landed.\n\n## Suggested fix\n\nThree minimal-impact options, in order of preference:\n\n1. **Hand the hook a defensive copy** (most surgical):\n\n   ```ts\n   _executeHooks(hooks.uponSanitizeElement, currentNode, {\n     tagName,\n     allowedTags: { ...ALLOWED_TAGS },     // shallow copy; mutations stay scoped\n   });\n   ```\n\n   Doc note: \"`data.allowedTags` is a snapshot; to widen the live set, use `cfg.ADD_TAGS` or set the value to true in the snapshot and check the snapshot from a subsequent attribute hook.\" Hooks that read it for inspection still work; hooks that intended cross-call mutation must be rewritten to use a proper config path (which is the correct API anyway).\n\n2. **Clone-on-write inside the hook path**, mirroring the existing `ADD_TAGS` defense at `:696-700`: detect that `ALLOWED_TAGS === DEFAULT_ALLOWED_TAGS` after the hook returns, and if so, replace it with a clone for subsequent processing. This preserves the live-mutation semantics for in-call effects while preventing cross-call leakage.\n\n3. **Lazy-clone `ALLOWED_TAGS`/`ALLOWED_ATTR` from defaults on first mutation**: install a Proxy or accessor that triggers a clone before mutation. Largest surface area, but bulletproof.\n\nOption (1) is the cleanest API contract: hook event objects should be event-local, never references to library-internal state.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "alloy",
+        "purl": "pkg:docker/dhi/alloy?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.10.1-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "alloy",
+        "purl": "pkg:docker/dhi/alloy?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.10.1-debian13",
+        "1.11.0-debian13",
+        "1.11.2-debian13",
+        "1.11.3-debian13",
+        "1.12.0-debian13",
+        "1.12.0-debian13-dev",
+        "1.12.1-debian13",
+        "1.12.1-debian13-dev",
+        "1.12.2-debian13",
+        "1.12.2-debian13-dev",
+        "1.13.0-debian13",
+        "1.13.0-debian13-dev",
+        "1.13.1-debian13",
+        "1.13.1-debian13-dev",
+        "1.13.2-debian13",
+        "1.13.2-debian13-dev",
+        "1.13.2-debian13-fips",
+        "1.13.2-debian13-fips-dev",
+        "1.14.0-debian13",
+        "1.14.0-debian13-dev",
+        "1.14.0-debian13-fips",
+        "1.14.0-debian13-fips-dev",
+        "1.14.1-debian13",
+        "1.14.1-debian13-dev",
+        "1.14.1-debian13-fips",
+        "1.14.1-debian13-fips-dev",
+        "1.15.0-debian13",
+        "1.15.0-debian13-dev",
+        "1.15.0-debian13-fips",
+        "1.15.0-debian13-fips-dev",
+        "1.15.1-debian13",
+        "1.15.1-debian13-dev",
+        "1.15.1-debian13-fips",
+        "1.15.1-debian13-fips-dev",
+        "1.16.0-debian13",
+        "1.16.0-debian13-dev",
+        "1.16.0-debian13-fips",
+        "1.16.0-debian13-fips-dev",
+        "1.16.1-debian13",
+        "1.16.1-debian13-dev",
+        "1.16.1-debian13-fips",
+        "1.16.1-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "argocd",
+        "purl": "pkg:docker/dhi/argocd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.14.20-debian13",
+        "2.14.21-debian13",
+        "3.0.13-debian13",
+        "3.0.15-debian13",
+        "3.0.16-debian13",
+        "3.0.17-debian13",
+        "3.0.18-debian13",
+        "3.0.19-debian13",
+        "3.0.20-debian13",
+        "3.0.20-debian13-fips",
+        "3.0.21-debian13",
+        "3.0.21-debian13-fips",
+        "3.0.22-debian13",
+        "3.0.22-debian13-fips",
+        "3.0.23-debian13",
+        "3.0.23-debian13-fips",
+        "3.1.1-debian13",
+        "3.1.10-debian13",
+        "3.1.10-debian13-fips",
+        "3.1.11-debian13",
+        "3.1.11-debian13-fips",
+        "3.1.12-debian13",
+        "3.1.12-debian13-fips",
+        "3.1.13-debian13",
+        "3.1.13-debian13-fips",
+        "3.1.14-debian13",
+        "3.1.14-debian13-fips",
+        "3.1.15-debian13",
+        "3.1.15-debian13-fips",
+        "3.1.16-debian13",
+        "3.1.16-debian13-fips",
+        "3.1.3-debian13",
+        "3.1.4-debian13",
+        "3.1.5-debian13",
+        "3.1.6-debian13",
+        "3.1.7-debian13",
+        "3.1.8-debian13",
+        "3.1.9-debian13",
+        "3.1.9-debian13-fips",
+        "3.2.0-debian13",
+        "3.2.1-debian13",
+        "3.2.1-debian13-fips",
+        "3.2.10-debian13",
+        "3.2.10-debian13-fips",
+        "3.2.11-debian13",
+        "3.2.11-debian13-fips",
+        "3.2.12-debian13",
+        "3.2.12-debian13-fips",
+        "3.2.2-debian13",
+        "3.2.2-debian13-fips",
+        "3.2.3-debian13",
+        "3.2.3-debian13-fips",
+        "3.2.4-debian13",
+        "3.2.4-debian13-fips",
+        "3.2.5-debian13",
+        "3.2.5-debian13-fips",
+        "3.2.6-debian13",
+        "3.2.6-debian13-fips",
+        "3.2.7-debian13",
+        "3.2.7-debian13-fips",
+        "3.2.8-debian13",
+        "3.2.8-debian13-fips",
+        "3.2.9-debian13",
+        "3.2.9-debian13-fips",
+        "3.3.10-debian13",
+        "3.3.10-debian13-fips",
+        "3.3.11-debian13",
+        "3.3.11-debian13-fips",
+        "3.3.12-debian13",
+        "3.3.12-debian13-fips",
+        "3.3.2-debian13",
+        "3.3.2-debian13-fips",
+        "3.3.3-debian13",
+        "3.3.3-debian13-fips",
+        "3.3.4-debian13",
+        "3.3.4-debian13-fips",
+        "3.3.5-debian13",
+        "3.3.5-debian13-fips",
+        "3.3.6-debian13",
+        "3.3.6-debian13-fips",
+        "3.3.7-debian13",
+        "3.3.7-debian13-fips",
+        "3.3.8-debian13",
+        "3.3.8-debian13-fips",
+        "3.3.9-debian13",
+        "3.3.9-debian13-fips",
+        "3.4.1-debian13",
+        "3.4.1-debian13-fips",
+        "3.4.2-debian13",
+        "3.4.2-debian13-fips",
+        "3.4.3-debian13",
+        "3.4.3-debian13-fips",
+        "3.4.4-debian13",
+        "3.4.4-debian13-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "argocd",
+        "purl": "pkg:docker/dhi/argocd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "3.1.0-debian12",
+        "3.1.1-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "grist",
+        "purl": "pkg:docker/dhi/grist?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.6.0-debian12",
+        "1.6.1-debian12",
+        "1.7.0-debian12",
+        "1.7.1-debian12",
+        "1.7.2-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "grist",
+        "purl": "pkg:docker/dhi/grist?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.7.10-debian13",
+        "1.7.10-debian13-dev",
+        "1.7.11-debian13",
+        "1.7.11-debian13-dev",
+        "1.7.12-debian13",
+        "1.7.12-debian13-dev",
+        "1.7.13-debian13",
+        "1.7.13-debian13-dev",
+        "1.7.15-debian13",
+        "1.7.15-debian13-dev",
+        "1.7.19-debian13",
+        "1.7.19-debian13-dev",
+        "1.7.2-debian13",
+        "1.7.3-debian13",
+        "1.7.4-debian13",
+        "1.7.5-debian13",
+        "1.7.7-debian13",
+        "1.7.8-debian13",
+        "1.7.8-debian13-dev",
+        "1.7.9-debian13",
+        "1.7.9-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "9.1.10-debian13",
+        "9.1.8-debian13",
+        "9.1.9-debian13",
+        "9.2.2-debian13",
+        "9.2.3-debian13",
+        "9.2.4-debian13",
+        "9.2.5-debian13",
+        "9.2.6-debian13",
+        "9.2.8-debian13",
+        "9.3.0-debian13",
+        "9.3.1-debian13",
+        "9.3.3-debian13",
+        "9.3.4-debian13",
+        "9.3.5-debian13",
+        "9.4.1-debian13",
+        "9.4.2-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-bblo-hsi6-i2gc-noi2"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-76mc-f452-cxcm"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/cure53/DOMPurify/security/advisories/GHSA-76mc-f452-cxcm"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-65902"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-65902"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-65902"
+    }
+  ]
+}
