@@ -1,0 +1,233 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-4wn2-qfbl-iwwl-4gth",
+  "modified": "2026-09-21T12:44:12Z",
+  "published": "2026-09-21T12:44:12Z",
+  "upstream": [
+    "CVE-2026-59947"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nWhen Composer is run with -vvv (debug verbosity), it could print a credential that was embedded directly in a repository or package URL, but not as a password, to its debug output. Composer already masked the password portion of such URLs, but the username portion was shown in clear text. Because GitHub and several other services support placing an access token in the username position of a URL (for example https://[token]@github.com/owner/repo), a token used that way could end up written to the verbose log in full.\n\nThis is an information disclosure issue. The credential is only ever exposed to whoever can already read Composer's debug output.\n\n## Am I affected?\n\nYou are potentially affected only if **all** of the following apply:\n\n- A credential is embedded inside a URL that Composer handles, e.g. in a `repositories` entry in composer.json, in a package dist/source URL - rather than being supplied through auth.json or the COMPOSER_AUTH environment variable.\n- The secret sits in the username slot of that URL (e.g. `https://TOKEN@host/…`). A normal `username:password@host` pair where the username is an ordinary account name did not expose the password, that was already masked.\n- Composer is run with -vvv (debug verbosity), and that output is retained or shared somewhere others can read it: public CI build logs, output pasted into an issue or chat, archived terminal sessions, and so on.\n\nIf you keep credentials in auth.json or environment variables, or you never run Composer at debug verbosity, you were not exposed.\n\nThe most realistic exposure is the documented pattern of embedding a GitHub Personal Access Token in a URL's username position on a machine (often CI) that captures verbose output.\n\n## Patched versions\n\nThe username is now masked the same way the password already was, so an embedded token no longer appears in verbose output (a short, non-secret prefix may be shown to aid debugging, but never the full value).\n\nFixed in Composer 2.10.2 and the 2.2.29.\n\n## Workarounds\n\nThere is no configuration setting that prevents outputting credentials while keeping normal behavior.\n\nIf you cannot upgrade right away, you can reduce exposure by:\n\n- Not running Composer with -vvv (debug verbosity) in environments where output is captured or shared.\n- Moving credentials out of URLs and into auth.json or COMPOSER_AUTH.\n- Scrubbing existing CI/build logs that may already contain a leaked token.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "composer",
+        "purl": "pkg:docker/dhi/composer?os_name=alpine&os_version=3.22"
+      },
+      "versions": [
+        "2.10.0-alpine3.22-dev",
+        "2.10.0-alpine3.22-fips-dev",
+        "2.10.0-alpine3.22-php8.2-dev",
+        "2.10.0-alpine3.22-php8.2-fips-dev",
+        "2.10.0-alpine3.22-php8.3-dev",
+        "2.10.0-alpine3.22-php8.3-fips-dev",
+        "2.10.0-alpine3.22-php8.4-dev",
+        "2.10.0-alpine3.22-php8.4-fips-dev",
+        "2.10.1-alpine3.22-dev",
+        "2.10.1-alpine3.22-fips-dev",
+        "2.10.1-alpine3.22-php8.2-dev",
+        "2.10.1-alpine3.22-php8.2-fips-dev",
+        "2.10.1-alpine3.22-php8.3-dev",
+        "2.10.1-alpine3.22-php8.3-fips-dev",
+        "2.10.1-alpine3.22-php8.4-dev",
+        "2.10.1-alpine3.22-php8.4-fips-dev",
+        "2.2.26-alpine3.22-dev",
+        "2.2.26-alpine3.22-fips-dev",
+        "2.2.26-alpine3.22-php8.2-dev",
+        "2.2.26-alpine3.22-php8.2-fips-dev",
+        "2.2.26-alpine3.22-php8.3-dev",
+        "2.2.26-alpine3.22-php8.3-fips-dev",
+        "2.2.26-alpine3.22-php8.4-dev",
+        "2.2.26-alpine3.22-php8.4-fips-dev",
+        "2.2.27-alpine3.22-dev",
+        "2.2.27-alpine3.22-fips-dev",
+        "2.2.27-alpine3.22-php8.2-dev",
+        "2.2.27-alpine3.22-php8.2-fips-dev",
+        "2.2.27-alpine3.22-php8.3-dev",
+        "2.2.27-alpine3.22-php8.3-fips-dev",
+        "2.2.27-alpine3.22-php8.4-dev",
+        "2.2.27-alpine3.22-php8.4-fips-dev",
+        "2.2.28-alpine3.22-dev",
+        "2.2.28-alpine3.22-fips-dev",
+        "2.2.28-alpine3.22-php8.2-dev",
+        "2.2.28-alpine3.22-php8.2-fips-dev",
+        "2.2.28-alpine3.22-php8.3-dev",
+        "2.2.28-alpine3.22-php8.3-fips-dev",
+        "2.2.28-alpine3.22-php8.4-dev",
+        "2.2.28-alpine3.22-php8.4-fips-dev",
+        "2.9.5-alpine3.22-dev",
+        "2.9.5-alpine3.22-fips-dev",
+        "2.9.5-alpine3.22-php8.2-dev",
+        "2.9.5-alpine3.22-php8.2-fips-dev",
+        "2.9.5-alpine3.22-php8.3-dev",
+        "2.9.5-alpine3.22-php8.3-fips-dev",
+        "2.9.5-alpine3.22-php8.4-dev",
+        "2.9.5-alpine3.22-php8.4-fips-dev",
+        "2.9.7-alpine3.22-dev",
+        "2.9.7-alpine3.22-fips-dev",
+        "2.9.7-alpine3.22-php8.2-dev",
+        "2.9.7-alpine3.22-php8.2-fips-dev",
+        "2.9.7-alpine3.22-php8.3-dev",
+        "2.9.7-alpine3.22-php8.3-fips-dev",
+        "2.9.7-alpine3.22-php8.4-dev",
+        "2.9.7-alpine3.22-php8.4-fips-dev",
+        "2.9.8-alpine3.22-dev",
+        "2.9.8-alpine3.22-fips-dev",
+        "2.9.8-alpine3.22-php8.2-dev",
+        "2.9.8-alpine3.22-php8.2-fips-dev",
+        "2.9.8-alpine3.22-php8.3-dev",
+        "2.9.8-alpine3.22-php8.3-fips-dev",
+        "2.9.8-alpine3.22-php8.4-dev",
+        "2.9.8-alpine3.22-php8.4-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "composer",
+        "purl": "pkg:docker/dhi/composer?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.10.0-debian13-dev",
+        "2.10.0-debian13-fips-dev",
+        "2.10.0-debian13-php8.2-dev",
+        "2.10.0-debian13-php8.2-fips-dev",
+        "2.10.0-debian13-php8.3-dev",
+        "2.10.0-debian13-php8.3-fips-dev",
+        "2.10.0-debian13-php8.4-dev",
+        "2.10.0-debian13-php8.4-fips-dev",
+        "2.10.1-debian13-dev",
+        "2.10.1-debian13-fips-dev",
+        "2.10.1-debian13-php8.2-dev",
+        "2.10.1-debian13-php8.2-fips-dev",
+        "2.10.1-debian13-php8.3-dev",
+        "2.10.1-debian13-php8.3-fips-dev",
+        "2.10.1-debian13-php8.4-dev",
+        "2.10.1-debian13-php8.4-fips-dev",
+        "2.2.26-debian13-dev",
+        "2.2.26-debian13-fips-dev",
+        "2.2.26-debian13-php8.2-dev",
+        "2.2.26-debian13-php8.2-fips-dev",
+        "2.2.26-debian13-php8.3-dev",
+        "2.2.26-debian13-php8.3-fips-dev",
+        "2.2.26-debian13-php8.4-dev",
+        "2.2.26-debian13-php8.4-fips-dev",
+        "2.2.27-debian13-dev",
+        "2.2.27-debian13-fips-dev",
+        "2.2.27-debian13-php8.2-dev",
+        "2.2.27-debian13-php8.2-fips-dev",
+        "2.2.27-debian13-php8.3-dev",
+        "2.2.27-debian13-php8.3-fips-dev",
+        "2.2.27-debian13-php8.4-dev",
+        "2.2.27-debian13-php8.4-fips-dev",
+        "2.2.28-debian13-dev",
+        "2.2.28-debian13-fips-dev",
+        "2.2.28-debian13-php8.2-dev",
+        "2.2.28-debian13-php8.2-fips-dev",
+        "2.2.28-debian13-php8.3-dev",
+        "2.2.28-debian13-php8.3-fips-dev",
+        "2.2.28-debian13-php8.4-dev",
+        "2.2.28-debian13-php8.4-fips-dev",
+        "2.9.5-debian13-dev",
+        "2.9.5-debian13-fips-dev",
+        "2.9.5-debian13-php8.2-dev",
+        "2.9.5-debian13-php8.2-fips-dev",
+        "2.9.5-debian13-php8.3-dev",
+        "2.9.5-debian13-php8.3-fips-dev",
+        "2.9.5-debian13-php8.4-dev",
+        "2.9.5-debian13-php8.4-fips-dev",
+        "2.9.7-debian13-dev",
+        "2.9.7-debian13-fips-dev",
+        "2.9.7-debian13-php8.2-dev",
+        "2.9.7-debian13-php8.2-fips-dev",
+        "2.9.7-debian13-php8.3-dev",
+        "2.9.7-debian13-php8.3-fips-dev",
+        "2.9.7-debian13-php8.4-dev",
+        "2.9.7-debian13-php8.4-fips-dev",
+        "2.9.8-debian13-dev",
+        "2.9.8-debian13-fips-dev",
+        "2.9.8-debian13-php8.2-dev",
+        "2.9.8-debian13-php8.2-fips-dev",
+        "2.9.8-debian13-php8.3-dev",
+        "2.9.8-debian13-php8.3-fips-dev",
+        "2.9.8-debian13-php8.4-dev",
+        "2.9.8-debian13-php8.4-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-4wn2-qfbl-iwwl-4gth"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-g6xq-892h-64w3"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-59947"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/composer/composer/security/advisories/GHSA-g6xq-892h-64w3"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/composer/composer/commit/8887ad76fbd830cb1861a2b1fd8ead78ed1fa1ec"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/composer/composer/commit/6bd66874ae523ecb69aca5964487a0cdfda03ef8"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/composer/composer/releases/tag/2.2.29"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/composer/composer/releases/tag/2.10.2"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-1941.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-59948"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-59947"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-59946"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-59947"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-59947"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-59947"
+    }
+  ]
+}
