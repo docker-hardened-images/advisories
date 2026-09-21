@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-exah-lg5a-iavr-nvdo",
+  "modified": "2026-09-21T14:25:30Z",
+  "published": "2026-09-21T14:25:30Z",
+  "upstream": [
+    "CVE-2026-52846"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\nCaddy’s `stripHTML` template function cannot reliably remove all HTML tags from input strings. Certain malformed HTML, such as `<<>img src=x onerror=alert()>`, can bypass the tag-stripping logic, potentially leaving dangerous content in the output if it is later rendered as HTML. This may allow client-side XSS in cases where untrusted strings are rendered unsafely.\n\n---\n\n### Details\nThe vulnerability originates from `funcStripHTML` in:\n\n[caddy/caddy/caddyhttp/templates/tplcontext.go](https://github.com/caddyserver/caddy/blob/77e9ce7404c4a76853e101a9f5687a929ee56654/modules/caddyhttp/templates/tplcontext.go)\n\n```go\nfunc (TemplateContext) funcStripHTML(s string) string {\n    var buf bytes.Buffer\n    var inTag, inQuotes bool\n    var tagStart int\n    for i, ch := range s {\n        if inTag {\n            if ch == '>' && !inQuotes {\n                inTag = false\n            } else if ch == '<' && !inQuotes {\n                // false start\n                buf.WriteString(s[tagStart:i])\n                tagStart = i\n            } else if ch == '\"' {\n                inQuotes = !inQuotes\n            }\n            continue\n        }\n        if ch == '<' {\n            inTag = true\n            tagStart = i\n            continue\n        }\n        buf.WriteRune(ch)\n    }\n    if inTag {\n        // false start\n        buf.WriteString(s[tagStart:])\n    }\n    return buf.String()\n}\n```\n\n### POC\n\nCaddyfile setup\n\n```\n:8080 {\n    root * ./site\n    file_server\n    templates\n}\n```\n\nTemplate file (index.html)\n\n```html\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>StripHTML Bypass Test</title>\n</head>\n<body>\n    <p>{{ stripHTML \"<<>img src=x onerror=alert('XSS')>\" }}</p>\n</body>\n</html>\n```\n\nThe payload exploits the false start branch to smuggle a literal < back into the output, then uses the following > to terminate the parser’s tag state, leaving a valid <img ...> tag behind.\n\nTested in v2.11.3\n\n### Impact\n\nMalformed HTML can bypass stripHTML, potentially allowing arbitrary HTML or JavaScript to be rendered if the output is used unsafely, leading to client-side XSS.\n\n### AI Disclosure\n\nAI assisted in writing the report description; however, the discovery of the issue has been done manually.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "caddy",
+        "purl": "pkg:docker/dhi/caddy?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.10.2-debian13",
+        "2.10.2-debian13-dev",
+        "2.10.2-debian13-fips",
+        "2.10.2-debian13-fips-dev",
+        "2.11.1-debian13",
+        "2.11.1-debian13-dev",
+        "2.11.1-debian13-fips",
+        "2.11.1-debian13-fips-dev",
+        "2.11.2-debian13",
+        "2.11.2-debian13-dev",
+        "2.11.2-debian13-fips",
+        "2.11.2-debian13-fips-dev",
+        "2.11.3-debian13",
+        "2.11.3-debian13-dev",
+        "2.11.3-debian13-fips",
+        "2.11.3-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-exah-lg5a-iavr-nvdo"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-vcc4-2c75-vc9v"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/caddyserver/caddy/security/advisories/GHSA-vcc4-2c75-vc9v"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-52846"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-5660"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-52846"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-52846"
+    }
+  ]
+}
