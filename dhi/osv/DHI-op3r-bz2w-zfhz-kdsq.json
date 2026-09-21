@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-op3r-bz2w-zfhz-kdsq",
+  "modified": "2026-09-21T16:14:28Z",
+  "published": "2026-09-21T16:14:28Z",
+  "upstream": [
+    "GHSA-rgwj-5xj2-c3m3"
+  ],
+  "summary": "## Vulnerability Details",
+  "details": "## Vulnerability Details\n\n**File**: `lib/compressed_protocol.js`\n**Line**: 43 (`zlib.inflate(body, (err, data) => { ... })` inside `handleCompressedPacket`)\n\n### Root Cause\nWhen a connection is created with `compress: true` (and the server advertises `CLIENT_COMPRESS`), every incoming packet is unwrapped by `handleCompressedPacket()` in `lib/compressed_protocol.js`, which calls:\n\n```js\nzlib.inflate(body, (err, data) => { ... });\n```\n\nNo options object (in particular, no `maxOutputLength`) is passed. Node's zlib convenience methods default `maxOutputLength` to `buffer.kMaxLength`, which on this platform is `Number.MAX_SAFE_INTEGER` — i.e. effectively unbounded until the process runs out of memory. The 3-byte \"length of payload before compression\" field in the compressed-packet header is read (`packet.readInt24()`) but is only used to branch on `!== 0`; it is never used to cap or validate the actual inflate output size, and the real decompressed size is determined purely by the attacker-supplied deflate stream.\n\nBecause DEFLATE can reach compression ratios over 1000:1 for crafted repetitive input, an attacker who controls (or MITMs, on a non-TLS connection) the MySQL server endpoint can send a single small compressed packet that expands to gigabytes in the client's memory — a classic decompression-bomb / \"zip bomb\" applied to MySQL's client-compression protocol.\n\n### Attack Scenario\n1. Application connects with `mysql2`/`mysql2/promise` using `compress: true` (a documented option for reducing bandwidth, commonly used for cloud/WAN DB connections).\n2. The connection target is attacker-controlled or attacker-compromised, or an attacker MITMs a non-TLS connection.\n3. Right after authentication succeeds, the malicious endpoint sends one crafted compressed packet whose deflate stream is small on the wire (hundreds of KB) but decompresses to several GB.\n4. `zlib.inflate()` starts allocating memory for the full decompressed output with no ceiling.\n5. The Node.js process's RSS grows uncontrolled until OOM-kill or crash — no query needs to be issued by the client; the malicious packet alone is enough.\n\n### Impact\nDenial of Service of the client application (process crash / OOM) — not the database itself. No authentication bypass or data exposure. Requires `compress: true` plus a malicious/compromised server or MITM position.\n\n### Vulnerable Code\n```js\nfunction handleCompressedPacket(packet) {\n  const connection = this;\n  const deflatedLength = packet.readInt24();\n  const body = packet.readBuffer();\n\n  if (deflatedLength !== 0) {\n    connection.inflateQueue.push((task) => {\n      zlib.inflate(body, (err, data) => {\n        if (err) {\n          connection._handleNetworkError(err);\n          return;\n        }\n        connection._bumpCompressedSequenceId(packet.numPackets);\n        connection._inflatedPacketsParser.execute(data);\n        task.done();\n      });\n    });\n  } else {\n    ...\n  }\n}\n```\n\n### Recommended Fix\n```js\nconst MAX_INFLATED_PACKET_SIZE = 1 * 1024 * 1024 * 1024; // e.g. 1 GiB, ideally configurable\n\nzlib.inflate(body, { maxOutputLength: MAX_INFLATED_PACKET_SIZE }, (err, data) => {\n  if (err) {\n    connection._handleNetworkError(err);\n    return;\n  }\n  ...\n});\n```\n`maxOutputLength` makes `zlib.inflate` abort with `ERR_BUFFER_TOO_LARGE` as soon as the decompressed size would exceed the cap, routing into the exact same (already-existing) `err` → `connection._handleNetworkError(err)` path, so no new error-handling logic is required.\n\n### Verification\nDynamically confirmed on v3.23.0 (HEAD) using a minimal rogue \"MySQL server\" built on node-mysql2's own server-mode helpers (`mysql.createServer`, `Packets.Handshake`, `connection.writeOk()`). The rogue server completes a real handshake advertising `CLIENT_COMPRESS`, then writes one raw compressed frame (509,604 bytes on the wire — a zlib deflate of 500 MB of zero bytes, ratio 1028.8:1) directly to the socket. A normal `mysql.createConnection({ ..., compress: true })` victim client — which never issues any query — had its RSS grow from 74.3 MB to 1115.0 MB after receiving that single packet, before erroring out with `PROTOCOL_UNEXPECTED_PACKET` once the client tried to parse the inflated zero-filled buffer as MySQL packets. The memory allocation happens unconditionally before any content validation.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "uptime-kuma",
+        "purl": "pkg:docker/dhi/uptime-kuma?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.23.17-debian13",
+        "1.23.17-debian13-dev",
+        "2.4.0-debian13",
+        "2.4.0-debian13-dev",
+        "2.5.0-debian13",
+        "2.5.0-debian13-dev",
+        "2.5.3-debian13",
+        "2.5.3-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-op3r-bz2w-zfhz-kdsq"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-rgwj-5xj2-c3m3"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/sidorares/node-mysql2/security/advisories/GHSA-rgwj-5xj2-c3m3"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/sidorares/node-mysql2/commit/7c48343c95ecc80d30d6ebfa67875947b7d848d2"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/sidorares/node-mysql2/releases/tag/v3.23.1"
+    }
+  ]
+}

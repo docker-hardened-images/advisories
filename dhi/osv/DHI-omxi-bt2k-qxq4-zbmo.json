@@ -1,0 +1,231 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-omxi-bt2k-qxq4-zbmo",
+  "modified": "2026-09-21T16:14:28Z",
+  "published": "2026-09-21T16:14:28Z",
+  "upstream": [
+    "CVE-2026-50572"
+  ],
+  "summary": "*Title*: Envoy occasionally crashes with `suspect faulting address 0x0` when calling onSuccess callback in…",
+  "details": "*Title*: Envoy occasionally crashes with `suspect faulting address 0x0` when calling onSuccess callback in ext_authz_http_impl.cc.\r\n\r\n*Description*: This crash occurs around 3-5 times every 24 hours on a cluster that has average qps of 100k. We have been unable to find the circumstances that trigger this segfault due to the rarity of the problem. We use an HTTP1.1 service to handle our ext_authz requests from Envoy. \r\n\r\nWe know for sure that the ext_authz request that triggers the segfault is neither cancelled nor reset due to the dump state output of `async_client_impl.cc`. \r\n\r\nWe suspect that `callbacks_` in the RawHttpClientImpl class is referring to junk memory because the stacktrace doesn't include `toResponse`. We also check that `callbacks_` is not nullptr in the code but that didn't prevent the segfault from happening.\r\nhttps://github.com/envoyproxy/envoy/blob/9cd454d18227dd9b7b13d5b3051304e4fdd219fb/source/extensions/filters/common/ext_authz/ext_authz_http_impl.cc#L287-L291\r\n\r\nFurthermore, the 2nd stacktrace for this segfault ends with the lines below so we think the `0x1` in the stacktrace is referring to the `onComplete` interface method from `RequestCallbacks`.\r\n```bash\r\n[2025-05-06 22:33:18.233][13][critical][backtrace] [./source/server/backtrace.h:127] Caught Aborted, suspect faulting address 0x1\r\nlibc++abi: Pure virtual function called!\r\n```\r\nhttps://github.com/envoyproxy/envoy/blob/9cd454d18227dd9b7b13d5b3051304e4fdd219fb/source/extensions/filters/common/ext_authz/ext_authz.h#L140-L148\r\n\r\n*Repro steps*: Have not been able to reproduce locally\r\n\r\n*Call Stack*:\r\n```bash\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#31: start_thread [0x7f04d31d9609]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#30: Envoy::Thread::PosixThreadFactory::createPthread()::$_2::__invoke() [0x5615405bd452]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#29: Envoy::Server::WorkerImpl::threadRoutine() [0x56153fac8ecd]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#28: event_base_loop [0x5615405359c1]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#27: event_process_active_single_queue [0x561540537080]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#26: Envoy::Event::FileEventImpl::mergeInjectedEventsAndRunCb() [0x5615402d5d65]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#25: std::__1::__function::__func<>::operator()() [0x5615402d4816]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#24: std::__1::__function::__func<>::operator()() [0x5615402eb9b6]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#23: Envoy::Network::ConnectionImpl::onFileEvent() [0x5615402e1b01]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#22: Envoy::Network::ConnectionImpl::onReadReady() [0x5615402e591b]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#21: Envoy::Network::FilterManagerImpl::onContinueReading() [0x5615403476f5]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#20: Envoy::Http::CodecClient::CodecReadFilter::onData() [0x56153ff4b475]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#19: Envoy::Http::CodecClient::onData() [0x56153ff48f52]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#18: Envoy::Http::Http1::ClientConnectionImpl::dispatch() [0x5615400acd1d]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#17: Envoy::Http::Http1::ConnectionImpl::dispatch() [0x5615400ad1f3]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#16: Envoy::Http::Http1::ConnectionImpl::dispatchSlice() [0x5615400adb36]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#15: quiche::BalsaFrame::ProcessInput() [0x5615400be793]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#14: quiche::BalsaFrame::ProcessHeaders() [0x5615400bf8ce]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#13: Envoy::Http::Http1::BalsaParser::MessageDone() [0x5615400bc49f]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#12: Envoy::Http::Http1::ConnectionImpl::onMessageComplete() [0x5615400b00c8]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#11: Envoy::Http::Http1::ConnectionImpl::onMessageCompleteImpl() [0x5615400b0486]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#10: Envoy::Http::Http1::ClientConnectionImpl::onMessageCompleteBase() [0x5615400b6aeb]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#9: Envoy::Http::CodecClient::ActiveRequest::decodeHeaders() [0x56153ff4a6e1]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#8: Envoy::Http::Http1::ActiveClient::StreamWrapper::decodeHeaders() [0x56153fea3c81]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#7: Envoy::Router::UpstreamCodecFilter::CodecBridge::decodeHeaders() [0x5615401310bf]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#6: Envoy::Http::FilterManager::encodeHeaders() [0x56154014851c]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#5: Envoy::Router::UpstreamRequest::decodeHeaders() [0x561540128246]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#4: Envoy::Router::Filter::onUpstreamHeaders() [0x561540118d4b]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#3: Envoy::Http::AsyncStreamImpl::encodeHeaders() [0x56153ff5e8ea]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#2: Envoy::Http::AsyncRequestSharedImpl::onComplete() [0x56153ff5ffe7]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] envoyproxy/envoy#1: Envoy::Extensions::Filters::Common::ExtAuthz::RawHttpClientImpl::onSuccess() [0x56153e389ee9]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:119] #0: __restore_rt [0x7f04d31e5420]\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:127] Caught Segmentation fault, suspect faulting address 0x0\r\n[2025-05-06 22:33:18.361][13][critical][backtrace] [./source/server/backtrace.h:114] Address mapping: 56153dfe4000-561540b53000 /opt/system/envoy/bin/envoy\r\n\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.31.10-debian12",
+        "1.31.8-debian12",
+        "1.31.9-debian12",
+        "1.32.10-debian12",
+        "1.32.6-debian12",
+        "1.32.7-debian12",
+        "1.32.8-debian12",
+        "1.32.9-debian12",
+        "1.33.3-debian12",
+        "1.33.4-debian12",
+        "1.33.5-debian12",
+        "1.33.6-debian12",
+        "1.33.7-debian12",
+        "1.34.1-debian12",
+        "1.34.2-debian12",
+        "1.34.3-debian12",
+        "1.34.4-debian12",
+        "1.34.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.31.10-debian13",
+        "1.32.10-debian13",
+        "1.32.11-debian13",
+        "1.32.12-debian13",
+        "1.32.13-debian13",
+        "1.33.10-debian13",
+        "1.33.11-debian13",
+        "1.33.12-debian13",
+        "1.33.13-debian13",
+        "1.33.14-debian13",
+        "1.33.14-debian13-dev",
+        "1.33.7-debian13",
+        "1.33.8-debian13",
+        "1.33.9-debian13",
+        "1.34.10-debian13",
+        "1.34.11-debian13",
+        "1.34.12-debian13",
+        "1.34.12-debian13-dev",
+        "1.34.13-debian13",
+        "1.34.13-debian13-dev",
+        "1.34.14-debian13",
+        "1.34.14-debian13-dev",
+        "1.34.5-debian13",
+        "1.34.6-debian13",
+        "1.34.7-debian13",
+        "1.34.8-debian13",
+        "1.34.9-debian13",
+        "1.35.10-debian13",
+        "1.35.10-debian13-dev",
+        "1.35.10-debian13-fips",
+        "1.35.10-debian13-fips-dev",
+        "1.35.11-debian13",
+        "1.35.11-debian13-dev",
+        "1.35.11-debian13-fips",
+        "1.35.11-debian13-fips-dev",
+        "1.35.12-debian13",
+        "1.35.12-debian13-dev",
+        "1.35.12-debian13-fips",
+        "1.35.12-debian13-fips-dev",
+        "1.35.13-debian13",
+        "1.35.13-debian13-dev",
+        "1.35.13-debian13-fips",
+        "1.35.13-debian13-fips-dev",
+        "1.35.2-debian13",
+        "1.35.3-debian13",
+        "1.35.4-debian13",
+        "1.35.5-debian13",
+        "1.35.6-debian13",
+        "1.35.7-debian13",
+        "1.35.8-debian13",
+        "1.35.8-debian13-dev",
+        "1.35.9-debian13",
+        "1.35.9-debian13-dev",
+        "1.36.2-debian13",
+        "1.36.4-debian13",
+        "1.36.4-debian13-dev",
+        "1.36.5-debian13",
+        "1.36.5-debian13-dev",
+        "1.36.6-debian13",
+        "1.36.6-debian13-dev",
+        "1.36.6-debian13-fips",
+        "1.36.6-debian13-fips-dev",
+        "1.36.7-debian13",
+        "1.36.7-debian13-dev",
+        "1.36.7-debian13-fips",
+        "1.36.7-debian13-fips-dev",
+        "1.36.8-debian13",
+        "1.36.8-debian13-dev",
+        "1.36.8-debian13-fips",
+        "1.36.8-debian13-fips-dev",
+        "1.36.9-debian13",
+        "1.36.9-debian13-dev",
+        "1.36.9-debian13-fips",
+        "1.36.9-debian13-fips-dev",
+        "1.37.0-debian13",
+        "1.37.0-debian13-dev",
+        "1.37.1-debian13",
+        "1.37.1-debian13-dev",
+        "1.37.2-debian13",
+        "1.37.2-debian13-dev",
+        "1.37.2-debian13-fips",
+        "1.37.2-debian13-fips-dev",
+        "1.37.3-debian13",
+        "1.37.3-debian13-dev",
+        "1.37.3-debian13-fips",
+        "1.37.3-debian13-fips-dev",
+        "1.37.4-debian13",
+        "1.37.4-debian13-dev",
+        "1.37.4-debian13-fips",
+        "1.37.4-debian13-fips-dev",
+        "1.37.5-debian13",
+        "1.37.5-debian13-dev",
+        "1.37.5-debian13-fips",
+        "1.37.5-debian13-fips-dev",
+        "1.38.0-debian13",
+        "1.38.0-debian13-dev",
+        "1.38.0-debian13-fips",
+        "1.38.0-debian13-fips-dev",
+        "1.38.1-debian13",
+        "1.38.1-debian13-dev",
+        "1.38.1-debian13-fips",
+        "1.38.1-debian13-fips-dev",
+        "1.38.2-debian13",
+        "1.38.2-debian13-dev",
+        "1.38.2-debian13-fips",
+        "1.38.2-debian13-fips-dev",
+        "1.38.3-debian13",
+        "1.38.3-debian13-dev",
+        "1.38.3-debian13-fips",
+        "1.38.3-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-omxi-bt2k-qxq4-zbmo"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-q8wp-gf7q-m8cv"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-2149.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73553"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73552"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73551"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73550"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73549"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73548"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73547"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73546"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73513"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73512"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73511"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-50572"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-48521"
+    }
+  ]
+}
