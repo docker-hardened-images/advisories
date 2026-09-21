@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-kf2t-5fmp-w3hf-ds3k",
+  "modified": "2026-09-21T15:27:23Z",
+  "published": "2026-09-21T15:27:23Z",
+  "upstream": [
+    "GHSA-26pp-8wgv-hjvm"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nCookie names are not validated on the write path when using `setCookie()`, `serialize()`, or `serializeSigned()` to generate Set-Cookie headers.\n\nWhile certain cookie attributes such as domain and path are validated, the cookie name itself may contain invalid characters.\n\nThis results in inconsistent handling of cookie names between parsing (read path) and serialization (write path).\n\n## Details\n\nWhen applications use `setCookie()`, `serialize()`, or `serializeSigned()` with a user-controlled cookie name, invalid values (e.g., containing control characters such as `\\r` or `\\n`) can be used to construct malformed `Set-Cookie` header values.\n\nFor example:\n\n```\nSet-Cookie: legit\nX-Injected: evil=value\n```\n\nHowever, in modern runtimes such as Node.js and Cloudflare Workers, such invalid header values are rejected and result in a runtime error before the response is sent.\n\nAs a result, the reported header injection / response splitting behavior could not be reproduced in these environments.\n\n## Impact\n\nApplications that pass untrusted input as the cookie name to `setCookie()`, `serialize()`, or `serializeSigned()` may encounter runtime errors due to invalid header values.\n\nIn tested environments, malformed `Set-Cookie` headers are rejected before being sent, and the reported header injection behavior could not be reproduced.\n\nThis issue primarily affects correctness and robustness rather than introducing a confirmed exploitable vulnerability.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "context7-mcp",
+        "purl": "pkg:docker/dhi/context7-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.0.31-debian13",
+        "1.0.33-debian13",
+        "2.0.1-debian13",
+        "2.0.2-debian13",
+        "2.1.0-debian13",
+        "2.1.1-debian13",
+        "2.1.2-debian13",
+        "2.1.3-debian13",
+        "2.1.4-debian13",
+        "2.1.6-debian13",
+        "2.1.7-debian13",
+        "2.1.8-debian13",
+        "2.2.0-debian13",
+        "2.2.1-debian13",
+        "2.2.2-debian13",
+        "2.2.3-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "filesystem-mcp",
+        "purl": "pkg:docker/dhi/filesystem-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2025.11.25-debian13",
+        "2025.12.18-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "firecrawl-mcp",
+        "purl": "pkg:docker/dhi/firecrawl-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.2.1-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "hub-mcp",
+        "purl": "pkg:docker/dhi/hub-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "0.18.0-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "9.1.10-debian13",
+        "9.2.6-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-kf2t-5fmp-w3hf-ds3k"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-26pp-8wgv-hjvm"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/honojs/hono/security/advisories/GHSA-26pp-8wgv-hjvm"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/honojs/hono/commit/a586cd72e3f6122792e631ecf1817e5cabb803ec"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/honojs/hono/releases/tag/v4.12.12"
+    }
+  ]
+}
