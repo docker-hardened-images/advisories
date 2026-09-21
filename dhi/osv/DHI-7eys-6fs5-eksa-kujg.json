@@ -1,0 +1,134 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-7eys-6fs5-eksa-kujg",
+  "modified": "2026-09-21T13:16:34Z",
+  "published": "2026-09-21T13:16:34Z",
+  "upstream": [
+    "GHSA-r9mr-m37c-5fr3"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\nGitPython's `check_unsafe_options` guard (the control introduced by CVE-2026-42215 / GHSA-2f96 and hardened since) can be bypassed for **every** guarded method (`clone`/`clone_from`, `fetch`/`pull`/`push`, `ls_remote`, `iter_commits`, `blame`, `archive`) by smuggling an option token inside the VALUE of a single-character kwarg. In the default `allow_unsafe_options=False` configuration this yields arbitrary command execution via `--upload-pack`.\n\n## Root Cause\nThe guard builds its candidate option list from kwarg KEYS only: `_option_candidates([], {\"n\":\"--upload-pack=<cmd>\"})` returns `['-n']` (cmd.py:1042-1046 derives the candidate from the key, never the value). `-n` is not on the denylist, so `check_unsafe_options` passes. But `transform_kwarg('n', value, split_single_char_options=True)` (cmd.py:1600-1606) emits **two** argv tokens `['-n', '--upload-pack=<cmd>']`. git then parses the second token as `--upload-pack` and executes the attacker-supplied command. The guard never inspects the value that becomes a separate argv token.\n\n## Impact\nArbitrary OS command execution as the host process (via `--upload-pack`) in the default configuration, affecting all guarded methods since they all build candidates through the name-only `_option_candidates`.\n\n## Proof of Concept\n```python\nfrom git import Repo\nRepo.clone_from(bare_repo, out_dir, n=\"--upload-pack=touch /tmp/ACE;git-upload-pack\")\n# /tmp/ACE created -> ACE. Direct-name form upload_pack=\"...\" is correctly BLOCKED.\n```\nFile-write variant on a guarded revision command: `iter_commits('HEAD', g='--output=/path')` -> candidate `['-g']` passes, argv `['-g','--output=/path']`, victim file truncated.\n\n## Attack Chain\n1. Entry: app forwards a user-supplied options dict -> `Repo.clone_from(url, path, n=\"--upload-pack=touch /tmp/ACE;git-upload-pack\")`. Guard: `check_unsafe_options(options=_option_candidates([], kwargs), unsafe=unsafe_git_clone_options)` at base.py. Bypass proof: `_option_candidates([], {\"n\":\"--upload-pack=...\"})` -> `['-n']` (key-only), not on denylist -> no UnsafeOptionError (verified live).\n2. Transform: `transform_kwarg('n', value, split_single_char_options=True)` -> `['-n', '--upload-pack=touch /tmp/ACE;git-upload-pack']`. Guard: none (guard already passed on name-only candidate). Bypass proof: verified transform emits two tokens.\n3. Sink: `git clone -n --upload-pack='touch ...;git-upload-pack' -- <src> <dst>`; git parses and runs the second token. Impact: ACE (marker created, verified end-to-end).\n\n## Bypass Evidence\nLive-verified on HEAD (tag 3.1.53): `_option_candidates` returns key-only candidate `['-n']`; `transform_kwargs` emits the smuggled `--upload-pack=` token; clone_from with the payload created the marker file; the direct-name `upload_pack=` form raised UnsafeOptionError. All prior bypasses (GHSA-rpm5 underscore key, GHSA-2f96 long-option abbreviation, GHSA-v396 joined short option, GHSA-x2qx multi-before-split) are BLOCKED on HEAD — this is a distinct kwarg-value->separate-token vector.\n\n## Affected Versions\n`<= 3.1.53`\n\n## Suggested Fix\nMake `_option_candidates` also emit candidates derived from single-character kwarg VALUES when `split_single_char_options` is in effect, OR run `check_unsafe_options` over the fully-transformed argv rather than the reconstructed name-only candidate list.\n\n---\nReported by **zx (Jace)** — GitHub: @manus-use",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "airflow",
+        "purl": "pkg:docker/dhi/airflow?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.0.6-python3.12-debian13-compat",
+        "3.1.0-python3.12-debian13-compat",
+        "3.1.1-python3.12-debian13-compat",
+        "3.1.2-python3.12-debian13-compat",
+        "3.1.2-python3.12-debian13-compat-fips",
+        "3.1.3-python3.12-debian13-compat",
+        "3.1.3-python3.12-debian13-compat-fips",
+        "3.1.5-python3.12-debian13-compat",
+        "3.1.5-python3.12-debian13-compat-fips",
+        "3.1.6-python3.12-debian13-compat",
+        "3.1.6-python3.12-debian13-compat-fips",
+        "3.1.7-python3.12-debian13-compat",
+        "3.1.7-python3.12-debian13-compat-fips",
+        "3.1.8-python3.12-debian13-compat",
+        "3.1.8-python3.12-debian13-compat-fips",
+        "3.2.0-python3.13-debian13-compat",
+        "3.2.0-python3.13-debian13-compat-fips",
+        "3.2.1-python3.13-debian13-compat",
+        "3.2.1-python3.13-debian13-compat-fips",
+        "3.2.2-python3.13-debian13-compat",
+        "3.2.2-python3.13-debian13-compat-fips",
+        "3.3.0-python3.13-debian13-compat",
+        "3.3.0-python3.13-debian13-compat-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datahub-ingestion",
+        "purl": "pkg:docker/dhi/datahub-ingestion?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.5.0.7-debian13",
+        "1.5.0.7-debian13-dev",
+        "1.5.0.7-debian13-fips",
+        "1.5.0.7-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datascience-notebook",
+        "purl": "pkg:docker/dhi/datascience-notebook?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2026-05-11-debian13",
+        "2026-05-11-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "git-mcp",
+        "purl": "pkg:docker/dhi/git-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2025.11.25-debian13",
+        "2025.12.18-debian13",
+        "2026.1.14-debian13",
+        "2026.1.26-debian13",
+        "2026.6.16-debian13",
+        "2026.6.3-debian13",
+        "2026.7.10-debian13",
+        "2026.7.4-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-7eys-6fs5-eksa-kujg"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-r9mr-m37c-5fr3"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/gitpython-developers/GitPython/security/advisories/GHSA-r9mr-m37c-5fr3"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/pull/2180"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/commit/e8d0fbf774d1f6baa3b481adfe48bd262e43b453"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/gitpython-developers/GitPython/releases/tag/3.1.54"
+    }
+  ]
+}
