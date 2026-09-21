@@ -1,0 +1,191 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ntls-iqj3-zpiy-fn2y",
+  "modified": "2026-09-21T16:05:01Z",
+  "published": "2026-09-21T16:05:01Z",
+  "upstream": [
+    "CVE-2026-59896"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\n`hono/jsx` did not isolate context values per request during server-side rendering. While an async component was suspended on `await`, its provided context value stayed observable to other requests rendering concurrently, so `useContext()` could return a value from a different in-flight request.\n\n### Details\n\nDuring server-side rendering, context values were kept in a process-wide structure rather than scoped to each request's render. While an async component awaited, another request entering the same provider could observe or replace the value; when the first render resumed, it could read the other request's context.\n\nThis affects the usual ways request-scoped data is passed through a server-rendered JSX tree:\n\n- `createContext()` / `useContext()`\n- the `jsxRenderer` middleware and `useRequestContext()`\n\nIt arises only when context is read after an `await` inside an async component while requests render concurrently. Reading context synchronously (before any `await`), purely synchronous rendering, and client-side (DOM) rendering are not affected.\n\n### Impact\n\nUnder concurrent requests, a response could be rendered with another request's context. A user may receive HTML rendered for a different user, and an authorization check performed after an `await` may be evaluated against another user's data.\n\nThis may lead to:\n\n- disclosure of rendered output intended for another user\n- authorization decisions made with the wrong request's context\n- cross-request mixing of session or other request-scoped state",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "brave-search-mcp",
+        "purl": "pkg:docker/dhi/brave-search-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.0.85-debian13",
+        "2.1.0-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "context7-mcp",
+        "purl": "pkg:docker/dhi/context7-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.1.1-debian13",
+        "2.1.2-debian13",
+        "2.1.3-debian13",
+        "2.1.4-debian13",
+        "2.1.6-debian13",
+        "2.1.7-debian13",
+        "2.1.8-debian13",
+        "2.2.0-debian13",
+        "2.2.1-debian13",
+        "2.2.2-debian13",
+        "2.2.3-debian13",
+        "2.2.4-debian13",
+        "2.2.5-debian13",
+        "2.3.0-debian13",
+        "3.2.1-debian13",
+        "3.2.2-debian13",
+        "3.2.3-debian13",
+        "3.2.4-debian13",
+        "3.2.5-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "filesystem-mcp",
+        "purl": "pkg:docker/dhi/filesystem-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2025.12.18-debian13",
+        "2026.1.26-debian13",
+        "2026.6.16-debian13",
+        "2026.6.3-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "firecrawl-mcp",
+        "purl": "pkg:docker/dhi/firecrawl-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.2.1-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "hub-mcp",
+        "purl": "pkg:docker/dhi/hub-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "0.18.0-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "9.1.10-debian13",
+        "9.2.6-debian13",
+        "9.2.8-debian13",
+        "9.3.3-debian13",
+        "9.3.4-debian13",
+        "9.3.5-debian13",
+        "9.3.7-debian13",
+        "9.3.8-debian13",
+        "9.4.1-debian13",
+        "9.4.2-debian13",
+        "9.4.3-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "perplexity-mcp",
+        "purl": "pkg:docker/dhi/perplexity-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "0.9.0-debian13",
+        "0.9.0-debian13-dev",
+        "0.9.0-debian13-fips",
+        "0.9.0-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "trigger-dev",
+        "purl": "pkg:docker/dhi/trigger-dev?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.5.6-debian13",
+        "4.5.6-debian13-dev",
+        "4.5.6-debian13-fips",
+        "4.5.6-debian13-fips-dev",
+        "4.5.8-debian13",
+        "4.5.8-debian13-dev",
+        "4.5.8-debian13-fips",
+        "4.5.8-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ntls-iqj3-zpiy-fn2y"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-hvrm-45r6-mjfj"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-59896"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/honojs/hono/security/advisories/GHSA-hvrm-45r6-mjfj"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/honojs/hono/commit/fab3b13639339cbd5ba1166a5b23d9ac30c5f64f"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/honojs/hono/releases/tag/v4.12.27"
+    }
+  ]
+}
