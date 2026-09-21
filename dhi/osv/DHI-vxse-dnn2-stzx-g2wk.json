@@ -1,0 +1,169 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-vxse-dnn2-stzx-g2wk",
+  "modified": "2026-09-21T17:57:38Z",
+  "published": "2026-09-21T17:57:38Z",
+  "upstream": [
+    "CVE-2026-47221"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\r\n\r\nEnvoy is an open-source edge and service proxy designed for cloud-native applications. The router filter contains a null pointer dereference vulnerability when handling HTTP 303 (See Other) internal redirects for body-less non-GET/HEAD requests. When a POST, PUT, DELETE, or PATCH request without a body is sent to a route configured with internal redirect policy that includes 303 in `redirect_response_codes`, and the upstream responds with HTTP 303, the redirect handling code attempts to drain a request body buffer that was never allocated. This results in a segmentation fault that crashes the entire Envoy process. When route configured with `internal_redirect_policy` including 303 in `redirect_response_codes` and upstream must return HTTP 303 response, an unauthenticated attacker can exploit this to cause complete denial of service, terminating all active connections.\r\n\r\n## Technical Details\r\n\r\nThe vulnerability manifests through a specific code path in the router filter:\r\n\r\n1. **Request processing without body allocation**: When a body-less POST request arrives (Content-Length: 0 or HTTP/2 END_STREAM on HEADERS), `Filter::decodeHeaders()` in `source/common/router/router.cc:900-901` is called with `end_stream=true`. This invokes `onRequestComplete()`, which sets `downstream_end_stream_ = true`. Since `decodeData()` is never called for body-less requests, `buffered_request_data_` in the FilterManager remains null.\r\n\r\n2. **Internal redirect triggered**: Upon receiving a 303 response, `Filter::onUpstreamHeaders()` at line 1823-1826 checks if internal redirect is enabled and whether the response code qualifies. When 303 is explicitly configured in `redirect_response_codes`, `setupRedirect()` is invoked.\r\n\r\n3. **Null check bypass**: In `Filter::setupRedirect()` at line 2031, the condition `downstream_end_stream_ && (!request_buffer_overflowed_ || !callbacks_->decodingBuffer())` passes because `downstream_end_stream_` is true and `request_buffer_overflowed_` is false, causing the short-circuit OR evaluation to skip the `decodingBuffer()` null check entirely.\r\n\r\n4. **Null pointer dereference**: `Filter::convertRequestHeadersForInternalRedirect()` at lines 2188-2193 handles the 303 response by changing the method to GET and attempting to drain the request body buffer via `callbacks_->modifyDecodingBuffer()`. For non-GET/HEAD methods, this branch executes unconditionally. The `modifyDecodingBuffer()` function in `source/common/http/filter_manager.cc:485-489` dereferences `buffered_request_data_.get()` which returns nullptr, causing a SIGSEGV. The ASSERT check on line 487 is compiled to a no-op in release builds (NDEBUG), providing no protection.\r\n\r\nThe router filter is tagged `robust_to_untrusted_downstream_and_upstream` in `source/extensions/extensions_metadata.yaml`, indicating it must be resilient against malicious inputs from either direction. The crash is deterministic and affects all connections on the Envoy process.\r\n\r\n## Proof of Concept\r\n\r\n[poc.zip](https://github.com/user-attachments/files/26296915/poc.zip)\r\n\r\n### File Structure\r\n\r\n```\r\nnullptr/\r\n├── envoy.yaml      # Envoy configuration with internal redirect policy\r\n├── upstream.py     # Mock upstream that returns 303 responses\r\n├── poc.py          # HTTP client that sends body-less POST requests\r\n└── run.sh          # Orchestration script\r\n```\r\n\r\n### Running the PoC\r\n\r\n```bash\r\ncd nullptr/\r\nchmod +x run.sh\r\n./run.sh\r\n```\r\n\r\n**Expected Output:**\r\n```\r\n[1] Starting mock upstream on 0.0.0.0:8080...\r\n    upstream PID=12345\r\n[2] Starting Envoy container (envoyproxy/envoy:dev)...\r\n    container: envoy_nullptr_poc  (host port 10080 → envoy 10000)\r\n[3] Waiting for Envoy to become ready...\r\n    Envoy ready (attempt 1)\r\n[4] Firing PoC — one body-less POST to Envoy...\r\n─────────────────────────────────────────────────────────────\r\n[+] NO RESPONSE — Envoy process likely crashed (SIGSEGV)\r\n─────────────────────────────────────────────────────────────\r\n[5] Envoy container state:\r\n    exited (exit=139)\r\n[5] Relevant Envoy log lines:\r\n─────────────────────────────────────────────────────────────\r\n[2026-03-19 ...][critical][assert] ... Caught Segv faulting address 0x0\r\n...\r\n─────────────────────────────────────────────────────────────\r\n[+] VULNERABILITY CONFIRMED\r\n```\r\n\r\n## Credit\r\nThis vulnerability was discovered by:\r\n- XlabAI Team of Tencent Xuanwu Lab\r\n- Atuin Automated Vulnerability Discovery Engine\r\n\r\nCVE and credit are preferred.\r\n\r\nIf you have any questions regarding the vulnerability details, please feel free to reach out to us for further discussion. Our email address is xlabai@tencent.com.\r\n\r\n## Note\r\nWe follow the security industry standard disclosure policy—the 90+30 policy (reference: https://googleprojectzero.blogspot.com/p/vulnerability-disclosure-policy.html). If the aforementioned vulnerabilities cannot be fixed within 90 days of submission, we reserve the right to publicly disclose all information about the issues after this timeframe.\r\n",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.31.10-debian12",
+        "1.31.8-debian12",
+        "1.31.9-debian12",
+        "1.32.10-debian12",
+        "1.32.6-debian12",
+        "1.32.7-debian12",
+        "1.32.8-debian12",
+        "1.32.9-debian12",
+        "1.33.3-debian12",
+        "1.33.4-debian12",
+        "1.33.5-debian12",
+        "1.33.6-debian12",
+        "1.33.7-debian12",
+        "1.34.1-debian12",
+        "1.34.2-debian12",
+        "1.34.3-debian12",
+        "1.34.4-debian12",
+        "1.34.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.31.10-debian13",
+        "1.32.10-debian13",
+        "1.32.11-debian13",
+        "1.32.12-debian13",
+        "1.32.13-debian13",
+        "1.33.10-debian13",
+        "1.33.11-debian13",
+        "1.33.12-debian13",
+        "1.33.13-debian13",
+        "1.33.14-debian13",
+        "1.33.14-debian13-dev",
+        "1.33.7-debian13",
+        "1.33.8-debian13",
+        "1.33.9-debian13",
+        "1.34.10-debian13",
+        "1.34.11-debian13",
+        "1.34.12-debian13",
+        "1.34.12-debian13-dev",
+        "1.34.13-debian13",
+        "1.34.13-debian13-dev",
+        "1.34.14-debian13",
+        "1.34.14-debian13-dev",
+        "1.34.5-debian13",
+        "1.34.6-debian13",
+        "1.34.7-debian13",
+        "1.34.8-debian13",
+        "1.34.9-debian13",
+        "1.35.10-debian13",
+        "1.35.10-debian13-dev",
+        "1.35.10-debian13-fips",
+        "1.35.10-debian13-fips-dev",
+        "1.35.11-debian13",
+        "1.35.11-debian13-dev",
+        "1.35.11-debian13-fips",
+        "1.35.11-debian13-fips-dev",
+        "1.35.12-debian13",
+        "1.35.12-debian13-dev",
+        "1.35.12-debian13-fips",
+        "1.35.12-debian13-fips-dev",
+        "1.35.2-debian13",
+        "1.35.3-debian13",
+        "1.35.4-debian13",
+        "1.35.5-debian13",
+        "1.35.6-debian13",
+        "1.35.7-debian13",
+        "1.35.8-debian13",
+        "1.35.8-debian13-dev",
+        "1.35.9-debian13",
+        "1.35.9-debian13-dev",
+        "1.36.2-debian13",
+        "1.36.4-debian13",
+        "1.36.4-debian13-dev",
+        "1.36.5-debian13",
+        "1.36.5-debian13-dev",
+        "1.36.6-debian13",
+        "1.36.6-debian13-dev",
+        "1.36.6-debian13-fips",
+        "1.36.6-debian13-fips-dev",
+        "1.36.7-debian13",
+        "1.36.7-debian13-dev",
+        "1.36.7-debian13-fips",
+        "1.36.7-debian13-fips-dev",
+        "1.36.8-debian13",
+        "1.36.8-debian13-dev",
+        "1.36.8-debian13-fips",
+        "1.36.8-debian13-fips-dev",
+        "1.37.0-debian13",
+        "1.37.0-debian13-dev",
+        "1.37.1-debian13",
+        "1.37.1-debian13-dev",
+        "1.37.2-debian13",
+        "1.37.2-debian13-dev",
+        "1.37.2-debian13-fips",
+        "1.37.2-debian13-fips-dev",
+        "1.37.3-debian13",
+        "1.37.3-debian13-dev",
+        "1.37.3-debian13-fips",
+        "1.37.3-debian13-fips-dev",
+        "1.37.4-debian13",
+        "1.37.4-debian13-dev",
+        "1.37.4-debian13-fips",
+        "1.37.4-debian13-fips-dev",
+        "1.38.0-debian13",
+        "1.38.0-debian13-dev",
+        "1.38.0-debian13-fips",
+        "1.38.0-debian13-fips-dev",
+        "1.38.1-debian13",
+        "1.38.1-debian13-dev",
+        "1.38.1-debian13-fips",
+        "1.38.1-debian13-fips-dev",
+        "1.38.2-debian13",
+        "1.38.2-debian13-dev",
+        "1.38.2-debian13-fips",
+        "1.38.2-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-vxse-dnn2-stzx-g2wk"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-rcff-gw58-pjpr"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-47221"
+    }
+  ]
+}
