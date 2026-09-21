@@ -1,0 +1,142 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ssrj-epnm-cmbx-wncs",
+  "modified": "2026-09-21T17:08:09Z",
+  "published": "2026-09-21T17:08:09Z",
+  "upstream": [
+    "CVE-2026-47692"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\r\n\r\nPROXY Protocol v2 header generator emits TLVs beyond the maximum length of 65535 bytes, causing a mismatch between bytes written and the length field in the header. This can result in smuggled bytes on the upstream request.\r\n\r\n### Details\r\n\r\nIn source/extensions/common/proxy_protocol/proxy_protocol_header.cc,\r\ngenerateV2Header() declares a vector named final_tlvs (line 118),\r\npopulates it with TLVs that fit within the 65535-byte limit (line\r\n175), but then the emit loop at line 193 iterates combined_tlv_vector\r\ninstead — including the TLVs that were \"skipped\". The PP header's\r\nlength field advertises the filtered size; the actual buffer contains\r\nthe unfiltered set.\r\n\r\nI built a unit test against the actual generateV2Header()\r\n(proxy_protocol_header_test, --config=local-asan, main @ ccb42a35).\r\nWith two small custom_tlvs plus one 65520-byte passthrough TLV, the\r\nwarning log fires at proxy_protocol_header.cc:170 (\"Skipping TLV type\r\n10 because adding it would exceed the 65535 limit\"), the header\r\nadvertises 38 bytes, and the buffer contains 65,561 bytes. The\r\n65,523-byte spillover begins with the \"skipped\" TLV's header (0a ff\r\nf0) followed by its value — in my test, \"\\r\\nGET /admin\r\nHTTP/1.1\\r\\nHost: internal\\r\\n\\r\\n\".\r\n\r\nThe upstream's PROXY-protocol parser will read 38 bytes per the header\r\nand hand the rest to the application. Those bytes were inside a\r\ndownstream TLV that the listener filter consumed before any L7 filter\r\nran — they were never seen by the HTTP connection manager, RBAC,\r\next_authz, JWT, or any other filter.\r\n\r\nThe reachable configuration is the documented AWS pattern: listener\r\nproxy_protocol with pass_through_tlvs, plus cluster\r\nupstream_proxy_protocol V2 with pass_through_tlvs and at least one\r\nadded_tlvs entry. The added_tlvs are what push the total over 65535.\r\n\r\nThe bug was introduced in PR #37591 (commit 90e99327ff, Feb 2025). The\r\nexisting tests for the over-limit case\r\n(GeneratesV2WithTLVExceedingLengthLimit at\r\nproxy_protocol_header_test.cc:209, and\r\nGeneratesV2WithCustomTLVExceedingLengthLimit at :247) only assert\r\nEXPECT_LOG_CONTAINS for the warning — they never inspect the buffer.\r\n\r\nThe fix is one variable name: line 193 should iterate final_tlvs.\r\n\r\n### Impact\r\n\r\nAttacker-controlled bytes can be written directly to the beginning of the upstream connection data stream before any Envoy-controlled HTTP request.\r\n",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.34.1-debian12",
+        "1.34.2-debian12",
+        "1.34.3-debian12",
+        "1.34.4-debian12",
+        "1.34.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.34.10-debian13",
+        "1.34.11-debian13",
+        "1.34.12-debian13",
+        "1.34.12-debian13-dev",
+        "1.34.13-debian13",
+        "1.34.13-debian13-dev",
+        "1.34.14-debian13",
+        "1.34.14-debian13-dev",
+        "1.34.5-debian13",
+        "1.34.6-debian13",
+        "1.34.7-debian13",
+        "1.34.8-debian13",
+        "1.34.9-debian13",
+        "1.35.10-debian13",
+        "1.35.10-debian13-dev",
+        "1.35.10-debian13-fips",
+        "1.35.10-debian13-fips-dev",
+        "1.35.11-debian13",
+        "1.35.11-debian13-dev",
+        "1.35.11-debian13-fips",
+        "1.35.11-debian13-fips-dev",
+        "1.35.12-debian13",
+        "1.35.12-debian13-dev",
+        "1.35.12-debian13-fips",
+        "1.35.12-debian13-fips-dev",
+        "1.35.2-debian13",
+        "1.35.3-debian13",
+        "1.35.4-debian13",
+        "1.35.5-debian13",
+        "1.35.6-debian13",
+        "1.35.7-debian13",
+        "1.35.8-debian13",
+        "1.35.8-debian13-dev",
+        "1.35.9-debian13",
+        "1.35.9-debian13-dev",
+        "1.36.2-debian13",
+        "1.36.4-debian13",
+        "1.36.4-debian13-dev",
+        "1.36.5-debian13",
+        "1.36.5-debian13-dev",
+        "1.36.6-debian13",
+        "1.36.6-debian13-dev",
+        "1.36.6-debian13-fips",
+        "1.36.6-debian13-fips-dev",
+        "1.36.7-debian13",
+        "1.36.7-debian13-dev",
+        "1.36.7-debian13-fips",
+        "1.36.7-debian13-fips-dev",
+        "1.36.8-debian13",
+        "1.36.8-debian13-dev",
+        "1.36.8-debian13-fips",
+        "1.36.8-debian13-fips-dev",
+        "1.37.0-debian13",
+        "1.37.0-debian13-dev",
+        "1.37.1-debian13",
+        "1.37.1-debian13-dev",
+        "1.37.2-debian13",
+        "1.37.2-debian13-dev",
+        "1.37.2-debian13-fips",
+        "1.37.2-debian13-fips-dev",
+        "1.37.3-debian13",
+        "1.37.3-debian13-dev",
+        "1.37.3-debian13-fips",
+        "1.37.3-debian13-fips-dev",
+        "1.37.4-debian13",
+        "1.37.4-debian13-dev",
+        "1.37.4-debian13-fips",
+        "1.37.4-debian13-fips-dev",
+        "1.38.0-debian13",
+        "1.38.0-debian13-dev",
+        "1.38.0-debian13-fips",
+        "1.38.0-debian13-fips-dev",
+        "1.38.1-debian13",
+        "1.38.1-debian13-dev",
+        "1.38.1-debian13-fips",
+        "1.38.1-debian13-fips-dev",
+        "1.38.2-debian13",
+        "1.38.2-debian13-dev",
+        "1.38.2-debian13-fips",
+        "1.38.2-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ssrj-epnm-cmbx-wncs"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-wh36-hm39-mm3r"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-47692"
+    }
+  ]
+}
