@@ -1,0 +1,231 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-5kur-ws54-x4gy-udif",
+  "modified": "2026-09-21T12:51:56Z",
+  "published": "2026-09-21T12:51:56Z",
+  "upstream": [
+    "CVE-2026-73547"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\r\nA null pointer dereference vulnerability in the Envoy `ext_authz` filter allows an untrusted downstream client to trigger a full process crash (Denial of Service) by sending a path-less CONNECT request when the authorization server is configured to mutate query parameters.\r\n\r\n### Details\r\nWhen the `ext_authz` filter is enabled and receives a successful (`OK`) response from the authorization server that contains query parameter mutations (`query_parameters_to_set` or `query_parameters_to_remove`), it attempts to parse and modify the request's query parameters.\r\n\r\nIn the vulnerable implementation (inside `Filter::onComplete` in [ext_authz.cc](https://github.com/envoyproxy/envoy/blob/main/source/extensions/filters/http/ext_authz/ext_authz.cc)), the filter attempts to retrieve the path header value using:\r\n```cpp\r\nmodified_query_parameters = Http::Utility::QueryParamsMulti::parseQueryString(\r\n    request_headers_->Path()->value().getStringView());\r\n```\r\n\r\nHowever, path-less requests (such as standard HTTP/1.1 `CONNECT` requests) do not contain a `:path` header. In this case, `request_headers_->Path()` returns `nullptr`. Calling `->value()` on this null pointer results in a segmentation fault, crashing the entire Envoy worker thread and aborting the proxy process.\r\n\r\n### PoC\r\nTo reproduce the crash:\r\n1. Configure the HTTP Connection Manager (HCM) to accept `CONNECT` requests (e.g., using `upgrade_configs: [{upgrade_type: CONNECT}]` or similar tunnel configurations).\r\n2. Enable the `ext_authz` filter in the HTTP filter chain.\r\n3. Configure the external authorization server to respond with a `CheckResponse` having status `OK` and containing one or more query parameters to set in `query_parameters_to_set` (e.g., `key: \"k\", value: \"v\"`).\r\n4. Send a path-less CONNECT request from a downstream client:\r\n   ```http\r\n   CONNECT host:port HTTP/1.1\r\n   Host: host:port\r\n\r\n   ```\r\n5. On receipt of the authorization server's response, Envoy will immediately crash with a segmentation fault.\r\n\r\n### Impact\r\n- **Vulnerability Type**: Denial of Service (DoS) via Null Pointer Dereference / Segmentation Fault.\r\n- **Severity**: High (causes immediate full-process termination).\r\n- **Target Audience**: Any deployment using the `ext_authz` filter with query parameter mutations enabled that also routes/proxies path-less `CONNECT` requests.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.31.10-debian12",
+        "1.31.8-debian12",
+        "1.31.9-debian12",
+        "1.32.10-debian12",
+        "1.32.6-debian12",
+        "1.32.7-debian12",
+        "1.32.8-debian12",
+        "1.32.9-debian12",
+        "1.33.3-debian12",
+        "1.33.4-debian12",
+        "1.33.5-debian12",
+        "1.33.6-debian12",
+        "1.33.7-debian12",
+        "1.34.1-debian12",
+        "1.34.2-debian12",
+        "1.34.3-debian12",
+        "1.34.4-debian12",
+        "1.34.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.31.10-debian13",
+        "1.32.10-debian13",
+        "1.32.11-debian13",
+        "1.32.12-debian13",
+        "1.32.13-debian13",
+        "1.33.10-debian13",
+        "1.33.11-debian13",
+        "1.33.12-debian13",
+        "1.33.13-debian13",
+        "1.33.14-debian13",
+        "1.33.14-debian13-dev",
+        "1.33.7-debian13",
+        "1.33.8-debian13",
+        "1.33.9-debian13",
+        "1.34.10-debian13",
+        "1.34.11-debian13",
+        "1.34.12-debian13",
+        "1.34.12-debian13-dev",
+        "1.34.13-debian13",
+        "1.34.13-debian13-dev",
+        "1.34.14-debian13",
+        "1.34.14-debian13-dev",
+        "1.34.5-debian13",
+        "1.34.6-debian13",
+        "1.34.7-debian13",
+        "1.34.8-debian13",
+        "1.34.9-debian13",
+        "1.35.10-debian13",
+        "1.35.10-debian13-dev",
+        "1.35.10-debian13-fips",
+        "1.35.10-debian13-fips-dev",
+        "1.35.11-debian13",
+        "1.35.11-debian13-dev",
+        "1.35.11-debian13-fips",
+        "1.35.11-debian13-fips-dev",
+        "1.35.12-debian13",
+        "1.35.12-debian13-dev",
+        "1.35.12-debian13-fips",
+        "1.35.12-debian13-fips-dev",
+        "1.35.13-debian13",
+        "1.35.13-debian13-dev",
+        "1.35.13-debian13-fips",
+        "1.35.13-debian13-fips-dev",
+        "1.35.2-debian13",
+        "1.35.3-debian13",
+        "1.35.4-debian13",
+        "1.35.5-debian13",
+        "1.35.6-debian13",
+        "1.35.7-debian13",
+        "1.35.8-debian13",
+        "1.35.8-debian13-dev",
+        "1.35.9-debian13",
+        "1.35.9-debian13-dev",
+        "1.36.2-debian13",
+        "1.36.4-debian13",
+        "1.36.4-debian13-dev",
+        "1.36.5-debian13",
+        "1.36.5-debian13-dev",
+        "1.36.6-debian13",
+        "1.36.6-debian13-dev",
+        "1.36.6-debian13-fips",
+        "1.36.6-debian13-fips-dev",
+        "1.36.7-debian13",
+        "1.36.7-debian13-dev",
+        "1.36.7-debian13-fips",
+        "1.36.7-debian13-fips-dev",
+        "1.36.8-debian13",
+        "1.36.8-debian13-dev",
+        "1.36.8-debian13-fips",
+        "1.36.8-debian13-fips-dev",
+        "1.36.9-debian13",
+        "1.36.9-debian13-dev",
+        "1.36.9-debian13-fips",
+        "1.36.9-debian13-fips-dev",
+        "1.37.0-debian13",
+        "1.37.0-debian13-dev",
+        "1.37.1-debian13",
+        "1.37.1-debian13-dev",
+        "1.37.2-debian13",
+        "1.37.2-debian13-dev",
+        "1.37.2-debian13-fips",
+        "1.37.2-debian13-fips-dev",
+        "1.37.3-debian13",
+        "1.37.3-debian13-dev",
+        "1.37.3-debian13-fips",
+        "1.37.3-debian13-fips-dev",
+        "1.37.4-debian13",
+        "1.37.4-debian13-dev",
+        "1.37.4-debian13-fips",
+        "1.37.4-debian13-fips-dev",
+        "1.37.5-debian13",
+        "1.37.5-debian13-dev",
+        "1.37.5-debian13-fips",
+        "1.37.5-debian13-fips-dev",
+        "1.38.0-debian13",
+        "1.38.0-debian13-dev",
+        "1.38.0-debian13-fips",
+        "1.38.0-debian13-fips-dev",
+        "1.38.1-debian13",
+        "1.38.1-debian13-dev",
+        "1.38.1-debian13-fips",
+        "1.38.1-debian13-fips-dev",
+        "1.38.2-debian13",
+        "1.38.2-debian13-dev",
+        "1.38.2-debian13-fips",
+        "1.38.2-debian13-fips-dev",
+        "1.38.3-debian13",
+        "1.38.3-debian13-dev",
+        "1.38.3-debian13-fips",
+        "1.38.3-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-5kur-ws54-x4gy-udif"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-87ph-jqwm-pg6r"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-2149.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73553"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73552"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73551"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73550"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73549"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73548"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73547"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73546"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73513"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73512"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73511"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-50572"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-48521"
+    }
+  ]
+}
