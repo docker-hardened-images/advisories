@@ -1,0 +1,152 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-etqt-rvr7-ihzk-iis4",
+  "modified": "2026-09-21T14:24:13Z",
+  "published": "2026-09-21T14:24:13Z",
+  "upstream": [
+    "GHSA-p538-c434-8v24"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n`Commit.count()` forwards `**kwargs` into `rev_list` with **no** `check_unsafe_options` guard (the guard exists only in the sibling `iter_items`, commit.py:341). `git rev-list --output=<path>` opens and truncates the target file to 0 bytes before revision parsing, so `count(output='/victim')` destroys/blanks an arbitrary file.\n\n## Root Cause\n`commit.py:290-291` calls `self.repo.git.rev_list(self.hexsha, **kwargs)` with no `check_unsafe_options` and no `allow_unsafe_options` parameter. The sibling `iter_items` (commit.py:341) is guarded; `count` is not. This is a distinct, uncovered sink — GHSA-956x-8gvw-wg5v fixed `iter_commits`/`blame`, not `count`.\n\n## Impact\nDestroy/blank an arbitrary file at process privilege (integrity/availability). Reachability is key-control only (`count` uses `self.hexsha`, not a user ref), and the write is a 0-byte truncation (no content control), so MEDIUM.\n\n## Proof of Concept\n```python\ncommit.count(output='/path/to/victim')   # victim truncated to 0 bytes (verified)\n# control: commit.iter_commits(output=...) raises UnsafeOptionError\n```\n\n## Attack Chain\n1. Entry: app forwards user options -> `commit.count(output='/victim')`. Guard: none. Bypass proof: `iter_commits(output=)` raises UnsafeOptionError; `count(output=)` does not — verified side-by-side.\n2. Sink: `git rev-list <sha> --output=/victim` -> file truncated to 0 bytes. Impact: destroy/blank arbitrary file.\n\n## Bypass Evidence\nLive-verified on HEAD (tag 3.1.53): `count(output=<victim>)` truncated a pre-existing file to 0 bytes; guarded `iter_commits(output=)` raised UnsafeOptionError. Same CNA-accepted \"app forwards user options dict\" model as GHSA-956x-8gvw-wg5v's `archive(**kwargs)`. Uncovered sink, not a duplicate.\n\n## Affected Versions\n`<= 3.1.53`\n\n## Suggested Fix\nAdd `check_unsafe_options` to `Commit.count` (mirroring `iter_items`).\n\n---\nReported by **zx (Jace)** — GitHub: @manus-use",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:L"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "airflow",
+        "purl": "pkg:docker/dhi/airflow?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.0.6-python3.12-debian13-compat",
+        "3.1.0-python3.12-debian13-compat",
+        "3.1.1-python3.12-debian13-compat",
+        "3.1.2-python3.12-debian13-compat",
+        "3.1.2-python3.12-debian13-compat-fips",
+        "3.1.3-python3.12-debian13-compat",
+        "3.1.3-python3.12-debian13-compat-fips",
+        "3.1.5-python3.12-debian13-compat",
+        "3.1.5-python3.12-debian13-compat-fips",
+        "3.1.6-python3.12-debian13-compat",
+        "3.1.6-python3.12-debian13-compat-fips",
+        "3.1.7-python3.12-debian13-compat",
+        "3.1.7-python3.12-debian13-compat-fips",
+        "3.1.8-python3.12-debian13-compat",
+        "3.1.8-python3.12-debian13-compat-fips",
+        "3.2.0-python3.13-debian13-compat",
+        "3.2.0-python3.13-debian13-compat-fips",
+        "3.2.1-python3.13-debian13-compat",
+        "3.2.1-python3.13-debian13-compat-fips",
+        "3.2.2-python3.13-debian13-compat",
+        "3.2.2-python3.13-debian13-compat-fips",
+        "3.3.0-python3.13-debian13-compat",
+        "3.3.0-python3.13-debian13-compat-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datahub-ingestion",
+        "purl": "pkg:docker/dhi/datahub-ingestion?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.5.0.7-debian13",
+        "1.5.0.7-debian13-dev",
+        "1.5.0.7-debian13-fips",
+        "1.5.0.7-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datascience-notebook",
+        "purl": "pkg:docker/dhi/datascience-notebook?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2026-05-11-debian13",
+        "2026-05-11-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "git-mcp",
+        "purl": "pkg:docker/dhi/git-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2025.11.25-debian13",
+        "2025.12.18-debian13",
+        "2026.1.14-debian13",
+        "2026.1.26-debian13",
+        "2026.6.16-debian13",
+        "2026.6.3-debian13",
+        "2026.7.10-debian13",
+        "2026.7.4-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "mlflow",
+        "purl": "pkg:docker/dhi/mlflow?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.14.0-debian13",
+        "3.14.0-debian13-fips",
+        "3.15.0-debian13",
+        "3.15.0-debian13-fips",
+        "3.15.1-debian13",
+        "3.15.1-debian13-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-etqt-rvr7-ihzk-iis4"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-p538-c434-8v24"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/gitpython-developers/GitPython/security/advisories/GHSA-p538-c434-8v24"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/pull/2184"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/commit/38553b6fddc7f6a667cdb45a6762343a08fc72b2"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/gitpython-developers/GitPython/releases/tag/3.1.56"
+    }
+  ]
+}
