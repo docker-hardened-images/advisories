@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-us2a-543a-7abp-ycpn",
+  "modified": "2026-09-21T17:39:04Z",
+  "published": "2026-09-21T17:39:04Z",
+  "upstream": [
+    "GHSA-3f6p-5ww8-9rcr"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nA rogue MySQL server (or MITM) can force mysql2 to send credentials in **plaintext** by requesting an auth switch to `mysql_clear_password`. The driver complies without verifying that TLS is active.\n\n## Details\n\n`mysql_clear_password` is registered as a default standard plugin in `lib/commands/auth_switch.js` (line 21). When a server sends an AuthSwitchRequest (0xFE) requesting `mysql_clear_password`, the driver executes it without checking for TLS. The plugin (`lib/auth_plugins/mysql_clear_password.js`) returns `Buffer.from(password + '\\0')`.\n\nNote: `caching_sha2_password` plugin DOES check for SSL before sending cleartext (line 77). But `mysql_clear_password` has no such guard.\n\n## Attack Scenario\n\n1. Attacker operates rogue MySQL server or performs MITM\n2. Server advertises `caching_sha2_password` in handshake\n3. Client sends hashed auth response\n4. Server replies with AuthSwitchRequest to `mysql_clear_password`\n5. Client sends password in plaintext\n6. Attacker captures plaintext password\n\n## PoC\n\nRogue MySQL server (Node.js, ~80 lines) that captures plaintext passwords from mysql2 clients. Tested against mysql2 3.20.0. Full PoC available on request.\n\n## Suggested Fix\n\nRemove `mysql_clear_password` from `standardAuthPlugins`, or add a guard requiring TLS/unix socket before allowing cleartext auth.\n\n## Impact\n\n- mysql2: 9M weekly downloads\n- Any application connecting without TLS is vulnerable to credential theft\n- Cloud environments with untrusted network paths are especially at risk",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "uptime-kuma",
+        "purl": "pkg:docker/dhi/uptime-kuma?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.23.17-debian13",
+        "1.23.17-debian13-dev",
+        "2.4.0-debian13",
+        "2.4.0-debian13-dev",
+        "2.5.0-debian13",
+        "2.5.0-debian13-dev",
+        "2.5.3-debian13",
+        "2.5.3-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-us2a-543a-7abp-ycpn"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-3f6p-5ww8-9rcr"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/sidorares/node-mysql2/security/advisories/GHSA-3f6p-5ww8-9rcr"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/sidorares/node-mysql2/pull/4236"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/sidorares/node-mysql2/commit/884bec56288d827939d0dd3f1f4ae476fbc8dbeb"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/sidorares/node-mysql2/releases/tag/v3.22.0"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/sidorares/node-mysql2/issues/1617"
+    }
+  ]
+}
