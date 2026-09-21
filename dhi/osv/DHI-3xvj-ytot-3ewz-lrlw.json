@@ -1,0 +1,162 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-3xvj-ytot-3ewz-lrlw",
+  "modified": "2026-09-21T12:33:01Z",
+  "published": "2026-09-21T12:33:01Z",
+  "upstream": [
+    "CVE-2025-66220"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\r\nEnvoy’s mTLS certificate matcher for `match_typed_subject_alt_names` may incorrectly treat certificates containing an embedded null byte (\\0) inside an `OTHERNAME` SAN value as valid matches.\r\n\r\n### Details\r\nThis occurs when the SAN is encoded as a `BMPSTRING` or `UNIVERSALSTRING`, and its UTF-8 conversion result is truncated at the first null byte during string assignment. As a result, `\"victim\\0evil\"` may match an exact: `\"victim\"` rule and be accepted by Envoy.\r\n\r\n### PoC\r\n\r\nCreate a CA and a server certificate signed by that CA.\r\nCreate two client certificates signed by the same CA:\r\nclient_evil with OTHERNAME BMPSTRING = \"evil\"\r\nclient_null with OTHERNAME BMPSTRING = \"victim\\0evil\"\r\nConfigure Envoy with require_client_certificate: true and a match_typed_subject_alt_names entry for the OTHERNAME OID with matcher.exact: \"victim\".\r\nConnect without a client cert → connection rejected.\r\nConnect with client_evil → connection rejected.\r\nConnect with client_null → connection accepted (but shouldn't!).\r\n\r\n### Impact\r\nAn attacker who can obtain a trusted client certificate with a null byte embedded in an OTHERNAME SAN can exploit this vulnerability. The practical impact is unauthorized impersonation of the matched identity, enabling access to services or APIs protected by that exact OTHERNAME check.\r\n\r\n### Credit\r\n[markevich.nikita1@gmail.com](mailto:markevich.nikita1@gmail.com)",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.31.10-debian12",
+        "1.31.8-debian12",
+        "1.31.9-debian12",
+        "1.32.10-debian12",
+        "1.32.6-debian12",
+        "1.32.7-debian12",
+        "1.32.8-debian12",
+        "1.32.9-debian12",
+        "1.33.3-debian12",
+        "1.33.4-debian12",
+        "1.33.5-debian12",
+        "1.33.6-debian12",
+        "1.33.7-debian12",
+        "1.34.1-debian12",
+        "1.34.2-debian12",
+        "1.34.3-debian12",
+        "1.34.4-debian12",
+        "1.34.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.31.10-debian13",
+        "1.32.10-debian13",
+        "1.32.11-debian13",
+        "1.32.12-debian13",
+        "1.32.13-debian13",
+        "1.33.10-debian13",
+        "1.33.11-debian13",
+        "1.33.12-debian13",
+        "1.33.7-debian13",
+        "1.33.8-debian13",
+        "1.33.9-debian13",
+        "1.34.10-debian13",
+        "1.34.5-debian13",
+        "1.34.6-debian13",
+        "1.34.7-debian13",
+        "1.34.8-debian13",
+        "1.34.9-debian13",
+        "1.35.2-debian13",
+        "1.35.3-debian13",
+        "1.35.4-debian13",
+        "1.35.5-debian13",
+        "1.35.6-debian13",
+        "1.36.2-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-3xvj-ytot-3ewz-lrlw"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-rwjg-c3h2-f57p"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2025-1357.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-66220"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-64763"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-64527"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-62504"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-62409"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-55162"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-54588"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-0725"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-25178"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-25177"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-25176"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-11407"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-66220"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-rwjg-c3h2-f57p"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2025-66220"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2025-66220\nhttps://nvd.nist.gov/vuln/detail/CVE-2025-66220\nhttps://github.com/envoyproxy/envoy/security/advisories/GHSA-rwjg-c3h2-f57p"
+    }
+  ]
+}
