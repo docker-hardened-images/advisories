@@ -1,0 +1,185 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-3uvz-y6uw-p2ph-5exe",
+  "modified": "2026-09-21T12:31:38Z",
+  "published": "2026-09-21T12:31:38Z",
+  "upstream": [
+    "CVE-2026-45793"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nComposer leaks the full contents of tokens configured as GitHub OAuth tokens if they do not match Composer's expected format for such tokens to stderr. GitHub has introduced a new format for GitHub Actions GITHUB_TOKEN values. These tokens are validated in the same way by Composer on GitHub Actions. The new format including a `-` (hyphen) fails Composer's validation and leads to disclosure of the GITHUB_TOKEN in logs.\n\nMany widely-used Actions (e.g. `shivammathur/setup-php`) auto-register `GITHUB_TOKEN` into composer's global `auth.json`, so the leak triggers without any unusual user configuration.\n\nGitHub Actions tokens expire when the associated job finishes, and they are scoped to the respective repository only. So in most regular cases the Composer validation, which errors while leaking the token, also immediately ends the job, expiring the token immediately. Tokens expire at the very latest after 6 hours on GitHub-hosted runners. If you use self-hosted runner, expiration is at most 24 hours after creation. The new token format is being rolled out gradually, so not all repositories are affected yet, but will be soon.\n\nClassic `ghp_` PATs are not affected by the regex bug per se, but the same leak primitive applies to any future credential that fails validation for any reason.\n\n### Details\n\nWhen a GitHub token fails regular expression validation of the character set, the rejected token is interpolated verbatim into the `UnexpectedValueException` message thrown by `Composer\\IO\\BaseIO::loadConfiguration()`, which Symfony Console then prints. Validation reliably fails for any token containing a `-` (hyphen), which includes the modern `ghs_<id>_<base64url-JWT>` GitHub App installation token format, the same format used by GitHub Actions' built-in `GITHUB_TOKEN` and by `actions/create-github-app-token`. \n\nSeverity: medium. Pre-conditions are common in real-world CI. Practical blast radius is bounded by the leaked credential's scope and TTL (short for a workflow `GITHUB_TOKEN`, longer for App-minted tokens or user-issued credentials that happen to contain `-`).\n\nVulnerable code, `src/Composer/IO/BaseIO.php` (line 139 on `main`, line 143 on 2.8.x), inside `loadConfiguration()`:\n\n```php\n// allowed chars for GH tokens are from https://github.blog/changelog/2021-03-04-authentication-token-format-updates/\n// plus dots which were at some point used for GH app integration tokens\nif (!Preg::isMatch('{^[.A-Za-z0-9_]+$}', $token)) {\n    throw new \\UnexpectedValueException(\n        'Your github oauth token for '.$domain.' contains invalid characters: \"'.$token.'\"'\n    );\n}\n```\n\nThree issues combine to produce the leak:\n\n1. **The rejected token is interpolated into the exception message.** The exception bubbles up to Symfony Console's default error renderer, which writes it to stderr. Any environment that captures stderr (CI logs, log shippers, monitoring, support transcripts) now has the raw token.\n\n2. **The validation regex `^[.A-Za-z0-9_]+$` does not permit `-`.** GitHub's current `ghs_<numeric-id>_<base64url-JWT>` structured installation tokens routinely contain `-`, because base64url (RFC 4648 §5) uses `-` and `_` as URL-safe replacements for `+` and `/`. The regex was chosen in 2021 on the understanding that GitHub tokens use only `[A-Za-z0-9_]` plus `.`.\n\n3. **Detection / mitigation in upstream platforms is unreliable.** GitHub Actions' built-in secret masker matches registered values as exact substrings. When the exception message is rendered by Symfony Console it may wrap, embed in `In BaseIO.php line N:` framing, or interleave with ANSI control sequences. So the masker does not redact, and the plaintext token reaches the log.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "composer",
+        "purl": "pkg:docker/dhi/composer?os_name=alpine&os_version=3.22"
+      },
+      "versions": [
+        "2.2.26-alpine3.22-dev",
+        "2.2.26-alpine3.22-fips-dev",
+        "2.2.26-alpine3.22-php8.2-dev",
+        "2.2.26-alpine3.22-php8.2-fips-dev",
+        "2.2.26-alpine3.22-php8.3-dev",
+        "2.2.26-alpine3.22-php8.3-fips-dev",
+        "2.2.26-alpine3.22-php8.4-dev",
+        "2.2.26-alpine3.22-php8.4-fips-dev",
+        "2.2.27-alpine3.22-dev",
+        "2.2.27-alpine3.22-fips-dev",
+        "2.2.27-alpine3.22-php8.2-dev",
+        "2.2.27-alpine3.22-php8.2-fips-dev",
+        "2.2.27-alpine3.22-php8.3-dev",
+        "2.2.27-alpine3.22-php8.3-fips-dev",
+        "2.2.27-alpine3.22-php8.4-dev",
+        "2.2.27-alpine3.22-php8.4-fips-dev",
+        "2.9.5-alpine3.22-dev",
+        "2.9.5-alpine3.22-fips-dev",
+        "2.9.5-alpine3.22-php8.2-dev",
+        "2.9.5-alpine3.22-php8.2-fips-dev",
+        "2.9.5-alpine3.22-php8.3-dev",
+        "2.9.5-alpine3.22-php8.3-fips-dev",
+        "2.9.5-alpine3.22-php8.4-dev",
+        "2.9.5-alpine3.22-php8.4-fips-dev",
+        "2.9.7-alpine3.22-dev",
+        "2.9.7-alpine3.22-fips-dev",
+        "2.9.7-alpine3.22-php8.2-dev",
+        "2.9.7-alpine3.22-php8.2-fips-dev",
+        "2.9.7-alpine3.22-php8.3-dev",
+        "2.9.7-alpine3.22-php8.3-fips-dev",
+        "2.9.7-alpine3.22-php8.4-dev",
+        "2.9.7-alpine3.22-php8.4-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "composer",
+        "purl": "pkg:docker/dhi/composer?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.2.26-debian13-dev",
+        "2.2.26-debian13-fips-dev",
+        "2.2.26-debian13-php8.2-dev",
+        "2.2.26-debian13-php8.2-fips-dev",
+        "2.2.26-debian13-php8.3-dev",
+        "2.2.26-debian13-php8.3-fips-dev",
+        "2.2.26-debian13-php8.4-dev",
+        "2.2.26-debian13-php8.4-fips-dev",
+        "2.2.27-debian13-dev",
+        "2.2.27-debian13-fips-dev",
+        "2.2.27-debian13-php8.2-dev",
+        "2.2.27-debian13-php8.2-fips-dev",
+        "2.2.27-debian13-php8.3-dev",
+        "2.2.27-debian13-php8.3-fips-dev",
+        "2.2.27-debian13-php8.4-dev",
+        "2.2.27-debian13-php8.4-fips-dev",
+        "2.9.5-debian13-dev",
+        "2.9.5-debian13-fips-dev",
+        "2.9.5-debian13-php8.2-dev",
+        "2.9.5-debian13-php8.2-fips-dev",
+        "2.9.5-debian13-php8.3-dev",
+        "2.9.5-debian13-php8.3-fips-dev",
+        "2.9.5-debian13-php8.4-dev",
+        "2.9.5-debian13-php8.4-fips-dev",
+        "2.9.7-debian13-dev",
+        "2.9.7-debian13-fips-dev",
+        "2.9.7-debian13-php8.2-dev",
+        "2.9.7-debian13-php8.2-fips-dev",
+        "2.9.7-debian13-php8.3-dev",
+        "2.9.7-debian13-php8.3-fips-dev",
+        "2.9.7-debian13-php8.4-dev",
+        "2.9.7-debian13-php8.4-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-3uvz-y6uw-p2ph-5exe"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-f9f8-rm49-7jv2"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-45793"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/composer/composer/security/advisories/GHSA-f9f8-rm49-7jv2"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/composer/composer/pull/12855"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/composer/composer/pull/12853"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/composer/composer/commit/e66c8fdb7ff5409bd2f358c5f194038e49e93714"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/composer/composer/commit/65e6390c49f1a11cd8b660d81822086db51fe2d1"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/composer/composer/commit/3f5e7f9fbfa541137d6d1d5643ec3b718e9d5039"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/FriendsOfPHP/security-advisories/blob/master/composer/composer/CVE-2026-45793.yaml"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/composer/composer/releases/tag/2.9.8"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/composer/composer/releases/tag/2.2.28"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/composer/composer/releases/tag/1.10.28"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-45793"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-1800.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-45793"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-45793"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-45793"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-45793"
+    }
+  ]
+}
