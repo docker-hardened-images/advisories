@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-bgan-pqye-o5ri-u5u5",
+  "modified": "2026-09-21T13:44:20Z",
+  "published": "2026-09-21T13:44:20Z",
+  "upstream": [
+    "CVE-2026-54592"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\n`Oj::Doc#each_child`, when invoked recursively over a deeply nested JSON\ndocument, overflows a fixed-size stack buffer and aborts the process. This is a\ndenial of service reachable from untrusted JSON.\n\n### Details\n\nTwo-step chain in `ext/oj/fast.c`:\n\n1. **`doc_each_child` (~line 1501)** increments `doc->where` past the\n   `where_path[MAX_STACK = 100]` array with no bounds check, and never restores\n   it (`doc->where--` is missing). Calling `each_child` recursively from inside\n   the yield block therefore drives `doc->where` beyond the array.\n\n2. **On the next entry (~line 1478)** the function copies the path into a\n   stack-local buffer:\n\n   ```c\n   Leaf  save_path[MAX_STACK];           // 800-byte stack buffer\n   size_t wlen = doc->where - doc->where_path;\n   if (0 < wlen) {\n       memcpy(save_path, doc->where_path, sizeof(Leaf) * (wlen + 1));\n   }\n   ```\n\n   When the previous recursive call left `doc->where` past `where_path[100]`,\n   `wlen` exceeds `MAX_STACK` and the `memcpy` overflows `save_path` on the C\n   stack.\n\nThe `Oj::Doc` parser imposes no JSON nesting-depth limit (it relies on a\nC-stack pressure check), so deeply nested attacker input reaches this path.\n\n### Proof of Concept\n\n```ruby\nrequire 'oj'\ndepth = 200\npayload = '[' * depth + '1' + ']' * depth\nOj::Doc.open(payload) do |doc|\n  r = lambda { doc.each_child { |_| r.call } }\n  r.call\nend\n```\n\nRecursion depth <= 99 iterates normally; depth >= 101 aborts. lldb backtrace\non the affected build (`ruby 3.3.8 / arm64-darwin24`):\n\n```\nSIGABRT\n#2 __abort\n#3 __stack_chk_fail\n#4 doc_each_child   (oj.bundle, fast.c)\n```\n\n### Impact\n\nReliable denial of service: any endpoint that calls\n`Oj::Doc.open(untrusted) { |d| d.each_child ... }` recursively can be crashed\nwith a small deeply-nested payload. On builds with a stack protector (the\ndefault, `-fstack-protector-strong`) the canary aborts the process before the\nsaved return address is used. The Step-1 heap OOB writes into `struct _doc`\nfields do occur, but are masked in practice because the Step-2 stack overflow\ncrashes first; turning them into anything beyond a crash has not been\ndemonstrated.\n\n### Patches\n\nFixed in **3.17.3**: `doc_each_child` now bounds-checks before incrementing\n`doc->where` (raising `Oj::DepthError`) and restores `doc->where` after the\nloop, matching the existing `each_leaf` pattern. Verified on the fixed build:\ndepth >= 101 raises a clean `Oj::DepthError` instead of aborting.\n\n### Credit\n\nReported by Zac Wang (@7a6163).",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.18.0-debian12",
+        "1.18.0-dev-debian12-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.18.0-debian13",
+        "1.18.0-dev-debian13-dev",
+        "1.19.0-debian13",
+        "1.19.0-debian13-dev",
+        "1.19.0-dev-debian13-dev",
+        "1.19.1-debian13",
+        "1.19.1-debian13-dev",
+        "1.19.2-debian13",
+        "1.19.2-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "gitlab-webservice",
+        "purl": "pkg:docker/dhi/gitlab-webservice?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "18.11.1-debian13",
+        "18.11.1-debian13-dev",
+        "18.11.1-debian13-fips",
+        "18.11.1-debian13-fips-dev",
+        "18.11.3-debian13",
+        "18.11.3-debian13-dev",
+        "18.11.3-debian13-fips",
+        "18.11.3-debian13-fips-dev",
+        "18.11.4-debian13",
+        "18.11.4-debian13-dev",
+        "18.11.4-debian13-fips",
+        "18.11.4-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-bgan-pqye-o5ri-u5u5"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-3m6q-jj5j-38c9"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/ohler55/oj/security/advisories/GHSA-3m6q-jj5j-38c9"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-54592"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-54592"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-54592"
+    }
+  ]
+}
