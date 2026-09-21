@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-gdkg-rzpq-mbdx-6qeh",
+  "modified": "2026-09-21T14:43:33Z",
+  "published": "2026-09-21T14:43:33Z",
+  "upstream": [
+    "CVE-2026-54897"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\n`Oj::Doc` iterators (`each_value`, `each_child`, `each_leaf`) are vulnerable to a heap use-after-free. When a Ruby block yielded during iteration calls `doc.close` or `d.close`, the document's heap memory is freed while the C iterator is still running. When control returns from the block, the iterator reads from the freed region, producing a use-after-free accessible from pure Ruby.\n\n### Version\n\n- **Software**: oj gem\n- **Affected**: all versions with `ext/oj/fast.c`\n- **Latest tested**: 3.17.1 (confirmed present)\n\n### Details\n\nThe iterators in `ext/oj/fast.c` follow the pattern:\n\n```c\n// fast.c:1505 (doc_each_child)\nstatic VALUE doc_each_child(VALUE self, ...) {\n    ...\n    while (cur != NULL) {\n        rb_yield(...);       // ← Ruby block executes here\n        cur = cur->next;     // ← cur is now freed if block called close()\n    }\n}\n```\n\n`rb_yield` can invoke arbitrary Ruby code, including calling `close()` on the `Doc` or any child node, which calls `ruby_sized_xfree` on the backing buffer. On return, the C code reads `cur->next` from the freed region. All three iterators are affected.\n\nASAN report (each_child variant):\n```\n==253632==ERROR: AddressSanitizer: heap-use-after-free on address 0x5210000bd080\nREAD of size 8 at 0x5210000bd080 thread T0\n    #0 doc_each_child  /ext/oj/fast.c:1505\n0x5210000bd080 is located 896 bytes inside of 4064-byte region [0x5210000bcd00, 0x5210000bdce0)\nfreed by thread T0 here:\n    #0 free\n    #1 ruby_sized_xfree  (libruby-3.3.so.3.3)\n```\n\nAll three iterators trigger the same freed region (`fd` shadow bytes):\n```\n0x5210000bd080:[fd]fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd\n```\n\n### Reproduce\n\n```ruby\nrequire 'oj'\n# each_child\nOj::Doc.open('[1,2]') { |doc| doc.each_child { |d| d.close } }\n# each_value\nOj::Doc.open('[1,2]') { |doc| doc.each_value { |v| doc.close } }\n# each_leaf\nOj::Doc.open('[1,[2]]') { |doc| doc.each_leaf { |d| d.close } }\n```",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.18.0-debian12",
+        "1.18.0-dev-debian12-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.18.0-debian13",
+        "1.18.0-dev-debian13-dev",
+        "1.19.0-debian13",
+        "1.19.0-debian13-dev",
+        "1.19.0-dev-debian13-dev",
+        "1.19.1-debian13",
+        "1.19.1-debian13-dev",
+        "1.19.2-debian13",
+        "1.19.2-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "gitlab-webservice",
+        "purl": "pkg:docker/dhi/gitlab-webservice?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "18.11.1-debian13",
+        "18.11.1-debian13-dev",
+        "18.11.1-debian13-fips",
+        "18.11.1-debian13-fips-dev",
+        "18.11.3-debian13",
+        "18.11.3-debian13-dev",
+        "18.11.3-debian13-fips",
+        "18.11.3-debian13-fips-dev",
+        "18.11.4-debian13",
+        "18.11.4-debian13-dev",
+        "18.11.4-debian13-fips",
+        "18.11.4-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-gdkg-rzpq-mbdx-6qeh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-9ppp-w3g4-fh4q"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/ohler55/oj/security/advisories/GHSA-9ppp-w3g4-fh4q"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-54897"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-54897"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-54897"
+    }
+  ]
+}
