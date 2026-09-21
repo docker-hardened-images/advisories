@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-uukc-cb25-tirc-cza3",
+  "modified": "2026-09-21T17:40:59Z",
+  "published": "2026-09-21T17:40:59Z",
+  "upstream": [
+    "CVE-2023-30624"
+  ],
+  "summary": "Wasmtime is a standalone runtime for WebAssembly. Prior to versions 6.0.2, 7.0.1, and 8.0.1, Wasmtime's implementation…",
+  "details": "Wasmtime is a standalone runtime for WebAssembly. Prior to versions 6.0.2, 7.0.1, and 8.0.1, Wasmtime's implementation of managing per-instance state, such as tables and memories, contains LLVM-level undefined behavior. This undefined behavior was found to cause runtime-level issues when compiled with LLVM 16 which causes some writes, which are critical for correctness, to be optimized away. Vulnerable versions of Wasmtime compiled with Rust 1.70, which is currently in beta, or later are known to have incorrectly compiled functions. Versions of Wasmtime compiled with the current Rust stable release, 1.69, and prior are not known at this time to have any issues, but can theoretically exhibit potential issues.\n\nThe underlying problem is that Wasmtime's runtime state for an instance involves a Rust-defined structure called `Instance` which has a trailing `VMContext` structure after it. This `VMContext` structure has a runtime-defined layout that is unique per-module. This representation cannot be expressed with safe code in Rust so `unsafe` code is required to maintain this state. The code doing this, however, has methods which take `&self` as an argument but modify data in the `VMContext` part of the allocation. This means that pointers derived from `&self` are mutated. This is typically not allowed, except in the presence of `UnsafeCell`, in Rust. When compiled to LLVM these functions have `noalias readonly` parameters which means it's UB to write through the pointers.\n\nWasmtime's internal representation and management of `VMContext` has been updated to use `&mut self` methods where appropriate. Additionally verification tools for `unsafe` code in Rust, such as `cargo miri`, are planned to be executed on the `main` branch soon to fix any Rust-level issues that may be exploited in future compiler versions.\n\nPrecomplied binaries available for Wasmtime from GitHub releases have been compiled with at most LLVM 15 so are not known to be vulnerable. As mentioned above, however, it's still recommended to update.\n\nWasmtime version 6.0.2, 7.0.1, and 8.0.1 have been issued which contain the patch necessary to work correctly on LLVM 16 and have no known UB on LLVM 15 and earlier. If Wasmtime is compiled with Rust 1.69 and prior, which use LLVM 15, then there are no known issues. There is a theoretical possibility for undefined behavior to exploited, however, so it's recommended that users upgrade to a patched version of Wasmtime. Users using beta Rust (1.70 at this time) or nightly Rust (1.71 at this time) must update to a patched version to work correctly.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:H/UI:R/S:U/C:L/I:L/A:L"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "apisix",
+        "purl": "pkg:docker/dhi/apisix?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.13.0-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-uukc-cb25-tirc-cza3"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-30624"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/bytecodealliance/wasmtime/security/advisories/GHSA-ch89-5g45-qwc7"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/bytecodealliance/wasmtime/commit/0977952dcd9d482bff7c288868ccb52769b3a92e"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2023-344.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-32067"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-31147"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-31130"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-31124"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-30624"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2023-30624"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-ch89-5g45-qwc7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2023-0092.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2023-0092"
+    }
+  ]
+}
