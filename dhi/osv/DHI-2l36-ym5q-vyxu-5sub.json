@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-2l36-ym5q-vyxu-5sub",
+  "modified": "2026-09-21T12:15:47Z",
+  "published": "2026-09-21T12:15:47Z",
+  "upstream": [
+    "CVE-2026-54502"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\n`Oj.dump` is vulnerable to a stack-based buffer overflow when a large `:indent` value is provided by the developer. `fill_indent` in `dump.h` calls `memset(indent_str, ' ', (size_t)opts->indent)` without validating the size. When `opts->indent` is set to `INT_MAX` (2,147,483,647), the `(size_t)` cast preserves the large value and `memset` writes 2 GB into the stack-allocated `out` buffer (4,184 bytes), corrupting the stack and crashing the process.\n\n### Version\n\n- **Software**: oj gem\n- **Affected**: all versions with `ext/oj/dump.h`\n- **Latest tested**: 3.17.1 (confirmed present)\n\n### Details\n\n`ext/oj/dump.h`, line 77:\n\n```c\nstatic void fill_indent(Out out, int depth) {\n    if (0 < out->opts->indent) {\n        size_t len = (size_t)(out->opts->indent * depth);\n        // ...\n        memset(out->buf + ..., ' ', len);  // len = 2147483647 * depth\n```\n\nThe `indent` option is accepted as a plain Ruby integer and stored as `int` without range validation. Multiplying by `depth` can produce a value larger than any stack or heap buffer.\n\nASAN report:\n```\n==69820==ERROR: AddressSanitizer: stack-buffer-overflow on address 0x7fd1fc201278\nWRITE of size 2147483647 at 0x7fd1fc201278 thread T0\n    #0 memset\n    #1 fill_indent  /ext/oj/dump.h:77\n    #2 dump_array   /ext/oj/dump_compat.c:165\n    #3 oj_dump_obj_to_json_using_params  /ext/oj/dump.c:818\n    #4 dump_body    /ext/oj/oj.c:1429\n    #5 dump         /ext/oj/oj.c:1480\nAddress is in stack of thread T0 at offset 4728 in frame:\n    #0 dump /ext/oj/oj.c:1453\n  [544, 4728) 'out'  <== Memory access at offset 4728 overflows this variable\n```\n\n### Reproduce\n\n```ruby\nrequire \"oj\"\nobj = [0]\nOj.dump(obj, mode: :compat, indent: 2_147_483_647)\n```\n\n### Workaround\n\nThe develop should not use extreme indents and should not offer the option for users to dump Ruby data with unlimited indentation size.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.18.0-debian12",
+        "1.18.0-dev-debian12-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.18.0-debian13",
+        "1.18.0-dev-debian13-dev",
+        "1.19.0-debian13",
+        "1.19.0-debian13-dev",
+        "1.19.0-dev-debian13-dev",
+        "1.19.1-debian13",
+        "1.19.1-debian13-dev",
+        "1.19.2-debian13",
+        "1.19.2-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "gitlab-webservice",
+        "purl": "pkg:docker/dhi/gitlab-webservice?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "18.11.1-debian13",
+        "18.11.1-debian13-dev",
+        "18.11.1-debian13-fips",
+        "18.11.1-debian13-fips-dev",
+        "18.11.3-debian13",
+        "18.11.3-debian13-dev",
+        "18.11.3-debian13-fips",
+        "18.11.3-debian13-fips-dev",
+        "18.11.4-debian13",
+        "18.11.4-debian13-dev",
+        "18.11.4-debian13-fips",
+        "18.11.4-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-2l36-ym5q-vyxu-5sub"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-3v45-f3vh-wg7m"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/ohler55/oj/security/advisories/GHSA-3v45-f3vh-wg7m"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-54502"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-54502"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-54502"
+    }
+  ]
+}
