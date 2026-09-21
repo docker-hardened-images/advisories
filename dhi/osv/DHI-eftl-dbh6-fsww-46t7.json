@@ -1,0 +1,171 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-eftl-dbh6-fsww-46t7",
+  "modified": "2026-09-21T14:19:39Z",
+  "published": "2026-09-21T14:19:39Z",
+  "upstream": [
+    "CVE-2026-53539"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nWhen parsing `application/x-www-form-urlencoded` bodies, `QuerystringParser` located the field separator with a two step lookup: it first scanned the entire remaining buffer for `&`, and only when no `&` existed anywhere ahead did it fall back to scanning for `;`. For a body that uses `;` as the separator and contains no `&`, every field iteration performed a full failed `&` scan over the entire remaining buffer before locating the nearby `;`. With N semicolon separated fields in a chunk of size B, this yields O(B^2) byte comparisons per chunk.\n\nAn attacker can submit a small crafted body of the form `a;a;a;...` and cause the parser to spend seconds of CPU per request. A handful of concurrent requests can exhaust worker processes.\n\n### Details\n\nIn `python_multipart/multipart.py`, both the `FIELD_NAME` and `FIELD_DATA` states located the next separator like this:\n\n```python\nsep_pos = data.find(b\"&\", i)\nif sep_pos == -1:\n    sep_pos = data.find(b\";\", i)\n```\n\n`data.find(b\"&\", i)` scans from `i` to the end of the buffer and returns `-1` only when there is no `&` anywhere in the remainder. For a `;` separated body with no `&`, this failed full buffer scan repeats once per field, making parsing quadratic in the body length.\n\nFor example, a 1 MiB url encoded body consisting of `a;` repeated ~500,000 times, submitted with `Content-Type: application/x-www-form-urlencoded`, causes the parser to perform on the order of 10^11 byte comparisons, consuming several seconds of CPU for a single request. Cost scales quadratically with chunk size.\n\nThe parser is reachable through the public `QuerystringParser` class and through the high level `FormParser`, `create_form_parser`, and `parse_form` APIs for url encoded bodies. It is also the parser Starlette and FastAPI use for `application/x-www-form-urlencoded` request bodies via `request.form()`.\n\n### Impact\n\nUncontrolled CPU consumption (denial of service). Parsing is synchronous, so a single small crafted form body occupies the handling worker for seconds, blocking any other work on that worker until parsing finishes. Sustained concurrent requests keep workers continuously busy, degrading or denying service.\n\n### Mitigation\n\nUpgrade to `python-multipart` `0.0.30` or later, which treats only `&` as a field separator (per the [WHATWG URL standard](https://url.spec.whatwg.org/#urlencoded-parsing)) using a single bounded scan, making parsing linear in the body length.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "airflow",
+        "purl": "pkg:docker/dhi/airflow?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.0.6-python3.12-debian13",
+        "3.0.6-python3.12-debian13-compat",
+        "3.0.6-python3.12-debian13-dev",
+        "3.1.0-python3.12-debian13",
+        "3.1.0-python3.12-debian13-compat",
+        "3.1.0-python3.12-debian13-dev",
+        "3.1.1-python3.12-debian13",
+        "3.1.1-python3.12-debian13-compat",
+        "3.1.1-python3.12-debian13-dev",
+        "3.1.2-python3.12-debian13",
+        "3.1.2-python3.12-debian13-compat",
+        "3.1.2-python3.12-debian13-compat-fips",
+        "3.1.2-python3.12-debian13-dev",
+        "3.1.2-python3.12-debian13-fips",
+        "3.1.2-python3.12-debian13-fips-dev",
+        "3.1.3-python3.12-debian13",
+        "3.1.3-python3.12-debian13-compat",
+        "3.1.3-python3.12-debian13-compat-fips",
+        "3.1.3-python3.12-debian13-dev",
+        "3.1.3-python3.12-debian13-fips",
+        "3.1.3-python3.12-debian13-fips-dev",
+        "3.1.5-python3.12-debian13",
+        "3.1.5-python3.12-debian13-compat",
+        "3.1.5-python3.12-debian13-compat-fips",
+        "3.1.5-python3.12-debian13-dev",
+        "3.1.5-python3.12-debian13-fips",
+        "3.1.5-python3.12-debian13-fips-dev",
+        "3.1.6-python3.12-debian13",
+        "3.1.6-python3.12-debian13-compat",
+        "3.1.6-python3.12-debian13-compat-fips",
+        "3.1.6-python3.12-debian13-dev",
+        "3.1.6-python3.12-debian13-fips",
+        "3.1.6-python3.12-debian13-fips-dev",
+        "3.1.7-python3.12-debian13",
+        "3.1.7-python3.12-debian13-compat",
+        "3.1.7-python3.12-debian13-compat-fips",
+        "3.1.7-python3.12-debian13-dev",
+        "3.1.7-python3.12-debian13-fips",
+        "3.1.7-python3.12-debian13-fips-dev",
+        "3.1.8-python3.12-debian13",
+        "3.1.8-python3.12-debian13-compat",
+        "3.1.8-python3.12-debian13-compat-fips",
+        "3.1.8-python3.12-debian13-dev",
+        "3.1.8-python3.12-debian13-fips",
+        "3.1.8-python3.12-debian13-fips-dev",
+        "3.2.0-python3.13-debian13",
+        "3.2.0-python3.13-debian13-compat",
+        "3.2.0-python3.13-debian13-compat-fips",
+        "3.2.0-python3.13-debian13-dev",
+        "3.2.0-python3.13-debian13-fips",
+        "3.2.0-python3.13-debian13-fips-dev",
+        "3.2.1-python3.13-debian13",
+        "3.2.1-python3.13-debian13-compat",
+        "3.2.1-python3.13-debian13-compat-fips",
+        "3.2.1-python3.13-debian13-dev",
+        "3.2.1-python3.13-debian13-fips",
+        "3.2.1-python3.13-debian13-fips-dev",
+        "3.2.2-python3.13-debian13",
+        "3.2.2-python3.13-debian13-compat",
+        "3.2.2-python3.13-debian13-compat-fips",
+        "3.2.2-python3.13-debian13-dev",
+        "3.2.2-python3.13-debian13-fips",
+        "3.2.2-python3.13-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fetch-mcp",
+        "purl": "pkg:docker/dhi/fetch-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2025.11.25-debian13",
+        "2025.12.18-debian13",
+        "2026.1.26-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "git-mcp",
+        "purl": "pkg:docker/dhi/git-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2025.11.25-debian13",
+        "2025.12.18-debian13",
+        "2026.1.14-debian13",
+        "2026.1.26-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kserve-storage-initializer",
+        "purl": "pkg:docker/dhi/kserve-storage-initializer?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "0.17.0-python3.11-debian13",
+        "0.17.0-python3.11-debian13-dev",
+        "0.18.0-python3.11-debian13",
+        "0.18.0-python3.11-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-eftl-dbh6-fsww-46t7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-5rvq-cxj2-64vf"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/Kludex/python-multipart/security/advisories/GHSA-5rvq-cxj2-64vf"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-53539"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-53539"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-53539"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-53539"
+    }
+  ]
+}
