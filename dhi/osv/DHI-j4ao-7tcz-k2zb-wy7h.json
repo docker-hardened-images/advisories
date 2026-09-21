@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-j4ao-7tcz-k2zb-wy7h",
+  "modified": "2026-09-21T15:13:31Z",
+  "published": "2026-09-21T15:13:31Z",
+  "upstream": [
+    "CVE-2026-54500"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\n`Oj.load` in `:object` mode reads uninitialized stack memory (and, for long\nkeys, reads out of bounds) when parsing a JSON object whose key is 254 bytes\nor longer. The interned bytes can surface to the caller, disclosing process\nstack memory.\n\n### Details\n\nIn `ext/oj/intern.c`, `form_attr()` handles the long-key path by allocating a\nheap buffer `b`, populating it with the attribute name, and then freeing it —\nbut it passed the **uninitialized stack buffer `buf`** (not `b`) to\n`rb_intern3()`:\n\n```c\nstatic VALUE form_attr(const char *str, size_t len) {\n    char buf[256];\n    if (sizeof(buf) - 2 <= len) {        // long-key path (len >= 254)\n        char *b = OJ_R_ALLOC_N(char, len + 2);\n        // ... b is filled correctly ...\n        id = rb_intern3(buf, len + 1, oj_utf8_encoding);   // BUG: reads `buf`\n        OJ_R_FREE(b);\n        return id;\n    }\n    // ...\n}\n```\n\n`rb_intern3` therefore reads `len + 1` bytes of uninitialized stack memory.\nWhen the key length is >= 256, it also reads out of bounds past the 256-byte\n`buf` (CWE-125). The resulting bytes are interned and can reach the caller via\nthe produced Symbol or via the `EncodingError` message raised on invalid\nUTF-8, leaking process stack contents.\n\nThis is the same defect previously fixed in `ext/oj/usual.c`; `intern.c` held\na duplicated copy of `form_attr` that was missed.\n\n### Proof of Concept\n\n```ruby\nrequire 'oj'\nkey  = \"A\" * 300\njson = %Q[{\"^o\":\"Object\",\"#{key}\":1}]\nOj.load(json, mode: :object)\n```\n\nOn affected versions this raises an `EncodingError` whose message contains\n~1500 bytes of uninitialized stack memory (not the supplied \"A\"s). The leaked\nbyte count varies between runs with the identical payload (e.g. 1491 vs 1516\nbytes), confirming the content is uninitialized memory rather than fixed data.\n\n### Impact\n\nInformation disclosure of process stack memory to a caller that parses\nuntrusted JSON with `Oj.load(..., mode: :object)`. For keys >= 256 bytes it is\nalso an out-of-bounds read (CWE-125).\n\nSeverity is bounded by several preconditions: it requires `:object` mode\n(which is already discouraged for untrusted input), the leaked bytes are\nuncontrolled (the attacker cannot choose what is disclosed), and the data only\nreaches an attacker if the application surfaces the resulting Symbol or\n`EncodingError` back to them. Scored CVSS 5.3 (Medium) on that basis.\n\n### Patches\n\nFixed in **3.17.3**: `form_attr()` now passes `b` to `rb_intern3` (a\none-character change mirroring the earlier `usual.c` fix). Verified on the\nfixed build: the same payload returns cleanly with no leak across repeated\nruns.\n\n### Credit\n\nReported by Zac Wang (@7a6163).",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.18.0-debian12",
+        "1.18.0-dev-debian12-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.18.0-debian13",
+        "1.18.0-dev-debian13-dev",
+        "1.19.0-debian13",
+        "1.19.0-debian13-dev",
+        "1.19.0-dev-debian13-dev",
+        "1.19.1-debian13",
+        "1.19.1-debian13-dev",
+        "1.19.2-debian13",
+        "1.19.2-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "gitlab-webservice",
+        "purl": "pkg:docker/dhi/gitlab-webservice?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "18.11.1-debian13",
+        "18.11.1-debian13-dev",
+        "18.11.1-debian13-fips",
+        "18.11.1-debian13-fips-dev",
+        "18.11.3-debian13",
+        "18.11.3-debian13-dev",
+        "18.11.3-debian13-fips",
+        "18.11.3-debian13-fips-dev",
+        "18.11.4-debian13",
+        "18.11.4-debian13-dev",
+        "18.11.4-debian13-fips",
+        "18.11.4-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-j4ao-7tcz-k2zb-wy7h"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-fm7p-mprw-wjm9"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/ohler55/oj/security/advisories/GHSA-fm7p-mprw-wjm9"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-54500"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-54500"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-54500"
+    }
+  ]
+}
