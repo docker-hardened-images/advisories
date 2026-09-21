@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-5g2w-byau-rjpw-ahwp",
+  "modified": "2026-09-21T12:49:40Z",
+  "published": "2026-09-21T12:49:40Z",
+  "upstream": [
+    "CVE-2026-11769"
+  ],
+  "summary": "We have released version 5.24.0 of the Grafana Operator. This patch includes a MEDIUM severity security fix for a path…",
+  "details": "We have released version 5.24.0 of the Grafana Operator. This patch includes a MEDIUM severity security fix for a path traversal/privilege escalation vulnerability in the Grafana Operator.\n\n\n### Summary\n\nThe Grafana Operator supports loading dashboards & library panels using the jsonnet data templating language. The jsonnet expression is evaluated in the context of the operator manager pod.\n\n\n### Impact\n\nIt is possible for a malicious user who can create Dashboard or LibraryPanel resources for a Grafana instance to obtain the Kubernetes service account token of the Grafana Operator manager.\n\n### Affected versions\n\nAll Grafana Operator versions <= 5.23\n\n### Solutions and mitigations\n\nAll installations should be upgraded as soon as possible.\n\nAs a workaround, the following ValidatingAdmissionPolicy prevent the creation or modification of jsonnet based resources:\n\napiVersion: admissionregistration.k8s.io/v1\nkind: ValidatingAdmissionPolicy\nmetadata:\n  name: \"prevent-jsonnet-dashboards\"\nspec:\n  failurePolicy: Fail\n  matchConstraints:\n    resourceRules:\n      - apiGroups: [\"grafana.integreatly.org\"]\n        apiVersions: [\"v1beta1\"]\n        operations: [\"CREATE\", \"UPDATE\"]\n        resources: [\"grafanadashboards\", \"grafanalibrarypanels\"]\n  validations:\n    - expression: \"!has(object.spec.jsonnetLib)\"\n---\napiVersion: admissionregistration.k8s.io/v1\nkind: ValidatingAdmissionPolicyBinding\nmetadata:\n  name: \"prevent-jsonnet-dashboards-clusterwide\"\nspec:\n  policyName: \"prevent-jsonnet-dashboards\"\n  validationActions: [Deny]\n\n\n\n### Acknowledgement\n\nWe would like to thank Artem Cherezov for responsibly disclosing the vulnerability.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:N/SC:H/SI:H/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "grafana-operator",
+        "purl": "pkg:docker/dhi/grafana-operator?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "5.21.4-debian13",
+        "5.21.4-debian13-dev",
+        "5.21.4-debian13-fips",
+        "5.21.4-debian13-fips-dev",
+        "5.22.0-debian13",
+        "5.22.0-debian13-dev",
+        "5.22.0-debian13-fips",
+        "5.22.0-debian13-fips-dev",
+        "5.22.1-debian13",
+        "5.22.1-debian13-dev",
+        "5.22.1-debian13-fips",
+        "5.22.1-debian13-fips-dev",
+        "5.22.2-debian13",
+        "5.22.2-debian13-dev",
+        "5.22.2-debian13-fips",
+        "5.22.2-debian13-fips-dev",
+        "5.23.0-debian13",
+        "5.23.0-debian13-dev",
+        "5.23.0-debian13-fips",
+        "5.23.0-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-5g2w-byau-rjpw-ahwp"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-11769"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://grafana.com/security/security-advisories/cve-2026-11769"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-fcw4-wwqm-m8cf"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/grafana/grafana-operator/security/advisories/GHSA-fcw4-wwqm-m8cf"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-5355"
+    }
+  ]
+}
