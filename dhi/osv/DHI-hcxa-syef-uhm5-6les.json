@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-hcxa-syef-uhm5-6les",
+  "modified": "2026-09-21T14:54:03Z",
+  "published": "2026-09-21T14:54:03Z",
+  "upstream": [
+    "GHSA-69x8-hrgq-fjj8"
+  ],
+  "summary": "### Impact",
+  "details": "### Impact\n\nThree issues combine into a full authentication bypass chain:\n\n1. Weak hashing: User passwords are stored as unsalted SHA-256 hashes, making them vulnerable to rainbow table attacks and trivially identifying users with identical passwords.\n2. Hash exposure: Multiple API endpoints (/user/info, /user/update, /spend/users) return the password hash field in responses to any authenticated user regardless of role. Plaintext passwords could also potentially be exposed in certain scenarios.\n4. Pass-the-hash: The /v2/login endpoint accepts the raw SHA-256 hash as a valid password without re-hashing, allowing direct login with a stolen\n\nAn already authenticated user can retrieve another user's password hash from the API and use it to log in as that user. This enables full privilege escalation in three HTTP requests.\n\n### Patches\n\nFixed in v1.83.0. Passwords are now hashed with scrypt (random 16-byte salt, n=16384, r=8, p=1). Password hashes are stripped from all API responses. Existing SHA-256 hashes are transparently migrated on next login.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "airflow",
+        "purl": "pkg:docker/dhi/airflow?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.0.6-python3.12-debian13-compat",
+        "3.1.0-python3.12-debian13-compat",
+        "3.1.1-python3.12-debian13-compat",
+        "3.1.2-python3.12-debian13-compat",
+        "3.1.2-python3.12-debian13-compat-fips",
+        "3.1.3-python3.12-debian13-compat",
+        "3.1.3-python3.12-debian13-compat-fips",
+        "3.1.5-python3.12-debian13-compat",
+        "3.1.5-python3.12-debian13-compat-fips",
+        "3.1.6-python3.12-debian13-compat",
+        "3.1.6-python3.12-debian13-compat-fips",
+        "3.1.7-python3.12-debian13-compat",
+        "3.1.7-python3.12-debian13-compat-fips",
+        "3.1.8-python3.12-debian13-compat",
+        "3.1.8-python3.12-debian13-compat-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-hcxa-syef-uhm5-6les"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-69x8-hrgq-fjj8"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/BerriAI/litellm/security/advisories/GHSA-69x8-hrgq-fjj8"
+    }
+  ]
+}
