@@ -1,0 +1,142 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-6yl5-qukt-c4gj-jrpn",
+  "modified": "2026-09-21T13:09:43Z",
+  "published": "2026-09-21T13:09:43Z",
+  "upstream": [
+    "CVE-2026-48706"
+  ],
+  "summary": "### Impact",
+  "details": "### Impact\r\n\r\nVulnerability Type: Heap Out-of-Bounds Write / Memory Corruption \r\n\r\nSeverity: High\r\n\r\nDescription: A vulnerability exists in Envoy's TCP StatsD sink (TcpStatsdSink), where the thread-local flusher buffer can be overflowed by exceptionally long statistic names (e.g., >16KiB).\r\n\r\nDuring formatting, TcpStatsdSink reserves a single contiguous memory slice of 16KiB (FLUSH_SLICE_SIZE_BYTES). If formatting a single metric exceeds the remaining capacity, the flusher initiates a buffer rotation but incorrectly continues to allocate another fixed 16KiB slice.\r\n\r\nIf an attacker can trigger a statistic name longer than 16KiB—for example, by sending an HTTP or gRPC request with an extremely long request path (:path) that is recorded by the grpc_stats filter configured with stats_for_all_methods: true—the flusher will attempt to copy the metric name using memcpy operations beyond the allocated heap buffer boundaries. This leads to a heap write overflow, which can cause immediate denial-of-service (process crash) or potential remote code execution (RCE).\r\n\r\nWho is Impacted?: Any Envoy deployment is vulnerable if it:\r\n\r\nConfigures a TCP-based StatsD sink (envoy.stat_sinks.statsd).\r\nEmits dynamic statistics whose names can be influenced or controlled by downstream clients (e.g., enabling grpc_stats with stats_for_all_methods: true).\r\n\r\n### Patches\r\n\r\nThe problem exists in Envoy latest main and all supported release branches.\r\n\r\n\r\n\r\n### Workarounds\r\n\r\nUsers can mitigate this vulnerability through any of the following operations:\r\n\r\nSwitch to UDP StatsD: Configure envoy.stat_sinks.statsd to use UDP instead of TCP. The UDP statsd flusher path utilizes safe, dynamic buffer appending and is not vulnerable to this heap buffer overflow.\r\n\r\nDisable Method Cardinality Stats: Disable stats_for_all_methods on grpc_stats and avoid dynamic path-based or client-controlled metrics generation in your configuration.\r\n\r\n### References\r\n\r\n",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.34.1-debian12",
+        "1.34.2-debian12",
+        "1.34.3-debian12",
+        "1.34.4-debian12",
+        "1.34.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.34.10-debian13",
+        "1.34.11-debian13",
+        "1.34.12-debian13",
+        "1.34.12-debian13-dev",
+        "1.34.13-debian13",
+        "1.34.13-debian13-dev",
+        "1.34.14-debian13",
+        "1.34.14-debian13-dev",
+        "1.34.5-debian13",
+        "1.34.6-debian13",
+        "1.34.7-debian13",
+        "1.34.8-debian13",
+        "1.34.9-debian13",
+        "1.35.10-debian13",
+        "1.35.10-debian13-dev",
+        "1.35.10-debian13-fips",
+        "1.35.10-debian13-fips-dev",
+        "1.35.11-debian13",
+        "1.35.11-debian13-dev",
+        "1.35.11-debian13-fips",
+        "1.35.11-debian13-fips-dev",
+        "1.35.12-debian13",
+        "1.35.12-debian13-dev",
+        "1.35.12-debian13-fips",
+        "1.35.12-debian13-fips-dev",
+        "1.35.2-debian13",
+        "1.35.3-debian13",
+        "1.35.4-debian13",
+        "1.35.5-debian13",
+        "1.35.6-debian13",
+        "1.35.7-debian13",
+        "1.35.8-debian13",
+        "1.35.8-debian13-dev",
+        "1.35.9-debian13",
+        "1.35.9-debian13-dev",
+        "1.36.2-debian13",
+        "1.36.4-debian13",
+        "1.36.4-debian13-dev",
+        "1.36.5-debian13",
+        "1.36.5-debian13-dev",
+        "1.36.6-debian13",
+        "1.36.6-debian13-dev",
+        "1.36.6-debian13-fips",
+        "1.36.6-debian13-fips-dev",
+        "1.36.7-debian13",
+        "1.36.7-debian13-dev",
+        "1.36.7-debian13-fips",
+        "1.36.7-debian13-fips-dev",
+        "1.36.8-debian13",
+        "1.36.8-debian13-dev",
+        "1.36.8-debian13-fips",
+        "1.36.8-debian13-fips-dev",
+        "1.37.0-debian13",
+        "1.37.0-debian13-dev",
+        "1.37.1-debian13",
+        "1.37.1-debian13-dev",
+        "1.37.2-debian13",
+        "1.37.2-debian13-dev",
+        "1.37.2-debian13-fips",
+        "1.37.2-debian13-fips-dev",
+        "1.37.3-debian13",
+        "1.37.3-debian13-dev",
+        "1.37.3-debian13-fips",
+        "1.37.3-debian13-fips-dev",
+        "1.37.4-debian13",
+        "1.37.4-debian13-dev",
+        "1.37.4-debian13-fips",
+        "1.37.4-debian13-fips-dev",
+        "1.38.0-debian13",
+        "1.38.0-debian13-dev",
+        "1.38.0-debian13-fips",
+        "1.38.0-debian13-fips-dev",
+        "1.38.1-debian13",
+        "1.38.1-debian13-dev",
+        "1.38.1-debian13-fips",
+        "1.38.1-debian13-fips-dev",
+        "1.38.2-debian13",
+        "1.38.2-debian13-dev",
+        "1.38.2-debian13-fips",
+        "1.38.2-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-6yl5-qukt-c4gj-jrpn"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-7q3f-gwg7-j8g4"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-48706"
+    }
+  ]
+}
