@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-dy5k-qjbk-csnu-seja",
+  "modified": "2026-09-21T14:14:59Z",
+  "published": "2026-09-21T14:14:59Z",
+  "upstream": [
+    "CVE-2026-54899"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nDisabling `symbol_keys` on a reused `Oj::Parser` instance triggers a heap use-after-free. When `symbol_keys` is toggled from `true` to `false`, `opt_symbol_keys_set` frees the internal key cache (`cache_free`) but does not clear the pointer. The next `parse` call reads from the freed cache via `cache_intern`, producing a use-after-free.\n\n### Version\n\n- **Software**: oj gem\n- **Affected**: all versions with `ext/oj/usual.c`\n- **Latest tested**: 3.17.1 (confirmed present)\n\n### Details\n\n`ext/oj/usual.c`, `opt_symbol_keys_set`:\n\n```c\n// usual.c:1043–1051\nif (symbol_keys) {\n    d->key_cache = cache_create(...);   // allocate\n} else {\n    cache_free(d->key_cache);           // free — but d->key_cache pointer not NULLed\n}\n```\n\nOn the next parse call, `cache_key` → `cache_intern` reads from `d->key_cache` which now points to freed memory.\n\nASAN report:\n```\n==145265==ERROR: AddressSanitizer: heap-use-after-free on address 0x50b00001a318\nREAD of size 8 at 0x50b00001a318 thread T0\n    #0 cache_intern            /ext/oj/cache.c:328\n    #1 cache_key               /ext/oj/usual.c:161\n    #2 close_object            /ext/oj/usual.c:285\n    #3 parse                   /ext/oj/parser.c:693\n    #4 parser_parse            /ext/oj/parser.c:1408\nfreed by thread T0 here:\n    #0 free\n    #1 cache_free              /ext/oj/cache.c:277\n    #2 opt_symbol_keys_set     /ext/oj/usual.c:1051\n    #3 option                  /ext/oj/usual.c:1111\n    #4 parser_missing          /ext/oj/parser.c:1362\n0x50b00001a318 is 40 bytes inside freed 112-byte region [fd]fd fd fd fd fd fd fd\n```\n\n### Reproduce\n\n```ruby\nrequire 'oj'\np = Oj::Parser.new(:usual, symbol_keys: true)\np.symbol_keys = false     # frees cache without nulling pointer\np.parse('{\"attacker\":1}') # UAF: reads freed cache\n```",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.18.0-debian12",
+        "1.18.0-dev-debian12-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.18.0-debian13",
+        "1.18.0-dev-debian13-dev",
+        "1.19.0-debian13",
+        "1.19.0-debian13-dev",
+        "1.19.0-dev-debian13-dev",
+        "1.19.1-debian13",
+        "1.19.1-debian13-dev",
+        "1.19.2-debian13",
+        "1.19.2-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "gitlab-webservice",
+        "purl": "pkg:docker/dhi/gitlab-webservice?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "18.11.1-debian13",
+        "18.11.1-debian13-dev",
+        "18.11.1-debian13-fips",
+        "18.11.1-debian13-fips-dev",
+        "18.11.3-debian13",
+        "18.11.3-debian13-dev",
+        "18.11.3-debian13-fips",
+        "18.11.3-debian13-fips-dev",
+        "18.11.4-debian13",
+        "18.11.4-debian13-dev",
+        "18.11.4-debian13-fips",
+        "18.11.4-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-dy5k-qjbk-csnu-seja"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-2cw7-v8ff-p88r"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/ohler55/oj/security/advisories/GHSA-2cw7-v8ff-p88r"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-54899"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-54899"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-54899"
+    }
+  ]
+}
