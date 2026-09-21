@@ -1,0 +1,142 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-m4fa-vwfz-myf2-57lu",
+  "modified": "2026-09-21T15:45:40Z",
+  "published": "2026-09-21T15:45:40Z",
+  "upstream": [
+    "CVE-2026-47207"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\r\n\r\nEnvoy crashes if an ext_proc server sends a single gRPC message containing multiple, specially crafted `ProcessingResponse` messages. This can occur when the first response in the batch causes the gRPC stream object to be destroyed, leading to a use-after-free error when Envoy attempts to process subsequent responses in the same gRPC message.\r\n\r\n### Details\r\n\r\nEnvoy crashes when call: callbacks_.onReceiveMessageRaw() in the function AsyncStreamImpl::onData().\r\n\r\nThe crash happens in this case:\r\n1) ext_proc server packs two unexpected responses into one gRPC message and sends to Envoy.\r\n2) Upon receiving the first `ProcessingResponse`, Envoy call `callbacks_.onReceiveMessageRaw()`.  As the `ProcessingResponse` is unexpected, this function call caused the destruction of this callbacks_ object.\r\n3) In the next iteration of the for loop, Envoy accesses the already freed `callbakcs_` object,  and crashes.\r\n\r\n### PoC\r\n\r\n1) To reproduce this issue, just configure ext_proc filter under the HTTP filter chain.\r\n2) Run the Envoy binary with trace log enabled.\r\n3) Run the ext_proc server.  Upon receiving a ProcessingRequest, it packs two ProcessingResponse messages in one gRPC message and sends back to Envoy. \r\n4) From a client VM, sends a HTTP request to Envoy which hits the ext_proc filter.\r\n\r\n### Impact\r\n\r\nThis vulnerability will cause Denial of Service (DoS). The severity is high.  It impacts all supported release versions.  Anyone who uses ext_proc in their deployment might be impacted. \r\n",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.34.1-debian12",
+        "1.34.2-debian12",
+        "1.34.3-debian12",
+        "1.34.4-debian12",
+        "1.34.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "envoy",
+        "purl": "pkg:docker/dhi/envoy?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.34.10-debian13",
+        "1.34.11-debian13",
+        "1.34.12-debian13",
+        "1.34.12-debian13-dev",
+        "1.34.13-debian13",
+        "1.34.13-debian13-dev",
+        "1.34.14-debian13",
+        "1.34.14-debian13-dev",
+        "1.34.5-debian13",
+        "1.34.6-debian13",
+        "1.34.7-debian13",
+        "1.34.8-debian13",
+        "1.34.9-debian13",
+        "1.35.10-debian13",
+        "1.35.10-debian13-dev",
+        "1.35.10-debian13-fips",
+        "1.35.10-debian13-fips-dev",
+        "1.35.11-debian13",
+        "1.35.11-debian13-dev",
+        "1.35.11-debian13-fips",
+        "1.35.11-debian13-fips-dev",
+        "1.35.12-debian13",
+        "1.35.12-debian13-dev",
+        "1.35.12-debian13-fips",
+        "1.35.12-debian13-fips-dev",
+        "1.35.2-debian13",
+        "1.35.3-debian13",
+        "1.35.4-debian13",
+        "1.35.5-debian13",
+        "1.35.6-debian13",
+        "1.35.7-debian13",
+        "1.35.8-debian13",
+        "1.35.8-debian13-dev",
+        "1.35.9-debian13",
+        "1.35.9-debian13-dev",
+        "1.36.2-debian13",
+        "1.36.4-debian13",
+        "1.36.4-debian13-dev",
+        "1.36.5-debian13",
+        "1.36.5-debian13-dev",
+        "1.36.6-debian13",
+        "1.36.6-debian13-dev",
+        "1.36.6-debian13-fips",
+        "1.36.6-debian13-fips-dev",
+        "1.36.7-debian13",
+        "1.36.7-debian13-dev",
+        "1.36.7-debian13-fips",
+        "1.36.7-debian13-fips-dev",
+        "1.36.8-debian13",
+        "1.36.8-debian13-dev",
+        "1.36.8-debian13-fips",
+        "1.36.8-debian13-fips-dev",
+        "1.37.0-debian13",
+        "1.37.0-debian13-dev",
+        "1.37.1-debian13",
+        "1.37.1-debian13-dev",
+        "1.37.2-debian13",
+        "1.37.2-debian13-dev",
+        "1.37.2-debian13-fips",
+        "1.37.2-debian13-fips-dev",
+        "1.37.3-debian13",
+        "1.37.3-debian13-dev",
+        "1.37.3-debian13-fips",
+        "1.37.3-debian13-fips-dev",
+        "1.37.4-debian13",
+        "1.37.4-debian13-dev",
+        "1.37.4-debian13-fips",
+        "1.37.4-debian13-fips-dev",
+        "1.38.0-debian13",
+        "1.38.0-debian13-dev",
+        "1.38.0-debian13-fips",
+        "1.38.0-debian13-fips-dev",
+        "1.38.1-debian13",
+        "1.38.1-debian13-dev",
+        "1.38.1-debian13-fips",
+        "1.38.1-debian13-fips-dev",
+        "1.38.2-debian13",
+        "1.38.2-debian13-dev",
+        "1.38.2-debian13-fips",
+        "1.38.2-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-m4fa-vwfz-myf2-57lu"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-68cv-hq5f-g6xv"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-47207"
+    }
+  ]
+}
