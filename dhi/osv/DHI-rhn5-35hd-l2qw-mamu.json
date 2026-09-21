@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-rhn5-35hd-l2qw-mamu",
+  "modified": "2026-09-21T16:45:12Z",
+  "published": "2026-09-21T16:45:12Z",
+  "upstream": [
+    "GHSA-gqvg-gmmx-x4hm"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nMLflow introduced `MLFLOW_ALLOW_PICKLE_DESERIALIZATION` as a security control to prevent unsafe `pickle.load` execution during model loading, in response to CVE-2024-37052 through CVE-2024-37060. When set to `False`, operators expect all pickle deserialization to be blocked. The most recent related fix (#21188) patched a bypass in the pyfunc flavor.\n\nHowever, the `mlflow.statsmodels` flavor completely omits this guard. An attacker who places a crafted MLmodel artifact into any accessible artifact store can trigger arbitrary code execution on any process that calls `mlflow.pyfunc.load_model()` against the malicious model — **even when `MLFLOW_ALLOW_PICKLE_DESERIALIZATION=False`**.\n\nThis is a security control bypass. The operator believes pickle RCE is mitigated; the statsmodels flavor silently ignores the control.\n\n---\n\n## Root Cause\n\n`mlflow.pyfunc.load_model()` dispatches to flavor `_load_pyfunc` implementations via:\n\n```\n# mlflow/pyfunc/__init__.py L1170-1172\nmodel_impl = importlib.import_module(conf[MAIN])._load_pyfunc(data_path)\n```\n\nThe guarded pattern (from `mlflow/sklearn/__init__.py` L526-533, the reference implementation) is:\n\n```\nif (\n    not MLFLOW_ALLOW_PICKLE_DESERIALIZATION.get()\n    and not is_in_databricks_runtime()\n    and not is_in_databricks_model_serving_environment()\n):\n    raise MlflowException(\"Deserializing model using pickle is disallowed...\")\n```\n\n`mlflow/statsmodels/__init__.py` has **no such check**:\n\n```\n# L307-320 — no guard anywhere in this file\ndef _load_model(path):\n    import statsmodels.iolib.api as smio\n    return smio.load_pickle(path)   # calls pickle.load() directly\n\ndef _load_pyfunc(path):\n    return _StatsmodelsModelWrapper(_load_model(path))\n```\n\n`statsmodels.iolib.api.load_pickle` is a thin wrapper around `pickle.load`. Its own docstring warns: *\"Never unpickle data received from an untrusted or unauthenticated source.\"*\n\n---\n\n## Trigger\n\nAn attacker crafts an MLmodel YAML that specifies `mlflow.statsmodels` as the loader module:\n\n```\nflavors:\n  python_function:\n    loader_module: mlflow.statsmodels\n    data: model.pkl\n  statsmodels:\n    data: model.pkl\n    statsmodels_version: 0.14.0\n```\n\nWith a malicious `model.pkl` placed alongside it in the artifact store, any call to:\n\n```\nos.environ[\"MLFLOW_ALLOW_PICKLE_DESERIALIZATION\"] = \"False\"\nmlflow.pyfunc.load_model(\"models:/MaliciousModel/1\")\n```\n\n...deserializes the pickle file with **no guard check**, executing arbitrary code with the privileges of the calling process.\n\nOn default MLflow deployments (no `--app-name basic-auth`), authentication is disabled, so artifact upload requires no credentials.\n\n---\n\n## Affected Code\n\n- `mlflow/statsmodels/__init__.py` L307-310: `_load_model` — calls `smio.load_pickle` without checking `MLFLOW_ALLOW_PICKLE_DESERIALIZATION`\n- `mlflow/statsmodels/__init__.py` L313-320: `_load_pyfunc` — dispatches to `_load_model` without checking the control\n\nPermalink (commit `0b0c576c`):\n- https://github.com/mlflow/mlflow/blob/0b0c576c642b5b0d9496c829809c7d097403bc9f/mlflow/statsmodels/__init__.py#L307-L310\n- https://github.com/mlflow/mlflow/blob/0b0c576c642b5b0d9496c829809c7d097403bc9f/mlflow/statsmodels/__init__.py#L313-L320\n\n---\n\n## Recommended Fix\n\nAdd the missing guard to `mlflow/statsmodels/__init__.py`:\n\n```\nfrom mlflow.environment_variables import MLFLOW_ALLOW_PICKLE_DESERIALIZATION\nfrom mlflow.utils.databricks_utils import (\n    is_in_databricks_model_serving_environment,\n    is_in_databricks_runtime,\n)\n\ndef _load_model(path):\n    if (\n        not MLFLOW_ALLOW_PICKLE_DESERIALIZATION.get()\n        and not is_in_databricks_runtime()\n        and not is_in_databricks_model_serving_environment()\n    ):\n        raise MlflowException(\n            \"Deserializing model using pickle is disallowed, but this statsmodels \"\n            \"model requires pickle deserialization. Set environment variable \"\n            \"'MLFLOW_ALLOW_PICKLE_DESERIALIZATION' to 'true' to allow this.\"\n        )\n    import statsmodels.iolib.api as smio\n    return smio.load_pickle(path)\n```",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "mlflow",
+        "purl": "pkg:docker/dhi/mlflow?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.14.0-debian13",
+        "3.14.0-debian13-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-rhn5-35hd-l2qw-mamu"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-gqvg-gmmx-x4hm"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/mlflow/mlflow/security/advisories/GHSA-gqvg-gmmx-x4hm"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/mlflow/mlflow/pull/24686"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/mlflow/mlflow/commit/38615289094a4b700a20b5d1dbfbe57bdfb0411f"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/mlflow/mlflow/releases/tag/v3.15.0"
+    }
+  ]
+}
