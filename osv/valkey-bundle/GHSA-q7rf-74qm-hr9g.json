@@ -1,0 +1,39 @@
+{
+  "modified": "2026-08-31T23:59:19Z",
+  "published": "2026-08-31T23:59:19Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-q7rf-74qm-hr9g",
+  "details": "## Impact\r\n\r\nAn authenticated user who can run Valkey JSON mutating commands can use a\r\nrecursive JSONPath expression to make the module free a JSON value that is\r\nstill held in the result set being iterated, and then write through the\r\ndangling pointer. This reliably crashes the server process, and has been\r\ndeveloped into remote code execution running as the user the server runs as.\r\n\r\nThis issue affects the Valkey JSON module in all released versions (1.0.0,\r\n1.0.1 and 1.0.2), including the valkey-bundle distributions that ship it. A\r\nserver that does not load the JSON module is not affected.\r\n\r\n## Details\r\n\r\n`Selector::eval` in `src/json/selector.cc` records each JSONPath match as a\r\nraw `JValue *`. `getUniqueResultSet` deduplicates those matches by pointer,\r\nbut it does not eliminate ancestor/descendant overlap and does not stabilize\r\nthe pointers. A recursive path such as `$..*` therefore returns both a\r\nparent array and the elements nested inside it.\r\n\r\nThe size-changing mutators in `src/json/dom.cc` walk that result set in\r\ndocument order, so the ancestor is mutated first. RapidJSON's\r\n`Reserve()`/`PushBack()` reallocates the parent's element buffer and frees\r\nthe old storage, after which the descendant entries still in the result set\r\npoint into freed memory. The loop then dereferences and writes through them.\r\n`JSON.ARRAPPEND`, `JSON.ARRINSERT`, `JSON.ARRPOP`, `JSON.ARRTRIM` and\r\n`JSON.CLEAR` all share this pattern. `JSON.CLEAR` additionally reaches a\r\nsecond destruction path, where it can free storage the ancestor's clear has\r\nalready released.\r\n\r\nBecause the freed chunk is a small ordinary heap allocation, it can be\r\nreclaimed with attacker-controlled bytes and shaped into a counterfeit array\r\nheader, which turns the stale write into a write to an attacker-selected\r\naddress. This was used to overwrite the module's allocator callback and\r\nobtain native code execution on an official valkey-bundle image.\r\n\r\nThe fix orders matched nodes deepest-first so a parent's element buffer is\r\nnever reallocated before its descendants have been consumed, and rewrites\r\nthe array mutators to write their results by index into a pre-sized vector\r\nso replies stay in document order.\r\n\r\n## Mitigation\r\n\r\nYou can mitigate this issue by using Valkey ACLs to restrict the Valkey JSON\r\nmutating commands, in particular `JSON.ARRAPPEND`, `JSON.ARRINSERT`,\r\n`JSON.ARRPOP`, `JSON.ARRTRIM` and `JSON.CLEAR`, if your application does not\r\nintend to use them. Applications that pass user-controlled JSONPath\r\nexpressions to those commands are the most exposed; confining paths to\r\nnon-recursive expressions also avoids the defect.\r\n\r\n## Credits\r\n\r\nThe defect was independently reported by Joao Teles, by Pham Huong Giang,\r\nby Troy Coll: [troy.coll@salesforce.com](mailto:troy.coll@salesforce.com) of Heroku Data Services (Salesforce), \r\nwho reported it through Aiven's vulnerability disclosure program. Joao Teles reported it first and\r\nsupplied the full exploitation chain. \r\nThe fix was authored by https://github.com/zackcam.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "valkey-bundle",
+        "purl": "pkg:dhi/valkey-bundle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.0.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "",
+        "source_package": "valkey-json"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/valkey-io/valkey-json/security/advisories/GHSA-q7rf-74qm-hr9g"
+    }
+  ]
+}
