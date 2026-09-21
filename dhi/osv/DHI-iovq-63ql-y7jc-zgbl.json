@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-iovq-63ql-y7jc-zgbl",
+  "modified": "2026-09-21T15:08:39Z",
+  "published": "2026-09-21T15:08:39Z",
+  "upstream": [
+    "CVE-2026-54901"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\n`Oj::Parser` in usual mode does not mark `array_class` and `hash_class` references during garbage collection. If GC runs after the class is assigned but before a parse, the class object is reclaimed, leaving the parser holding a dangling VALUE. The subsequent `parse` call dereferences the freed object, producing a segfault.\n\n### Version\n\n- **Software**: oj gem\n- **Affected**: all versions with `ext/oj/usual.c` / `ext/oj/parser.c`\n- **Latest tested**: 3.17.1 (confirmed present)\n\n### Details\n\nThe `parser_mark` function in `ext/oj/parser.c` is registered as the GC mark callback for the parser's `TypedData`. If `array_class` (stored as `d->array_class` in the `Usual` struct) is not passed to `rb_gc_mark`, the GC does not know it is referenced and may collect it.\n\nWhen `close_array_class` (`usual.c:405`) later calls `rb_funcallv` on the collected class VALUE, it accesses freed memory, crashing at `RIP: 0x7f... / 0x0000000000000000`.\n\nCrash output:\n```\narray_class finalized\nabout to parse\n[BUG] Segmentation fault at 0x0000000000000000\n    close_array_class+0x194  /ext/oj/usual.c:405\n    parse+0x17b3             /ext/oj/parser.c:715\n    parser_parse+0x10b       /ext/oj/parser.c:1408\nRIP: 0x7fd1b46d68b7  RBP: 0x0000000000000000\n```\n\n### Reproduce\n\n```ruby\nrequire 'oj'\np = Oj::Parser.new(:usual,\n  array_class: (ac = Class.new { def <<(_x); end }))\nObjectSpace.define_finalizer(ac, proc { warn 'array_class finalized' })\nac = nil\nGC.start(full_mark: true, immediate_sweep: true)  # collect the class\np.parse('[1]')  # segfault\n```",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.18.0-debian12",
+        "1.18.0-dev-debian12-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.18.0-debian13",
+        "1.18.0-dev-debian13-dev",
+        "1.19.0-debian13",
+        "1.19.0-debian13-dev",
+        "1.19.0-dev-debian13-dev",
+        "1.19.1-debian13",
+        "1.19.1-debian13-dev",
+        "1.19.2-debian13",
+        "1.19.2-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "gitlab-webservice",
+        "purl": "pkg:docker/dhi/gitlab-webservice?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "18.11.1-debian13",
+        "18.11.1-debian13-dev",
+        "18.11.1-debian13-fips",
+        "18.11.1-debian13-fips-dev",
+        "18.11.3-debian13",
+        "18.11.3-debian13-dev",
+        "18.11.3-debian13-fips",
+        "18.11.3-debian13-fips-dev",
+        "18.11.4-debian13",
+        "18.11.4-debian13-dev",
+        "18.11.4-debian13-fips",
+        "18.11.4-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-iovq-63ql-y7jc-zgbl"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-vwm4-62gf-x745"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/ohler55/oj/security/advisories/GHSA-vwm4-62gf-x745"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-54901"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-54901"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-54901"
+    }
+  ]
+}
