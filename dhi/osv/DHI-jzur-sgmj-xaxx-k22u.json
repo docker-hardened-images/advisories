@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-jzur-sgmj-xaxx-k22u",
+  "modified": "2026-09-21T15:23:14Z",
+  "published": "2026-09-21T15:23:14Z",
+  "upstream": [
+    "GHSA-36hh-v3qg-5jq4"
+  ],
+  "summary": "PyO3 0.24.0 added optimized implementations of `Iterator::nth` and `DoubleEndedIterator::nth_back` for the…",
+  "details": "PyO3 0.24.0 added optimized implementations of `Iterator::nth` and `DoubleEndedIterator::nth_back` for the `BoundListIterator` and `BoundTupleIterator` types. These implementations computed the target index using unchecked `usize` addition (`index + n`) before bounds-checking against the sequence length, then read the element via `get_item_unchecked`.\n\nIn `nth` methods, a sufficiently large `n` (combined with a non-zero internal index) could cause the addition to overflow and wrap around, producing a small \"target index\" that passed the bounds check and enabling reads at the front of the `list` or `tuple` of elements previously yielded by the iterator.\n\nIn `nth_back` methods, a sufficiently large `n` could cause underflow in a similar fashion, however would instead allow reads of arbitrary memory past the end of the `list` or `tuple` storage.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datascience-notebook",
+        "purl": "pkg:docker/dhi/datascience-notebook?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2026-05-11-debian13",
+        "2026-05-11-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "influxdb",
+        "purl": "pkg:docker/dhi/influxdb?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.7.0-debian13-core",
+        "3.7.0-debian13-core-dev",
+        "3.8.0-debian13-core",
+        "3.8.0-debian13-core-dev",
+        "3.8.1-debian13-core",
+        "3.8.1-debian13-core-dev",
+        "3.8.2-debian13-core",
+        "3.8.2-debian13-core-dev",
+        "3.8.3-debian13-core",
+        "3.8.3-debian13-core-dev",
+        "3.9.2-debian13-core",
+        "3.9.2-debian13-core-dev",
+        "3.9.3-debian13-core",
+        "3.9.3-debian13-core-dev",
+        "3.9.4-debian13-core",
+        "3.9.4-debian13-core-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-jzur-sgmj-xaxx-k22u"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-36hh-v3qg-5jq4"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0176.html"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/PyO3/pyo3/pull/6086"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0176"
+    }
+  ]
+}
