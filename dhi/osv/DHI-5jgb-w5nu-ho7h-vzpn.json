@@ -1,0 +1,117 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-5jgb-w5nu-ho7h-vzpn",
+  "modified": "2026-09-21T19:26:16Z",
+  "published": "2026-09-21T19:26:16Z",
+  "upstream": [
+    "CVE-2026-47261"
+  ],
+  "summary": "Wasmtime is a runtime for WebAssembly. In versions prior to 24.0.9, 36.0.10, and 44.0.2, when a filesystem preopen is…",
+  "details": "Wasmtime is a runtime for WebAssembly. In versions prior to 24.0.9, 36.0.10, and 44.0.2, when a filesystem preopen is given DirPerms::all() and FilePerms::READ without FilePerms::WRITE, this access control mechanism can be bypassed via the wasip2 descriptor.open-at or wasip1 path_open interfaces by opening a file with only the OpenFlags::TRUNCATE oflag. The root cause is that the clause handling OpenFlags::TRUNCATE in crates/wasi/src/filesystem.rs (Dir::open_at, lines 967–969) did not set open_mode |= OpenMode::WRITE;, which is later used for the access control check against FilePerms to determine whether opening the file is permitted; the single-line fix adds that missing assignment, after which the affected calls correctly fail with error-code.not-permitted and ERRNO_PERM respectively. Only wasmtime-wasi embeddings that combine DirPerms::MUTATE with FilePerms::READ are affected by this bug. In particular, the Wasmtime project's wasmtime-cli's use of wasmtime-wasi is not affected, because it always sets FilePerms::all() for all preopens. This issue has been fixed in versions 24.0.9, 36.0.10 and44.0.2.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "influxdb",
+        "purl": "pkg:docker/dhi/influxdb?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.10.0-debian13-core",
+        "3.10.0-debian13-core-dev",
+        "3.10.1-debian13-core",
+        "3.10.1-debian13-core-dev",
+        "3.10.3-debian13-core",
+        "3.10.3-debian13-core-dev",
+        "3.10.5-debian13-core",
+        "3.10.5-debian13-core-dev",
+        "3.10.6-debian13-core",
+        "3.10.6-debian13-core-dev",
+        "3.11.0-debian13-core",
+        "3.11.0-debian13-core-dev",
+        "3.11.1-debian13-core",
+        "3.11.1-debian13-core-dev",
+        "3.11.2-debian13-core",
+        "3.11.2-debian13-core-dev",
+        "3.11.4-debian13-core",
+        "3.11.4-debian13-core-dev",
+        "3.9.11-debian13-core",
+        "3.9.11-debian13-core-dev",
+        "3.9.2-debian13-core",
+        "3.9.2-debian13-core-dev",
+        "3.9.3-debian13-core",
+        "3.9.3-debian13-core-dev",
+        "3.9.4-debian13-core",
+        "3.9.4-debian13-core-dev",
+        "3.9.6-debian13-core",
+        "3.9.6-debian13-core-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-5jgb-w5nu-ho7h-vzpn"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-47261"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-47261"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-47261"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-2r75-cxrj-cmph"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0149.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/bytecodealliance/wasmtime/security/advisories/GHSA-2r75-cxrj-cmph"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/bytecodealliance/wasmtime/releases/tag/v45.0.0"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/bytecodealliance/wasmtime/releases/tag/v44.0.2"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/bytecodealliance/wasmtime/releases/tag/v36.0.10"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/bytecodealliance/wasmtime/releases/tag/v24.0.9"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0149"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-47261"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-47261"
+    }
+  ]
+}
