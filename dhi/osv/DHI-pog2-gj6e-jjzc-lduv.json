@@ -1,0 +1,423 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-pog2-gj6e-jjzc-lduv",
+  "modified": "2026-09-21T16:24:37Z",
+  "published": "2026-09-21T16:24:37Z",
+  "upstream": [
+    "CVE-2026-8384"
+  ],
+  "summary": "### Description (as reported)",
+  "details": "### Description (as reported)\n\n#### Summary\n\nIn Jetty 12.1.8, org.eclipse.jetty.util.URIUtil.canonicalPath() may leave dot-dot path segments unnormalized when a semicolon path parameter marker is followed by a slash and a dot\n  segment.\n\nA minimal example is:\n\n`/public;/../admin/secret`\n\nIn my local reproduction, URIUtil.canonicalPath() returns:\n\n`/public/../admin/secret`\n\ninstead of the expected normalized path:\n\n`/admin/secret`\n\nWhen Jetty's `SecurityHandler.PathMapped` is used to protect a path prefix such as `/admin/*`, the non-normalized canonical path may not match the protected prefix. As a result, an unauthenticated request may bypass the configured path-based security constraint.\n\n\n\n#### Tested Version\n\nJetty: 12.1.8\nJDK: 17.0.18\nMaven: 3.9.14\n\nMaven artifacts used:\n\n  org.eclipse.jetty:jetty-server:12.1.8\n  org.eclipse.jetty:jetty-security:12.1.8\n  org.eclipse.jetty:jetty-session:12.1.8\n\nOnly confirmed Jetty 12.1.8 so far. \n\n\n#### Minimal Reproduction\n\nStarts a minimal Jetty server with the following security setup:\n\n```java\nSecurityHandler.PathMapped security = new SecurityHandler.PathMapped();\nsecurity.put(\"/admin/*\", Constraint.from(\"admin\"));\nsecurity.put(\"/*\", Constraint.ALLOWED);\nsecurity.setAuthenticator(new BasicAuthenticator());\n```\n\nThe test then sends requests with no `Authorization` header.\n\nObserved result:\n\n```\nGET /admin/secret                  -> 401\nGET /public;x/../admin/secret      -> 200\n```\n\nThe handler receives paths such as:\n\n`/public/../admin/secret`\n\nThis suggests that the `/admin/*` security constraint is bypassed because `PathMapped` matching is performed against the non-normalized canonical path.\n\n\n#### Suspected Root Cause\n\nThe suspected root cause is in `URIUtil.canonicalPath()`.\n\nThe relevant logic is approximately:\n\n```java\n    for (int i = 0; i < end; i++)\n    {\n        char c = encodedPath.charAt(i);\n\n        switch (c)\n        {\n            case ';':\n                if (builder == null)\n                {\n                    builder = new Utf8StringBuilder(encodedPath.length());\n                    builder.append(encodedPath, 0, i);\n                }\n\n                while (++i < end)\n                {\n                    if (encodedPath.charAt(i) == '/')\n                    {\n                        builder.append('/');\n                        break;\n                    }\n                }\n                break;\n\n            case '.':\n                if (slash)\n                    normal = false;\n                if (builder != null)\n                    builder.append(c);\n                break;\n        }\n\n        slash = c == '/';\n    }\n\n    String canonical = (builder != null)\n        ? (onBadUtf8 == null ? builder.toCompleteString() : builder.takeCompleteString(onBadUtf8))\n        : encodedPath;\n    return normal ? canonical : normalizePath(canonical);\n```\n\nFor the input:\n\n`/public;/../admin/secret`\n\nwhen the outer loop reaches the semicolon:\n\n```\n    i      = 7\n    c      = ';'\n    slash  = false\n    normal = true\n```\n\nInside `case ';'`, the `while (++i < end)` loop advances i to the next character, which is already '/' for the empty path parameter form \";/\".\n\nThe code then appends '/' to the canonical builder:\n\n`builder.append('/');`\n\nAt this point, the canonical builder ends with '/':\n\n`/public/`\n\nHowever, the local variable `c` is still the old value ';', because `c` was read before entering the switch and is not updated when the inner loop advances `i`.\n\nAfter leaving the switch, the loop updates the slash state using:\n\n`slash = c == '/';`\n\nSince `c` is still ';', slash becomes `false`.\n\nOn the next iteration, the scanner reaches '.', which is the first dot in the following \"../\" segment. Because slash is incorrectly `false`, this code does not run:\n\n```java\n    if (slash)\n        normal = false;\n```\n\nTherefore `normal` remains `true`, and `canonicalPath()` returns the canonical string directly instead of calling `normalizePath(canonical)`.\n\nThe result is:\n\n`/public/../admin/secret`\n\ninstead of:\n\n`/admin/secret`\n\nIn short:\n\n`case ';'` advances the scan position i and appends '/' to the canonical builder, but the loop tail still updates slash from the stale character `c=';'`. As a result, the following dot-dot segment is not detected as a path traversal segment.\n\n####  More Precise Trigger Condition\n\nThe issue is not limited to a non-empty path parameter such as \";x\".\n\nThe more precise trigger shape is:\n\n`;[^/]*/.`\n\nExamples:\n\n```\n    /public;/../admin/secret\n    /public;x/../admin/secret\n    /public;anything/../admin/secret\n    /public;/./admin/secret\n```\n\nThe minimal form is:\n\n`/public;/../admin/secret`\n\nbecause the semicolon is immediately followed by '/', so the inner while loop reaches '/' on its first increment.\n\n####  Potential Minimal Fix Direction\n\nA minimal fix would be to ensure that, when case ';' consumes input until '/' and appends '/' to the canonical builder, the slash state reflects the last effective character in the canonical path.\n\nFor example, conceptually:\n\n```java\n    case ';':\n        if (builder == null)\n        {\n            builder = new Utf8StringBuilder(encodedPath.length());\n            builder.append(encodedPath, 0, i);\n        }\n\n        while (++i < end)\n        {\n            if (encodedPath.charAt(i) == '/')\n            {\n                builder.append('/');\n                slash = true;\n                break;\n            }\n        }\n        continue;\n```\n\nThe important part is to avoid the loop tail from overwriting slash using the stale `c` value:\n\n`slash = c == '/';`\n\nIn other words, `slash` should represent the last effective character appended to the canonical builder, not the original input character read before case ';' advanced `i`.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "activemq-artemis",
+        "purl": "pkg:docker/dhi/activemq-artemis?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "2.41.0-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "activemq-artemis",
+        "purl": "pkg:docker/dhi/activemq-artemis?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.41.0-debian13",
+        "2.42.0-debian13",
+        "2.43.0-debian13",
+        "2.44.0-debian13",
+        "2.44.0-debian13-dev",
+        "2.50.0-debian13",
+        "2.50.0-debian13-dev",
+        "2.51.0-debian13",
+        "2.51.0-debian13-dev",
+        "2.52.0-debian13",
+        "2.52.0-debian13-dev",
+        "2.53.0-debian13",
+        "2.53.0-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datahub-frontend-react",
+        "purl": "pkg:docker/dhi/datahub-frontend-react?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.5.0.7-debian13",
+        "1.5.0.7-debian13-dev",
+        "1.5.0.7-debian13-fips",
+        "1.5.0.7-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datahub-gms",
+        "purl": "pkg:docker/dhi/datahub-gms?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.4.0.3-debian13",
+        "1.4.0.3-debian13-dev",
+        "1.4.0.3-debian13-fips",
+        "1.4.0.3-debian13-fips-dev",
+        "1.5.0.7-debian13",
+        "1.5.0.7-debian13-dev",
+        "1.5.0.7-debian13-fips",
+        "1.5.0.7-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datahub-mae-consumer",
+        "purl": "pkg:docker/dhi/datahub-mae-consumer?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.5.0.7-debian13",
+        "1.5.0.7-debian13-dev",
+        "1.5.0.7-debian13-fips",
+        "1.5.0.7-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datahub-mce-consumer",
+        "purl": "pkg:docker/dhi/datahub-mce-consumer?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.5.0.7-debian13",
+        "1.5.0.7-debian13-dev",
+        "1.5.0.7-debian13-fips",
+        "1.5.0.7-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "druid",
+        "purl": "pkg:docker/dhi/druid?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "36.0.0-debian13",
+        "36.0.0-debian13-dev",
+        "36.0.0-debian13-fips",
+        "36.0.0-debian13-fips-dev",
+        "37.0.0-debian13",
+        "37.0.0-debian13-dev",
+        "37.0.0-debian13-fips",
+        "37.0.0-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "jenkins",
+        "purl": "pkg:docker/dhi/jenkins?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.528.2-debian13",
+        "2.528.2-debian13-fips",
+        "2.528.3-debian13",
+        "2.528.3-debian13-dev",
+        "2.528.3-debian13-fips",
+        "2.528.3-debian13-fips-dev",
+        "2.534-debian13",
+        "2.536-debian13",
+        "2.538-debian13",
+        "2.538-debian13-fips",
+        "2.539-debian13",
+        "2.539-debian13-fips",
+        "2.540-debian13",
+        "2.540-debian13-fips",
+        "2.541-debian13",
+        "2.541-debian13-fips",
+        "2.541.1-debian13",
+        "2.541.1-debian13-dev",
+        "2.541.1-debian13-fips",
+        "2.541.1-debian13-fips-dev",
+        "2.541.2-debian13",
+        "2.541.2-debian13-dev",
+        "2.541.2-debian13-fips",
+        "2.541.2-debian13-fips-dev",
+        "2.541.3-debian13",
+        "2.541.3-debian13-dev",
+        "2.541.3-debian13-fips",
+        "2.541.3-debian13-fips-dev",
+        "2.542-debian13",
+        "2.542-debian13-fips",
+        "2.543-debian13",
+        "2.543-debian13-fips",
+        "2.544-debian13",
+        "2.544-debian13-dev",
+        "2.544-debian13-fips",
+        "2.544-debian13-fips-dev",
+        "2.545-debian13",
+        "2.545-debian13-dev",
+        "2.545-debian13-fips",
+        "2.545-debian13-fips-dev",
+        "2.546-debian13",
+        "2.546-debian13-dev",
+        "2.546-debian13-fips",
+        "2.546-debian13-fips-dev",
+        "2.547-debian13",
+        "2.547-debian13-dev",
+        "2.547-debian13-fips",
+        "2.547-debian13-fips-dev",
+        "2.548-debian13",
+        "2.548-debian13-dev",
+        "2.548-debian13-fips",
+        "2.548-debian13-fips-dev",
+        "2.549-debian13",
+        "2.549-debian13-dev",
+        "2.549-debian13-fips",
+        "2.549-debian13-fips-dev",
+        "2.550-debian13",
+        "2.550-debian13-dev",
+        "2.550-debian13-fips",
+        "2.550-debian13-fips-dev",
+        "2.551-debian13",
+        "2.551-debian13-dev",
+        "2.551-debian13-fips",
+        "2.551-debian13-fips-dev",
+        "2.552-debian13",
+        "2.552-debian13-dev",
+        "2.552-debian13-fips",
+        "2.552-debian13-fips-dev",
+        "2.553-debian13",
+        "2.553-debian13-dev",
+        "2.553-debian13-fips",
+        "2.553-debian13-fips-dev",
+        "2.554-debian13",
+        "2.554-debian13-dev",
+        "2.554-debian13-fips",
+        "2.554-debian13-fips-dev",
+        "2.555-debian13",
+        "2.555-debian13-dev",
+        "2.555-debian13-fips",
+        "2.555-debian13-fips-dev",
+        "2.555.1-debian13",
+        "2.555.1-debian13-dev",
+        "2.555.1-debian13-fips",
+        "2.555.1-debian13-fips-dev",
+        "2.555.2-debian13",
+        "2.555.2-debian13-dev",
+        "2.555.2-debian13-fips",
+        "2.555.2-debian13-fips-dev",
+        "2.555.3-debian13",
+        "2.555.3-debian13-dev",
+        "2.555.3-debian13-fips",
+        "2.555.3-debian13-fips-dev",
+        "2.556-debian13",
+        "2.556-debian13-dev",
+        "2.556-debian13-fips",
+        "2.556-debian13-fips-dev",
+        "2.557-debian13",
+        "2.557-debian13-dev",
+        "2.557-debian13-fips",
+        "2.557-debian13-fips-dev",
+        "2.558-debian13",
+        "2.558-debian13-dev",
+        "2.558-debian13-fips",
+        "2.558-debian13-fips-dev",
+        "2.559-debian13",
+        "2.559-debian13-dev",
+        "2.559-debian13-fips",
+        "2.559-debian13-fips-dev",
+        "2.562-debian13",
+        "2.562-debian13-dev",
+        "2.562-debian13-fips",
+        "2.562-debian13-fips-dev",
+        "2.563-debian13",
+        "2.563-debian13-dev",
+        "2.563-debian13-fips",
+        "2.563-debian13-fips-dev",
+        "2.564-debian13",
+        "2.564-debian13-dev",
+        "2.564-debian13-fips",
+        "2.564-debian13-fips-dev",
+        "2.565-debian13",
+        "2.565-debian13-dev",
+        "2.565-debian13-fips",
+        "2.565-debian13-fips-dev",
+        "2.566-debian13",
+        "2.566-debian13-dev",
+        "2.566-debian13-fips",
+        "2.566-debian13-fips-dev",
+        "2.567-debian13",
+        "2.567-debian13-dev",
+        "2.567-debian13-fips",
+        "2.567-debian13-fips-dev",
+        "2.568-debian13",
+        "2.568-debian13-dev",
+        "2.568-debian13-fips",
+        "2.568-debian13-fips-dev",
+        "2.568.1-debian13",
+        "2.568.1-debian13-dev",
+        "2.568.1-debian13-fips",
+        "2.568.1-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kafka",
+        "purl": "pkg:docker/dhi/kafka?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "4.0.0-debian12",
+        "4.0.0-native-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kafka",
+        "purl": "pkg:docker/dhi/kafka?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.0.0-debian13",
+        "4.0.0-debian13-native",
+        "4.0.0-native-debian13",
+        "4.0.1-debian13",
+        "4.0.1-debian13-native",
+        "4.1.0-debian13",
+        "4.1.0-debian13-native",
+        "4.1.1-debian13",
+        "4.1.1-debian13-dev",
+        "4.1.1-debian13-fips",
+        "4.1.2-debian13",
+        "4.1.2-debian13-dev",
+        "4.1.2-debian13-fips",
+        "4.1.2-debian13-native",
+        "4.2.0-debian13",
+        "4.2.0-debian13-dev",
+        "4.2.0-debian13-fips",
+        "4.2.0-debian13-native",
+        "4.2.1-debian13",
+        "4.2.1-debian13-dev",
+        "4.2.1-debian13-fips",
+        "4.2.1-debian13-native",
+        "4.3.0-debian13",
+        "4.3.0-debian13-dev",
+        "4.3.0-debian13-fips",
+        "4.3.0-debian13-native",
+        "4.3.1-debian13",
+        "4.3.1-debian13-dev",
+        "4.3.1-debian13-fips",
+        "4.3.1-debian13-native"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "strimzi-kafka",
+        "purl": "pkg:docker/dhi/strimzi-kafka?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.1.0-debian13-kafka-4.3.0",
+        "1.1.0-debian13-kafka-4.3.0-dev",
+        "1.1.0-debian13-kafka-4.3.0-fips",
+        "1.1.0-debian13-kafka-4.3.0-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-pog2-gj6e-jjzc-lduv"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-w7x5-g22v-xqhr"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-8384"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/jetty/jetty.project/security/advisories/GHSA-w7x5-g22v-xqhr"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/jetty/jetty.project/pull/14973"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/jetty/jetty.project/pull/14969"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/jetty/jetty.project/commit/ade27ce93a37c33278720250d85c48601230ae3f"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/jetty/jetty.project/commit/82969c77f6da46e27008b10b3c14840cd31db084"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/jetty/jetty.project/releases/tag/jetty-12.1.9"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/jetty/jetty.project/releases/tag/jetty-12.0.35"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-8384"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-8384"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-8384"
+    }
+  ]
+}
