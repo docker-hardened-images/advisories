@@ -1,0 +1,130 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-im6c-lvic-qm7d-ngma",
+  "modified": "2026-09-21T15:07:24Z",
+  "published": "2026-09-21T15:07:24Z",
+  "upstream": [
+    "GHSA-fjr4-x663-mwxc"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n`Diffable.diff()` forwards `**kwargs` straight into `diff`/`diff_tree` with **no** `check_unsafe_options` guard. `Diffable` is mixed into `Commit`, `Tree`, `IndexFile`, and `Submodule`, giving a broad surface. `git diff --output=<path>` writes real patch content to an attacker-chosen path, enabling arbitrary file overwrite.\n\n## Root Cause\n`diff.py:188-283` builds and runs the diff command with no `check_unsafe_options` anywhere in the method (grep-confirmed). Additionally `diff.py:265` does `args.insert(0, other)`, placing the caller-supplied `other` ref BEFORE the `--` separator, so a value of `--output=/path` is parsed by git as an option — a value-only control path requiring no kwarg key.\n\n## Impact\nOverwrite/corrupt any file at process privilege with attacker-chosen path (e.g. `~/.ssh/authorized_keys`, configs, lockfiles). Content is real diff/patch bytes (attacker-influenced). Per the skill's rule, controlling WHICH file is overwritten = I:H regardless of content constraints.\n\n## Proof of Concept\n```python\n# Key-control:\ncommit.diff(other_commit, output='/home/app/.ssh/authorized_keys')   # victim overwritten with diff (105 bytes verified)\n# Value-control (attacker controls only the ref string):\ncommit.diff(other='--output=/home/app/.ssh/authorized_keys')          # 14-byte victim -> 146 bytes of diff-tree output\n```\n\n## Attack Chain\n1. Entry (value-control): `commit.diff(other=<user ref>)` with `other = \"--output=/home/app/.ssh/authorized_keys\"`. Guard: none in `Diffable.diff`. Bypass proof: no `check_unsafe_options` in the method body (grep); `other` inserted pre-`--` at diff.py:265.\n2. Sink: `git diff-tree <sha> --output=/home/app/.ssh/authorized_keys -r ...` -> git opens+truncates the target then writes diff content. Impact: overwrite/corrupt any file at process privilege (attacker chooses the path). Verified argv and victim overwrite live.\n\n## Bypass Evidence\nLive-verified on HEAD (tag 3.1.53): both key-control (`output=`) and value-control (`other='--output=...'`) overwrote a victim file with real diff-tree content; argv confirmed `['git','diff-tree','<sha>','--output=/victim','-r',...]`. This is the same value-control model GHSA-956x deemed fix-worthy for `iter_commits(rev='--output=')` — but `diff` is a distinct, unguarded sink NOT touched by that fix.\n\n## Affected Versions\n`<= 3.1.53`\n\n## Suggested Fix\nAdd `check_unsafe_options` to `Diffable.diff` (mirroring `iter_commits`/`archive`), and/or place `--end-of-options` before the `other` ref so it cannot be parsed as an option.\n\n---\nReported by **zx (Jace)** — GitHub: @manus-use",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "airflow",
+        "purl": "pkg:docker/dhi/airflow?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.0.6-python3.12-debian13-compat",
+        "3.1.0-python3.12-debian13-compat",
+        "3.1.1-python3.12-debian13-compat",
+        "3.1.2-python3.12-debian13-compat",
+        "3.1.2-python3.12-debian13-compat-fips",
+        "3.1.3-python3.12-debian13-compat",
+        "3.1.3-python3.12-debian13-compat-fips",
+        "3.1.5-python3.12-debian13-compat",
+        "3.1.5-python3.12-debian13-compat-fips",
+        "3.1.6-python3.12-debian13-compat",
+        "3.1.6-python3.12-debian13-compat-fips",
+        "3.1.7-python3.12-debian13-compat",
+        "3.1.7-python3.12-debian13-compat-fips",
+        "3.1.8-python3.12-debian13-compat",
+        "3.1.8-python3.12-debian13-compat-fips",
+        "3.2.0-python3.13-debian13-compat",
+        "3.2.0-python3.13-debian13-compat-fips",
+        "3.2.1-python3.13-debian13-compat",
+        "3.2.1-python3.13-debian13-compat-fips",
+        "3.2.2-python3.13-debian13-compat",
+        "3.2.2-python3.13-debian13-compat-fips",
+        "3.3.0-python3.13-debian13-compat",
+        "3.3.0-python3.13-debian13-compat-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datahub-ingestion",
+        "purl": "pkg:docker/dhi/datahub-ingestion?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.5.0.7-debian13",
+        "1.5.0.7-debian13-dev",
+        "1.5.0.7-debian13-fips",
+        "1.5.0.7-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "datascience-notebook",
+        "purl": "pkg:docker/dhi/datascience-notebook?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2026-05-11-debian13",
+        "2026-05-11-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "git-mcp",
+        "purl": "pkg:docker/dhi/git-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2025.11.25-debian13",
+        "2025.12.18-debian13",
+        "2026.1.14-debian13",
+        "2026.1.26-debian13",
+        "2026.6.16-debian13",
+        "2026.6.3-debian13",
+        "2026.7.10-debian13",
+        "2026.7.4-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-im6c-lvic-qm7d-ngma"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-fjr4-x663-mwxc"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/gitpython-developers/GitPython/security/advisories/GHSA-fjr4-x663-mwxc"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/pull/2180"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/commit/1d51b891d7f236044a6aa17498ec682b63dad6e6"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/gitpython-developers/GitPython/releases/tag/3.1.54"
+    }
+  ]
+}
