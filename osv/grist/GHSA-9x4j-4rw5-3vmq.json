@@ -1,0 +1,39 @@
+{
+  "modified": "2026-09-13T14:53:26Z",
+  "published": "2026-09-13T14:53:26Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-9x4j-4rw5-3vmq",
+  "details": "### Impact\r\nA user able to import a malicious document into a Grist installation could run commands on the machine hosting the server.\r\n\r\n### Patches\r\nAddressed in 1.7.19.\r\nThe known vulnerability is a many-step process, and several of the steps have been rendered ineffective. The core issue that allows these steps to connect, and indeed converts them into vulnerabilities, is prototype pollution. Grist has been hardened against pollution, and work will continue to harden it further. Steps taken include, but are not limited to:\r\n* Server processes now run with the `__proto__` accessor removed and the base object prototype made non-extensible, both via a node flag and an in-process fallback.\r\n* Documents imported into Grist are now checked to make sure every table and column identifier has the shape Grist's own sanitizer produces, so a foreign or hand-edited schema with an unexpected identifier is refused.\r\n* Every sandbox subprocess is launched with an environment built only from intended variables, excluding prototype leakage.\r\n\r\n\r\n### Workarounds\r\nOnly import documents from sources you trust. Only allow those you trust to import documents. To reduce exposure on a self-hosted instance, consider using the default permission set recommended in Quick Setup and the Admin Panel, so that only people who pass your authentication will be able to import documents.\r\n\r\n### References\r\n  * [Release v1.7.19](https://github.com/gristlabs/grist-core/releases/tag/v1.7.19)\r\n  * [Remove `__proto__`, seal `Object.prototype`](https://github.com/gristlabs/grist-core/commit/da2a1fe93720a581cffd6e88c70b70fa00142f9e)\r\n  * [Validate ids in imported documents](https://github.com/gristlabs/grist-core/commit/c516f8a3d44923e29592a9ef472dba6c83eaa914)\r\n  * [Clean sandbox subprocess environments](https://github.com/gristlabs/grist-core/commit/596b32acd37cfcaf70150a99b3f48dcefa74154c)\r\n  * [Recommended permissions in Quick Setup](https://support.getgrist.com/install/first-run-setup/#step-5-apply-and-restart)\r\n  * [LOTP: Python env-var poisoning](https://boostsecurityio.github.io/lotp/tool/python)\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "grist",
+        "purl": "pkg:dhi/grist"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.7.19"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "docker",
+        "source_package": "gristlabs/grist"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/gristlabs/grist-core/security/advisories/GHSA-9x4j-4rw5-3vmq"
+    }
+  ]
+}
