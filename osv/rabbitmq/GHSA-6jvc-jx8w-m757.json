@@ -1,0 +1,63 @@
+{
+  "modified": "2026-09-18T00:15:06Z",
+  "published": "2026-09-18T00:15:06Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-6jvc-jx8w-m757",
+  "details": "### Advisory Details\r\n\r\n**Title**: RabbitMQ Stream Publisher Management API Discloses Unauthorized Vhost and Stream Existence\r\n\r\n**Description**:\r\n\r\n### Summary\r\n\r\nRabbitMQ's Stream Management publisher endpoints return distinguishable responses for existing versus nonexistent vhosts and Stream queues before verifying whether the authenticated management user can access the requested vhost. A management-tagged user with no permissions on the target vhost receives `200 []` for an existing target and `404` for an absent target, enabling vhost and Stream queue name enumeration.\r\n\r\n### Details\r\n\r\nThe affected routes are `GET /api/stream/publishers/:vhost` and `GET /api/stream/publishers/:vhost/:queue`, implemented by `rabbit_stream_publishers_mgmt`.\r\n\r\nAt the highest affected release, RabbitMQ 4.3.2, `is_authorized/2` uses only the general management authorization helper:\r\n\r\n```erlang\r\nis_authorized(ReqData, Context) -\u003e\r\n    rabbit_mgmt_util:is_authorized(ReqData, Context).\r\n```\r\n\r\nThat check authenticates the caller and verifies a management-capable user tag, but it does not enforce access to the vhost provided in the route. The handler subsequently executes `resource_exists/2`, which looks up the supplied vhost and, for the queue-specific route, the supplied queue. The existence result determines whether Cowboy continues with a `200` response or returns `404`.\r\n\r\nThe later `filter_user/2` call suppresses publisher entries belonging to other users, but it cannot hide the status code selected earlier. The resulting response difference is an observable existence oracle across RabbitMQ's vhost isolation boundary.\r\n\r\nThe appropriate fix is to change `rabbit_stream_publishers_mgmt:is_authorized/2` to use `rabbit_mgmt_util:is_authorized_vhost/2`, matching other vhost-scoped management handlers. This performs the vhost permission check before the existence lookup and makes inaccessible and missing targets externally indistinguishable.\r\n\r\n### PoC\r\n\r\n#### Prerequisites\r\n\r\n- Docker with access to the official `rabbitmq:4.3.1` image\r\n- A RabbitMQ checkout with the PoC directory located at `llm-enhance/cve-finding/Info_Leak/Advisory-GHSA-j45q-v7g2-82ph-stream-publishers-vhost-authorization-exp/`\r\n- Management, Stream, and Stream Management plugins enabled by the environment script\r\n- Local availability of TCP port `15672`\r\n\r\nThe PoC provisions an isolated `management`-tagged user with no permissions on `hidden-vhost`. Administrator credentials are used only to create and inspect the local fixture; the vulnerable requests themselves use the restricted account.\r\n\r\n#### Reproduction Steps\r\n\r\n1. Download [run_experiment.sh](https://gist.github.com/YLChen-007/407d1447bbd94ab34b9c8a95779c0b58), [start_environment.sh](https://gist.github.com/YLChen-007/0e8ee4a5c000df83be27d669f2b5fa37), [stop_environment.sh](https://gist.github.com/YLChen-007/d576d60375dce37a1aaddf4b2e9fa6ae), [verification_test.py](https://gist.github.com/YLChen-007/939e5a8c5f9669f7686500bbbd7f0bca), and [control-missing-target.py](https://gist.github.com/YLChen-007/b5ac4656ec87b049b65b77bd10fc26fa) into the PoC directory above\r\n2. Make the shell scripts executable and run `./run_experiment.sh`\r\n3. Observe `verification.log`: requests by `limited:limited-password` to the existing but unauthorized `hidden-vhost` and `hidden-stream` return `200` with `[]`\r\n4. Observe `control.log`: requests with the same credentials to `missing-vhost` and `missing-stream` return `404`\r\n5. Inspect `observation.log` for the raw HTTP responses and `module_path.log` for matching runtime and checkout-built module SHA-256 values\r\n\r\n### Log of Evidence\r\n\r\nThe end-to-end run against the isolated Broker produced:\r\n\r\n```text\r\nexisting inaccessible vhost:  HTTP 200, body []\r\nexisting inaccessible stream: HTTP 200, body []\r\nmissing vhost control:        HTTP 404\r\nmissing stream control:       HTTP 404\r\n```\r\n\r\n`limited-user-permissions.json` contained `[]`, confirming that the probing account had no permissions on `hidden-vhost`. `enabled-plugins.log` confirmed `rabbitmq_management`, `rabbitmq_stream`, and `rabbitmq_stream_management` were running. The SHA-256 of the container-loaded publisher handler matched the handler compiled from the checkout.\r\n\r\n### Impact\r\n\r\nThis is a cross-vhost metadata disclosure. An authenticated management user can test known or guessable vhost and Stream queue names belonging to other tenants or business units. The demonstrated behavior does not disclose message contents, publisher records, credentials, or permit unauthorized queue operations. However, vhost and Stream names commonly reveal deployment topology and business boundaries, and the oracle can support targeted follow-on reconnaissance.\r\n\r\n### Affected products\r\n\r\n- **Ecosystem**: RabbitMQ Server\r\n- **Package name**: rabbitmq-server\r\n- **Affected versions**: \u003c= 4.3.2\r\n- **Patched versions**: \u003cNone\u003e\r\n\r\nRabbitMQ 4.3.2 is the highest published GitHub release confirmed affected. Its release tag resolves to commit `a509158b1b1e21c892a7f1dacbe0d158076dc7b8`; the same vulnerable handler logic was also reproduced from the current checkout.\r\n\r\n### Severity\r\n\r\n- **Severity**: Medium (CVSS 3.1: 4.3)\r\n- **Vector string**: CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N\r\n\r\n### Weaknesses\r\n\r\n- **CWE**: CWE-203: Observable Discrepancy\r\n\r\n### Occurrences\r\n\r\n| Permalink | Description |\r\n| :--- | :--- |\r\n| [https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stream_management/src/rabbit_stream_publishers_mgmt.erl#L39-L58](https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stream_management/src/rabbit_stream_publishers_mgmt.erl#L39-L58) | `resource_exists/2` resolves the attacker-controlled vhost and optional queue before a vhost authorization check, selecting the existence-dependent `200` or `404` path |\r\n| [https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stream_management/src/rabbit_stream_publishers_mgmt.erl#L96-L97](https://github.com/rabbitmq/rabbitmq-server/blob/a509158b1b1e21c892a7f1dacbe0d158076dc7b8/deps/rabbitmq_stream_management/src/rabbit_stream_publishers_mgmt.erl#L96-L97) | `is_authorized/2` invokes only tag-based management authorization instead of the vhost-aware authorization helper |",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.11"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-6jvc-jx8w-m757"
+    }
+  ]
+}
