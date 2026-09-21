@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-jb2v-dyf2-7w3j-slix",
+  "modified": "2026-09-21T15:14:40Z",
+  "published": "2026-09-21T15:14:40Z",
+  "upstream": [
+    "CVE-2026-55873"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\nSeaweedFS routes requests signed with SigV4 service `s3tables` to the S3Tables\nmanagement API. Authorization on that path collapsed account-less S3 identities\ninto the shared `admin` account and failed open, so a user holding only ordinary\nS3 `Read` credentials — and no S3Tables-specific permission — could invoke\nS3Tables management operations such as `GET /buckets` and enumerate\nadministrator-owned table bucket inventory (names and ARNs). The same handler\nbacks the Iceberg REST catalog, which was affected by the same flaw.\n\n### Impact\nAn authenticated low-privileged S3 user can cross the boundary between ordinary\nS3 object access and S3Tables management. Confirmed impact is disclosure of\nadministrator-owned table bucket inventory (bucket names and ARNs); in shared or\nmulti-tenant deployments this can reveal tenant naming and operational structure.\n\n### Affected versions\nSeaweedFS `>= 4.08, < 4.34` (the S3Tables management API was introduced in 4.08).\n\n### Patched versions\nFixed in **4.34** (#9961). Administrator status is now decided by the\n`ACTION_ADMIN` capability rather than by a collapsed `admin` account id, S3Tables\nauthorization no longer defaults to allow, and the tautological ListTableBuckets\ngate was removed. Related hardening of the same root cause landed in #9962,\n#9963, and #9971.\n\n### Workaround\nNo configuration workaround — upgrade to 4.34 or later.\n\n### Credit\nReported by **TA-MU-TA**.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "seaweedfs-cosi-driver",
+        "purl": "pkg:docker/dhi/seaweedfs-cosi-driver?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "0.3.1-debian13",
+        "0.3.1-debian13-dev",
+        "0.3.1-debian13-fips",
+        "0.3.1-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-jb2v-dyf2-7w3j-slix"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-hgpf-8634-g44c"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-55873"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/seaweedfs/seaweedfs/security/advisories/GHSA-hgpf-8634-g44c"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/seaweedfs/seaweedfs/pull/9961"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/seaweedfs/seaweedfs/commit/b13463880c1fa62e255c058a9228b63cc95b4b36"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/seaweedfs/seaweedfs/releases/tag/4.34"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-6329"
+    }
+  ]
+}
