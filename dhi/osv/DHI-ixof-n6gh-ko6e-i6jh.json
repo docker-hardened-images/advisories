@@ -1,0 +1,130 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ixof-n6gh-ko6e-i6jh",
+  "modified": "2026-09-21T15:11:14Z",
+  "published": "2026-09-21T15:11:14Z",
+  "upstream": [
+    "CVE-2026-54289"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nOn AWS Lambda@Edge, CloudFront delivers a request header that appears more than once as several separate entries. The adapter writes each value with `Headers.set` instead of `Headers.append`, so every value overwrites the previous one and only the last reaches the application. Repeated request headers such as `X-Forwarded-For`, `Forwarded`, and `Via` are silently truncated to a single value.\n\n### Details\n\nA repeated request header carries an ordered list of values. The adapter iterates the list but overwrites on each step, keeping only the final value. Middleware that depends on the full list — for example IP restriction that walks the `X-Forwarded-For` chain, or auditing based on `Forwarded`/`Via` hops — receives incomplete data. The API Gateway adapter already appends repeated values and is not affected.\n\nThis issue arises only on Lambda@Edge deployments, for requests that contain the same header more than once.\n\n### Impact\n\nRequest middleware sees only the last value of a repeated header instead of the full chain. For applications that base access control on the `X-Forwarded-For` chain, this can weaken or alter that decision; for auditing, hop history is lost. This affects applications deployed on AWS Lambda@Edge that rely on multi-value request headers.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "context7-mcp",
+        "purl": "pkg:docker/dhi/context7-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.0.31-debian13",
+        "1.0.33-debian13",
+        "2.0.1-debian13",
+        "2.0.2-debian13",
+        "2.1.0-debian13",
+        "2.1.1-debian13",
+        "2.1.2-debian13",
+        "2.1.3-debian13",
+        "2.1.4-debian13",
+        "2.1.6-debian13",
+        "2.1.7-debian13",
+        "2.1.8-debian13",
+        "2.2.0-debian13",
+        "2.2.1-debian13",
+        "2.2.2-debian13",
+        "2.2.3-debian13",
+        "2.2.4-debian13",
+        "2.2.5-debian13",
+        "2.3.0-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "filesystem-mcp",
+        "purl": "pkg:docker/dhi/filesystem-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2025.11.25-debian13",
+        "2025.12.18-debian13",
+        "2026.1.26-debian13",
+        "2026.6.3-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "firecrawl-mcp",
+        "purl": "pkg:docker/dhi/firecrawl-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.2.1-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "hub-mcp",
+        "purl": "pkg:docker/dhi/hub-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "0.18.0-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "9.1.10-debian13",
+        "9.2.6-debian13",
+        "9.2.8-debian13",
+        "9.3.3-debian13",
+        "9.3.4-debian13",
+        "9.3.5-debian13",
+        "9.4.1-debian13",
+        "9.4.2-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ixof-n6gh-ko6e-i6jh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-wgpf-jwqj-8h8p"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-54289"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/honojs/hono/security/advisories/GHSA-wgpf-jwqj-8h8p"
+    }
+  ]
+}
