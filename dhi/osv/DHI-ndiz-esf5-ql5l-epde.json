@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ndiz-esf5-ql5l-epde",
+  "modified": "2026-09-26T23:58:59Z",
+  "published": "2026-09-26T23:58:59Z",
+  "upstream": [
+    "GHSA-58qw-p7qm-5rvh"
+  ],
+  "summary": "### From the reporter",
+  "details": "### From the reporter\n\n> `XmlParser` is vulnerable to XML external entity (XXE) vulnerability.\n>  XmlParser is being used when parsing Jetty’s xml configuration files. An attacker might exploit\n> this vulnerability in order to achieve SSRF or cause a denial of service.\n> One possible scenario is importing a (remote) malicious WAR into a Jetty’s server, while the\n> WAR includes a malicious web.xml.\n\n### Impact\nThere are no circumstances in a normally deployed Jetty server where potentially hostile XML is given to the XmlParser class without the attacker already having arbitrary access to the server. I.e. in order to exploit `XmlParser` the attacker would already have the ability to deploy and execute hostile code.  Specifically, Jetty has no protection against malicious web application and potentially hostile web applications should only be run on an isolated virtualisation.  \n\nThus this is not considered a vulnerability of the Jetty server itself, as any such usage of the jetty XmlParser is equally vulnerable as a direct usage of the JVM supplied SAX parser.  No CVE will be allocated to this advisory.\n\nHowever, any direct usage of the `XmlParser` class by an application may be vulnerable.  The impact would greatly depend on how the application uses `XmlParser`, but it could be a denial of service due to large entity expansion, or possibly the revealing local files if the XML results are accessible remotely.\n\n### Patches\nAbility to configure the SAXParserFactory to fit the needs of your particular XML parser implementation have been merged as part of PR #10067\n\n### Workarounds\nDon't use Jetty's `XmlParser` to parse data from users.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:L/I:L/A:L"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "druid",
+        "purl": "pkg:docker/dhi/druid?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "36.0.0-debian13",
+        "36.0.0-debian13-dev",
+        "36.0.0-debian13-fips",
+        "36.0.0-debian13-fips-dev",
+        "37.0.0-debian13",
+        "37.0.0-debian13-dev",
+        "37.0.0-debian13-fips",
+        "37.0.0-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "spark",
+        "purl": "pkg:docker/dhi/spark?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "3.5.5-scala2.12-java17-python3.12-debian12",
+        "3.5.5-scala2.13-java17-python3.12-debian12",
+        "3.5.6-scala2.12-java17-python3.12-debian12",
+        "3.5.6-scala2.13-java17-python3.12-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "spark",
+        "purl": "pkg:docker/dhi/spark?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.5.6-scala2.12-java17-python3.12-debian13",
+        "3.5.6-scala2.13-java17-python3.12-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ndiz-esf5-ql5l-epde"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-58qw-p7qm-5rvh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/jetty/jetty.project/security/advisories/GHSA-58qw-p7qm-5rvh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/eclipse/jetty.project/security/advisories/GHSA-58qw-p7qm-5rvh"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/eclipse/jetty.project/pull/10067"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/eclipse/jetty.project/releases/tag/jetty-9.4.52.v20230823"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/eclipse/jetty.project/releases/tag/jetty-12.0.0"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/eclipse/jetty.project/releases/tag/jetty-11.0.16"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/eclipse/jetty.project/releases/tag/jetty-10.0.16"
+    }
+  ]
+}
