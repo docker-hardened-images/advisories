@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ayga-hiud-gj5c-ub5z",
+  "modified": "2026-09-27T00:11:07Z",
+  "published": "2026-09-27T00:11:07Z",
+  "upstream": [
+    "CVE-2023-34454"
+  ],
+  "summary": "snappy-java is a fast compressor/decompressor for Java. Due to unchecked multiplications, an integer overflow may occur…",
+  "details": "snappy-java is a fast compressor/decompressor for Java. Due to unchecked multiplications, an integer overflow may occur in versions prior to 1.1.10.1, causing an unrecoverable fatal error.\n\nThe function `compress(char[] input)` in the file `Snappy.java` receives an array of characters and compresses it. It does so by multiplying the length by 2 and passing it to the rawCompress` function.\n\nSince the length is not tested, the multiplication by two can cause an integer overflow and become negative. The rawCompress function then uses the received length and passes it to the natively compiled maxCompressedLength function, using the returned value to allocate a byte array.\n\nSince the maxCompressedLength function treats the length as an unsigned integer, it doesn’t care that it is negative, and it returns a valid value, which is casted to a signed integer by the Java engine. If the result is negative, a `java.lang.NegativeArraySizeException` exception will be raised while trying to allocate the array `buf`. On the other side, if the result is positive, the `buf` array will successfully be allocated, but its size might be too small to use for the compression, causing a fatal Access Violation error.\n\nThe same issue exists also when using the `compress` functions that receive double, float, int, long and short, each using a different multiplier that may cause the same issue. The issue most likely won’t occur when using a byte array, since creating a byte array of size 0x80000000 (or any other negative value) is impossible in the first place.\n\nVersion 1.1.10.1 contains a patch for this issue.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "druid",
+        "purl": "pkg:docker/dhi/druid?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "36.0.0-debian13",
+        "36.0.0-debian13-dev",
+        "36.0.0-debian13-fips",
+        "36.0.0-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ayga-hiud-gj5c-ub5z"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-34454"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/xerial/snappy-java/security/advisories/GHSA-fjpj-2g6w-x25r"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/xerial/snappy-java/commit/d0042551e4a3509a725038eb9b2ad1f683674d94"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/xerial/snappy-java/blob/master/src/main/java/org/xerial/snappy/Snappy.java"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/xerial/snappy-java/blob/05c39b2ca9b5b7b39611529cc302d3d796329611/src/main/java/org/xerial/snappy/Snappy.java#L422"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/xerial/snappy-java/blob/05c39b2ca9b5b7b39611529cc302d3d796329611/src/main/java/org/xerial/snappy/Snappy.java#L169"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-fjpj-2g6w-x25r"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2023-34454"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2023-34454"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2023-34454"
+    }
+  ]
+}
