@@ -84,11 +84,6 @@ normalized DHI package identity defined in
 [Package identity and versioning](package-identity-and-versioning.md), retaining
 the exact installed package version. Do not substitute an upstream `ID_LIKE`
 package PURL or treat a subcomponent PURL as the product match key.
-The example above is the current upcoming-feed contract. A separate
-[public PURL proposal](package-identity-and-versioning.md#proposed-public-purl-projection-not-adopted)
-would change this HSP product to
-`pkg:apk/dhi/coreutils@9.11-r0?distro=dhi-3.24` after consumer checks and a
-planned transition; it has not been adopted.
 
 ## VEX Is Context, Not The Source Of Discovery
 

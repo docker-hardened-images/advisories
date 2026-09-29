@@ -21,33 +21,6 @@ themselves with `/etc/os-release` `ID=dhi`.
 > before those production images are published. Scanner integrations must not
 > rewrite image metadata; cutover images will report `ID=dhi` themselves.
 
-## Package PURLs: current plan and proposal
-
-The examples and validation in this guide describe the **current upcoming-feed
-contract**. Docker's internal advisory owner and the planned OSV and VEX
-package PURLs all use `os_distro`, `os_name`, and `os_version`. A scanner may
-instead observe `distro=dhi-3.24`, so it must translate that PURL to match a
-current VEX product by exact PURL.
-
-We are evaluating a **public-feed proposal**, not a change to the current
-contract: keep the internal owner as it is, but publish package PURLs with
-`distro=dhi-3.24`. The proposed value retains the DHI base release while
-matching the release qualifier in the recorded Syft output more closely.
-
-| Alpine `coreutils` identity | Current upcoming-feed contract | Proposed public feed |
-| --- | --- | --- |
-| OSV `affected[].package.purl` | `pkg:apk/dhi/coreutils?os_distro=alpine&os_name=dhi&os_version=3.24` | `pkg:apk/dhi/coreutils?distro=dhi-3.24` |
-| VEX `products[].@id` | `pkg:apk/dhi/coreutils@9.11-r0?os_distro=alpine&os_name=dhi&os_version=3.24` | `pkg:apk/dhi/coreutils@9.11-r0?distro=dhi-3.24` |
-
-The recorded scanner PURL is
-`pkg:apk/dhi/coreutils@9.11-r0?arch=aarch64&distro=dhi-3.24`.
-Both public forms would still require DHI membership checks, release-scoped OSV
-matching, and native APK version comparison. The proposal applies to DHI OS
-package (HSP) advisories; image-owner advisories have a separate identity
-contract. See
-[the proposed public PURL projection](docs/package-identity-and-versioning.md#proposed-public-purl-projection-not-adopted)
-for examples, consumer impact, and the checks needed before changing the feed.
-
 ## Scope
 
 This guide primarily describes scanning official DHI images as published by

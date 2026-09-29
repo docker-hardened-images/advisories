@@ -5,9 +5,7 @@ It does not replace the package manager's version grammar or ordering.
 
 This document defines the target package identity and version contract for
 generated DHI OSV records and scanner integrations. The contract applies after
-an image has cut over to `/etc/os-release` `ID=dhi`. A possible change to the
-public PURLs is described in [Proposed public PURL projection](#proposed-public-purl-projection-not-adopted);
-the contract and examples above that section remain the current plan.
+an image has cut over to `/etc/os-release` `ID=dhi`.
 
 ## Contract
 
@@ -194,97 +192,3 @@ Alpine `under_investigation` entry with enumerated versions and no
   "versions": ["3.12.13-r7"]
 }
 ```
-
-## Proposed public PURL projection (not adopted)
-
-The current upcoming-feed shape reuses an internal advisory owner PURL as the
-public OSV package PURL, then inserts an installed version to make each VEX
-product PURL. That owner is an exact internal assessment key. Its qualifiers
-also carry DHI identity and base release, but they differ from the qualifier
-observed in the recorded Syft SBOM. This forces a scanner or importer to
-translate between two package PURL shapes before it can match VEX context.
-
-The proposal is to keep the internal HSP owner key unchanged and project a
-separate public package identity. For this Alpine example:
-
-| Identity | Current upcoming-feed contract | Proposed public projection |
-| --- | --- | --- |
-| Internal HSP owner | `pkg:apk/dhi/coreutils?os_distro=alpine&os_name=dhi&os_version=3.24` | Same exact key; no migration of stored assessments. |
-| OSV ecosystem | `Docker Hardened Images:Alpine:3.24` | Same release-scoped ecosystem. |
-| OSV `affected[].package.purl` | `pkg:apk/dhi/coreutils?os_distro=alpine&os_name=dhi&os_version=3.24` | `pkg:apk/dhi/coreutils?distro=dhi-3.24` |
-| VEX `products[].@id` | `pkg:apk/dhi/coreutils@9.11-r0?os_distro=alpine&os_name=dhi&os_version=3.24` | `pkg:apk/dhi/coreutils@9.11-r0?distro=dhi-3.24` |
-| Recorded Syft package PURL | `pkg:apk/dhi/coreutils@9.11-r0?arch=aarch64&distro=dhi-3.24` | Same observed package. |
-
-The public fields of one affected OSV entry and its paired VEX statement would
-therefore change as follows. Other assessment fields, affected versions, and
-native version ranges would keep their current meanings.
-
-Current upcoming-feed `affected[].package`:
-
-```json
-{
-  "ecosystem": "Docker Hardened Images:Alpine:3.24",
-  "name": "coreutils",
-  "purl": "pkg:apk/dhi/coreutils?os_distro=alpine&os_name=dhi&os_version=3.24"
-}
-```
-
-Proposed public `affected[].package`:
-
-```json
-{
-  "ecosystem": "Docker Hardened Images:Alpine:3.24",
-  "name": "coreutils",
-  "purl": "pkg:apk/dhi/coreutils?distro=dhi-3.24"
-}
-```
-
-Current upcoming-feed VEX `products[]` member:
-
-```json
-{"@id": "pkg:apk/dhi/coreutils@9.11-r0?os_distro=alpine&os_name=dhi&os_version=3.24"}
-```
-
-Proposed public VEX `products[]` member:
-
-```json
-{"@id": "pkg:apk/dhi/coreutils@9.11-r0?distro=dhi-3.24"}
-```
-
-For Debian 13, the analogous proposed public products would be
-`pkg:deb/dhi/coreutils?distro=dhi-13` in OSV and
-`pkg:deb/dhi/coreutils@9.7-3%2Bdhi3?distro=dhi-13` in VEX; the internal owner
-would keep `os_distro=debian&os_name=dhi&os_version=13`. The `apk`/`deb` type
-and `dhi` namespace still identify the package family and producer. The
-`distro=dhi-<release>` value carries the base release. Removing every
-qualifier would lose that release in a VEX product PURL, where there is no OSV
-ecosystem field to recover it from.
-
-This is a candidate public convention based on observed scanner output, not a
-claim that `distro` has one universally specified value across scanners. A
-PURL-aware consumer may also retain `arch` on its installed-package PURL; the
-consumer's matching behavior for that extra qualifier needs verification.
-The OSV ecosystem still carries lineage and release because some OSV consumers
-match using ecosystem and package name rather than PURL qualifiers.
-
-### Migration and acceptance checks
-
-1. Leave stored owner keys and assessment identity unchanged. Change the
-   materializer's public HSP projection and feed renderer together: they
-   currently derive public PURLs directly from owner PURLs and validate that
-   the owner and public PURL are identical. Keep IMAGE owners on their separate
-   contract.
-2. Generate candidate OSV/VEX artifacts beside the current feed, then check
-   them with Syft, Grype, Trivy, Docker Scout, and the actual feed importers.
-   Verify an installed package matches the intended DHI release and version,
-   while a different release or version does not. Confirm how each consumer
-   handles an extra `arch` qualifier and the release-scoped OSV ecosystem.
-3. Update the normative examples, fixtures, and static validator only after
-   agreeing on the public shape. Plan a consumer transition before replacing
-   public PURLs: exact-PURL consumers may lose matches at cutover. Temporary
-   compatibility VEX products are possible to evaluate, but duplicating OSV
-   affected entries may produce duplicate findings and needs separate proof.
-
-This proposal concerns the upcoming advisory feed's package owners across DHI
-images. It does not replace the separate image-digest and package-subcomponent
-shape investigated for image-attached OpenVEX.
