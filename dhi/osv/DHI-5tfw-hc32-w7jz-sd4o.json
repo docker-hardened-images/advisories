@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-5tfw-hc32-w7jz-sd4o",
+  "modified": "2026-09-29T04:11:26Z",
+  "published": "2026-09-29T04:11:26Z",
+  "upstream": [
+    "CVE-2026-45304"
+  ],
+  "summary": "### Description",
+  "details": "### Description\n\n`Symfony\\Component\\Yaml\\Parser` resolves YAML aliases (`*anchor`) during parsing. Aliases that reference *collections* (arrays, `stdClass`, `TaggedValue`-wrapped collections) can themselves point to other collections containing aliases, creating exponential expansion at resolution time. A small input can blow up into a multi-gigabyte structure and exhaust memory: the classic \"Billion Laughs\" denial-of-service against any parser exposed to untrusted YAML.\n\n### Resolution\n\nThe `Parser` now counts collection alias resolutions in a shared `ParserState` object, with a default limit of **128**, following the [SnakeYAML model](https://github.com/snakeyaml/snakeyaml/blob/master/src/main/java/org/yaml/snakeyaml/LoaderOptions.java). Scalar aliases remain unrestricted since they cannot drive exponential growth. The limit is configurable via a new `$maxAliasesForCollections` argument on `Parser::__construct()`, `Yaml::parse()` and `Yaml::parseFile()`. A new `Yaml::PARSE_EXCEPTION_ON_ALIAS` flag also rejects all aliases outright when parsing fully untrusted input.\n\nThe patch for this issue is available [here](https://github.com/symfony/symfony/commit/e77391b2e4f18821198f010d573674c8ed4a970a) for branch 5.4.\n\n### Credits\n\nSymfony would like to thank Pietro Tirenna (Shielder) for reporting the issue and Nicolas Grekas for fixing it.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:U"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "mediawiki",
+        "purl": "pkg:docker/dhi/mediawiki?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.45.1-debian13-php-fpm",
+        "1.45.1-debian13-php-fpm-dev",
+        "1.45.1-debian13-php-fpm-fips",
+        "1.45.1-debian13-php-fpm-fips-dev",
+        "1.45.2-debian13-php-fpm",
+        "1.45.2-debian13-php-fpm-dev",
+        "1.45.2-debian13-php-fpm-fips",
+        "1.45.2-debian13-php-fpm-fips-dev",
+        "1.45.3-debian13-php-fpm",
+        "1.45.3-debian13-php-fpm-dev",
+        "1.45.3-debian13-php-fpm-fips",
+        "1.45.3-debian13-php-fpm-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-5tfw-hc32-w7jz-sd4o"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-4qpc-3hr4-r2p4"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/symfony/symfony/security/advisories/GHSA-4qpc-3hr4-r2p4"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/symfony/symfony/commit/e77391b2e4f18821198f010d573674c8ed4a970a"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/FriendsOfPHP/security-advisories/blob/master/symfony/yaml/CVE-2026-45304.yaml"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/FriendsOfPHP/security-advisories/blob/master/symfony/symfony/CVE-2026-45304.yaml"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-45304"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-45304"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-45304"
+    }
+  ]
+}
