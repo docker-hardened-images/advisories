@@ -53,10 +53,12 @@ package evidence reference resolves to one of them.
 
 In production, a scanner can establish DHI package origin by resolving the
 `com.docker.dhi.chain-id` boundary and attributing packages to DHI base layers.
-If the exact base image is already known, the scanner can instead compare
-against the Docker-issued SPDX or CycloneDX SBOM attached to that base's
-resolved platform-manifest digest. A scanner must not treat an arbitrary SBOM
-supplied with the derived image as a Docker-issued base SBOM.
+It can also resolve a candidate base digest from published SLSA provenance,
+verify the base rootfs prefix and ChainID, and compare against the Docker-issued
+SPDX or CycloneDX SBOM attached to that base's platform-manifest digest. See
+[Derived-image base discovery](../../../derived-image-base-discovery.md). A
+scanner must not treat an arbitrary SBOM supplied with the derived image as a
+Docker-issued base SBOM.
 
 This fixture excludes `jq` because it is absent from the recorded base snapshot
 and its package-file evidence is in later layers. Both observations classify it
