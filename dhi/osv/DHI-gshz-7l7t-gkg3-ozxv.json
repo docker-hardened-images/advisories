@@ -1,21 +1,21 @@
 {
   "schema_version": "1.8.0",
-  "id": "DHI-24uq-vojq-th6q-ap7z",
+  "id": "DHI-gshz-7l7t-gkg3-ozxv",
   "modified": "2026-09-30T06:15:13Z",
-  "published": "2026-09-21T12:11:20Z",
+  "published": "2026-09-30T06:15:13Z",
   "upstream": [
-    "CVE-2026-34478"
+    "CVE-2026-34477"
   ],
-  "summary": "Apache Log4j Core's  Rfc5424Layout https://logging.apache.org/log4j/2.x/manual/layouts.html#RFC5424Layout , in versions…",
-  "details": "Apache Log4j Core's  Rfc5424Layout https://logging.apache.org/log4j/2.x/manual/layouts.html#RFC5424Layout , in versions 2.21.0 through 2.25.3, is vulnerable to log injection via CRLF sequences due to undocumented renames of security-relevant configuration attributes.\n\nTwo distinct issues affect users of stream-based syslog services who configure Rfc5424Layout directly:\n\n  *  The newLineEscape attribute was silently renamed, causing newline escaping to stop working for users of TCP framing (RFC 6587), exposing them to CRLF injection in log output.\n  *  The useTlsMessageFormat attribute was silently renamed, causing users of TLS framing (RFC 5425) to be silently downgraded to unframed TCP (RFC 6587), without newline escaping.\n\n\nUsers of the SyslogAppender are not affected, as its configuration attributes were not modified.\n\nUsers are advised to upgrade to Apache Log4j Core 2.25.4, which corrects this issue.",
+  "summary": "The fix for  CVE-2025-68161 https://logging.apache.org/security.html#CVE-2025-68161  was incomplete: it addressed…",
+  "details": "The fix for  CVE-2025-68161 https://logging.apache.org/security.html#CVE-2025-68161  was incomplete: it addressed hostname verification only when enabled via the  log4j2.sslVerifyHostName https://logging.apache.org/log4j/2.x/manual/systemproperties.html#log4j2.sslVerifyHostName  system property, but not when configured through the  verifyHostName https://logging.apache.org/log4j/2.x/manual/appenders/network.html#SslConfiguration-attr-verifyHostName  attribute of the <Ssl> element.\n\nAlthough the verifyHostName configuration attribute was introduced in Log4j Core 2.12.0, it was silently ignored in all versions through 2.25.3, leaving TLS connections vulnerable to interception regardless of the configured value.\n\nA network-based attacker may be able to perform a man-in-the-middle attack when all of the following conditions are met:\n\n  *  An SMTP, Socket, or Syslog appender is in use.\n  *  TLS is configured via a nested <Ssl> element.\n  *  The attacker can present a certificate issued by a CA trusted by the appender's configured trust store, or by the default Java trust store if none is configured.\nThis issue does not affect users of the HTTP appender, which uses a separate  verifyHostname https://logging.apache.org/log4j/2.x/manual/appenders/network.html#HttpAppender-attr-verifyHostName  attribute that was not subject to this bug and verifies host names by default.\n\nUsers are advised to upgrade to Apache Log4j Core 2.25.4, which corrects this issue.",
   "severity": [
     {
       "type": "CVSS_V3",
-      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N"
     },
     {
       "type": "CVSS_V4",
-      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:L/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+      "score": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:L/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
     }
   ],
   "affected": [
@@ -64,6 +64,25 @@
         "purl": "pkg:docker/dhi/airflow?os_name=debian&os_version=13"
       },
       "versions": [
+        "3.0.6-python3.12-debian13-compat",
+        "3.1.0-python3.12-debian13-compat",
+        "3.1.1-python3.12-debian13-compat",
+        "3.1.2-python3.12-debian13-compat",
+        "3.1.2-python3.12-debian13-compat-fips",
+        "3.1.3-python3.12-debian13-compat",
+        "3.1.3-python3.12-debian13-compat-fips",
+        "3.1.5-python3.12-debian13",
+        "3.1.5-python3.12-debian13-compat",
+        "3.1.5-python3.12-debian13-compat-fips",
+        "3.1.5-python3.12-debian13-dev",
+        "3.1.5-python3.12-debian13-fips",
+        "3.1.5-python3.12-debian13-fips-dev",
+        "3.1.6-python3.12-debian13",
+        "3.1.6-python3.12-debian13-compat",
+        "3.1.6-python3.12-debian13-compat-fips",
+        "3.1.6-python3.12-debian13-dev",
+        "3.1.6-python3.12-debian13-fips",
+        "3.1.6-python3.12-debian13-fips-dev",
         "3.1.7-python3.12-debian13",
         "3.1.7-python3.12-debian13-compat",
         "3.1.7-python3.12-debian13-compat-fips",
@@ -111,9 +130,31 @@
       "package": {
         "ecosystem": "Docker Hardened Images",
         "name": "elasticsearch",
+        "purl": "pkg:docker/dhi/elasticsearch?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "8.17.3-debian",
+        "8.17.4-debian",
+        "8.17.4-debian12",
+        "8.17.5-debian12",
+        "8.17.6-debian12",
+        "8.17.7-debian12",
+        "8.17.8-debian12",
+        "8.19.2-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "elasticsearch",
         "purl": "pkg:docker/dhi/elasticsearch?os_name=debian&os_version=13"
       },
       "versions": [
+        "8.18.7-debian13",
+        "8.18.8-debian13",
         "8.19.10-debian13",
         "8.19.11-debian13",
         "8.19.11-debian13-fips",
@@ -125,12 +166,20 @@
         "8.19.14-debian13-fips",
         "8.19.15-debian13",
         "8.19.15-debian13-fips",
+        "8.19.2-debian13",
+        "8.19.3-debian13",
+        "8.19.4-debian13",
+        "8.19.5-debian13",
         "8.19.6-debian13",
         "8.19.7-debian13",
         "8.19.8-debian13",
         "8.19.9-debian13",
+        "9.0.7-debian13",
+        "9.0.8-debian13",
         "9.1.10-debian13",
         "9.1.10-debian13-fips",
+        "9.1.4-debian13",
+        "9.1.5-debian13",
         "9.1.6-debian13",
         "9.1.7-debian13",
         "9.1.8-debian13",
@@ -160,6 +209,47 @@
         "9.3.4-debian13-fips",
         "9.4.0-debian13",
         "9.4.0-debian13-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "flyway",
+        "purl": "pkg:docker/dhi/flyway?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "11.10.3-jre23-debian12",
+        "11.10.4-jre23-debian12",
+        "11.10.5-jre23-debian12",
+        "11.11.0-jre23-debian12",
+        "11.11.2-jre23-debian12",
+        "11.8.2-jre23-debian12",
+        "11.9.1-jre23-debian12",
+        "11.9.2-jre23-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "flyway",
+        "purl": "pkg:docker/dhi/flyway?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "11.11.2-jre23-debian13",
+        "11.12.0-jre23-debian13",
+        "11.13.0-jre23-debian13",
+        "11.13.1-jre23-debian13",
+        "11.13.2-jre23-debian13",
+        "11.13.3-jre23-debian13",
+        "11.14.0-jre23-debian13",
+        "11.14.1-jre23-debian13",
+        "11.15.0-jre23-debian13"
       ],
       "database_specific": {
         "owner_kind": "IMAGE"
@@ -222,8 +312,25 @@
         "8.19.13-debian13-compat",
         "8.19.14-debian13",
         "8.19.14-debian13-compat",
+        "8.19.5-debian13",
+        "8.19.6-debian13",
+        "8.19.7-debian13",
+        "8.19.8-debian13",
+        "8.19.9-debian13",
+        "9.0.7-debian13",
+        "9.0.8-debian13",
         "9.1.10-debian13",
         "9.1.10-debian13-compat",
+        "9.1.2-debian13",
+        "9.1.3-debian13",
+        "9.1.5-debian13",
+        "9.1.6-debian13",
+        "9.1.8-debian13",
+        "9.1.9-debian13",
+        "9.2.0-debian13",
+        "9.2.1-debian13",
+        "9.2.2-debian13",
+        "9.2.3-debian13",
         "9.2.4-debian13",
         "9.2.5-debian13",
         "9.2.6-debian13",
@@ -233,6 +340,19 @@
         "9.3.1-debian13",
         "9.3.2-debian13",
         "9.3.2-debian13-compat"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "logstash",
+        "purl": "pkg:docker/dhi/logstash?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "9.1.2-debian12"
       ],
       "database_specific": {
         "owner_kind": "IMAGE"
@@ -258,6 +378,8 @@
         "2026.02.3-debian13-dev",
         "2026.03.1-debian13",
         "2026.03.1-debian13-dev",
+        "5.26.17-debian13",
+        "5.26.18-debian13",
         "5.26.19-debian13",
         "5.26.19-debian13-dev",
         "5.26.20-debian13",
@@ -340,6 +462,12 @@
         "purl": "pkg:docker/dhi/sonarqube?os_name=debian&os_version=13"
       },
       "versions": [
+        "25.10.0-debian13",
+        "25.11.0-debian13",
+        "25.11.0-debian13-dev",
+        "25.12.0-debian13",
+        "25.12.0-debian13-dev",
+        "25.9.0-debian13",
         "26.2.0-debian13",
         "26.2.0-debian13-dev",
         "26.4.0-debian13",
@@ -355,11 +483,33 @@
       "package": {
         "ecosystem": "Docker Hardened Images",
         "name": "spark",
+        "purl": "pkg:docker/dhi/spark?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "3.5.5-scala2.12-java17-python3.12-debian12",
+        "3.5.5-scala2.13-java17-python3.12-debian12",
+        "3.5.6-scala2.12-java17-python3.12-debian12",
+        "3.5.6-scala2.13-java17-python3.12-debian12",
+        "4.0.0-scala2.13-java17-python3.12-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "spark",
         "purl": "pkg:docker/dhi/spark?os_name=debian&os_version=13"
       },
       "versions": [
+        "3.5.6-scala2.12-java17-python3.12-debian13",
+        "3.5.6-scala2.13-java17-python3.12-debian13",
         "3.5.7-debian13",
         "3.5.7-debian13-python",
+        "3.5.7-scala2.12-java17-python3.12-debian13",
+        "3.5.7-scala2.13-java17-python3.12-debian13",
+        "3.5.7-scala2.13-java17-python3.13-debian13",
         "3.5.8-debian13",
         "3.5.8-debian13-python",
         "4.0.0-scala2.13-java17-python3.12-debian13",
@@ -375,19 +525,6 @@
         "4.0.2-debian13-python-fips",
         "4.1.0-debian13",
         "4.1.1-debian13"
-      ],
-      "database_specific": {
-        "owner_kind": "IMAGE"
-      }
-    },
-    {
-      "package": {
-        "ecosystem": "Docker Hardened Images",
-        "name": "spark",
-        "purl": "pkg:docker/dhi/spark?os_name=debian&os_version=12"
-      },
-      "versions": [
-        "4.0.0-scala2.13-java17-python3.12-debian12"
       ],
       "database_specific": {
         "owner_kind": "IMAGE"
@@ -464,51 +601,47 @@
   "references": [
     {
       "type": "ADVISORY",
-      "url": "https://scout.docker.com/v/DHI-24uq-vojq-th6q-ap7z"
+      "url": "https://scout.docker.com/v/DHI-gshz-7l7t-gkg3-ozxv"
     },
     {
       "type": "ADVISORY",
-      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34478"
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34477"
     },
     {
       "type": "ADVISORY",
-      "url": "https://logging.apache.org/security.html#CVE-2026-34478"
+      "url": "https://logging.apache.org/security.html#CVE-2026-34477"
     },
     {
       "type": "ADVISORY",
-      "url": "https://lists.apache.org/thread/3k1clr2l6vkdnl4cbhjrnt1nyjvb5gwt"
-    },
-    {
-      "type": "ADVISORY",
-      "url": "http://www.openwall.com/lists/oss-security/2026/04/10/7"
-    },
-    {
-      "type": "FIX",
-      "url": "https://github.com/apache/logging-log4j2/pull/4074"
-    },
-    {
-      "type": "WEB",
-      "url": "https://logging.apache.org/log4j/2.x/manual/layouts.html#RFC5424Layout"
-    },
-    {
-      "type": "WEB",
       "url": "https://logging.apache.org/cyclonedx/vdr.xml"
     },
     {
-      "type": "ADVISORY",
-      "url": "https://security-tracker.debian.org/tracker/CVE-2026-34478"
+      "type": "FIX",
+      "url": "https://github.com/apache/logging-log4j2/pull/4075"
+    },
+    {
+      "type": "WEB",
+      "url": "https://logging.apache.org/log4j/2.x/manual/appenders/network.html#SslConfiguration-attr-verifyHostName"
+    },
+    {
+      "type": "WEB",
+      "url": "https://lists.apache.org/thread/lkx8cl46t2bvkcwfcb2pd43ygc097lq4"
     },
     {
       "type": "ADVISORY",
-      "url": "https://github.com/advisories/GHSA-445c-vh5m-36rj"
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-34477"
     },
     {
       "type": "ADVISORY",
-      "url": "https://ubuntu.com/security/CVE-2026-34478"
+      "url": "https://github.com/advisories/GHSA-6hg6-v5c8-fphq"
     },
     {
       "type": "ADVISORY",
-      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-34478"
+      "url": "https://ubuntu.com/security/CVE-2026-34477"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-34477"
     }
   ]
 }
