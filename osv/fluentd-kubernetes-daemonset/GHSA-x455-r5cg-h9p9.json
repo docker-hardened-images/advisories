@@ -1,0 +1,39 @@
+{
+  "modified": "2026-09-29T02:30:53Z",
+  "published": "2026-09-29T02:30:53Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-x455-r5cg-h9p9",
+  "details": "Fluentd supports buffer compression (e.g., `\u003ccompress gzip\u003e` or `\u003ccompress zstd\u003e`) to reduce the on-disk footprint of buffered data. \r\nIt was discovered that the previous mitigation for decompression bombs (**CVE-2026-44160**) is incomplete.\r\n\r\nWhile the `decompression_size_limit` introduced in the previous fix is properly enforced for string-based data reads, the streaming IO decompression path (specifically `Buffer::Chunk#open` and `#write_to`) bypasses this limit entirely. If buffer compression is enabled, an attacker can send highly compressible payloads. These payloads bypass buffer chunk limits because they are evaluated based on their tiny compressed size. However, when the chunk is flushed to an output IO (such as a file, socket, or standard output) or triggers the automatic error-backup path (`backup_chunk`), it expands to an unbounded size without any limitation.\r\n\r\n### Impact\r\n\r\nThis vulnerability allows for an unauthenticated remote **Denial of Service (DoS)**.\r\nBy injecting highly repetitive, highly compressible data into a Fluentd instance with buffer compression enabled, an attacker can cause massive data amplification during the buffer flush phase. This results in severe memory exhaustion (OOM) or total disk space depletion, crashing the Fluentd worker and disrupting log routing.\r\n\r\n### Patches\r\n\r\nv1.19.4\r\n\r\n### Workarounds\r\n\r\nIf an immediate upgrade is not possible, users are strongly advised to apply the following mitigations:\r\n\r\n1. Disable Buffer Compression\r\n   * Remove the `compress gzip` or `compress zstd` directives from all `\u003cbuffer\u003e` configuration blocks. Without chunk-level compression, data amplification cannot occur during the buffer flush phase.\r\n2. Disable Automatic Chunk Backup\r\n   * If buffer compression must remain enabled, set `disable_chunk_backup true` in your output plugins to close the unconditional IO decompression path that triggers during unrecoverable errors.\r\n3. Restrict Network Access\r\n   * Ensure that Fluentd input ports (such as `in_http` or `in_forward`) are strictly deployed within a closed, trusted network, or protected by native authentication features, to block malicious payloads from untrusted sources.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "fluentd-kubernetes-daemonset",
+        "purl": "pkg:dhi/fluentd-kubernetes-daemonset"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.19.4"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rubygems",
+        "source_package": "fluentd"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/fluent/fluentd/security/advisories/GHSA-x455-r5cg-h9p9"
+    }
+  ]
+}
