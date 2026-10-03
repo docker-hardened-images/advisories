@@ -1,0 +1,39 @@
+{
+  "modified": "2026-09-29T02:30:32Z",
+  "published": "2026-09-29T02:30:32Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-g69w-f42r-xp35",
+  "details": "Fluentd's `in_http` plugin allows receiving logs via HTTP requests. It was discovered that the parsing logic for `ndjson` (Newline Delimited JSON) parameters is vulnerable to an object allocation amplification attack, which can lead to a Denial of Service (DoS) due to memory exhaustion (OOM).\r\n\r\nWhen processing `ndjson` payloads, the plugin eagerly splits the entire decompressed payload into an array of strings in memory. An attacker can craft a highly compressed HTTP request containing millions of extremely short lines. While the raw decompressed byte size successfully passes the configured `decompression_size_limit`, the overhead of allocating millions of individual Ruby string objects causes the actual memory consumption to drastically exceed the intended limits. This massive object-count amplification rapidly exhausts system memory, causing the Fluentd worker process to be killed by the operating system.\r\n\r\n### Impact\r\n\r\nThis vulnerability allows for an unauthenticated remote **Denial of Service (DoS)**.\r\nBy sending crafted, highly compressible payloads to the `in_http` endpoint, an attacker can continuously crash the Fluentd worker processes. Although the Fluentd supervisor automatically restarts crashed workers, repeated malicious requests can sustain the outage, resulting in dropped logs and severe backpressure to upstream systems.\r\n\r\n### Resolution\r\n\r\nThe inherent behavior of Ruby's object allocation makes it structurally difficult to process arbitrarily crafted, highly-compressed payloads without significant memory overhead. To fundamentally resolve this vulnerability, Fluentd v1.19.4 introduces native access control mechanisms directly into the `in_http` plugin.\r\n\r\nAdministrators can now reject malicious payloads *before* they reach the vulnerable parsing logic by configuring the newly added `\u003cauth\u003e` (Basic Authentication) and `\u003csecurity\u003e` (Client IP Allowlisting) directives. We strongly recommend configuring these new directives to restrict access to trusted clients only, which completely neutralizes unauthenticated DoS vectors without requiring an external reverse proxy.\r\n\r\n**Example of secure `in_http` configuration:**\r\n\r\n```\r\n\u003csource\u003e\r\n  @type http\r\n  \u003cauth\u003e\r\n    method basic\r\n    username fluentd\r\n    password [SECRET]\r\n  \u003c/auth\u003e\r\n  \u003csecurity\u003e\r\n    \u003cclient\u003e\r\n      network 10.0.0.0/8\r\n    \u003c/client\u003e\r\n  \u003c/security\u003e\r\n\u003c/source\u003e\r\n\r\n```\r\n\r\n### Patches\r\n\r\nv1.19.4\r\n\r\n### Workarounds\r\n\r\nIf an immediate upgrade to v1.19.4 is not possible, users are strongly advised to apply the following mitigations:\r\n\r\n1. Restrict Network Access\r\n   * Ensure that the `in_http` listener (default port `9880`) is strictly deployed within a closed, trusted network. Use firewall rules (e.g., iptables, cloud security groups) to block access from untrusted sources.\r\n2. Implement Reverse Proxy Limits\r\n   * Place Fluentd behind a reverse proxy (e.g., Nginx, HAProxy) or a Web Application Firewall (WAF). Enforce strict rate limiting and request size limits at the proxy layer to drop anomalous requests before they reach the Fluentd worker.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "fluentd",
+        "purl": "pkg:dhi/fluentd"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.19.4"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rubygems",
+        "source_package": "fluentd"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/fluent/fluentd/security/advisories/GHSA-g69w-f42r-xp35"
+    }
+  ]
+}
