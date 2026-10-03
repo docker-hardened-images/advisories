@@ -1,0 +1,39 @@
+{
+  "modified": "2026-09-29T02:30:42Z",
+  "published": "2026-09-29T02:30:42Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-h3xv-5jpx-r4j2",
+  "details": "Fluentd's `in_syslog` plugin allows receiving syslog messages over UDP, TCP, and TLS. It was discovered that the plugin is vulnerable to an unauthenticated remote memory exhaustion (OOM) attack when configured to use TCP or TLS transport.\r\n\r\nWhile the `message_length_limit` parameter correctly bounds payload sizes for UDP inputs, the TCP and TLS handlers append incoming data to an unbounded per-connection buffer before parsing. An attacker can exploit this missing validation by establishing a TCP/TLS connection and continuously streaming bytes without sending the configured delimiter (Traditional Framing), or by declaring a massive frame length but never completing the payload (Octet-Count Framing). In both scenarios, Fluentd buffers the incomplete data indefinitely, allowing a single connection to exhaust system memory and crash the worker process.\r\n\r\n### Impact\r\n\r\nThis vulnerability allows for an unauthenticated remote **Denial of Service (DoS)**.\r\nBy sending crafted, unterminated, or malformed streams to the `in_syslog` TCP/TLS endpoint, an attacker can rapidly exhaust system memory. This results in the operating system killing the Fluentd worker process (OOM Killer), leading to dropped logs, service outages, and severe backpressure to upstream systems.\r\n\r\n### Patches\r\n\r\nv1.19.4\r\n\r\n### Workarounds\r\n\r\nIf an immediate upgrade is not possible, users are strongly advised to apply one or more of the following mitigations:\r\n\r\n1. Restrict Network Access\r\n   * Ensure that the `in_syslog` listener is strictly deployed within a closed, trusted network. Use firewall rules (e.g., iptables, cloud security groups) to block access from untrusted sources.\r\n2. Switch to UDP Transport\r\n   * If TCP or TLS reliability is not strictly required for your architecture, reconfigure the plugin to use `\u003ctransport udp\u003e`. The UDP implementation properly enforces the `message_length_limit` upon receipt and is not vulnerable to this memory exhaustion vector.\r\n3. Implement Reverse Proxy Limits\r\n   * Place Fluentd behind a reverse proxy (e.g., HAProxy, Nginx) configured with strict client connection timeouts and buffer size limits to terminate anomalous, non-delimited streams before they overwhelm Fluentd.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "fluentd-kubernetes-daemonset",
+        "purl": "pkg:dhi/fluentd-kubernetes-daemonset"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.19.4"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rubygems",
+        "source_package": "fluentd"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/fluent/fluentd/security/advisories/GHSA-h3xv-5jpx-r4j2"
+    }
+  ]
+}
