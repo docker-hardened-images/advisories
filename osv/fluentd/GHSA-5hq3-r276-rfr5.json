@@ -1,0 +1,39 @@
+{
+  "modified": "2026-09-29T02:30:03Z",
+  "published": "2026-09-29T02:30:02Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-5hq3-r276-rfr5",
+  "details": "Fluentd allows dynamically constructing file paths using the `${tag}` placeholder.\r\nIt was discovered that the previous path traversal mitigation (**CVE-2026-44024**) introduced in v1.19.3 is incomplete.\r\n\r\nSpecifically, the validation logic fails to detect a bare `..` (two dots without a trailing separator) when provided as the tag value. When this tag is substituted into a configured path template (e.g., `/path/to/${tag}/output`), the surrounding path separators in the template complete the traversal sequence (e.g., `/path/to/../output`), successfully bypassing the intended directory restrictions. Furthermore, the secondary post-substitution validation is inherently skipped when the buffer is configured to group by tag only (`\u003cbuffer tag\u003e`).\r\n\r\nIf a Fluentd instance is configured to receive logs from untrusted sources and uses the `${tag}` placeholder in file configurations (such as the `path` parameter in the `out_file` plugin), an attacker can exploit this bypass. This vulnerability allows an attacker to write arbitrary files or overwrite existing files on the system with attacker-controlled content.\r\n\r\n### Impact\r\n\r\nThis vulnerability allows for **Arbitrary File Write**, which can be directly escalated to full **Remote Code Execution (RCE)**.\r\nAn attacker could achieve RCE by overwriting critical system files (such as cron jobs or SSH keys), injecting executable plugins, or modifying configuration files.\r\nThe impact is Critical as it can lead to full system compromise without any authentication, depending on the Fluentd configuration and the privileges of the Fluentd process.\r\n\r\n### Patches\r\n\r\nv1.19.4\r\n\r\n### Workarounds\r\n\r\nIf an immediate upgrade is not possible, users are strongly advised to apply the following mitigations:\r\n\r\n1. Restrict Network Access\r\n   * Ensure that Fluentd input ports (such as `in_forward` on default port `24224`) are deployed within a closed, trusted network. Use firewall rules (e.g., iptables, AWS Security Groups) to block access from untrusted networks or instances.\r\n\r\n\r\n2. Run Fluentd as a non-root user\r\n   * Dropping privileges prevents Fluentd from writing to sensitive system directories (e.g., `/etc/`), significantly mitigating the risk of system-wide RCE.\r\n\r\n\r\n3. Revise configurations\r\n   * Do not use the `${tag}` placeholder in the `path` parameter of output plugins (like `out_file`) if the tag originates from an untrusted source.\r\n\r\n\r\n4. Filter incoming tags\r\n   * Strictly validate and filter incoming tags at the input layer (e.g., using `fluent-plugin-rewrite-tag-filter`) to drop any tags containing `.` or `/` characters.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "fluentd",
+        "purl": "pkg:dhi/fluentd"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.19.4"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rubygems",
+        "source_package": "fluentd"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/fluent/fluentd/security/advisories/GHSA-5hq3-r276-rfr5"
+    }
+  ]
+}
