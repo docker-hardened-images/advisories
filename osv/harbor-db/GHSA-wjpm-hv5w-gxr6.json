@@ -1,0 +1,87 @@
+{
+  "modified": "2026-10-06T13:42:03Z",
+  "published": "2026-10-06T13:42:02Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-wjpm-hv5w-gxr6",
+  "details": "### Impact\n\nWhen Harbor pushes a blob to a remote registry, the remote answers the upload request with a `Location` header telling Harbor where to send the data. Harbor used that URL as given, without checking that it pointed back to the same registry. A remote registry could therefore direct the upload to any other host, including internal addresses and the cloud metadata endpoint `169.254.169.254`. Harbor sent the blob content to that host together with the `Authorization` header it uses for the remote registry.\n\nThis affects every blob push to a remote registry during push-based replication, with or without **Copy by chunk**. Harbor does not return the responses of these requests to users; at most an error ends up in the replication log, which only system administrators can read.\n\n### Am I affected?\n\nYou are affected if all of the following are true:\n\n- You run Harbor v2.15.2, v2.14.4, v2.13.5 or any earlier version.\n- You have push-based replication rules to a remote registry.\n- That remote registry is not fully under your control, could be compromised, or is reached over plain `http` or without certificate verification so the responses can be tampered with in transit.\n\nOnly system administrators can add registry endpoints and replication rules. The attacker needs control over the responses of a destination registry that an administrator has already configured.\n\n### What to do\n\n**Upgrade** to Harbor v2.15.3, v2.14.5 or v2.13.6, or to v2.16.0 or later.\n\nAfter the upgrade, an upload `Location` that points to a different scheme, host or port than the configured registry endpoint, or that contains a username, is rejected and the replication task fails. Relative locations, including those from registries running with `relativeurls` behind a path prefix, keep working. A destination registry that hands uploads off to a different hostname than the one configured in Harbor will need its endpoint URL in Harbor changed to that hostname.\n\n**Until you can upgrade:**\n\n1. Only replicate to registries you trust, and configure them with `https` and **Verify Remote Cert** enabled.\n2. Give the credentials stored for each remote registry the minimum permissions replication needs, and rotate them if you suspect a remote was compromised.\n3. Restrict outbound traffic from the jobservice container or pod to the registries you replicate with. Block `169.254.169.254` in all cases.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.14.0"
+            },
+            {
+              "fixed": "2.14.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.15.0"
+            },
+            {
+              "fixed": "2.15.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/goharbor/harbor/security/advisories/GHSA-wjpm-hv5w-gxr6"
+    }
+  ]
+}

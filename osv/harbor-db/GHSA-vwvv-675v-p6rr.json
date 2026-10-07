@@ -1,0 +1,87 @@
+{
+  "modified": "2026-10-06T13:42:28Z",
+  "published": "2026-10-06T13:42:28Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-vwvv-675v-p6rr",
+  "details": "### Impact\n\nWhen a system administrator registers a scanner (for example Trivy) under **Interrogation Services**, Harbor stores the credential it sends to the scanner adapter (a Basic, Bearer or API key value). Harbor never returns this credential through the API, but list requests accepted it as a search filter in the `q` query parameter. By sending many filter queries and watching whether a scanner is returned, a caller could work out the stored credential one character at a time.\n\nThe filter is reachable from the project-level endpoint that lists scanners a project can use, which requires the **Project Admin** role (or a robot account granted scanner create on a project). With the default **Project Creation: Everyone**, any registered user can create a project and become its admin. Scanner registrations are global, so a project admin could recover the credential of a scanner that serves the whole Harbor instance.\n\nWith the scanner credential, an attacker who can reach the scanner adapter's API can submit requests to it directly as Harbor would. Registry contents and Harbor accounts are not exposed by this.\n\nThis advisory and GHSA-9c86-xf3m-pxvx describe the same issue.\n\n### Am I affected?\n\nYou are affected if all of the following are true:\n\n- At least one scanner registration has authentication configured (any setting other than none).\n- Users who are not fully trusted can become project admin. With the default **Project Creation: Everyone**, every registered user can.\n- The credential can be recovered as plain text. On v2.13.x, and on v2.14.0 to v2.14.3 and v2.15.0 to v2.15.1, scanner credentials are stored in plain text. From v2.14.4 and v2.15.2, Harbor encrypts the credential when a scanner registration is created or updated, which makes the recovered value useless without Harbor's encryption key. Registrations saved before that upgrade and not edited since are still stored in plain text.\n\n### What to do\n\n**Upgrade** to Harbor v2.15.3, v2.14.5 or v2.13.6, or to v2.16.0 or later. The credential can no longer be used as a filter. No configuration change is needed and scanning behaves as before.\n\nAfter upgrading, **rotate the scanner adapter credential** if untrusted users could create projects: set a new credential on the adapter and enter it in the scanner registration in Harbor. On v2.14.4 and later the new credential is stored encrypted.\n\n**Until you can upgrade:**\n\n1. Set **Configuration \u003e System Settings \u003e Project Creation** to **Admin Only**, so untrusted users cannot become project admin.\n2. On v2.14.4 or later, rotate the scanner credential (new value on the adapter and in the registration) so it is stored encrypted.\n3. Restrict network access to the scanner adapter so only Harbor jobservice and core can reach it.\n\n### Check for misuse\n\nSearch the access logs of your reverse proxy or ingress for requests to `/api/v2.0/projects/*/scanner/candidates` with a `q` parameter containing `access_cred`. Many such requests from one client indicate an extraction attempt.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.14.0"
+            },
+            {
+              "fixed": "2.14.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.15.0"
+            },
+            {
+              "fixed": "2.15.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/goharbor/harbor/security/advisories/GHSA-vwvv-675v-p6rr"
+    }
+  ]
+}

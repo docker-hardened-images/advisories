@@ -1,0 +1,87 @@
+{
+  "modified": "2026-10-07T05:36:12Z",
+  "published": "2026-10-06T12:21:19Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-2phj-cp9f-qq6w",
+  "details": "### Impact\r\n\r\nA project administrator can configure a webhook (HTTP or Slack) that points at an address inside your network: localhost, private ranges (10/8, 172.16/12, 192.168/16), link-local, or the cloud metadata endpoint `169.254.169.254`. When an event fires, Harbor's jobservice sends an HTTP POST to that address from inside your deployment. If the target answers with an error status, the response body is written to the webhook execution log, which project members can read.\r\n\r\nIn practice this lets a project admin reach services that are not meant to be reachable from outside, and read back parts of their error responses.\r\n\r\n### Am I affected?\r\n\r\nYou are affected if all of the following are true:\r\n\r\n- You run any Harbor version that supports webhooks (1.7.0 and later).\r\n- Users who are not fully trusted can become project admin. With the default setting **Project Creation: Everyone**, every registered user can create a project and is its admin.\r\n- jobservice has network access to internal services or a cloud metadata endpoint.\r\n\r\n### What to do\r\n\r\n**Upgrade** to Harbor v2.15.3, v2.14.5 or v2.13.6, or to v2.16.0 or later.\r\n\r\nAfter upgrading, webhooks to private, loopback and link-local addresses are rejected, and existing ones stop being delivered. If you send webhooks to internal endpoints on purpose (for example an in-cluster CI system), set:\r\n\r\n- `harbor.yml` installs: `network.allow_private_network_access: true`, then re-run `prepare`\r\n- Helm or other deployments: the environment variable `HARBOR_ALLOW_PRIVATE_NETWORK_ACCESS=true` on both core and jobservice\r\n\r\nThis turns the protection off, so only use it if you trust all of your project admins.\r\n\r\n**Until you can upgrade:**\r\n\r\n1. Set **Configuration \u003e System Settings \u003e Project Creation** to **Admin Only**, so untrusted users cannot become project admin.\r\n2. Restrict outbound traffic from the jobservice container or pod, for example with a Kubernetes NetworkPolicy or firewall rules, so it can only reach the webhook destinations you use. Block `169.254.169.254` in all cases.\r\n3. On cloud instances, require token-based metadata access (AWS IMDSv2, or the equivalent on your provider).\r\n\r\n### Check for misuse\r\n\r\nReview existing webhook targets for internal addresses:\r\n\r\n```sql\r\nSELECT id, project_id, name, creator, targets FROM notification_policy;\r\n```\r\n\r\nLook for targets using IP literals in private ranges, `localhost`, `169.254.169.254`, or internal service names. The webhook execution logs for these policies show what was sent and what came back.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.7.0"
+            },
+            {
+              "fixed": "2.13.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.14.0"
+            },
+            {
+              "fixed": "2.14.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.15.0"
+            },
+            {
+              "fixed": "2.15.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/goharbor/harbor/security/advisories/GHSA-2phj-cp9f-qq6w"
+    }
+  ]
+}

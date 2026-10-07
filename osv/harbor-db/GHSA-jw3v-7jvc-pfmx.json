@@ -1,0 +1,87 @@
+{
+  "modified": "2026-10-06T13:42:45Z",
+  "published": "2026-10-06T13:42:45Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-jw3v-7jvc-pfmx",
+  "details": "### Impact\n\nWhen a webhook receiver answered with an error status, jobservice read the entire response body into memory to put it in the execution log. There was no size limit, and the HTTP client transparently decompresses gzip responses, so a receiver could send a small compressed response that expands to many megabytes inside jobservice. In testing, a 16 KB gzip response grew to 16 MB and raised jobservice memory use by about 120 MB for a single delivery.\n\njobservice is shared by all projects and also runs replication, scanning, garbage collection and retention jobs. Repeated deliveries can drive it into high memory use or an out-of-memory restart, which delays or fails those jobs for every project.\n\n### Am I affected?\n\nYou are affected if both of the following are true:\n\n- You run Harbor v2.15.2, v2.14.4, v2.13.5 or any earlier version with webhooks.\n- Users who are not fully trusted can become project admin. The attacker has to point a webhook at a server they control, which requires the project admin role. With the default setting **Project Creation: Everyone** every registered user can create a project and is its admin.\n\n### What to do\n\n**Upgrade** to Harbor v2.15.3, v2.14.5 or v2.13.6, or to v2.16.0 or later.\n\nAfter the upgrade, jobservice no longer reads the body of a failed webhook response. It discards at most 64 KiB so the connection can be reused, and the execution log records only the status code. Redirects from the receiver are also no longer followed; a 3xx answer is recorded as a failed delivery.\n\n**Until you can upgrade:**\n\n1. Set **Configuration \u003e System Settings \u003e Project Creation** to **Admin Only**, so untrusted users cannot become project admin.\n2. Set a memory limit on the jobservice container or pod, so a spike restarts jobservice instead of starving other components on the same host.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.14.0"
+            },
+            {
+              "fixed": "2.14.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.15.0"
+            },
+            {
+              "fixed": "2.15.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/goharbor/harbor/security/advisories/GHSA-jw3v-7jvc-pfmx"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "modified": "2026-10-06T13:42:24Z",
+  "published": "2026-10-06T13:42:24Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-884q-mjcg-86x4",
+  "details": "### Impact\n\nWhen a scan job runs against a scanner that uses bearer authorization, jobservice requests a short-lived registry token from Harbor core (`\u003ccore_url\u003e/service/token`) using the scan robot account's credentials. This one request skipped TLS certificate verification, and it read the token response without a size limit or timeout.\n\nIf core is reached over HTTPS (internal TLS enabled), an attacker who can intercept traffic between jobservice and core could present any certificate and capture the credentials of the temporary robot account Harbor creates for the scan. That robot can read the project being scanned until the scan finishes and Harbor deletes it. A malicious or broken token endpoint could also make jobservice read an arbitrarily large response into memory.\n\nNo Harbor user permission is involved. The attacker needs a network position between jobservice and core.\n\n### Am I affected?\n\nYou are affected if all of the following are true:\n\n- Internal TLS is enabled, or `core_url` otherwise points to an HTTPS endpoint.\n- The traffic between jobservice and core passes through a network you do not fully trust (for example, components split across hosts or clusters without an encrypted overlay).\n\nIf jobservice and core talk over plain HTTP, TLS verification is not involved, and the credentials are already exposed to anyone who can read that traffic. In that case, enable internal TLS or keep the traffic on a trusted network.\n\n### What to do\n\n**Upgrade** to Harbor v2.15.3, v2.14.5 or v2.13.6, or to v2.16.0 or later.\n\nAfter upgrading, the token request verifies core's certificate using the same internal TLS configuration as other Harbor component calls, is limited to a 1 MiB response, and times out after 30 seconds. If scans start failing with certificate errors after the upgrade, the certificate presented at `core_url` is not trusted by jobservice: fix the internal TLS CA configuration. There is no option to turn verification off again.\n\n**Until you can upgrade:** keep traffic between jobservice and core on a trusted network, for example the same Kubernetes cluster with network policies that only allow jobservice to reach core.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.14.0"
+            },
+            {
+              "fixed": "2.14.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.15.0"
+            },
+            {
+              "fixed": "2.15.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/goharbor/harbor/security/advisories/GHSA-884q-mjcg-86x4"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "modified": "2026-10-06T13:42:12Z",
+  "published": "2026-10-06T13:42:11Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-3x7c-wf86-mjx6",
+  "details": "### Impact\n\nWhen Harbor core could not read its configured authentication mode (for example during a database or configuration cache outage), the request security middleware logged a warning and kept processing the request without an authentication mode. Authorization should not continue in that state.\n\nNo exploit path is known. The OIDC and auth-proxy login methods are skipped when no mode is set, and password login reads the mode again and fails, so such requests end up unauthenticated rather than with extra privileges. An attacker cannot cause the lookup failure. This is a hardening fix that makes the middleware fail closed.\n\n### Am I affected?\n\nAll Harbor versions before the fixed releases are affected. There is nothing to configure or check.\n\n### What to do\n\n**Upgrade** to Harbor v2.15.3, v2.14.5 or v2.13.6, or to v2.16.0 or later.\n\nAfter upgrading, if core cannot read the authentication mode, requests are rejected with HTTP 500 (\"failed to determine authentication mode\") instead of continuing. Normal requests are unchanged. If you see this error, check core's connection to its database and Redis.\n\n**Until you can upgrade:** no action is needed beyond normal monitoring of core's database and Redis connectivity.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.14.0"
+            },
+            {
+              "fixed": "2.14.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.15.0"
+            },
+            {
+              "fixed": "2.15.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/goharbor/harbor/security/advisories/GHSA-3x7c-wf86-mjx6"
+    }
+  ]
+}
