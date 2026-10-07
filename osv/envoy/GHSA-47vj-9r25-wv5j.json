@@ -1,0 +1,57 @@
+{
+  "modified": "2026-10-06T13:40:30Z",
+  "published": "2026-10-06T10:45:32Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-47vj-9r25-wv5j",
+  "details": "## Brief description\r\n\r\nThe `api_key_auth` HTTP filter (`envoy.filters.http.api_key_auth`) dereferences the `:path` pseudo-header without a null check when stripping a `query` key source from the request. A classic HTTP `CONNECT` request legitimately carries no `:path`, and Envoy explicitly permits that. A client holding a valid API key can crash the Envoy process with a single request when the filter is configured with `forwarding.hide_credentials: true` and a `query` key source alongside another key source.\r\n\r\n## Affected component\r\n\r\n- `envoy.filters.http.api_key_auth` — `security_posture: robust_to_untrusted_downstream`, `status: alpha`.\r\n- Sink: `KeySources::Source::removeKey` in `source/extensions/filters/http/api_key_auth/api_key_auth.cc`, reached from the unconditional loop in `KeySources::removeKey`.\r\n\r\n## Attack vector\r\n\r\nA client holding a valid API key sends a path-less `CONNECT` with the key in a header-backed key source, against a filter configured with at least two key sources (one of them `query`) and `forwarding.hide_credentials: true`. Authentication succeeds, credential stripping then walks *every* configured source, and the `query` source dereferences the absent `:path`.\r\n\r\nEnvoy runs all workers in a single process, so the crash drops every connection the instance was serving and can be replayed indefinitely.\r\n\r\n## Example exploit or proof-of-concept\r\n\r\n```yaml\r\n- name: envoy.filters.http.api_key_auth\r\n  typed_config:\r\n    \"@type\": type.googleapis.com/envoy.extensions.filters.http.api_key_auth.v3.ApiKeyAuth\r\n    key_sources:\r\n    - header: \"x-api-key\"\r\n    - query: \"api_key\"\r\n    forwarding:\r\n      hide_credentials: true\r\n    credentials:\r\n    - key: \"supersecret\"\r\n      client: \"acme\"\r\n```\r\n\r\nwith an ordinary route table (`match: { prefix: \"/\" }`, no `connect_matcher`). Trigger, with a valid key:\r\n\r\n```\r\nprintf 'CONNECT anything:443 HTTP/1.1\\r\\nHost: anything:443\\r\\nx-api-key: supersecret\\r\\n\\r\\n' \\\r\n  | nc \u003cenvoy-host\u003e 10000\r\n```\r\n\r\nResult: SIGSEGV in `KeySources::Source::removeKey`.\r\n\r\n## Details\r\n\r\n### Why `:path` can be absent\r\n\r\n`HeaderUtility::checkRequiredRequestHeaders` requires `:path` only in the non-CONNECT branch; for CONNECT it requires only `Host`. The HTTP/1 server codec does not set `:path` for an authority-form CONNECT target, and an HTTP/2 `CONNECT` with `:authority` and no `:path`/`:scheme`/`:protocol` reaches the same state.\r\n\r\n### Why the filter chain runs at all\r\n\r\nThe connection manager's \"route does not permit upgrades\" 403 is only evaluated when a route has matched. For a path-less request no route matches unless a `connect_matcher` route is configured, because `RouteMatcher::route` skips every candidate whose `supportsPathlessHeaders()` is false and only `ConnectRouteEntryImpl` overrides that to true. So under any ordinary prefix/path/safe_regex route table the request falls through directly to the filter chain. Omitting CONNECT support from the route table is the vulnerable configuration, not a mitigation.\r\n\r\n### The defect\r\n\r\n`KeySources::removeKey` iterates **every** configured source, regardless of which one actually produced the validated key:\r\n\r\n```cpp\r\nvoid KeySources::removeKey(Http::RequestHeaderMap\u0026 headers) const {\r\n  for (const auto\u0026 source : key_sources_) {\r\n    source.removeKey(headers);\r\n  }\r\n}\r\n```\r\n\r\nand the `query` branch of `KeySources::Source::removeKey` ends with:\r\n\r\n```cpp\r\nheaders.setPath(params.replaceQueryString(headers.Path()-\u003evalue()));   // null deref\r\n```\r\n\r\nThe *lookup* path is already null-safe — `KeySources::Source::getKey` reads the path through `headers.getPathValue()`, which returns an empty view when `:path` is absent. Only the *removal* path dereferences the pointer. That asymmetry is why the bug survives normal testing: the query source correctly finds nothing, a header source supplies the key, authentication succeeds, and the crash happens afterwards during credential stripping.\r\n\r\n## Fix\r\n\r\nThe `query` branch of `KeySources::Source::removeKey` now returns early when `:path` is absent, so credential stripping skips query-string rewriting for path-less requests. A regression test covering a path-less `CONNECT` has been added.\r\n\r\n## Affected versions\r\n\r\nAll versions since the filter was introduced in 1.33.0.\r\n\r\n## Fixed versions\r\n\r\n1.36.12, 1.37.8, 1.38.6, 1.39.3\r\n\r\n## Mitigations\r\n\r\nInsert an RBAC filter *before* `api_key_auth` in `http_filters`, denying `:method: CONNECT`:\r\n\r\n```yaml\r\n- name: envoy.filters.http.rbac\r\n  typed_config:\r\n    \"@type\": type.googleapis.com/envoy.extensions.filters.http.rbac.v3.RBAC\r\n    rules:\r\n      action: DENY\r\n      policies:\r\n        deny-connect:\r\n          permissions:\r\n          - header: { name: \":method\", string_match: { exact: \"CONNECT\" } }\r\n          principals:\r\n          - any: true\r\n```\r\n\r\nThis is safe on path-less requests: the header matcher reads `:method`, which is always present, and RBAC's own path matcher explicitly handles a null `:path`.\r\n\r\nAlternatively, either drop the `query` key source or set `forwarding.hide_credentials: false`. Either alone prevents the sink from being reached.\r\n\r\n**Not a mitigation:** omitting CONNECT from `upgrade_configs`. As shown above, that is the vulnerable configuration.\r\n\r\n## Detection\r\n\r\nThe process dies while handling the request, so the offending request generally does not reach the access log. Look for:\r\n\r\n1. **Fatal-error backtrace** with frames through `Envoy::Extensions::HttpFilters::ApiKeyAuth::KeySources::Source::removeKey`.\r\n2. **Repeated process restarts** on listeners running the filter, especially at a steady interval, indicating a replayed request.\r\n3. **Upstream of the proxy**, in CDN or load-balancer logs: authority-form `CONNECT` requests with no path, immediately followed by a connection reset.\r\n4. **On patched builds**, an access log format including `%REQ(:METHOD)%` and `%REQ(:PATH)%` will show `CONNECT` with an empty path reaching these listeners — each such entry would have crashed a vulnerable build.\r\n\r\n## Credits\r\n\r\nthreatroute66\r\n\r\n## References\r\n\r\n* Related: CVE-2026-73547 (`ext_authz`, same defect class — the `ext_authz` portion of the original report was addressed under that advisory)\r\n* Related: \u003coauth2 CVE / GHSA-8vc2-jrm4-835w\u003e (`oauth2`, same defect class)\r\n* Introducing commit: `d2dbc0539b` — \"auth: new api auth implementation (#36968)\", 2024-12-11\r\n* Threat model: https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/security/threat_model",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "envoy",
+        "purl": "pkg:dhi/envoy"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.33.0"
+            },
+            {
+              "fixed": "1.36.12"
+            },
+            {
+              "introduced": "1.37.0"
+            },
+            {
+              "fixed": "1.37.8"
+            },
+            {
+              "introduced": "1.38.0"
+            },
+            {
+              "fixed": "1.38.6"
+            },
+            {
+              "introduced": "1.39.0"
+            },
+            {
+              "fixed": "1.39.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "envoy proxy",
+        "source_package": "Envoy"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-47vj-9r25-wv5j"
+    }
+  ]
+}
