@@ -1,0 +1,87 @@
+{
+  "modified": "2026-10-06T22:15:28Z",
+  "published": "2026-10-06T13:42:36Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-w5fq-xrhj-j7g2",
+  "details": "### Impact\n\nA system robot account with the **User: Update** permission could set or remove the system administrator flag on any Harbor user. The holder of that robot's token could make a user account they control a system administrator and take full control of Harbor, or remove administrator rights from the real administrators.\n\n### Am I affected?\n\nYou are affected if a system robot account exists with the **User: Update** permission and its token is held by someone or something you do not fully trust, for example a user provisioning or sync job. Only a system administrator can create such a robot.\n\n### What to do\n\n**Upgrade** to Harbor v2.15.3, v2.14.5 or v2.13.6, or to v2.16.0 or later.\n\nAfter upgrading, only system administrators can change a user's administrator flag. Robots with User: Update get HTTP 403 on that operation, both for granting and for removing the flag. Their other user-update operations are unchanged. If automation grants or removes administrator rights through a robot, it must use an administrator account instead.\n\n**Until you can upgrade:**\n\n1. Find system robots with User: Update (see below).\n2. Remove that permission if it is not needed, or rotate the robot's secret and restrict who holds it.\n\n### Check for misuse\n\nList users who currently have administrator rights and confirm each one is expected:\n\n```sql\nSELECT user_id, username, update_time FROM harbor_user WHERE sysadmin_flag = true;\n```\n\nList system robots with User: Update:\n\n```sql\nSELECT r.id, r.name\nFROM robot r\nJOIN role_permission rp ON rp.role_type = 'robotaccount' AND rp.role_id = r.id\nJOIN permission_policy pp ON pp.id = rp.permission_policy_id\nWHERE pp.resource = 'user' AND pp.action = 'update';\n```\n\n\n\n### Credits\n\nReported by **Mitchell Benjamin** via the `cncf-harbor-security` list.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.14.0"
+            },
+            {
+              "fixed": "2.14.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.15.0"
+            },
+            {
+              "fixed": "2.15.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/goharbor/harbor/security/advisories/GHSA-w5fq-xrhj-j7g2"
+    }
+  ]
+}

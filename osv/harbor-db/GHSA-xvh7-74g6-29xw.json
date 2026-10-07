@@ -1,0 +1,87 @@
+{
+  "modified": "2026-10-06T13:42:16Z",
+  "published": "2026-10-06T13:42:16Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-xvh7-74g6-29xw",
+  "details": "### Impact\n\nThis affects deployments using the HTTP auth proxy (`auth_mode = http_auth`).\n\nWhen a client sends a request to the registry API (`/v2/`) with HTTP basic authentication using an auth-proxy token (username `tokenreview$\u003cname\u003e`), Harbor looks up the local Harbor user with the same username. If that local user is a Harbor system administrator, the request was treated as system administrator even when the auth proxy did not grant admin rights. The built-in local `admin` account always exists, so any identity that your identity provider authenticates with the username `admin` got system administrator access on the registry API.\n\nWith that access the caller can pull, push and delete images in every project, including private ones. The Harbor web UI and REST API (`/api/v2.0`) are not affected.\n\n### Am I affected?\n\nYou are affected if all of the following are true:\n\n- Harbor runs with `auth_mode = http_auth`.\n- Your identity provider can authenticate a user whose username is `admin`, or matches any other Harbor user that has the system administrator flag set.\n\nDeployments using database, LDAP, UAA or OIDC authentication are not affected.\n\n### What to do\n\n**Upgrade** to Harbor v2.15.3, v2.14.5 or v2.13.6, or to v2.16.0 or later.\n\nAfter upgrading, in `http_auth` mode administrator rights on the registry API come only from the auth-proxy admin settings (`http_authproxy_admin_usernames` and `http_authproxy_admin_groups`). A user who was made administrator in the Harbor UI (local system administrator flag) no longer gets administrator access on `/v2/` requests through the auth proxy. If you rely on that, add those users or their groups to the auth-proxy admin settings.\n\n**Until you can upgrade:**\n\n1. Make sure your identity provider cannot issue tokens for the username `admin`, for example by reserving that name.\n2. Check which local Harbor users have the system administrator flag (see below). Make sure no other identity in your identity provider can use the same username, and grant admin rights through `http_authproxy_admin_usernames` or `http_authproxy_admin_groups` instead.\n\n### Check for misuse\n\nList local Harbor users with the system administrator flag:\n\n```sql\nSELECT user_id, username FROM harbor_user WHERE sysadmin_flag = true;\n```\n\nThen check whether your identity provider has accounts with any of these usernames, and review registry activity (pushes and deletes) by those usernames in the Harbor audit log.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.14.0"
+            },
+            {
+              "fixed": "2.14.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.15.0"
+            },
+            {
+              "fixed": "2.15.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/goharbor/harbor/security/advisories/GHSA-xvh7-74g6-29xw"
+    }
+  ]
+}

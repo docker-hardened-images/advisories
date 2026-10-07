@@ -1,0 +1,87 @@
+{
+  "modified": "2026-10-06T13:42:41Z",
+  "published": "2026-10-06T13:42:41Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-qj39-pjf2-wmrc",
+  "details": "### Impact\n\nHarbor checked permissions on registry API requests (`/v2/`) against the raw request path, but served the request after `..` segments in the path were resolved. A crafted path could therefore pass the permission check for a repository the caller can access and then operate on a different repository.\n\n- **Anyone, without logging in**, can read image manifests from any project, including private ones, as long as the Harbor instance has at least one public project. Manifests contain image metadata and layer digests.\n- **Any user with push access to at least one project** can change and delete tags and manifests in any project.\n\nThe affected operations are `GET`, `HEAD`, `PUT` and `DELETE` on `/v2/\u003crepository\u003e/manifests/\u003creference\u003e`.\n\n### Am I affected?\n\nYou are affected if you run Harbor before the fixed releases. Anonymous manifest reads require at least one public project. Changing or deleting content in other projects requires any account with push access to one project, which every user has under the default **Project Creation: Everyone** setting.\n\n### What to do\n\n**Upgrade** to Harbor v2.15.3, v2.14.5 or v2.13.6, or to v2.16.0 or later.\n\nAfter upgrading, `/v2/` requests whose path contains a `.` or `..` segment are rejected with HTTP 400. Docker, containerd, Podman and other OCI clients never send such paths, so normal use is not affected.\n\n**Until you can upgrade:**\n\n1. In the reverse proxy or ingress in front of Harbor, reject requests to `/v2/` whose path contains `/../` or `/./` segments, including percent-encoded forms (`%2e`, `%2E`).\n2. Set **Configuration \u003e System Settings \u003e Project Creation** to **Admin Only**, and review which users have push access.\n3. If you don't need public projects, make them private. This blocks the anonymous read path but not the write path.\n\n### Check for misuse\n\nSearch your reverse proxy, ingress or Harbor nginx access logs for `/v2/` requests containing `/../`, `/./` or `%2e`. Any such request is suspicious, because normal clients never send them.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.14.0"
+            },
+            {
+              "fixed": "2.14.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.15.0"
+            },
+            {
+              "fixed": "2.15.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/goharbor/harbor/security/advisories/GHSA-qj39-pjf2-wmrc"
+    }
+  ]
+}
