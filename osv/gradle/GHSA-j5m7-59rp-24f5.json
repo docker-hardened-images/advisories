@@ -1,0 +1,105 @@
+{
+  "modified": "2026-10-07T21:52:05Z",
+  "published": "2026-10-07T21:52:05Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-j5m7-59rp-24f5",
+  "details": "### Impact\r\n\r\nWhen resolving dependencies, Gradle searches repositories in declaration order. If it encounters connection errors, Gradle will disable the repository and fail dependency resolution. This is necessary for both reproducibility and security reasons to prevent dependencies from being resolved from other repositories without warning. \r\n\r\nIn previous versions of Gradle, some exceptions were not treated as fatal errors and would not cause a repository to be disabled. If a build encountered one of these exceptions, Gradle would continue to the next repository in the list and potentially resolve dependencies from a different repository. \r\n\r\n#### Vulnerability caused by continuing after SSL connection establishment errors\r\n\r\nExceptions like `SSLException` or `SSLHandshakeException` are neither handled as fatal exceptions nor as transient failures. Gradle should fail hard on any failure that is not transient, disable the repository and not move on to the next one. \r\n\r\nThis behavior could allow an attacker to disrupt the service of a repository and leverage another repository to serve malicious artifacts. This attack requires the attacker to have control over a repository after the disrupted repository.\r\n\r\n### Patches\r\n\r\nGradle has introduced a change in behavior to stop searching other repositories when encountering these errors. \r\n\r\n| Fix version | Availability |\r\n| ---------- | ----------- |\r\n| 9.8.1 | OSS |\r\n| 9.7.2 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.6.2 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.5.2 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.4.2 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.3.2 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.2.2 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.1.1 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 8.14.6 | OSS |\r\n| 7.6.7 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n\r\n### Workarounds\r\n\r\nIf you are using strict [repository content filtering](https://docs.gradle.org/9.3.0/userguide/filtering_repository_content.html#header) and / or [dependency verification](https://docs.gradle.org/9.3.0/userguide/dependency_verification.html), your build is safe from the potential vulnerabilities described above.\r\n\r\nIf you cannot update to a newer Gradle version, configuring [dependency verification](https://docs.gradle.org/9.3.0/userguide/dependency_verification.html) is the best way to make sure your build resolves the dependencies you expect and nothing else.\r\n\r\nYou should also review which repositories your builds use to check for unused or outdated repository declarations. \r\n\r\n### References\r\n* [Failure to disable repositories failing to answer can expose builds to malicious artifacts](https://github.com/gradle/gradle/security/advisories/GHSA-mqwm-5m85-gmcv)\r\n\r\nMore about this type of vulnerabilities:\r\n\r\n* https://cwe.mitre.org/data/definitions/494.html\r\n* https://cwe.mitre.org/data/definitions/829.html\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.6"
+            },
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.8.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.6"
+            },
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.8.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.6"
+            },
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.8.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/gradle/gradle/security/advisories/GHSA-j5m7-59rp-24f5"
+    }
+  ]
+}
