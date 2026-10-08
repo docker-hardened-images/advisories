@@ -1,0 +1,105 @@
+{
+  "modified": "2026-10-07T21:51:52Z",
+  "published": "2026-10-07T21:51:52Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-mvvg-497x-hmj8",
+  "details": "### Impact\r\n\r\nGradle runs work — compilation, tests, and Worker API actions — in forked **worker** processes that communicate with the long-lived **Gradle daemon**. The worker ↔ daemon socket is a loopback TCP connection that performs no authentication of the connecting peer. The connection is accepted on a first-come basis during a short window while a worker starts. Each message on that channel can be encoded with a per-type serializer but uses Java serialization as a fallback. This advisory is about a vulnerability on this communication channel. \r\n\r\nAn attacker who can place bytes on this channel can cause the daemon to deserialize a hostile object graph which can lead to **remote code execution in the daemon JVM** or a **denial of service** (a crash or resource exhaustion from a malformed or deeply nested graph). This has been demonstrated with a proof-of-concept. Code execution in the daemon runs with the privileges of the user running the build and exposes in-memory and on-disk secrets available to it. This advisory does not publish the proof-of-concept.\r\n\r\nBuilds running on **shared / multi-user build hosts** are the most at risk. The vulnerability requires an actively running Gradle build and requires the attacker to win a race to connect during the short window between a worker process starting and the daemon accepting a connection from it. \r\n\r\nThis vulnerability is not exploitable from a remote network connection.\r\n\r\n### Patches\r\n\r\nGradle has updated the worker/daemon protocol to use a per-connection secret for authentication.\r\n\r\n| Fix version | Availability |\r\n| ---------- | ----------- |\r\n| 9.8.1 | OSS |\r\n| 9.7.2 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.6.2 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.5.2 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.4.2 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.3.2 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.2.2 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.1.1 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 8.14.6 | OSS |\r\n| 7.6.7 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n\r\n### Workarounds\r\n\r\nUpgrading Gradle is our recommended fix. \r\n\r\nIf you cannot upgrade immediately:\r\n\r\n* **Do not run builds on shared, multi-user machines.** Ensure only trusted users have local (same-host) access to a machine while a Gradle build/daemon is running. On CI, prefer single-tenant, ephemeral runners rather than shared hosts. The attacker must be a co-located local principal to gain access to the Gradle build.\r\n\r\nIf you cannot apply these mitigations, restrict which users and processes share a host with your builds until you can upgrade.\r\n\r\n### Forensics\r\n\r\nWhen a message not originating from the worker takes over the connection, the worker process will fail its connection attempt and Gradle will report this error in the build output:\r\n\r\n```\r\norg.gradle.internal.remote.internal.ConnectException: Could not connect to server [\u003cid\u003e port:\u003cport\u003e, addresses:[/127.0.0.1]]. Tried addresses: [/127.0.0.1].\r\n\tat org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:…)\r\n\t…\r\n\tat worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:…)\r\nCaused by: java.net.ConnectException: Connection refused\r\n```\r\nThis error will then be reported as a failure of the task or operation that started the worker.\r\n\r\n\u003e [!IMPORTANT]\r\n\u003e The lack of a log entry cannot be used to conclude no such attack was performed. The presence of a log entry is not a confirmation that an attack happened, but an indication that more investigations are needed.\r\n\r\n### References\r\n\r\n*[ Gradle architecture standard ADR-0002,](https://github.com/gradle/gradle/blob/master/architecture/standards/0002-avoid-using-java-serialization.md) \"Avoid using Java serialization\" — Gradle's own guidance to move off Java serialization, citing deserialization security among the reasons.\r\n* [JEP 290: Filter Incoming Serialization Data](https://openjdk.org/jeps/290)\r\n* [Deserialization of untrusted Java objects before authentication in the client - daemon communication](https://github.com/gradle/gradle/security/advisories/GHSA-xwqc-3h47-hg64)\r\n\r\nMore about this type of vulnerabilities:\r\n\r\n* https://cwe.mitre.org/data/definitions/306.html\r\n* https://cwe.mitre.org/data/definitions/502.html",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.6"
+            },
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.8.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.6"
+            },
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.8.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.6"
+            },
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.8.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/gradle/gradle/security/advisories/GHSA-mvvg-497x-hmj8"
+    }
+  ]
+}
