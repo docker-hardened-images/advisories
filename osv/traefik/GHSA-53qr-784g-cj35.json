@@ -1,0 +1,39 @@
+{
+  "modified": "2026-10-07T08:47:35Z",
+  "published": "2026-10-07T08:47:35Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-53qr-784g-cj35",
+  "details": "## Summary\n\nThere is a high severity vulnerability in Traefik's experimental FastProxy implementation. Traefik isolates connection-bound NTLM and Negotiate (Kerberos) backend authentication by pinning the backend connection on which a client authenticated to that client's frontend connection, so that no other client is ever served on it. When `experimental.fastProxy` is enabled, requests to plain `http://` backends are dispatched through FastProxy's own connection pool, which was keyed only by ServersTransport and target URL and did not apply that isolation. Against a backend that binds an identity to a persistent connection, an unauthenticated client on a brand-new frontend connection could be handed a backend connection on which a victim had already completed an NTLM or Negotiate handshake, and be served as that victim, reading victim-only data and performing actions in the victim's name without presenting any credentials. Affected deployments require `experimental.fastProxy` enabled, a plain HTTP backend using connection-bound NTLM or Negotiate authentication, and backend keep-alive; the default proxy implementation is not affected. FastProxy now dispatches requests carrying an NTLM or Negotiate credential through a connection pool dedicated to their frontend connection, and every subsequent request on that frontend connection to the same backend reuses it.\n\nFastProxy was introduced in Traefik v3.2: v3.2 through v3.6 are affected but are no longer maintained and will not receive a patch of their own, users on those lines must upgrade to v3.7.14. Traefik v2 and earlier v3 versions are not affected.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v3.7.14\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.2.0"
+            },
+            {
+              "fixed": "3.7.14"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-53qr-784g-cj35"
+    }
+  ]
+}

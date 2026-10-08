@@ -1,0 +1,39 @@
+{
+  "modified": "2026-10-07T08:47:36Z",
+  "published": "2026-10-07T08:47:36Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-mwrr-6hp4-pxr6",
+  "details": "## Summary\n\nThere is a high severity vulnerability in Traefik's Kubernetes Ingress-NGINX provider. For an Ingress carrying the `nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream` annotation, the middleware that owns the `Ssl-Client-*` request headers is attached only to the TLS router, so the plaintext HTTP router generated for the same Ingress forwards those headers exactly as the client sent them. That router normally only issues a redirect, but when `nginx.ingress.kubernetes.io/ssl-redirect: \"false\"` is set it reaches the backend, and an unauthenticated client can then supply `Ssl-Client-Verify: SUCCESS` together with a chosen certificate subject and issuer. A backend that trusts those proxy-generated fields as an mTLS identity authorizes the request even though no client certificate was presented.\n\nOnly the Traefik v3.7 line is affected: support for the `auth-tls-pass-certificate-to-upstream` annotation was added in v3.7.0, and earlier versions do not translate it.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v3.7.14\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.7.0"
+            },
+            {
+              "fixed": "3.7.14"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-mwrr-6hp4-pxr6"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "modified": "2026-10-07T08:47:34Z",
+  "published": "2026-10-07T08:47:34Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-cw35-4q88-3rmp",
+  "details": "## Summary\n\nThere is a high severity vulnerability in Traefik's NTLM and Kerberos (Negotiate) backend authentication support. When a backend answers a request with a `WWW-Authenticate: NTLM` or `Negotiate` challenge, Traefik keeps a dedicated backend round tripper in the client connection context so that the next requests on that client connection reuse the authenticated backend connection. That round tripper carries the whole transport configuration of the `ServersTransport` that created it, including its TLS client configuration, but the slot holding it was shared by every `ServersTransport`: once armed by one service, it was reused for every later request on the same client connection, including requests routed to another service using a different `ServersTransport`. The backend connection of that second service was then established with the first service's TLS settings instead of its own: its root CAs, server name and certificate verification were not applied, and the first service's client certificate was presented to its backend. An unauthenticated client can arm the slot with an ordinary request to the first service and then reach the second one on the same keep-alive connection, silently disabling the operator's TLS policy on that backend leg. The dedicated round tripper is now kept per `ServersTransport`, so a service can only ever reuse a round tripper it created.\n\nTraefik v3.0 through v3.6 are affected and no longer receive patches; users on those lines must upgrade to v3.7.14. Traefik v2 is affected from v2.11.0, where NTLM and Kerberos support was introduced; earlier v2 releases and Traefik v1 are not affected.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v2.11.58\n- https://github.com/traefik/traefik/releases/tag/v3.7.14\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.11.0"
+            },
+            {
+              "fixed": "2.11.58"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.7.14"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-cw35-4q88-3rmp"
+    }
+  ]
+}

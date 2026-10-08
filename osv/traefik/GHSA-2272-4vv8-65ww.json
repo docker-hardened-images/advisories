@@ -1,0 +1,63 @@
+{
+  "modified": "2026-10-07T08:47:53Z",
+  "published": "2026-10-07T08:47:53Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-2272-4vv8-65ww",
+  "details": "## Summary\n\nThere is a medium severity vulnerability in Traefik's TLS options resolution: a negated `Host` matcher in a router rule (for example ``PathPrefix(`/`) \u0026\u0026 !Host(`secure.example.com`)``) is still counted as a host served by that router when the domains are deduced from the rule. When another router actually serves that host with non-default `tls.options`, Traefik sees two routers claiming the same host with different TLS options, declares a conflict, and falls back to the `default` TLS options for both. Because the `default` options request no client certificate, a `RequireAndVerifyClientCert` policy stops being enforced on that host and an unauthenticated client can reach the protected backend. The downgrade is reported at `ERROR` level in the logs, and setting `core.strictTLSOptions=true` disables the fallback and mitigates the issue.\n\nBoth the v2 and v3 lines are affected. Traefik v3 versions below v3.7 are affected but are no longer maintained and will not receive a patch of their own; the remedy for those users is to upgrade to a maintained, patched version.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v2.11.58\n- https://github.com/traefik/traefik/releases/tag/v3.7.13\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.11.58"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.7.13"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-2272-4vv8-65ww"
+    }
+  ]
+}

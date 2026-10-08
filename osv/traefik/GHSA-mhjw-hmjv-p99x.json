@@ -1,0 +1,63 @@
+{
+  "modified": "2026-10-07T08:47:54Z",
+  "published": "2026-10-07T08:47:54Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-mhjw-hmjv-p99x",
+  "details": "## Summary\n\nThere is a medium severity vulnerability in Traefik's NTLM and Kerberos (Negotiate) backend authentication support. When a backend answers a request with a `WWW-Authenticate: NTLM` or `Negotiate` challenge, Traefik stores a dedicated backend round tripper in the client connection context so that the next requests on that client connection reuse the same authenticated backend connection. That per-connection slot was read and written without any synchronization, while HTTP/2 and HTTP/3 client connections multiplex concurrent requests over a single connection. Concurrent requests racing on the slot could replace a round tripper already in use, orphaning the backend connections it held and breaking the connection-bound authentication for that client, and a torn read of the slot may crash the Traefik process.\n\nThe fix guards the slot with a mutex and keeps the round tripper already stored for a client connection, so concurrent requests stick exactly once. The same change also dedicates the slot to the `ServersTransport` that created it, which is tracked separately as GHSA-cw35-4q88-3rmp.\n\nTraefik v3.0 through v3.6 are affected and no longer receive patches; users on those lines must upgrade to v3.7.14. Traefik v2 is affected from v2.11.0, where NTLM and Kerberos support was introduced; earlier v2 releases and Traefik v1 are not affected.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v2.11.58\n- https://github.com/traefik/traefik/releases/tag/v3.7.14\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.11.0"
+            },
+            {
+              "fixed": "2.11.58"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.7.14"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-mhjw-hmjv-p99x"
+    }
+  ]
+}
