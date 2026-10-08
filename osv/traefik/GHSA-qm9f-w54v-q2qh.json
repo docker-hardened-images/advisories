@@ -1,0 +1,63 @@
+{
+  "modified": "2026-10-07T08:47:33Z",
+  "published": "2026-10-07T08:47:33Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-qm9f-w54v-q2qh",
+  "details": "## Summary\n\nThere is a high severity authentication vulnerability in Traefik's handling of connection-bound backend authentication (NTLM and SPNEGO/Kerberos \"Negotiate\"). For each new frontend connection, Traefik sends the first backend request through a globally shared transport and only switches that connection to an isolated, per-frontend-connection transport *after* it observes an NTLM/Negotiate challenge in the backend's response. When a client preauthenticates — sending a valid `Authorization: Negotiate` token on its first request instead of following the standard challenge-first (`401`) handshake — the backend authenticates the shared-pool connection on that first request and returns a successful response. Because isolation is decided only after the response is seen, the now victim-authenticated backend socket remains in the shared pool, and it is neither drained nor closed. An unrelated, unauthenticated client on a completely separate frontend connection can then be assigned that socket and act with the victim's identity, performing victim-authorized reads or writes.\n\nExploitation requires Traefik to proxy a connection-bound NTLM/Negotiate backend with connection reuse enabled, and a legitimate client that preauthenticates rather than following the standard challenge-first handshake. The ordinary challenge-first flow is not affected: it installs a dedicated backend transport before the credential-bearing request, so the authenticated socket never enters the shared pool. This is a distinct issue from GHSA-qqjf-53cj-pwvv (which fixed a missing HTTP/3 transport holder): it occurs on ordinary HTTP/1.1 and HTTP/2 frontend connections because the credential-bearing first request reaches the shared pool before any holder can isolate it. The behavior was introduced together with connection-bound NTLM/Kerberos support in v2.11.0 and v3.0.0. Traefik v3.0 through v3.6 are end-of-life and are also affected; they will not receive a fix on their own line, and users on those versions must upgrade to v3.7.14.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v2.11.58\n- https://github.com/traefik/traefik/releases/tag/v3.7.14\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.11.0"
+            },
+            {
+              "fixed": "2.11.58"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.7.14"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-qm9f-w54v-q2qh"
+    }
+  ]
+}

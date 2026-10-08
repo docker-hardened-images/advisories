@@ -1,0 +1,39 @@
+{
+  "modified": "2026-10-07T08:47:52Z",
+  "published": "2026-10-07T08:47:52Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-rv2h-qh7j-xrjw",
+  "details": "## Summary\n\nThere is a high severity vulnerability in Traefik's Kubernetes Ingress NGINX provider. The TLS option generated for an Ingress carrying the `nginx.ingress.kubernetes.io/auth-tls-secret` annotation is named from the referenced Secret's namespace and name after normalizing them, which replaces every dot with a dash. Two Secrets whose names differ only by a dot and a dash, such as `my.secret` and `my-secret`, therefore produce the same TLS option name, and the Ingress processed second silently reuses the option built for the first one. A host configured to require client certificates issued by its own CA is then gated by another host's CA: certificates from that other CA are accepted, while the host's legitimate clients are refused. In Traefik v3.7.0 to v3.7.10, where the generated name also included the Ingress name, the same collision could occur between Ingresses whose names normalize identically. The provider now keeps the resource names as is in the names it generates. Traefik v2 and Traefik v3 versions before v3.7.0 are not affected: the `auth-tls-secret` annotation is supported by the Ingress NGINX provider since v3.7.0.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v3.7.14\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.7.0"
+            },
+            {
+              "fixed": "3.7.14"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-rv2h-qh7j-xrjw"
+    }
+  ]
+}

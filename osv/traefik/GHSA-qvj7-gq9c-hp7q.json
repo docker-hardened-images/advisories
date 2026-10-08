@@ -1,0 +1,39 @@
+{
+  "modified": "2026-10-07T08:47:51Z",
+  "published": "2026-10-07T08:47:51Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-qvj7-gq9c-hp7q",
+  "details": "## Summary\n\nThere is a high severity vulnerability in Traefik's Kubernetes Ingress NGINX provider. Since v3.7.13, an Ingress carrying the `nginx.ingress.kubernetes.io/ssl-passthrough: \"true\"` annotation gets, besides its TCP passthrough router, an HTTP router on the non-TLS entry points that proxies to the backend. That router was built outside the regular per-rule processing, so the access-control annotations set on the same Ingress, such as `auth-type` with `auth-secret`, `auth-url` and `whitelist-source-range`, were parsed but never turned into middlewares on it. An unauthenticated client reaching the HTTP entry point with the Ingress host could therefore reach a backend the operator had annotated as protected, with no authentication and no source allow-listing applied, and nothing logged. The HTTP side of an ssl-passthrough Ingress is now built like any other Ingress, with its annotation directives applied; the routers it generates are renamed as a result, see the v3.7.14 migration guide. Traefik v2 and Traefik v3 versions before v3.7.13 are not affected.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v3.7.14\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.7.13"
+            },
+            {
+              "fixed": "3.7.14"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-qvj7-gq9c-hp7q"
+    }
+  ]
+}

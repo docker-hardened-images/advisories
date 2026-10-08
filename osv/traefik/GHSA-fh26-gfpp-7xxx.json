@@ -1,0 +1,63 @@
+{
+  "modified": "2026-10-07T08:47:28Z",
+  "published": "2026-10-07T08:47:28Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-fh26-gfpp-7xxx",
+  "details": "## Summary\n\nThere is a high severity vulnerability in Traefik's SNI check, which makes sure a request received on a TLS connection is only served by an HTTP router whose TLS options match the ones negotiated for that connection. The check was skipped entirely when the request carried no TLS connection state. Traefik built with Go 1.27 leaves that state unset for HTTP/2 requests sent with the `:scheme http` pseudo-header over a TLS connection, so an unauthenticated client could have such a request served by a router with different TLS options, for example one requiring a client certificate, without presenting one. Official Traefik binaries and images are built with Go 1.26 and are not exposed, but any Traefik build made with Go 1.27, including third-party rebuilds, is; Traefik now always sets the TLS state of requests received on a TLS connection, so the check applies whatever the toolchain.\n\nTraefik v3 versions below v3.7 are affected but are no longer maintained and will not receive a patch of their own; the remedy for those users is to upgrade to a maintained, patched version.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v2.11.58\n- https://github.com/traefik/traefik/releases/tag/v3.7.14\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.11.58"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.7.14"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-fh26-gfpp-7xxx"
+    }
+  ]
+}
