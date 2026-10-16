@@ -1,0 +1,39 @@
+{
+  "modified": "2026-10-16T08:01:00Z",
+  "published": "2026-10-16T08:01:00Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-28hp-c82p-8vqj",
+  "details": "## Summary\n\nThere is a low severity vulnerability in Traefik's Kubernetes Ingress NGINX provider. With `allowCrossNamespaceResources` disabled (the default), the cross-namespace check on the `nginx.ingress.kubernetes.io/auth-tls-secret` annotation only runs when a client authentication TLS option is first built: a later Ingress referencing a CA secret already used by another Ingress reuses the shared TLS option without being checked. A user allowed to create Ingresses in one namespace can therefore have a CA secret from another namespace enforced as the client certificate authority of their own routes, bypassing the configured namespace isolation, and learn whether that secret exists and is in use; the secret's contents are not disclosed. The issue was introduced in v3.7.11, when client authentication TLS options started being shared across Ingresses; earlier versions are not affected, and Traefik v2 is not affected since it does not include the Kubernetes Ingress NGINX provider.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v3.7.15\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.7.11"
+            },
+            {
+              "fixed": "3.7.15"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "Traefik"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-28hp-c82p-8vqj"
+    }
+  ]
+}
