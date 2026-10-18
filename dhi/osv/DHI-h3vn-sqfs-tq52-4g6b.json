@@ -1,0 +1,125 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-h3vn-sqfs-tq52-4g6b",
+  "modified": "2026-10-18T06:15:39Z",
+  "published": "2026-10-18T06:15:39Z",
+  "upstream": [
+    "CVE-2025-64076"
+  ],
+  "summary": "Multiple vulnerabilities exist in cbor2 through version 5.7.0 in the decode_definite_long_string() function of the C…",
+  "details": "Multiple vulnerabilities exist in cbor2 through version 5.7.0 in the decode_definite_long_string() function of the C extension decoder (source/decoder.c): (1) Integer Underflow Leading to Out-of-Bounds Read (CWE-191, CWE-125): An incorrect variable reference and missing state reset in the chunk processing loop causes buffer_length to not be reset to zero after UTF-8 character consumption. This results in subsequent chunk_length calculations producing negative values (e.g., chunk_length = 65536 - buffer_length), which are passed as signed integers to the read() method, potentially triggering unlimited read operations and resource exhaustion. (2) Memory Leak via Missing Reference Count Release (CWE-401): The main processing loop fails to release Python object references (Py_DECREF) for chunk objects allocated in each iteration. For CBOR strings longer than 65536 bytes, this causes cumulative memory leaks proportional to the payload size, enabling memory exhaustion attacks through repeated processing of large CBOR payloads. Both vulnerabilities can be exploited remotely without authentication by sending specially-crafted CBOR data containing definite-length text strings with multi-byte UTF-8 characters positioned at 65536-byte chunk boundaries. Successful exploitation results in denial of service through process crashes (CBORDecodeEOF exceptions) or memory exhaustion. The vulnerabilities affect all applications using cbor2's C extension to process untrusted CBOR data, including web APIs, IoT data collectors, and message queue processors. Fixed in commit 851473490281f82d82560b2368284ef33cf6e8f9 pushed with released version 5.7.1.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "localstack",
+        "purl": "pkg:docker/dhi/localstack?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "4.6.0-python3.12-debian12",
+        "4.7.0-python3.12-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "localstack",
+        "purl": "pkg:docker/dhi/localstack?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.7.0-python3.12-debian13",
+        "4.8.0-python3.12-debian13",
+        "4.8.1-python3.12-debian13",
+        "4.9.0-python3.12-debian13",
+        "4.9.1-python3.12-debian13",
+        "4.9.2-python3.12-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "localstack",
+        "purl": "pkg:docker/dhi/localstack?os_name=alpine&os_version=3.22"
+      },
+      "versions": [
+        "4.8.1-python3.12-alpine3.22",
+        "4.9.0-python3.12-alpine3.22",
+        "4.9.1-python3.12-alpine3.22",
+        "4.9.2-python3.12-alpine3.22"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-h3vn-sqfs-tq52-4g6b"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-64076"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/agronholm/cbor2/pull/265"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/agronholm/cbor2/commit/851473490281f82d82560b2368284ef33cf6e8f9"
+    },
+    {
+      "type": "EVIDENCE",
+      "url": "https://github.com/agronholm/cbor2/issues/264"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2025-64076"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2025-64076"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-9q9c-vjxh-p795"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/agronholm/cbor2/releases/tag/5.7.1"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2025-64076"
+    },
+    {
+      "type": "FIX",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2025-64076\nhttps://nvd.nist.gov/vuln/detail/CVE-2025-64076\nhttps://github.com/agronholm/cbor2/commit/851473490281f82d82560b2368284ef33cf6e8f9\nhttps://github.com/agronholm/cbor2/issues/264\nhttps://github.com/agronholm/cbor2/pull/265"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2025-64076"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2025-64076"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/agronholm/cbor2/commit/2349197bea8ebd1bf57a68f4a6549d8fd7585e66 (5.7.1)"
+    }
+  ]
+}
