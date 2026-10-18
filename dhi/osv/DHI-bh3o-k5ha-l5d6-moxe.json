@@ -1,0 +1,139 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-bh3o-k5ha-l5d6-moxe",
+  "modified": "2026-10-18T06:05:43Z",
+  "published": "2026-10-18T06:05:43Z",
+  "upstream": [
+    "CVE-2026-26209"
+  ],
+  "summary": "cbor2 provides encoding and decoding for the Concise Binary Object Representation (CBOR) serialization format. Versions…",
+  "details": "cbor2 provides encoding and decoding for the Concise Binary Object Representation (CBOR) serialization format. Versions prior to 5.9.0 are vulnerable to a Denial of Service (DoS) attack caused by uncontrolled recursion when decoding deeply nested CBOR structures. This vulnerability affects both the pure Python implementation and the C extension `_cbor2`. The C extension relies on Python's internal recursion limits `Py_EnterRecursiveCall` rather than a data-driven depth limit, meaning it still raises `RecursionError` and crashes the worker process when the limit is hit. While the library handles moderate nesting levels, it lacks a hard depth limit. An attacker can supply a crafted CBOR payload containing approximately 100,000 nested arrays `0x81`. When `cbor2.loads()` attempts to parse this, it hits the Python interpreter's maximum recursion depth or exhausts the stack, causing the process to crash with a `RecursionError`. Because the library does not enforce its own limits, it allows an external attacker to exhaust the host application's stack resource. In many web application servers (e.g., Gunicorn, Uvicorn) or task queues (Celery), an unhandled `RecursionError` terminates the worker process immediately. By sending a stream of these small (<100KB) malicious packets, an attacker can repeatedly crash worker processes, resulting in a complete Denial of Service for the application. Version 5.9.0 patches the issue.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "localstack",
+        "purl": "pkg:docker/dhi/localstack?os_name=alpine&os_version=3.22"
+      },
+      "versions": [
+        "4.10.0-python3.12-alpine3.22",
+        "4.10.0-python3.13-alpine3.22",
+        "4.11.1-python3.13-alpine3.22",
+        "4.12.0-python3.13-alpine3.22",
+        "4.13.0-python3.13-alpine3.22",
+        "4.13.1-python3.13-alpine3.22",
+        "4.14.0-python3.13-alpine3.22",
+        "4.8.1-python3.12-alpine3.22",
+        "4.9.0-python3.12-alpine3.22",
+        "4.9.1-python3.12-alpine3.22",
+        "4.9.2-python3.12-alpine3.22"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "localstack",
+        "purl": "pkg:docker/dhi/localstack?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.10.0-python3.12-debian13",
+        "4.10.0-python3.13-debian13",
+        "4.11.1-python3.13-debian13",
+        "4.12.0-python3.13-debian13",
+        "4.12.0-python3.13-debian13-dev",
+        "4.13.0-python3.13-debian13",
+        "4.13.0-python3.13-debian13-dev",
+        "4.13.1-python3.13-debian13",
+        "4.13.1-python3.13-debian13-dev",
+        "4.14.0-python3.13-debian13",
+        "4.14.0-python3.13-debian13-dev",
+        "4.7.0-python3.12-debian13",
+        "4.8.0-python3.12-debian13",
+        "4.8.1-python3.12-debian13",
+        "4.9.0-python3.12-debian13",
+        "4.9.1-python3.12-debian13",
+        "4.9.2-python3.12-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "localstack",
+        "purl": "pkg:docker/dhi/localstack?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "4.6.0-python3.12-debian12",
+        "4.7.0-python3.12-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-bh3o-k5ha-l5d6-moxe"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-26209"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/agronholm/cbor2/security/advisories/GHSA-3c37-wwvx-h642"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/agronholm/cbor2/pull/275"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/agronholm/cbor2/commit/e61a5f365ba610d5907a0ae1bc72769bba34294b"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/agronholm/cbor2/releases/tag/5.9.0"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-26209"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-26209"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-3c37-wwvx-h642"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-26209"
+    },
+    {
+      "type": "FIX",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-26209\nhttps://nvd.nist.gov/vuln/detail/CVE-2026-26209\nhttps://github.com/agronholm/cbor2/commit/e61a5f365ba610d5907a0ae1bc72769bba34294b\nhttps://github.com/agronholm/cbor2/pull/275\nhttps://github.com/agronholm/cbor2/releases/tag/5.9.0\nhttps://github.com/agronholm/cbor2/security/advisories/GHSA-3c37-wwvx-h642"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-26209"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-26209"
+    }
+  ]
+}
