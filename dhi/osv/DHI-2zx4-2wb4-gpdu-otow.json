@@ -1,13 +1,13 @@
 {
   "schema_version": "1.8.0",
   "id": "DHI-2zx4-2wb4-gpdu-otow",
-  "modified": "2026-10-13T09:24:23Z",
+  "modified": "2026-10-20T06:52:38Z",
   "published": "2026-09-21T19:26:16Z",
   "upstream": [
     "CVE-2026-58494"
   ],
-  "summary": "Wasmtime is a runtime for WebAssembly. Prior to 24.0.11, 36.0.12, 45.0.3, and 46.0.1, wasmtime-wasi hard-link creation…",
-  "details": "Wasmtime is a runtime for WebAssembly. Prior to 24.0.11, 36.0.12, 45.0.3, and 46.0.1, wasmtime-wasi hard-link creation and renaming check directory permissions but not matching FilePerms on source and destination preopens, allowing a WASI guest with a read-only source file capability to overwrite host files exposed as FilePerms::READ through wasip1, wasip2, or wasip3 filesystem interfaces. This issue is fixed in versions 24.0.11, 36.0.12, 45.0.3, and 46.0.1.\n\n---\n- rust-wasmtime 36.0.12+dfsg-1\nhttps://github.com/bytecodealliance/wasmtime/security/advisories/GHSA-4ch3-9j33-3pmj\nhttps://github.com/bytecodealliance/wasmtime/commit/7db94cdcf0c79cb3dfde884b534b653f2dd83367 (v36.0.12)\nhttps://github.com/bytecodealliance/wasmtime/commit/8a250aac0962ca1364b5f16525720e9d0b39edcd (v24.0.11)",
+  "summary": "## Summary",
+  "details": "## Summary\n\nWasmtime's WASI filesystem implementation lets a guest with a read-only source file capability overwrite that file by hard-linking it into another preopen that allows file writes. An attacker who can run a WASI guest can bypass `WasiCtxBuilder` per-preopen `FilePerms` and modify host files that were exposed as `FilePerms::READ`.\n\nThis attack is possible through the wasip1, wasip2, and wasip3 interfaces to the WASI filesystem.\n\nThis attack is also possible through an indirection of renaming a hardlink into another preopen.\n\n### Details\n\n`WasiCtxBuilder::preopened_dir` documents `file_perms` as the maximum permissions usable for files in that preopen. However, hard-link creation and renaming only checked directory mutation for permission, and not whether the file permissions matched.\n\nThis makes an attack possible where:\n* a read-only file `target` exists in a preopen with only FilePerms::READ\n* a hardlink named `alias`, with destination to the `target`, is created in a preopen with FilePerms::READ | FilePerms::WRITE\n* the attacker opens the file `alias` for writing, in which they can overwrite `target`\n\nThe same attack is possible by way of renaming:\n* a read-only file `target` exists in a preopen with only FilePerms::READ\n* a hardlink named `alias`, with destination to the `target`, is created in that same preopen\n* the `alias` file is renamed into a preopen with FilePerms::READ | FilePerms::WRITE\n* the attacker opens the file `alias` for writing, in which they can overwrite `target`\n\nSymbolic links are not a vector for this attack because the wasi-filesystem interfaces already enforces that the destination for a symlink is under the same preopen. We do not believe there are any other vectors to this attack because there are no other wasi filesystem interfaces that take multiple borrows of a descriptor resource for e.g. the source and destination in different descriptors.\n\n### Remediation\n\nThe definition of `Dir::link_at` and `Dir::rename_at` in wasmtime-wasi's `src/filesystem.rs` now have an additional permissions check that ensures the source and destination values for the directory permissions `perms` and the file permissions `file_perms` are identical.\n\n```rust\n        if self.perms != new_dir.perms || self.file_perms != new_dir.file_perms {\n            return Err(ErrorCode::NotPermitted);\n        }\n```\n\n### Impact\n\nOnly wasmtime-wasi embeddings that use a combination of DirPerms::MUTATE with FilePerms::READ, as well as using a second preopen with higher permissions (FilePerms::WRITE as well), are affected by this bug, e.g. those that use in the WasiCtxBuilder:\n\n```rust\nbuilder.preopened_dir(\"readwrite\", \"readwrite\", DirPerms::READ | DirPerms::MUTATE, FilePerms::READ | FilePerms::WRITE);\nbuilder.preopened_dir(\"readonly\", \"readonly\", DirPerms::READ | DirPerms::MUTATE, FilePerms::READ);\n```\n\nIn particular, the Wasmtime project's wasmtime-cli's use of wasmtime-wasi is not affected, because it always sets FilePerms::all() for all preopens.",
   "severity": [
     {
       "type": "CVSS_V3",
@@ -42,6 +42,8 @@
         "3.11.4-debian13-core-dev",
         "3.11.6-debian13-core",
         "3.11.6-debian13-core-dev",
+        "3.11.7-debian13-core",
+        "3.11.7-debian13-core-dev",
         "3.9.11-debian13-core",
         "3.9.11-debian13-core-dev",
         "3.9.2-debian13-core",
@@ -65,39 +67,23 @@
     },
     {
       "type": "ADVISORY",
-      "url": "https://security-tracker.debian.org/tracker/CVE-2026-58494"
-    },
-    {
-      "type": "ADVISORY",
-      "url": "https://access.redhat.com/security/cve/CVE-2026-58494"
-    },
-    {
-      "type": "FIX",
-      "url": "https://www.cve.org/CVERecord?id=CVE-2026-58494\nhttps://nvd.nist.gov/vuln/detail/CVE-2026-58494\nhttps://github.com/bytecodealliance/wasmtime/commit/5ddfd5f1ef28f2041fa07d237ad0336e167b0e0c\nhttps://github.com/bytecodealliance/wasmtime/commit/7db94cdcf0c79cb3dfde884b534b653f2dd83367\nhttps://github.com/bytecodealliance/wasmtime/commit/8a250aac0962ca1364b5f16525720e9d0b39edcd\nhttps://github.com/bytecodealliance/wasmtime/commit/d3ceb56ec35f39e02496eeb4e2d9c7f4fb964d9e\nhttps://github.com/bytecodealliance/wasmtime/releases/tag/v24.0.11\nhttps://github.com/bytecodealliance/wasmtime/releases/tag/v36.0.12\nhttps://github.com/bytecodealliance/wasmtime/releases/tag/v45.0.3\nhttps://github.com/bytecodealliance/wasmtime/releases/tag/v46.0.1\nhttps://github.com/bytecodealliance/wasmtime/security/advisories/GHSA-4ch3-9j33-3pmj"
-    },
-    {
-      "type": "ADVISORY",
-      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0188"
+      "url": "https://github.com/advisories/GHSA-4ch3-9j33-3pmj"
     },
     {
       "type": "ADVISORY",
       "url": "https://rustsec.org/advisories/RUSTSEC-2026-0188.html"
     },
     {
-      "type": "FIX",
-      "url": "https://github.com/bytecodealliance/wasmtime/pull/13725"
-    },
-    {
       "type": "ADVISORY",
-      "url": "https://ubuntu.com/security/CVE-2026-58494"
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-58494"
     },
     {
       "type": "ADVISORY",
       "url": "https://github.com/bytecodealliance/wasmtime/security/advisories/GHSA-4ch3-9j33-3pmj"
     },
     {
-      "type": "ADVISORY",
-      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-58494"
+      "type": "FIX",
+      "url": "https://github.com/bytecodealliance/wasmtime/pull/13725"
     },
     {
       "type": "FIX",
@@ -130,6 +116,30 @@
     {
       "type": "WEB",
       "url": "https://github.com/bytecodealliance/wasmtime/releases/tag/v24.0.11"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-58494"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-58494"
+    },
+    {
+      "type": "FIX",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-58494\nhttps://nvd.nist.gov/vuln/detail/CVE-2026-58494\nhttps://github.com/bytecodealliance/wasmtime/commit/5ddfd5f1ef28f2041fa07d237ad0336e167b0e0c\nhttps://github.com/bytecodealliance/wasmtime/commit/7db94cdcf0c79cb3dfde884b534b653f2dd83367\nhttps://github.com/bytecodealliance/wasmtime/commit/8a250aac0962ca1364b5f16525720e9d0b39edcd\nhttps://github.com/bytecodealliance/wasmtime/commit/d3ceb56ec35f39e02496eeb4e2d9c7f4fb964d9e\nhttps://github.com/bytecodealliance/wasmtime/releases/tag/v24.0.11\nhttps://github.com/bytecodealliance/wasmtime/releases/tag/v36.0.12\nhttps://github.com/bytecodealliance/wasmtime/releases/tag/v45.0.3\nhttps://github.com/bytecodealliance/wasmtime/releases/tag/v46.0.1\nhttps://github.com/bytecodealliance/wasmtime/security/advisories/GHSA-4ch3-9j33-3pmj"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0188"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-58494"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-58494"
     }
   ]
 }
