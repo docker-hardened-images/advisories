@@ -83,8 +83,10 @@ line.
 
 A correct check has four parts, and each one matters:
 
-1. The signature on the checksum file is good **and** was made by the pinned
-   fingerprint.
+1. The checksum file's `.asc` holds exactly one signature, that signature is
+   good, **and** it was made by the pinned fingerprint. Verify with a keyring
+   that holds only the pinned key: with several keys imported, a good signature
+   from any of them can be mistaken for one from the pinned key.
 2. The key is not revoked. `gpg --verify` exits 0 for a signature from a
    revoked key, so check its status output rather than its exit code.
 3. The checksum line names exactly the path you fetched, and the file has no
@@ -120,6 +122,13 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 export GNUPGHOME="$work/gnupg"
 mkdir -m 700 "$GNUPGHOME"
+# Use exactly one key, the pinned one. With several keys in the keyring, a
+# signature from any of them would count as good.
+grep -q 'BEGIN PGP PRIVATE KEY' "$key" && { echo "error: $key holds a private key" >&2; exit 2; }
+key_fprs=$(gpg --batch --with-colons --show-keys "$key" 2>/dev/null |
+  awk -F: '$1 == "pub" {want = 1; next} want && $1 == "fpr" {print $10; want = 0}')
+[ "$key_fprs" = "$expected_fpr" ] ||
+  { echo "error: $key must hold only the pinned public key, $expected_fpr" >&2; exit 2; }
 gpg --batch --quiet --import "$key"
 
 fetch() {
@@ -127,12 +136,18 @@ fetch() {
   curl -fsSL "https://raw.githubusercontent.com/$repo/$commit/$1" -o "$work/$1"
 }
 
-# Accept only a good signature whose primary key is the pinned key.
-# gpg exits 0 for a revoked key, so check the status lines instead.
+# Accept exactly one signature, good, made by the pinned primary key. gpg
+# exits 0 for a revoked key, so the status lines are checked as well. With a
+# single signature, GOODSIG and VALIDSIG necessarily describe the same one.
 check_sig() {
-  local status
-  status=$(gpg --batch --status-fd 1 --verify "$work/$1" "$work/$2" 2>/dev/null || true)
-  grep -q '^\[GNUPG:\] GOODSIG ' <<<"$status" || { echo "FAIL: no good signature on $2" >&2; exit 1; }
+  local status rc=0
+  status=$(gpg --batch --status-fd 1 --verify "$work/$1" "$work/$2" 2>/dev/null) || rc=$?
+  [ "$(grep -c '^\[GNUPG:\] NEWSIG' <<<"$status")" -eq 1 ] ||
+    { echo "FAIL: $1 must hold exactly one signature" >&2; exit 1; }
+  if [ "$rc" -ne 0 ] || ! grep -q '^\[GNUPG:\] GOODSIG ' <<<"$status" ||
+    grep -qE '^\[GNUPG:\] (BADSIG|ERRSIG|EXPSIG|EXPKEYSIG|REVKEYSIG|NO_PUBKEY) ' <<<"$status"; then
+    echo "FAIL: no good signature on $2" >&2; exit 1
+  fi
   awk '$2 == "VALIDSIG" {print $NF}' <<<"$status" | grep -qx "$expected_fpr" ||
     { echo "FAIL: $2 is not signed by $expected_fpr" >&2; exit 1; }
 }
@@ -159,18 +174,22 @@ echo "OK: $path at $commit is signed by $expected_fpr"
 ./verify-dhi-artifact.sh main dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json dhi-bot.pub.asc
 ```
 
-`GOODSIG` is absent for an expired or revoked key, so the script rejects both.
+The script refuses a key file holding any key other than the pinned one, and
+an `.asc` holding more than one signature. `GOODSIG` is absent for an expired or
+revoked key, so it rejects both.
 On macOS, install GNU coreutils for `sha256sum` and `sha512sum`, or replace
 them with `shasum -a 256` and `shasum -a 512`.
 
 The same check by hand, from the root of a clone:
 
 ```bash
+gpg --show-keys dhi-bot.pub.asc   # must list one key: 3C03F4C03E937E469287DADA74443225FBB34CE4
 export GNUPGHOME=$(mktemp -d) && gpg --import dhi-bot.pub.asc
 f=dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json
 
-gpg --status-fd 1 --verify "$f.sha256.asc" "$f.sha256" | grep -E 'GOODSIG|VALIDSIG|REVKEYSIG|EXPKEYSIG'
-# Expect GOODSIG, and VALIDSIG ending in 3C03F4C03E937E469287DADA74443225FBB34CE4
+gpg --status-fd 1 --verify "$f.sha256.asc" "$f.sha256" | grep -E 'NEWSIG|SIG |VALIDSIG|NO_PUBKEY'
+# Expect exactly one NEWSIG, then GOODSIG, then VALIDSIG ending in
+# 3C03F4C03E937E469287DADA74443225FBB34CE4, and nothing else
 
 cat "$f.sha256"      # must name exactly $f, on a single line
 sha256sum -c "$f.sha256"
@@ -186,10 +205,11 @@ algorithm was checked.
 one-step check:
 
 ```bash
-gpg --status-fd 1 --verify "$f.asc" "$f" | grep -E 'GOODSIG|VALIDSIG|REVKEYSIG|EXPKEYSIG'
+gpg --status-fd 1 --verify "$f.asc" "$f" | grep -E 'NEWSIG|SIG |VALIDSIG|NO_PUBKEY'
 ```
 
-Apply the same fingerprint and revocation checks as above. A good result means
+Apply the same checks as above: one key in the keyring, one signature, `GOODSIG`
+and the pinned fingerprint. A good result means
 Docker signed these bytes. It does not mean they belong at this path: the VEX
 document of an advisory, served at its OSV path with its own `.asc`, verifies.
 Use the checksum route when the path matters.
@@ -223,8 +243,8 @@ Both checks are needed. `verified: true` means the signature matches a key
 registered to the signing GitHub account, and that account holds more than one
 key, so it does not identify which one.
 
-In a clone with the public key imported, `git verify-commit` gives the same
-answer as the second check:
+In a clone, with a keyring holding only the pinned key, `git verify-commit`
+gives the same answer as the second check:
 
 ```bash
 git verify-commit --raw "$commit" 2>&1 | grep -E 'GOODSIG|VALIDSIG'
