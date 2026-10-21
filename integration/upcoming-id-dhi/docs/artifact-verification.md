@@ -27,8 +27,11 @@ dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json.sha512      SHA-512 checksum line
 dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json.sha512.asc  signature over the checksum line
 ```
 
-VEX documents under `dhi/vex/` carry the same five files. An advisory can be
-VEX-only; it then has no file under `dhi/osv/`.
+VEX documents under `dhi/vex/` carry the same five files. Every advisory has a
+VEX document. An advisory that has never had an affected package, for example
+one assessed `not_affected` from the start, has no file under `dhi/osv/`. Once
+an OSV record is published it stays: if the finding later no longer stands, the
+record is marked withdrawn rather than removed.
 
 A checksum file holds one line in coreutils format: the hex digest, two spaces,
 and the artifact's path relative to the repository root.
