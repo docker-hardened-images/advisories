@@ -1,0 +1,63 @@
+{
+  "modified": "2026-10-22T03:08:15Z",
+  "published": "2026-10-22T03:08:15Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-68xw-fqpj-h922",
+  "details": "### Summary\r\n\r\nA single HTTP request with a `Content-Encoding: zstd` header and a non-empty body causes the receiving OpenSearch node to terminate its JVM via `Runtime.halt()`. OpenSearch 2.19.4 through 2.19.6 and the opensearch-security plugin 2.19.4.0 through 2.19.6.0 are affected. 2.19.0–2.19.3 and 3.x are not.\r\n\r\n### Details\r\n\r\nNetty's `ZstdDecoder` (since 4.1.125.Final) calls `com.github.luben.zstd.Zstd.getFrameContentSize` as its first operation on inbound bytes. Every 2.19.x release pins `zstd-jni 1.5.5-5`, which does not contain that method (added in `1.5.5-6`). Netty's availability check (`Zstd.isAvailable()`) only confirms the class loads and the native library initializes, so `HttpContentDecompressor` still advertises `zstd` and builds the decoder. The first decode then throws `NoSuchMethodError`, which OpenSearch's uncaught-exception handling treats as fatal and answers with `Runtime.halt()`.\r\n\r\nIntroduced in 2.19.4 by the netty bump from `4.1.121.Final` to `4.1.125.Final` (#19270). 3.x pins `zstd-jni 1.5.6-1`, which includes the method.\r\n\r\nAffected components: `modules/transport-netty4` (default HTTP transport), `plugins/transport-nio` (when selected via `http.type`), and opensearch-security's `Netty4ConditionalDecompressor`, which extends the same Netty class and decompresses only after successful authentication.\r\n\r\n### Proof of concept\r\n\r\nAgainst a default 2.19.6 node (security plugin not installed):\r\n\r\n```\r\ncurl -s -X POST 'http://localhost:9200/_bulk' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -H 'Content-Encoding: zstd' \\\r\n  --data-binary 'any-non-empty-bytes'\r\n```\r\n\r\nThe node logs a fatal `NoSuchMethodError: com.github.luben.zstd.Zstd.getFrameContentSize` from `ZstdDecoder.decode` and exits. With the security plugin installed, the same request sent over HTTPS with valid credentials produces the same result.\r\n\r\n### Impact\r\n\r\nAvailability only. Without the `security` plugin, anyone who can reach the HTTP port can halt the node without authenticating (CVSS 7.5), and can repeat the request to keep it down. With the `security` plugin, the request must first pass authentication. Any authenticated user can then halt the node without needing specific privileges (CVSS 6.5), and a cluster configured to accept anonymous requests is exposed to unauthenticated clients as well (CVSS 7.5). Halting skips JVM shutdown hooks. No confidentiality or integrity impact was identified.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "opensearch",
+        "purl": "pkg:dhi/opensearch"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.19.4"
+            },
+            {
+              "fixed": "2.19.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.opensearch:opensearch"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "opensearch",
+        "purl": "pkg:dhi/opensearch"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.19.4+0"
+            },
+            {
+              "fixed": "2.19.7+0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.opensearch.plugin:opensearch-security"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/opensearch-project/OpenSearch/security/advisories/GHSA-68xw-fqpj-h922"
+    }
+  ]
+}
