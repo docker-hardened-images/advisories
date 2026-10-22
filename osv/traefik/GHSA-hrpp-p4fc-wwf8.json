@@ -1,0 +1,63 @@
+{
+  "modified": "2026-10-21T09:27:01Z",
+  "published": "2026-10-21T09:27:01Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-hrpp-p4fc-wwf8",
+  "details": "## Summary\n\nThere is a high severity authentication vulnerability in Traefik's ForwardAuth middleware when the authentication server uses a connection-bound scheme such as NTLM or SPNEGO/Kerberos \"Negotiate\" (for example IIS Windows Authentication). ForwardAuth sends its authentication subrequests through a connection pool shared by every client of the middleware, so an auth-server connection already authenticated by one user can be reused for the subrequest of an unrelated client. An unauthenticated client on a separate frontend connection can then receive a successful authentication response carrying the victim's identity, which Traefik forwards to the backend through `authResponseHeaders`, and access the backend as that user. In Traefik v3.7 the same applies to the external authentication requests issued for the Kubernetes Ingress NGINX provider's `auth-url` annotation.\n\nThis is a distinct issue from GHSA-53qr-784g-cj35, GHSA-qqjf-53cj-pwvv, GHSA-cw35-4q88-3rmp and GHSA-qm9f-w54v-q2qh, which isolated connection-bound authentication on the backend proxy paths only; the fix applies the same per-frontend-connection isolation to the authentication server. Traefik v3.0 through v3.6 are end-of-life and are also affected; they will not receive a fix on their own line, and users on those versions must upgrade to v2.11.60 or v3.7.16.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v2.11.60\n- https://github.com/traefik/traefik/releases/tag/v3.7.16\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.11.60"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/traefik/traefik/v2"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.7.16"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/traefik/traefik/v3"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-hrpp-p4fc-wwf8"
+    }
+  ]
+}
