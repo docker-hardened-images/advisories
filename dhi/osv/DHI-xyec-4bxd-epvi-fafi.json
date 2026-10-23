@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-xyec-4bxd-epvi-fafi",
+  "modified": "2026-10-23T03:52:52Z",
+  "published": "2026-10-23T03:52:52Z",
+  "upstream": [
+    "CVE-2026-39244"
+  ],
+  "summary": "adm-zip before 0.5.18 is vulnerable to denial of service via a crafted ZIP file with a manipulated uncompressed size…",
+  "details": "adm-zip before 0.5.18 is vulnerable to denial of service via a crafted ZIP file with a manipulated uncompressed size header field. In zipEntry.js line 103, Buffer.alloc(_centralHeader.size) allocates memory based on the declared uncompressed size from the ZIP central directory header without validating it against the actual compressed data size or imposing any upper bound. The size value is read directly from the binary header at entryHeader.js line 266 with no bounds check. An attacker can craft a ~120-byte ZIP file that declares ~4GB uncompressed size, causing a memory allocation amplification ratio of over 33 million to 1. The allocation occurs before CRC validation, so the malicious payload cannot be rejected early. All extraction and read methods are affected: readFile(), readAsText(), extractEntryTo(), extractAllTo(), extractAllToAsync(), test(), and entry.getData(). Any application accepting untrusted ZIP files via adm-zip is vulnerable to immediate process crash.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "9.0.0-debian12",
+        "9.0.1-debian12",
+        "9.0.2-debian12",
+        "9.0.3-debian12",
+        "9.0.4-debian12",
+        "9.0.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "9.0.5-debian13",
+        "9.0.6-debian13",
+        "9.0.7-debian13",
+        "9.0.8-debian13",
+        "9.1.10-debian13",
+        "9.1.2-debian13",
+        "9.1.3-debian13",
+        "9.1.4-debian13",
+        "9.1.5-debian13",
+        "9.1.6-debian13",
+        "9.1.7-debian13",
+        "9.1.8-debian13",
+        "9.1.9-debian13",
+        "9.2.0-debian13",
+        "9.2.1-debian13",
+        "9.2.2-debian13",
+        "9.2.3-debian13",
+        "9.2.4-debian13",
+        "9.2.5-debian13",
+        "9.2.6-debian13",
+        "9.2.8-debian13",
+        "9.3.0-debian13",
+        "9.3.1-debian13",
+        "9.3.3-debian13",
+        "9.3.4-debian13",
+        "9.3.5-debian13",
+        "9.3.7-debian13",
+        "9.4.1-debian13",
+        "9.4.2-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-xyec-4bxd-epvi-fafi"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-xcpc-8h2w-3j85"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-39244"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/cthackers/adm-zip/commit/2450dcf417aa29df49270237d18c5245794da3e2"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/cthackers/adm-zip/issues/568"
+    }
+  ]
+}
