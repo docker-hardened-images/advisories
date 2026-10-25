@@ -1,0 +1,393 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-pr23-lgl6-l7eh-movx",
+  "modified": "2026-10-25T23:41:31Z",
+  "published": "2026-10-25T23:41:31Z",
+  "upstream": [
+    "GHSA-268h-hp4c-crq3"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nNodemailer constructs `List-*` headers from the caller-provided `list` message option using internally prepared header values. The `list.*.comment` field is inserted into those prepared values without removing CR (`\\r`) or LF (`\\n`) characters. Because prepared headers bypass the normal header-value sanitizer and are passed to `mimeFuncs.foldLines()`, a CRLF sequence in a list comment is emitted as an actual header boundary in the generated RFC822 message.\n\nAn application that lets a lower-privileged or unauthenticated user influence `list.help.comment`, `list.unsubscribe.comment`, `list.subscribe.comment`, `list.post.comment`, `list.owner.comment`, `list.archive.comment`, or `list.id.comment` can therefore be made to generate messages containing attacker-chosen additional headers.\n\n### Details\nSource-to-sink evidence:\n\n- `lib/mailer/mail-message.js:241-249` calls `_getListHeaders(this.data.list)` and adds each returned value with `this.message.addHeader(listHeader.key, value)`.\n- `lib/mailer/mail-message.js:253-296` builds each list header value as `{ prepared: true, foldLines: true, value: ... }`.\n- For `List-ID`, `lib/mailer/mail-message.js:272-279` copies `value.comment` into the generated header value. If `mimeFuncs.isPlainText(comment)` returns true, it wraps the comment in quotes rather than encoding or CRLF-normalizing it.\n- For the other `List-*` headers, `lib/mailer/mail-message.js:283-288` copies `value.comment` into `(<comment>)`. If `mimeFuncs.isPlainText(comment)` returns true, the value is not encoded or CRLF-normalized.\n- `lib/mime-node/index.js:323-351` accepts the prepared header object.\n- `lib/mime-node/index.js:533-540` trusts `options.prepared`; when `foldLines` is set, it pushes `mimeFuncs.foldLines(key + ': ' + value)` directly into the header block.\n- The normal header-value sanitizer path is bypassed because the value is marked prepared. By contrast, ordinary unprepared header values are normalized in the regular header-building path.\n- `lib/mailer/mail-message.js:299-308` removes whitespace and angle brackets from `list.*.url`, so the confirmed injection source is the `comment` field, not the URL field.\n\nDefault/common exposure evidence:\n\n- `lib/nodemailer.js:21-60` exposes the public `createTransport(...).sendMail(...)` flow used by the package.\n- `examples/full.js:106-123` documents `list.unsubscribe.comment` and `list.id.comment` as normal message options.\n- The behavior is in shipped runtime code and does not require test-only code, non-default build steps, or undocumented internals.\n\nFalse-positive screening and negative controls:\n\n- SMTP command construction was separately reviewed. Envelope sender/recipients reject CRLF before SMTP commands, EHLO names strip CRLF, SIZE is numeric, and DSN fields are encoded; no SMTP command-injection variant was confirmed.\n- Ordinary `subject` header input containing CRLF was normalized to a single `Subject:` header and did not create `X-Injected` in the local control case.\n- Address display names and MIME filename/content-type parameters were reviewed by a focused MIME/header audit and were encoded or CRLF-normalized in local checks.\n- `prepared: true` custom headers are an explicit low-level escape hatch, but this issue is different because Nodemailer itself creates prepared headers from the documented `list.*.comment` option.\n\nVariant analysis:\n\nLocal testing confirmed the same root cause for comments in `List-Help`, `List-Unsubscribe`, `List-Subscribe`, `List-Post`, `List-Owner`, `List-Archive`, and `List-ID`. These should be fixed together by rejecting or normalizing CR/LF in list comments before prepared header generation, or by avoiding the prepared-header bypass for caller-controlled list values.\n\nAffected version evidence and uncertainty:\n\n- Confirmed vulnerable: `nodemailer` 8.0.8 at commit `15138a84c543c20aa399218534cdbbfa2ea1ce55`.\n- Git history shows `_getListHeaders` present in historical commits including `22fcff8` (`v4.3.0`) and related list-header work in `9b4f90a` (`v3.1.8`), but older versions were not dynamically tested during this audit.\n- Affected range is therefore recorded as unknown beyond the confirmed current version.\n- No patched version was identified in this checkout.\n\nSeverity rationale:\n\n- AV: The vulnerable library path is reached through application-level message submission in typical networked applications that use Nodemailer.\n- AC: A single CRLF sequence in a documented message option triggers the issue.\n- PR: Conservative assumption that the attacker is a lower-privileged user of an application that exposes list metadata fields. Some applications could expose this to unauthenticated users, but that was not assumed.\n- UI: No maintainer or victim interaction is needed after the application accepts the message object.\n- S: The impact remains in the application/mail-generation security scope.\n- C/I: Injected headers can affect message metadata, mail-client/filter interpretation, and downstream mail-pipeline decisions. No SMTP envelope recipient injection or code execution was demonstrated.\n- A: No availability impact was demonstrated.\n\nFinal self-review:\n\n- Reproduction evidence was generated locally from this checkout with a safe in-memory `streamTransport` PoC and a negative `Subject` control case.\n- The PoC is non-destructive and does not send network traffic outside the process.\n- The observed output contains an actual CRLF-delimited injected header line.\n- Reachability, sanitizer bypass, package exposure, variants, and non-exploitable sibling paths were checked as described above.\n- The affected range is not overclaimed; only the current tested version is confirmed vulnerable.\n\n### PoC\n\nFrom a clean checkout of `nodemailer` at commit `15138a84c543c20aa399218534cdbbfa2ea1ce55`, run:\n\n```bash\nnode <<'NODE'\n'use strict';\nconst nodemailer = require('./');\nconst headersEnd = raw => raw.slice(0, raw.indexOf('\\r\\n\\r\\n'));\nconst hasStandaloneInjected = raw => /\\r\\nX-Injected: yes\\)/.test(raw) || /\\r\\nX-Injected: yes\\r\\n/.test(raw);\n(async () => {\n  const transport = nodemailer.createTransport({ streamTransport: true, buffer: true });\n  const positive = await transport.sendMail({\n    from: 'sender@example.test',\n    to: 'recipient@example.test',\n    subject: 'control',\n    list: { unsubscribe: { url: 'https://example.test/u', comment: 'ok\\r\\nX-Injected: yes' } },\n    text: 'body'\n  });\n  const positiveRaw = positive.message.toString('utf8');\n  console.log('POSITIVE_HAS_INJECTED=' + hasStandaloneInjected(positiveRaw));\n  console.log('POSITIVE_LIST_LINE=' + JSON.stringify(headersEnd(positiveRaw).split('\\r\\n').filter(line => /^List-Unsubscribe:|^X-Injected:/.test(line)).join('\\n')));\n\n  const control = await transport.sendMail({\n    from: 'sender@example.test',\n    to: 'recipient@example.test',\n    subject: 'safe\\r\\nX-Injected: no',\n    text: 'body'\n  });\n  const controlRaw = control.message.toString('utf8');\n  console.log('CONTROL_HAS_INJECTED=' + /\\r\\nX-Injected: no\\r\\n/.test(controlRaw));\n  console.log('CONTROL_SUBJECT=' + JSON.stringify(headersEnd(controlRaw).split('\\r\\n').filter(line => /^Subject:|^X-Injected:/.test(line)).join('\\n')));\n\n  const variantKeys = ['help', 'unsubscribe', 'subscribe', 'post', 'owner', 'archive', 'id'];\n  const result = [];\n  for (const key of variantKeys) {\n    const info = await transport.sendMail({\n      from: 'sender@example.test',\n      to: 'recipient@example.test',\n      subject: 'variant ' + key,\n      list: Object.assign({}, { [key]: { url: key === 'id' ? 'example.test' : 'https://example.test/' + key, comment: 'c\\r\\nX-Variant-' + key + ': yes' } }),\n      text: 'body'\n    });\n    result.push(key + '=' + new RegExp('\\\\r\\\\nX-Variant-' + key + ': yes').test(info.message.toString('utf8')));\n  }\n  console.log('VARIANTS=' + result.join(','));\n})().catch(err => { console.error(err && err.stack || err); process.exit(1); });\nNODE\n```\n\nObserved output in this environment:\n\n```text\nPOSITIVE_HAS_INJECTED=true\nPOSITIVE_LIST_LINE=\"List-Unsubscribe: <https://example.test/u> (ok\\nX-Injected: yes)\"\nCONTROL_HAS_INJECTED=false\nCONTROL_SUBJECT=\"Subject: safe X-Injected: no\"\nVARIANTS=help=true,unsubscribe=true,subscribe=true,post=true,owner=true,archive=true,id=true\n```\n\nExpected vulnerable output: `POSITIVE_HAS_INJECTED=true` and all listed variants ending in `=true`. Expected negative/control output: `CONTROL_HAS_INJECTED=false`, showing the ordinary `Subject` header path does not create a separate injected header.\n\nCleanup: none required; the PoC uses only in-memory message generation.\n\n### Impact\n\nA lower-privileged attacker who can influence `list.*.comment` fields in an application using Nodemailer can inject arbitrary additional headers into generated email messages. This can alter message semantics and downstream mail-client or mail-filter behavior, including adding attacker-controlled metadata headers. The PoC confirms header-boundary injection in the generated RFC822 output; it does not demonstrate SMTP command injection, recipient injection, or code execution.\n\n### Suggested remediation\n\nNormalize or reject CR and LF in `list.*.comment` before constructing prepared `List-*` headers. Prefer sharing the same CRLF-neutralization behavior used for ordinary header values, or avoid using `prepared: true` for caller-controlled list comment content. Add regression tests for CRLF in every documented `list` comment-bearing field and verify that generated messages do not contain attacker-controlled standalone headers.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "9.0.0-debian12",
+        "9.0.1-debian12",
+        "9.0.2-debian12",
+        "9.0.3-debian12",
+        "9.0.4-debian12",
+        "9.0.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "9.0.5-debian13",
+        "9.0.6-debian13",
+        "9.0.7-debian13",
+        "9.0.8-debian13",
+        "9.1.10-debian13",
+        "9.1.2-debian13",
+        "9.1.3-debian13",
+        "9.1.4-debian13",
+        "9.1.5-debian13",
+        "9.1.6-debian13",
+        "9.1.7-debian13",
+        "9.1.8-debian13",
+        "9.1.9-debian13",
+        "9.2.0-debian13",
+        "9.2.1-debian13",
+        "9.2.2-debian13",
+        "9.2.3-debian13",
+        "9.2.4-debian13",
+        "9.2.5-debian13",
+        "9.2.6-debian13",
+        "9.2.8-debian13",
+        "9.3.0-debian13",
+        "9.3.1-debian13",
+        "9.3.3-debian13",
+        "9.3.4-debian13",
+        "9.3.5-debian13",
+        "9.3.7-debian13",
+        "9.3.8-debian13",
+        "9.4.1-debian13",
+        "9.4.2-debian13",
+        "9.4.3-debian13",
+        "9.4.4-debian13",
+        "9.4.5-debian13",
+        "9.5.1-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "langfuse-worker",
+        "purl": "pkg:docker/dhi/langfuse-worker?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.95.12-debian13",
+        "2.95.12-debian13-dev",
+        "2.95.12-debian13-fips",
+        "2.95.12-debian13-fips-dev",
+        "3.187.0-debian13",
+        "3.187.0-debian13-dev",
+        "3.187.0-debian13-fips",
+        "3.187.0-debian13-fips-dev",
+        "3.188.0-debian13",
+        "3.188.0-debian13-dev",
+        "3.188.0-debian13-fips",
+        "3.188.0-debian13-fips-dev",
+        "3.191.0-debian13",
+        "3.191.0-debian13-dev",
+        "3.191.0-debian13-fips",
+        "3.191.0-debian13-fips-dev",
+        "3.193.0-debian13",
+        "3.193.0-debian13-dev",
+        "3.193.0-debian13-fips",
+        "3.193.0-debian13-fips-dev",
+        "3.194.0-debian13",
+        "3.194.0-debian13-dev",
+        "3.194.0-debian13-fips",
+        "3.194.0-debian13-fips-dev",
+        "3.194.1-debian13",
+        "3.194.1-debian13-dev",
+        "3.194.1-debian13-fips",
+        "3.194.1-debian13-fips-dev",
+        "3.195.0-debian13",
+        "3.195.0-debian13-dev",
+        "3.195.0-debian13-fips",
+        "3.195.0-debian13-fips-dev",
+        "3.197.1-debian13",
+        "3.197.1-debian13-dev",
+        "3.197.1-debian13-fips",
+        "3.197.1-debian13-fips-dev",
+        "3.198.0-debian13",
+        "3.198.0-debian13-dev",
+        "3.198.0-debian13-fips",
+        "3.198.0-debian13-fips-dev",
+        "3.200.0-debian13",
+        "3.200.0-debian13-dev",
+        "3.200.0-debian13-fips",
+        "3.200.0-debian13-fips-dev",
+        "3.201.1-debian13",
+        "3.201.1-debian13-dev",
+        "3.201.1-debian13-fips",
+        "3.201.1-debian13-fips-dev",
+        "3.202.1-debian13",
+        "3.202.1-debian13-dev",
+        "3.202.1-debian13-fips",
+        "3.202.1-debian13-fips-dev",
+        "3.203.1-debian13",
+        "3.203.1-debian13-dev",
+        "3.203.1-debian13-fips",
+        "3.203.1-debian13-fips-dev",
+        "3.203.3-debian13",
+        "3.203.3-debian13-dev",
+        "3.203.3-debian13-fips",
+        "3.203.3-debian13-fips-dev",
+        "3.204.0-debian13",
+        "3.204.0-debian13-dev",
+        "3.204.0-debian13-fips",
+        "3.204.0-debian13-fips-dev",
+        "3.205.0-debian13",
+        "3.205.0-debian13-dev",
+        "3.205.0-debian13-fips",
+        "3.205.0-debian13-fips-dev",
+        "3.205.1-debian13",
+        "3.205.1-debian13-dev",
+        "3.205.1-debian13-fips",
+        "3.205.1-debian13-fips-dev",
+        "3.206.0-debian13",
+        "3.206.0-debian13-dev",
+        "3.206.0-debian13-fips",
+        "3.206.0-debian13-fips-dev",
+        "3.208.0-debian13",
+        "3.208.0-debian13-dev",
+        "3.208.0-debian13-fips",
+        "3.208.0-debian13-fips-dev",
+        "3.210.0-debian13",
+        "3.210.0-debian13-dev",
+        "3.210.0-debian13-fips",
+        "3.210.0-debian13-fips-dev",
+        "3.212.0-debian13",
+        "3.212.0-debian13-dev",
+        "3.212.0-debian13-fips",
+        "3.212.0-debian13-fips-dev",
+        "3.213.0-debian13",
+        "3.213.0-debian13-dev",
+        "3.213.0-debian13-fips",
+        "3.213.0-debian13-fips-dev",
+        "3.214.0-debian13",
+        "3.214.0-debian13-dev",
+        "3.214.0-debian13-fips",
+        "3.214.0-debian13-fips-dev",
+        "3.216.0-debian13",
+        "3.216.0-debian13-dev",
+        "3.216.0-debian13-fips",
+        "3.216.0-debian13-fips-dev",
+        "3.218.0-debian13",
+        "3.218.0-debian13-dev",
+        "3.218.0-debian13-fips",
+        "3.218.0-debian13-fips-dev",
+        "3.219.0-debian13",
+        "3.219.0-debian13-dev",
+        "3.219.0-debian13-fips",
+        "3.219.0-debian13-fips-dev",
+        "3.221.1-debian13",
+        "3.221.1-debian13-dev",
+        "3.221.1-debian13-fips",
+        "3.221.1-debian13-fips-dev",
+        "3.222.0-debian13",
+        "3.222.0-debian13-dev",
+        "3.222.0-debian13-fips",
+        "3.222.0-debian13-fips-dev",
+        "3.223.0-debian13",
+        "3.223.0-debian13-dev",
+        "3.223.0-debian13-fips",
+        "3.223.0-debian13-fips-dev",
+        "3.224.0-debian13",
+        "3.224.0-debian13-dev",
+        "3.224.0-debian13-fips",
+        "3.224.0-debian13-fips-dev",
+        "3.224.1-debian13",
+        "3.224.1-debian13-dev",
+        "3.224.1-debian13-fips",
+        "3.224.1-debian13-fips-dev",
+        "3.224.2-debian13",
+        "3.224.2-debian13-dev",
+        "3.224.2-debian13-fips",
+        "3.224.2-debian13-fips-dev",
+        "3.224.3-debian13",
+        "3.224.3-debian13-dev",
+        "3.224.3-debian13-fips",
+        "3.224.3-debian13-fips-dev",
+        "3.225.0-debian13",
+        "3.225.0-debian13-dev",
+        "3.225.0-debian13-fips",
+        "3.225.0-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "langfuse",
+        "purl": "pkg:docker/dhi/langfuse?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.95.12-debian13",
+        "2.95.12-debian13-dev",
+        "2.95.12-debian13-fips",
+        "2.95.12-debian13-fips-dev",
+        "3.173.0-debian13",
+        "3.173.0-debian13-dev",
+        "3.173.0-debian13-fips",
+        "3.173.0-debian13-fips-dev",
+        "3.174.1-debian13",
+        "3.174.1-debian13-dev",
+        "3.174.1-debian13-fips",
+        "3.174.1-debian13-fips-dev",
+        "3.178.0-debian13",
+        "3.178.0-debian13-dev",
+        "3.178.0-debian13-fips",
+        "3.178.0-debian13-fips-dev",
+        "3.183.0-debian13",
+        "3.183.0-debian13-dev",
+        "3.183.0-debian13-fips",
+        "3.183.0-debian13-fips-dev",
+        "3.184.0-debian13",
+        "3.184.0-debian13-dev",
+        "3.184.0-debian13-fips",
+        "3.184.0-debian13-fips-dev",
+        "3.184.1-debian13",
+        "3.184.1-debian13-dev",
+        "3.184.1-debian13-fips",
+        "3.184.1-debian13-fips-dev",
+        "3.185.0-debian13",
+        "3.185.0-debian13-dev",
+        "3.185.0-debian13-fips",
+        "3.185.0-debian13-fips-dev",
+        "3.186.0-debian13",
+        "3.186.0-debian13-dev",
+        "3.186.0-debian13-fips",
+        "3.186.0-debian13-fips-dev",
+        "3.187.0-debian13",
+        "3.187.0-debian13-dev",
+        "3.187.0-debian13-fips",
+        "3.187.0-debian13-fips-dev",
+        "3.188.0-debian13",
+        "3.188.0-debian13-dev",
+        "3.188.0-debian13-fips",
+        "3.188.0-debian13-fips-dev",
+        "3.194.0-debian13",
+        "3.194.0-debian13-dev",
+        "3.194.0-debian13-fips",
+        "3.194.0-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "trigger-dev",
+        "purl": "pkg:docker/dhi/trigger-dev?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.4.6-debian13",
+        "4.4.6-debian13-dev",
+        "4.4.6-debian13-fips",
+        "4.4.6-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "unleash",
+        "purl": "pkg:docker/dhi/unleash?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "7.6.3-debian13",
+        "7.6.3-debian13-dev",
+        "7.6.3-debian13-fips",
+        "7.6.3-debian13-fips-dev",
+        "7.6.4-debian13",
+        "7.6.4-debian13-dev",
+        "7.6.4-debian13-fips",
+        "7.6.4-debian13-fips-dev",
+        "8.0.0-debian13",
+        "8.0.0-debian13-dev",
+        "8.0.0-debian13-fips",
+        "8.0.0-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "uptime-kuma",
+        "purl": "pkg:docker/dhi/uptime-kuma?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.23.16-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "uptime-kuma",
+        "purl": "pkg:docker/dhi/uptime-kuma?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.23.16-debian13",
+        "1.23.17-debian13",
+        "1.23.17-debian13-dev",
+        "2.0.2-debian13",
+        "2.0.2-debian13-dev",
+        "2.1.0-debian13",
+        "2.1.0-debian13-dev",
+        "2.1.1-debian13",
+        "2.1.1-debian13-dev",
+        "2.1.3-debian13",
+        "2.1.3-debian13-dev",
+        "2.2.0-debian13",
+        "2.2.0-debian13-dev",
+        "2.2.1-debian13",
+        "2.2.1-debian13-dev",
+        "2.3.2-debian13",
+        "2.3.2-debian13-dev",
+        "2.4.0-debian13",
+        "2.4.0-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-pr23-lgl6-l7eh-movx"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-268h-hp4c-crq3"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-268h-hp4c-crq3"
+    }
+  ]
+}
