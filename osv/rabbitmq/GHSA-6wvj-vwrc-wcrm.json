@@ -1,0 +1,111 @@
+{
+  "modified": "2026-10-25T16:09:16Z",
+  "published": "2026-10-25T16:09:16Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-6wvj-vwrc-wcrm",
+  "details": "## Affected product\r\n\r\nRabbitMQ — `rabbitmq_management` plugin, OAuth 2.0 login status rendering\r\n\r\n## Summary\r\n\r\nThe CVE-2026-67421 fix renamed the `login_oauth.ejs` template variable to `escaped_warnings`, establishing a contract that callers pre-escape, and added `fmt_escape_html` at the call sites. One caller was missed: `check_bad_response` still passes the server-supplied `reason` unescaped on the 401/403 OAuth branch, four lines above a sibling branch that escapes the same value. The sink is unchanged — `login_oauth.ejs` renders `\u003c%=escaped_warnings[i]%\u003e`, and `\u003c%=` does not auto-escape in this codebase's EJS engine.\r\n\r\nThe advisory's defense-in-depth recommendation, `base-uri 'none'` in the default CSP, was also not applied, so the `\u003cbase\u003e` injection that made CVE-2026-67421 reach credential theft still works.\r\n\r\n*Note on tooling: this report was prepared with AI assistance (Claude Code). The analysis and the proposed fix were reviewed by the submitter before filing.*\r\n\r\n## Affected code\r\n\r\n- `deps/rabbitmq_management/priv/www/js/main.js` → `check_bad_response`, `initiate_logout(oauth, reason)` on the `(req.status == 401 || req.status == 403) \u0026\u0026 oauth.enabled` branch. `initiate_logout/2` has that single caller, and it is the only unescaped path into the sink: the other callers of `renderWarningMessageInLoginStatus` pass either an `fmt_escape_html`-wrapped value (`main.js:29`) or a literal (`main.js:132` on all affected branches, plus `main.js:149` on `main`).\r\n- `deps/rabbitmq_management/priv/www/js/tmpl/login_oauth.ejs` → `\u003cp class=\"warning\"\u003e\u003c%=escaped_warnings[i]%\u003e \u003c/p\u003e`.\r\n- `deps/rabbitmq_management/Makefile` → default `content_security_policy` is `script-src 'self'; object-src 'self'`, with no `base-uri`.\r\n\r\n`reason` carries an attacker-chosen string: `rabbit_access_control:check_resource_access/4` formats `\"~s access to ~ts refused for user '~ts'\"` with the resource name, and `rabbit_channel:check_name/2` restricts only the `amq.` prefix.\r\n\r\n## Steps to reproduce\r\n\r\nNot runtime-confirmed. Verified by source inspection on the `v4.3.6` tag, `upstream/v4.3.x` and `upstream/main`: `initiate_logout(oauth, fmt_escape_html(` appears zero times on all three, and the template sink is unchanged from the version CVE-2026-67421 described.\r\n\r\nThe chain is the one that advisory documents, with OAuth enabled on the management UI: an attacker with `configure` permission declares a queue whose name is an HTML payload; a victim with management UI access but no `read` permission on it triggers Get Message(s); the broker returns 401 with `error: not_authorised` and a reason embedding the name; `check_bad_response` routes it to the raw sink.\r\n\r\n## Impact\r\n\r\nSame as CVE-2026-67421 and unchanged by its fix: stored HTML injection into the management UI login status, rendered for an administrator. `script-src 'self'` blocks inline script, but with no `base-uri` an injected `\u003cbase\u003e` retargets the UI's periodic relative-URL refresh to an attacker origin, sending the victim's `Authorization` header with it. Requires OAuth on the management UI, which is not the default, plus a shared vhost and the victim's permission mismatch and interaction.\r\n\r\n## Suggested remediation\r\n\r\nEscape at the missed caller:\r\n\r\n```js\r\ninitiate_logout(oauth, fmt_escape_html(reason));\r\n```\r\n\r\nEscaping at the sink instead is not viable, despite being CVE-2026-67421's stated primary fix: `warningMessageOAuthResource/2` and `warningMessageOAuthResources/3` in `js/oidc-oauth/helper.js` build warnings containing intentional `\u003cb\u003e` markup around individually escaped values, so a sink-level escape would render those tags as text. The caller contract is required rather than incidental, which is worth recording so the next fix does not reach for the sink again.\r\n\r\nSeparately, add `base-uri 'none'` to the default `content_security_policy`. The management UI uses no `\u003cbase\u003e` element and never reads `document.baseURI`, and operators who set `management.csp.policy` explicitly override the default entirely, so this is inert for existing deployments. `connect-src` should not be defaulted — it can break OAuth flows contacting an external identity provider and needs an operator allowlist.\r\n\r\nTwo commits implementing both are ready to push to a private fork on request.\r\n\r\n## Credit\r\n\r\nFound while reviewing scanner findings against the 4.3.6 source.\r\n\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.13.0"
+            },
+            {
+              "fixed": "3.13.21"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.1.0"
+            },
+            {
+              "fixed": "4.1.17"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.12"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-6wvj-vwrc-wcrm"
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "modified": "2026-10-25T15:45:57Z",
+  "published": "2026-10-25T15:45:57Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-9h6g-46wc-m2f5",
+  "details": "Any logged-in user can send a content header that declares a large body (the assembler accepts up to the hard 512 MiB gate) and then simply not send the last body frame. The server keeps every received body fragment in memory. `max_message_size` (default 16 MiB) is only checked after the final body frame arrives (`rabbit_channel:check_msg_size/3`), so for an unfinished message it never runs.\r\n\r\nOne connection can open up to 2,047 channels, and each channel can hold its own in-flight body. Demonstrated: one channel held ~300 MiB (18.75x the configured limit); 16 parallel holds reached ~2 GiB. No memory alarm fired: in containers `vm_memory_monitor` reads the host's MemTotal, not the cgroup limit, so the alarm threshold is unreachable and the endpoint is an OOM kill. On bare metal the endpoint is the memory watermark blocking all publishers node-wide.\r\n\r\n## Code\r\n\r\n`deps/rabbit_common/src/rabbit_command_assembler.erl` - the content header is checked against the hard 512 MiB gate only. The declared `BodySize` is known here, before any fragment is stored, but `max_message_size` is not consulted; body fragments are then accumulated with no size check:\r\n\r\n```erlang\r\n%% deps/rabbit_common/include/rabbit.hrl\r\n-define(MAX_MSG_SIZE, 536_870_912).\r\n\r\n%% deps/rabbit_common/src/rabbit_command_assembler.erl\r\nprocess({content_header, ClassId, 0, BodySize, PropertiesBin},\r\n        {content_header, Method, ClassId})\r\n  when BodySize =\u003c ?MAX_MSG_SIZE -\u003e\r\n    Content = empty_content(ClassId, PropertiesBin),\r\n    {ok, {content_body, Method, BodySize, Content}};\r\n%% ...\r\nprocess({content_body, FragmentBin},\r\n        {content_body, Method, RemainingSize,\r\n         Content = #content{payload_fragments_rev = Fragments}})\r\n  when byte_size(FragmentBin) =\u003c RemainingSize -\u003e\r\n    NewContent = Content#content{\r\n                   payload_fragments_rev = [FragmentBin | Fragments]},\r\n    case RemainingSize - byte_size(FragmentBin) of\r\n        0  -\u003e {ok, Method, NewContent, method};\r\n        Sz -\u003e {ok, {content_body, Method, Sz, NewContent}}\r\n    end;\r\n```\r\n\r\n`deps/rabbit/src/rabbit_channel.erl` - `check_msg_size/2` does compare against `max_message_size`, but it is only reached from `handle_method(#'basic.publish'{}, Content, State)`, which the reader calls once the assembler has returned a complete message, i.e. after the final body frame. For a message whose last frame never arrives, this code never runs:\r\n\r\n```erlang\r\nhandle_method(#'basic.publish'{exchange = ExchangeNameBin, ...},\r\n              Content, State0 = ...) -\u003e\r\n    State1 = maybe_increase_global_publishers(State0),\r\n    rabbit_global_counters:messages_received(amqp091, 1),\r\n    check_msg_size(Content, GCThreshold),\r\n    ...\r\n\r\ncheck_msg_size(Content, GCThreshold) -\u003e\r\n    MaxMessageSize = persistent_term:get(max_message_size),\r\n    Size = rabbit_basic:maybe_gc_large_msg(Content, GCThreshold),\r\n    case Size =\u003c MaxMessageSize of\r\n        true -\u003e\r\n            rabbit_msg_size_metrics:observe(amqp091, Size);\r\n        false -\u003e\r\n            ...\r\n            rabbit_misc:precondition_failed(Fmt, [Size, MaxMessageSize])\r\n    end.\r\n```\r\n\r\n## Steps to reproduce\r\n\r\n1. Authenticate and open a channel\r\n2. Send `basic.publish`, then a content header with a large declared body size (e.g. 300 MiB)\r\n3. Send body frames but withhold the last one; keep the connection alive\r\n4. Repeat on more channels/connections; watch broker memory grow with no alarm\r\n\r\n## Suggested fix\r\n\r\nCheck the header-declared body size against `max_message_size` when the content header arrives, before buffering any fragments.\r\n\r\n## Severity\r\n\r\n* CVSS 4.0: CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N (7.1, High)\r\n* CWE-770\r\n\r\n## Environment\r\n\r\n* RabbitMQ built from `main` at 851fb71306; re-verified unfixed at e0cc4a0bfc (October 1, 2026).\r\n* Erlang/OTP 27.3.4.9, Linux (containerized, cgroup v2).\r\n\r\nNote: this replaces issue 1 of the combined report GHSA-3v49-p897-q679, split into individual reports as offered there. Full reproduction scripts and logs available on request.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.12"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.1.0"
+            },
+            {
+              "fixed": "4.1.17"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.13.0"
+            },
+            {
+              "fixed": "3.13.21"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-9h6g-46wc-m2f5"
+    }
+  ]
+}

