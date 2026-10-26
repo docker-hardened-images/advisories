@@ -1,13 +1,13 @@
 {
   "schema_version": "1.8.0",
   "id": "DHI-js6p-tpnj-4cpp-2g7d",
-  "modified": "2026-10-07T02:38:42Z",
+  "modified": "2026-10-26T01:27:24Z",
   "published": "2026-10-07T02:38:42Z",
   "upstream": [
     "CVE-2026-48712"
   ],
-  "summary": "## Summary",
-  "details": "## Summary\n\nprotobufjs could recurse without a depth limit while converting decoded messages to plain objects or JSON. This affected generated `toObject()` conversion and the custom `google.protobuf.Any` JSON conversion path.\n\nA crafted protobuf binary payload containing deeply nested `Any` values could cause the JavaScript call stack to be exhausted during conversion to JSON.\n\n## Impact\n\nAn attacker who can provide protobuf binary data decoded by an application may be able to crash the process or otherwise cause message conversion to fail with a stack overflow.\n\nThis affects applications that decode untrusted protobuf input containing `google.protobuf.Any` values and then convert decoded messages to JSON or plain objects with JSON conversion enabled, for example through `JSON.stringify(message)`, `Message#toJSON()`, or `Type.toObject(message, { json: true })`.\n\nApplications that only decode and re-encode protobuf binary data without converting decoded messages to JSON are not directly affected by this issue.\n\n## Preconditions\n\n* The application must decode protobuf binary data influenced by an attacker.\n* The application schema must include `google.protobuf.Any`, and the referenced `type_url` must resolve to a message type in the loaded protobuf root.\n* The application must convert the decoded message to JSON or a plain object through an affected conversion path.\n* The crafted input must contain deeply nested `Any` values that are expanded during conversion.\n\n## Workarounds\n\nAvoid converting untrusted protobuf messages containing `google.protobuf.Any` values to JSON with affected versions. If immediate upgrade is not possible, reject or limit messages with deeply nested `Any` payloads at an outer protocol boundary where feasible, avoid JSON conversion of untrusted `Any` values, or isolate message conversion in a process that can be safely restarted.",
+  "summary": "protobufjs compiles protobuf definitions into JavaScript (JS) functions. Prior to 7.6.1 and 8.4.1, protobufjs could…",
+  "details": "protobufjs compiles protobuf definitions into JavaScript (JS) functions. Prior to 7.6.1 and 8.4.1, protobufjs could recurse without a depth limit while converting decoded messages to plain objects or JSON. This affected generated toObject() conversion and the custom google.protobuf.Any JSON conversion path. A crafted protobuf binary payload containing deeply nested Any values could cause the JavaScript call stack to be exhausted during conversion to JSON. This vulnerability is fixed in 7.6.1 and 8.4.1.",
   "severity": [
     {
       "type": "CVSS_V3",
@@ -319,15 +319,15 @@
     },
     {
       "type": "ADVISORY",
-      "url": "https://github.com/advisories/GHSA-wcpc-wj8m-hjx6"
-    },
-    {
-      "type": "ADVISORY",
       "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-48712"
     },
     {
       "type": "ADVISORY",
       "url": "https://github.com/protobufjs/protobuf.js/security/advisories/GHSA-wcpc-wj8m-hjx6"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-wcpc-wj8m-hjx6"
     }
   ]
 }
