@@ -233,11 +233,6 @@ Integration expectations:
   `.sha512`, `.sha512.asc`), when published, sit beside their artifact. Their
   checksum lines name the full repository-relative path, including the year
   directory.
-- Records published to `osv-vex-test` before the year layout was introduced
-  remain at flat `<tree>/<DHI-id>.json` paths, so that branch can hold the same
-  advisory at both a flat and a year path. Deduplicate by advisory ID and keep
-  the record with the latest OSV `modified` or VEX `last_updated` and
-  `version`. Do not choose a copy by its path.
 
 The examples and validation checks in this guide store fixtures in flat
 `osv/` and `vex/` directories for readability. Only the published feed uses
