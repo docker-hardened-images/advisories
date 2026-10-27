@@ -216,10 +216,6 @@ for OpenVEX, with one file per advisory:
 <vex-tree>/<YYYY>/<DHI-id>.json
 ```
 
-Before go-live, the trees are published to the `osv-vex-test` branch of this
-repository as `dhi/osv/` and `dhi/vex/`. They are separate from the
-current-production `osv/` and `vex/` directories at the repository root.
-
 `YYYY` is the UTC year of the advisory's first VEX publication. It is set once
 and never changes, so updating or republishing an advisory in a later year does
 not move its files. The OSV record and the VEX document for one advisory ID are
