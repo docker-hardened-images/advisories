@@ -44,3 +44,7 @@ platform-manifest digest.
 | `sbom.json` | Compact scanner snapshot with the local image ID, ordered image layers, and scanner-observed DHI Debian package evidence. |
 | `vex/DHI-CVE-2017-18018-coreutils.json` | Upcoming-PURL rendering of the pinned production `not_affected` assessment. |
 | `expected.json` | Expected scanner-routing interpretation. |
+
+The published feed stores these records under a year directory
+(`<tree>/<YYYY>/<DHI-id>.json`); see
+[Feed Layout](../../docs/advisory-routing.md#feed-layout).
