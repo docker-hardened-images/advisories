@@ -209,3 +209,7 @@ Derived image
 This repository publishes production DHI advisory data under
 [`osv/`](../../../osv/) and [`vex/`](../../../vex/). The examples and
 validation checks in this guide provide local fixtures for the expected shape.
+
+Generated artifacts are signed; see
+[Verifying published artifacts](artifact-verification.md) for how to confirm an
+artifact was published by Docker at the path it was fetched from.

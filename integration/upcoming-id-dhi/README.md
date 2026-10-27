@@ -55,6 +55,8 @@ upstream advisory coverage.
    [base-discovery procedure](../derived-image-base-discovery.md) and try the
    [derived-image routing example](examples/e2e-alpine-layer-package-namespace/README.md)
 7. Validate using the [Validation harness](validation/README.md)
+8. Verify fetched artifacts as described in
+   [Verifying published artifacts](docs/artifact-verification.md)
 
 ## Model Summary
 
@@ -168,6 +170,8 @@ integration/upcoming-id-dhi/validation/run-fixture-suite.sh
 - **VEX context**: [docs/vex-context.md](docs/vex-context.md)
 - **Decision trees**: [docs/decision-trees.md](docs/decision-trees.md)
 - **Coverage matrix**: [docs/scenarios.md](docs/scenarios.md)
+- **Verifying published artifacts**:
+  [docs/artifact-verification.md](docs/artifact-verification.md)
 - **Derived-image base discovery**:
   [../derived-image-base-discovery.md](../derived-image-base-discovery.md)
 - **Validation harness**: [validation/README.md](validation/README.md)
