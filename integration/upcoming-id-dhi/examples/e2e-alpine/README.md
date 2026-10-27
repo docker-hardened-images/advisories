@@ -49,5 +49,9 @@ platform-manifest digest.
 | `vex/DHI-CVE-2016-2781-coreutils.json` | Synthetic OpenVEX context for the same advisory/package. |
 | `expected.json` | Expected scanner-routing interpretation. |
 
+The published feed stores these records under a year directory
+(`<tree>/<YYYY>/<DHI-id>.json`); see
+[Feed Layout](../../docs/advisory-routing.md#feed-layout).
+
 Generated production records will use real DHI advisory IDs. The fixture ID is
 intentionally readable for local validation.

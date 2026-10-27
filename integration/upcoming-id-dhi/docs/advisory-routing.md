@@ -206,6 +206,43 @@ Derived image
          and use normal upstream advisory coverage
 ```
 
-This repository publishes production DHI advisory data under
-[`osv/`](../../../osv/) and [`vex/`](../../../vex/). The examples and
-validation checks in this guide provide local fixtures for the expected shape.
+## Feed Layout
+
+Generated DHI advisory records are published in two trees, one for OSV and one
+for OpenVEX, with one file per advisory:
+
+```text
+<osv-tree>/<YYYY>/<DHI-id>.json
+<vex-tree>/<YYYY>/<DHI-id>.json
+```
+
+Before go-live, the trees are published to the `osv-vex-test` branch of this
+repository as `dhi/osv/` and `dhi/vex/`. They are separate from the
+current-production `osv/` and `vex/` directories at the repository root.
+
+`YYYY` is the UTC year of the advisory's first VEX publication. It is set once
+and never changes, so updating or republishing an advisory in a later year does
+not move its files. The OSV record and the VEX document for one advisory ID are
+always in the same year directory, even when the OSV `published` year is
+different. The year is a layout detail only: advisory IDs, the OSV `id` and
+`published` fields, and the OpenVEX `@id` do not depend on it.
+
+Integration expectations:
+
+- Read each tree recursively. Do not assume a flat directory or work out a
+  file's year from the advisory's content.
+- Identify records by advisory ID, not by path. The file name stem is the
+  advisory ID.
+- Checksum and signature sidecars (`.asc`, `.sha256`, `.sha256.asc`,
+  `.sha512`, `.sha512.asc`), when published, sit beside their artifact. Their
+  checksum lines name the full repository-relative path, including the year
+  directory.
+- Records published to `osv-vex-test` before the year layout was introduced
+  remain at flat `<tree>/<DHI-id>.json` paths, so that branch can hold the same
+  advisory at both a flat and a year path. Deduplicate by advisory ID and keep
+  the record with the latest OSV `modified` or VEX `last_updated` and
+  `version`. Do not choose a copy by its path.
+
+The examples and validation checks in this guide store fixtures in flat
+`osv/` and `vex/` directories for readability. Only the published feed uses
+year directories.
