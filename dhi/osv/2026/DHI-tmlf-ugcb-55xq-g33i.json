@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-tmlf-ugcb-55xq-g33i",
+  "modified": "2026-09-29T02:45:54Z",
+  "published": "2026-09-29T02:45:54Z",
+  "upstream": [
+    "CVE-2026-55568"
+  ],
+  "summary": "### Impact",
+  "details": "### Impact\n\nThe built-in cURL handlers (`GuzzleHttp\\Handler\\CurlHandler` and `GuzzleHttp\\Handler\\CurlMultiHandler`, used by default whenever the PHP cURL extension is available) accept an `https://` proxy — a proxy reached over a TLS-encrypted connection — through the `proxy` request option, client-level `proxy` defaults, or proxy environment variables such as `http_proxy`, `https_proxy`, `HTTPS_PROXY`, `all_proxy`, and `ALL_PROXY`.\n\nWhen the installed libcurl does not support HTTPS proxies, behavior depends on the libcurl version/build:\n\n- libcurl older than 7.50.2 silently treats an `https://` proxy as a plaintext `http://` proxy. The TLS connection to the proxy is never established, and the proxy leg is cleartext with no error or warning.\n- libcurl 7.50.2 through 7.51.x rejects the unsupported proxy scheme at connect time, so no cleartext exposure occurs, but the failure is late and opaque.\n- libcurl 7.52.0 or newer builds without HTTPS-proxy support also fail at connect time rather than downgrading.\n\nThe security-relevant case is the silent downgrade on libcurl older than 7.50.2. An application is affected when it sends requests through one of the built-in cURL handlers, configures an `https://` proxy expecting the proxy connection itself to be encrypted, and runs with libcurl older than 7.50.2.\n\nIn that configuration, traffic expected to be protected by TLS on the hop to the proxy is transmitted in cleartext. Proxy authentication credentials (the `Proxy-Authorization` header, proxy userinfo in the proxy URL, or `CURLOPT_PROXYUSERPWD`) are sent without encryption, and the `CONNECT` target host and port for tunneled HTTPS requests are exposed. For plain HTTP requests, request headers and bodies are also exposed on the proxy leg. End-to-end HTTPS requests tunneled through the proxy remain protected by their inner TLS session; the exposure is limited to the proxy negotiation and proxy credentials.\n\nApplications that do not configure an `https://` proxy are not affected. Installations running libcurl 7.52.0 or newer built with HTTPS-proxy support are not affected because HTTPS proxies work as intended. Installations running libcurl 7.50.2 through 7.51.x, or libcurl 7.52.0 or newer built without HTTPS-proxy support, are not exposed to the silent cleartext downgrade, but Guzzle now rejects those unsupported configurations up front as well. The built-in stream handler is not affected; the issue is specific to the cURL handlers' proxy handling. Low-level cURL options under the `curl` request option, such as `CURLOPT_PROXY` or `CURLOPT_PROXYTYPE`, are advanced custom configuration and remain the caller's responsibility.\n\n### Patches\n\nThe issue is patched in `7.12.1` and later. Starting in that release, the built-in cURL handlers detect whether the installed libcurl supports HTTPS proxies — requiring both libcurl 7.52.0 or newer and the `CURL_VERSION_HTTPS_PROXY` feature bit — and reject a request configured through Guzzle's first-class proxy handling with an `https://` proxy up front by throwing a `GuzzleHttp\\Exception\\RequestException`. No request bytes reach the network when the proxy cannot be used securely. Versions before `7.12.1` are affected by the silent downgrade when run against libcurl older than 7.50.2.\n\n### Workarounds\n\nIf you cannot upgrade immediately, do not configure an `https://` proxy on an installation whose libcurl lacks HTTPS-proxy support, and verify the capability in application code before using one. Remember to check proxy environment variables as well as any explicit `proxy` option:\n\n```php\n$curl = \\curl_version();\n$httpsProxyBit = \\defined('CURL_VERSION_HTTPS_PROXY') ? \\CURL_VERSION_HTTPS_PROXY : (1 << 21);\n\nif (\\version_compare($curl['version'], '7.52.0', '<') || 0 === ($curl['features'] & $httpsProxyBit)) {\n    throw new \\RuntimeException('Installed libcurl does not support HTTPS proxies.');\n}\n```\n\nUpgrading the system libcurl to 7.52.0 or newer built with HTTPS-proxy support also resolves the underlying unsupported-proxy behavior.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "mediawiki",
+        "purl": "pkg:docker/dhi/mediawiki?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.45.1-debian13-php-fpm",
+        "1.45.1-debian13-php-fpm-dev",
+        "1.45.1-debian13-php-fpm-fips",
+        "1.45.1-debian13-php-fpm-fips-dev",
+        "1.45.2-debian13-php-fpm",
+        "1.45.2-debian13-php-fpm-dev",
+        "1.45.2-debian13-php-fpm-fips",
+        "1.45.2-debian13-php-fpm-fips-dev",
+        "1.45.3-debian13-php-fpm",
+        "1.45.3-debian13-php-fpm-dev",
+        "1.45.3-debian13-php-fpm-fips",
+        "1.45.3-debian13-php-fpm-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-tmlf-ugcb-55xq-g33i"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-wpwq-4j6v-78m3"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-wpwq-4j6v-78m3"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-55568"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-55568"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-55568"
+    }
+  ]
+}

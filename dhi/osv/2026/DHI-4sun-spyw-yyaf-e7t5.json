@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-4sun-spyw-yyaf-e7t5",
+  "modified": "2026-09-29T02:51:09Z",
+  "published": "2026-09-29T02:51:09Z",
+  "upstream": [
+    "CVE-2026-59883"
+  ],
+  "summary": "### Impact",
+  "details": "### Impact\n\n`CookieJar` does not restrict a cookie scoped to an IP address to the exact host that set it. When a stored cookie's `Domain` attribute is an IPv4 literal (`Domain=192.168.0.1`), a bracketed IPv6 literal (`Domain=[::1]`), or a bare numeric value that denotes an IPv4 address (`Domain=1`, which is `0.0.0.1`), `SetCookie::matchesDomain()` applies ordinary subdomain (suffix) matching to it instead of requiring an exact host. The IP-address check inside `matchesDomain()` is applied only to the request host and never to the cookie's own domain, and response cookies that carry an explicit `Domain` attribute are stored as suffix-matchable. As a result Guzzle sends such a cookie to any host whose name ends in that value as a trailing label, for example sending a `Domain=192.168.0.1` cookie to `evil.192.168.0.1`, or a `Domain=1` cookie to `evil.1`. The same flaw lets a look-alike host store a cookie that Guzzle then sends to the bare IP address. Depending on how the receiving service interprets the cookie, the impact is cross-host cookie disclosure, cookie injection, or session fixation.\n\nYou are affected if your application uses Guzzle's cookie support, for example `new Client(['cookies' => true])` or an explicit `CookieJar`, reuses one cookie jar across more than one host or trust boundary, and that jar can hold a cookie scoped to an IP-address or bare-numeric host. To actually leak a cookie the application must also resolve and connect to a look-alike host whose name ends in the IP-address label, such as `evil.192.168.0.1`. Such names are not publicly registrable, so in practice an attacker needs some influence over name resolution, which is realistic on private, split-horizon, container, or development networks. You are not affected if you do not use Guzzle's cookie support, if you use a separate cookie jar per host or trust boundary, or if your jars never hold cookies scoped to IP-address or bare-numeric hosts. This issue is independent of public suffix list validation. Per RFC 6265, an IP-address cookie domain must match only the exact host that set it and must never match a subdomain.\n\n### Patches\n\nThe issue is patched in `7.12.3` and later. Starting in that release, Guzzle matches an IPv4 literal, a bracketed IPv6 literal, or a bare-numeric cookie `Domain` only against the exact request host, and no longer applies subdomain suffix matching to them.\n\n### Workarounds\n\nIf you cannot upgrade immediately, do not reuse one `CookieJar` instance across untrusted and trusted origins. Use a separate cookie jar per host or trust boundary, or disable cookie handling for requests to untrusted hosts, and avoid scoping cookies to IP-address or bare-numeric hosts. In particular, avoid `new Client(['cookies' => true])` for any client that may contact unrelated hosts at different trust levels, because that option creates a single shared jar for the whole client.\n\n### References\n\n* https://datatracker.ietf.org/doc/html/rfc6265#section-5.1.3\n* https://datatracker.ietf.org/doc/html/rfc6265#section-5.3\n* https://url.spec.whatwg.org/#concept-ipv4-parser",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "mediawiki",
+        "purl": "pkg:docker/dhi/mediawiki?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.45.1-debian13-php-fpm",
+        "1.45.1-debian13-php-fpm-dev",
+        "1.45.1-debian13-php-fpm-fips",
+        "1.45.1-debian13-php-fpm-fips-dev",
+        "1.45.2-debian13-php-fpm",
+        "1.45.2-debian13-php-fpm-dev",
+        "1.45.2-debian13-php-fpm-fips",
+        "1.45.2-debian13-php-fpm-fips-dev",
+        "1.45.3-debian13-php-fpm",
+        "1.45.3-debian13-php-fpm-dev",
+        "1.45.3-debian13-php-fpm-fips",
+        "1.45.3-debian13-php-fpm-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-4sun-spyw-yyaf-e7t5"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-g446-98w2-8p5w"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-59883"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-g446-98w2-8p5w"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/guzzle/guzzle/pull/3694"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/guzzle/guzzle/commit/b9944c161b12d9ee9c9334cfc5b9659ecd7451f8"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/guzzle/guzzle/releases/tag/7.12.3"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-59883"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-59883"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-59883"
+    }
+  ]
+}
