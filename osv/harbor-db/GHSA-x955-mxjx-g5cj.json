@@ -1,0 +1,87 @@
+{
+  "modified": "2026-10-28T10:04:08Z",
+  "published": "2026-10-28T09:55:39Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-x955-mxjx-g5cj",
+  "details": "### Impact\r\n\r\nAn unauthenticated `PUT` request to `/api/v2.0/users` crashes the Harbor core process. Harbor's audit-log middleware recognises the `/api/v2.0/users` URL and builds an audit event for it. For a `PUT` that does not target a specific user ID, the event data stays empty, and the user audit resolver dereferences it without a check. The panic happens in a background goroutine without a `recover()`, so it terminates the whole process instead of failing one request. Core restarts, and the next such request crashes it again. A caller who repeats the request keeps the Harbor API, the UI and registry authentication down.\r\n\r\nNo credentials are needed. The audit middleware handles the request even when Harbor rejects it with `401`. `PUT /api/v2.0/users` is not a real endpoint, so blocking it does not break anything.\r\n\r\nThe middleware matches the full request URI, including the query string. A `PUT` to any core URL whose query string ends with `/api/v2.0/users`, for example `PUT /api/v2.0/projects?x=/api/v2.0/users`, crashes core the same way. A proxy rule that only checks the path does not stop it.\r\n\r\n### Am I affected?\r\n\r\nYou are affected if both of the following are true:\r\n\r\n- You run Harbor v2.13.0 to v2.13.6, v2.14.0 to v2.14.5, or v2.15.0 to v2.15.2. Releases before v2.13.0 do not have this audit resolver.\r\n- An untrusted client can send HTTP requests to Harbor.\r\n\r\nThe default configuration is affected. The only setting that prevents the crash is the one described under \"Until you can upgrade\".\r\n\r\n### What to do\r\n\r\n- **2.15:** fixed in v2.15.3. Upgrade to v2.15.3 or later.\r\n- **2.14 and 2.13:** no fixed release is available yet. A fix is prepared for the next 2.14 and 2.13 patch releases. After the upgrade, the resolver skips requests without event data, and a failure while building an audit event is logged instead of crashing core. Audit logging of real user changes works as before. No configuration change is needed.\r\n\r\n**Until you can upgrade,** use one of these:\r\n\r\n1. Disable the `update_user` audit event. In the UI, go to **Configuration \u003e System Settings \u003e Disable Audit Log Event Type** and select `update_user`. Through the API, add `update_user` to the comma-separated `disabled_audit_log_event_types` value with `PUT /api/v2.0/configurations`. Harbor then skips the audit resolver for these requests, and the crash cannot happen. The trade-off: user updates, password changes and system administrator grants are no longer written to the audit log. Remove `update_user` from the list again after the upgrade.\r\n2. At your reverse proxy, load balancer or WAF, reject `PUT` requests whose full request URI (path and query string) ends with `/api/v2.0/users`. No legitimate client sends such a request.\r\n\r\n### Check for misuse\r\n\r\nThis issue does not expose or change data. Signs of an attack are unexpected restarts of the core container or pod, with core logs that contain:\r\n\r\n```\r\npanic: interface conversion: interface {} is nil, not *model.CommonEvent\r\n```\r\n\r\nIn your reverse proxy access log, look for `PUT` requests whose URI ends with `/api/v2.0/users`, including after a `?`. These requests leave no entry in Harbor's audit log.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.13.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.14.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "harbor-db",
+        "purl": "pkg:dhi/harbor-db"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.14.6"
+            },
+            {
+              "introduced": "2.15.0"
+            },
+            {
+              "fixed": "2.15.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/goharbor/harbor"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/goharbor/harbor/security/advisories/GHSA-x955-mxjx-g5cj"
+    }
+  ]
+}
