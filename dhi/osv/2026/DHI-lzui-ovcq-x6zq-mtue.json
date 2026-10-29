@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-lzui-ovcq-x6zq-mtue",
+  "modified": "2026-10-24T12:00:55Z",
+  "published": "2026-10-24T12:00:55Z",
+  "upstream": [
+    "CVE-2026-41059"
+  ],
+  "summary": "OAuth2 Proxy is a reverse proxy that provides authentication using OAuth2 providers. Versions 7.5.0 through 7.15.1 have…",
+  "details": "OAuth2 Proxy is a reverse proxy that provides authentication using OAuth2 providers. Versions 7.5.0 through 7.15.1 have a configuration-dependent authentication bypass. Deployments are affected when all of the following are true: Use of `skip_auth_routes` or the legacy `skip_auth_regex`; use of patterns that can be widened by attacker-controlled suffixes, such as `^/foo/.*/bar$` causing potential exposure of `/foo/secret`; and protected upstream applications that interpret `#` as a fragment delimiter or otherwise route the request to the protected base path. In deployments that rely on these settings, an unauthenticated attacker can send a crafted request containing a number sign in the path, including the browser-safe encoded form `%23`, so that OAuth2 Proxy matches a public allowlist rule while the backend serves a protected resource. Deployments that do not use these skip-auth options, or that only allow exact public paths with tightly scoped method and path rules, are not affected. A fix has been implemented in version 7.15.2 to normalize request paths more conservatively before skip-auth matching so fragment content does not influence allowlist decisions. Users who cannot upgrade immediately can reduce exposure by tightening or removing `skip_auth_routes` and `skip_auth_regex` rules, especially patterns that use broad wildcards across path segments. Recommended mitigations include replacing broad rules with exact, anchored public paths and explicit HTTP methods; rejecting requests whose path contains `%23` or `#` at the ingress, load balancer, or WAF level; and/or avoiding placing sensitive application paths behind broad `skip_auth_routes` rules.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "oauth2-proxy",
+        "purl": "pkg:docker/dhi/oauth2-proxy?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "7.12.0-debian13",
+        "7.13.0-debian13",
+        "7.13.0-debian13-dev",
+        "7.13.0-debian13-fips",
+        "7.13.0-debian13-fips-dev",
+        "7.14.2-debian13",
+        "7.14.2-debian13-dev",
+        "7.14.2-debian13-fips",
+        "7.14.2-debian13-fips-dev",
+        "7.14.3-debian13",
+        "7.14.3-debian13-dev",
+        "7.14.3-debian13-fips",
+        "7.14.3-debian13-fips-dev",
+        "7.15.0-debian13",
+        "7.15.0-debian13-dev",
+        "7.15.0-debian13-fips",
+        "7.15.0-debian13-fips-dev",
+        "7.15.1-debian13",
+        "7.15.1-debian13-dev",
+        "7.15.1-debian13-fips",
+        "7.15.1-debian13-fips-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "pyroscope",
+        "purl": "pkg:docker/dhi/pyroscope?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "1.13.4-debian12",
+        "1.13.5-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-lzui-ovcq-x6zq-mtue"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-41059"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/oauth2-proxy/oauth2-proxy/security/advisories/GHSA-pxq7-h93f-9jrg"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-pxq7-h93f-9jrg"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-5559"
+    }
+  ]
+}
