@@ -1,0 +1,194 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ihgs-ewuo-lcez-5g2f",
+  "modified": "2026-11-01T13:17:29Z",
+  "published": "2026-11-01T13:17:29Z",
+  "upstream": [
+    "CVE-2026-48511"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\n`ExpandoObjectFormatter.Deserialize` populates `System.Dynamic.ExpandoObject` by calling `IDictionary<string, object>.Add` for each map entry. `ExpandoObject` internally maintains member names in array-like structures, so inserting many distinct keys can require repeated linear scans and array copies.\n\nFor large attacker-controlled maps, this produces quadratic CPU and allocation behavior. The issue is especially surprising because `ExpandoObjectResolver.Options` is configured with `MessagePackSecurity.UntrustedData`, but collision-resistant dictionary comparers cannot protect `ExpandoObject` insertion internals.\n\n## Impact\n\nApplications are affected when they deserialize untrusted MessagePack maps into `ExpandoObject` using `ExpandoObjectResolver` or related resolver options.\n\nA hostile payload containing many distinct keys can cause CPU exhaustion and allocation churn disproportionate to the input size. This can make a server unresponsive or exhaust memory under concurrent request load.\n\nThis is not a hash-collision attack against a configurable dictionary comparer. The super-linear behavior comes from `ExpandoObject`'s insertion model, so `MessagePackSecurity.UntrustedData` does not eliminate the cost.\n\n## Affected components\n\n- Package: `MessagePack`\n- APIs: `ExpandoObjectFormatter.Deserialize`, `ExpandoObjectResolver`\n- Data type: `System.Dynamic.ExpandoObject`\n- Finding ID: `MESSAGEPACKCSHARP-102`\n\n## Patches\n\nFixes are prepared and will be released in coordinated patch versions.\n\nUpgrade guidance:\n\n1. Upgrade `MessagePack` to the patched version for your release line.\n2. Upgrade companion MessagePack packages in the same dependency graph to the coordinated patched versions.\n\nPotential fixes include applying a map-entry count limit for `ExpandoObject` under untrusted-data settings, buffering into a security-aware dictionary before materializing a bounded `ExpandoObject`, or otherwise rejecting maps large enough to trigger quadratic behavior.\n\n## Workarounds\n\nPatching is recommended.\n\nUntil a patched version is available, avoid deserializing untrusted payloads into `ExpandoObject`. Prefer strongly typed DTOs or dictionaries with security-aware comparers and explicit count limits. Enforce request-size and map-entry limits at the transport or application layer.\n\n## Resources\n\n- `MESSAGEPACKCSHARP-102`: `ExpandoObjectFormatter` quadratic insertion behavior\n- CWE-407: Inefficient Algorithmic Complexity",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-node",
+        "purl": "pkg:docker/dhi/azure-functions-node?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "4.1037.1-node22.14.0-debian12",
+        "4.1039.200-node22.14.0-debian12",
+        "4.1039.300-node22.14.0-debian12",
+        "4.1039.400-node22.14-debian12",
+        "4.1039.400-node22.14.0-debian12",
+        "4.1039.500-node22.14-debian12",
+        "4.1039.500-node22.15-debian12",
+        "4.1039.600-node22.16-debian12",
+        "4.1040.100-node22.15-debian12",
+        "4.1040.100-node22.16-debian12",
+        "4.1040.200-node22.16-debian12",
+        "4.1040.300-node22.16-debian12",
+        "4.1041.100-node22.16-debian12",
+        "4.1041.100-node22.17-debian12",
+        "4.1041.200-node22.17-debian12",
+        "4.1041.200-node22.18-debian12",
+        "4.1042.100-node22.17-debian12",
+        "4.1042.100-node22.18-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-node",
+        "purl": "pkg:docker/dhi/azure-functions-node?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.1042.100-node22.19-debian13",
+        "4.1043.100-node22.18-debian13",
+        "4.1043.100-node22.19-debian13",
+        "4.1043.200-node22.19-debian13",
+        "4.1043.200-node22.20-debian13",
+        "4.1044.200-node22.20-debian13",
+        "4.1044.300-debian13-node22.20",
+        "4.1044.300-debian13-node22.21",
+        "4.1044.300-node22.20-debian13",
+        "4.1044.350-debian13-node22.21",
+        "4.1044.400-debian13-node22.21",
+        "4.1045.100-debian13-node22.21",
+        "4.1045.200-debian13-node22.21",
+        "4.1046.100-debian13-node22.22",
+        "4.1046.100-debian13-node22.22-dev",
+        "4.1046.100-debian13-node24.13",
+        "4.1046.100-debian13-node24.13-dev",
+        "4.1047.100-debian13-node22.22",
+        "4.1047.100-debian13-node22.22-dev",
+        "4.1047.100-debian13-node24.13",
+        "4.1047.100-debian13-node24.13-dev",
+        "4.1047.100-debian13-node24.14",
+        "4.1047.100-debian13-node24.14-dev",
+        "4.1048.100-debian13-node22.22",
+        "4.1048.100-debian13-node22.22-dev",
+        "4.1048.100-debian13-node24.14",
+        "4.1048.100-debian13-node24.14-dev",
+        "4.1048.200-debian13-node22.22",
+        "4.1048.200-debian13-node22.22-dev",
+        "4.1048.200-debian13-node24.14",
+        "4.1048.200-debian13-node24.14-dev",
+        "4.1049.100-debian13-node22.22",
+        "4.1049.100-debian13-node22.22-dev",
+        "4.1049.100-debian13-node24.14",
+        "4.1049.100-debian13-node24.14-dev",
+        "4.1049.200-debian13-node22.22",
+        "4.1049.200-debian13-node22.22-dev",
+        "4.1049.200-debian13-node24.14",
+        "4.1049.200-debian13-node24.14-dev",
+        "4.1049.200-debian13-node24.15",
+        "4.1049.200-debian13-node24.15-dev",
+        "4.1050.100-debian13-node22.22",
+        "4.1050.100-debian13-node22.22-dev",
+        "4.1050.100-debian13-node24.15",
+        "4.1050.100-debian13-node24.15-dev",
+        "4.1050.100-debian13-node24.16",
+        "4.1050.100-debian13-node24.16-dev",
+        "4.1051.100-debian13-node22.22",
+        "4.1051.100-debian13-node22.22-dev",
+        "4.1051.100-debian13-node24.16",
+        "4.1051.100-debian13-node24.16-dev",
+        "4.1051.200-debian13-node22.22",
+        "4.1051.200-debian13-node22.22-dev",
+        "4.1051.200-debian13-node24.16",
+        "4.1051.200-debian13-node24.16-dev",
+        "4.1051.300-debian13-node22.22",
+        "4.1051.300-debian13-node22.22-dev",
+        "4.1051.300-debian13-node24.16",
+        "4.1051.300-debian13-node24.16-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-python",
+        "purl": "pkg:docker/dhi/azure-functions-python?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "4.1037.1-python3.12-debian12",
+        "4.1039.200-python3.12-debian12",
+        "4.1039.300-python3.12-debian12",
+        "4.1039.400-python3.12-debian12",
+        "4.1039.500-python3.12-debian12",
+        "4.1039.600-python3.12-debian12",
+        "4.1040.100-python3.12-debian12",
+        "4.1040.200-python3.12-debian12",
+        "4.1040.300-python3.12-debian12",
+        "4.1041.100-python3.12-debian12",
+        "4.1041.200-python3.12-debian12",
+        "4.1042.100-python3.12-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-python",
+        "purl": "pkg:docker/dhi/azure-functions-python?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.1042.100-python3.12-debian13",
+        "4.1043.100-python3.12-debian13",
+        "4.1043.200-python3.12-debian13",
+        "4.1044.200-python3.12-debian13",
+        "4.1044.300-debian13-python3.12",
+        "4.1044.300-python3.12-debian13",
+        "4.1044.350-debian13-python3.12",
+        "4.1044.400-debian13-python3.12",
+        "4.1045.100-debian13-python3.12",
+        "4.1045.200-debian13-python3.12",
+        "4.1046.100-debian13-python3.12",
+        "4.1047.100-debian13-python3.12",
+        "4.1048.100-debian13-python3.12",
+        "4.1048.200-debian13-python3.12",
+        "4.1049.100-debian13-python3.12",
+        "4.1049.200-debian13-python3.12",
+        "4.1050.100-debian13-python3.12",
+        "4.1051.100-debian13-python3.12",
+        "4.1051.200-debian13-python3.12",
+        "4.1051.300-debian13-python3.12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ihgs-ewuo-lcez-5g2f"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-2x83-8g95-xh59"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-48511"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/security/advisories/GHSA-2x83-8g95-xh59"
+    }
+  ]
+}
