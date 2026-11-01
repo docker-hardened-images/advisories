@@ -1,0 +1,194 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-rsuk-u2rt-p742-kmmo",
+  "modified": "2026-11-01T13:06:06Z",
+  "published": "2026-11-01T13:06:06Z",
+  "upstream": [
+    "CVE-2026-48506"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\n`MessagePackReader.TrySkip()` recursively descends into nested arrays and maps without incrementing the reader depth or calling the configured depth checks. This bypasses `MessagePackSecurity.MaximumObjectGraphDepth`, the library's documented protection against deeply nested object graphs.\n\nMany generated and dynamic formatters call `reader.Skip()` when they encounter unknown map keys, unknown array members, ignored fields, or data that should be skipped for forward compatibility. A deeply nested value in one of these skipped positions can therefore cause unbounded recursion and an uncatchable `StackOverflowException`.\n\n## Impact\n\nApplications that deserialize untrusted MessagePack payloads are affected when a formatter skips attacker-controlled values. This is a broad deserialization path and can be reached during normal object deserialization when an input includes an unknown member or extra value.\n\nThe attacker does not need to target a special resolver or compression mode. A payload containing many nested single-element arrays or maps in a skipped location can exhaust the process stack. Because `StackOverflowException` is not catchable in normal .NET execution, this terminates the host process and can deny service to other users of the same process.\n\n`MessagePackSecurity.UntrustedData` does not mitigate this issue because the skip path does not participate in depth accounting.\n\n## Affected components\n\n- Package: `MessagePack`\n- APIs: `MessagePackReader.Skip`, `MessagePackReader.TrySkip`, and formatter paths that skip unknown or ignored values\n- Finding IDs: `MESSAGEPACKCSHARP-021`, duplicate/open variant `MESSAGEPACKCSHARP-OPEN-001`\n\n## Patches\n\nFixes are prepared and will be released in coordinated patch versions.\n\nUpgrade guidance:\n\n1. Upgrade `MessagePack` to the patched version for your release line.\n2. Upgrade companion MessagePack packages in the same dependency graph to the coordinated patched versions.\n\nThe fix should either make skip traversal iterative or apply the existing depth accounting to arrays and maps encountered by `TrySkip()`. Any exceeded depth limit should result in a catchable serialization exception instead of process stack exhaustion.\n\n## Workarounds\n\nPatching is recommended.\n\nThere is no complete workaround for applications that deserialize untrusted MessagePack payloads with affected versions. Reducing accepted message sizes can raise the cost of exploitation but does not remove the recursive skip behavior. Strict schema validation outside MessagePack-CSharp may help only if it rejects unknown or skipped fields before the serializer sees them.\n\n## Resources\n\n- `MESSAGEPACKCSHARP-021`: unbounded recursion in `TrySkip()`\n- `MESSAGEPACKCSHARP-OPEN-001`: duplicate/open finding for the same root cause\n- CWE-674: Uncontrolled Recursion\n\n## CVE split rationale\n\nThis vulnerability is independently fixable in the skip traversal implementation. It should be tracked separately from formatter-specific missing depth checks, JSON conversion recursion, and non-recursion allocation bugs.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-node",
+        "purl": "pkg:docker/dhi/azure-functions-node?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "4.1037.1-node22.14.0-debian12",
+        "4.1039.200-node22.14.0-debian12",
+        "4.1039.300-node22.14.0-debian12",
+        "4.1039.400-node22.14-debian12",
+        "4.1039.400-node22.14.0-debian12",
+        "4.1039.500-node22.14-debian12",
+        "4.1039.500-node22.15-debian12",
+        "4.1039.600-node22.16-debian12",
+        "4.1040.100-node22.15-debian12",
+        "4.1040.100-node22.16-debian12",
+        "4.1040.200-node22.16-debian12",
+        "4.1040.300-node22.16-debian12",
+        "4.1041.100-node22.16-debian12",
+        "4.1041.100-node22.17-debian12",
+        "4.1041.200-node22.17-debian12",
+        "4.1041.200-node22.18-debian12",
+        "4.1042.100-node22.17-debian12",
+        "4.1042.100-node22.18-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-node",
+        "purl": "pkg:docker/dhi/azure-functions-node?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.1042.100-node22.19-debian13",
+        "4.1043.100-node22.18-debian13",
+        "4.1043.100-node22.19-debian13",
+        "4.1043.200-node22.19-debian13",
+        "4.1043.200-node22.20-debian13",
+        "4.1044.200-node22.20-debian13",
+        "4.1044.300-debian13-node22.20",
+        "4.1044.300-debian13-node22.21",
+        "4.1044.300-node22.20-debian13",
+        "4.1044.350-debian13-node22.21",
+        "4.1044.400-debian13-node22.21",
+        "4.1045.100-debian13-node22.21",
+        "4.1045.200-debian13-node22.21",
+        "4.1046.100-debian13-node22.22",
+        "4.1046.100-debian13-node22.22-dev",
+        "4.1046.100-debian13-node24.13",
+        "4.1046.100-debian13-node24.13-dev",
+        "4.1047.100-debian13-node22.22",
+        "4.1047.100-debian13-node22.22-dev",
+        "4.1047.100-debian13-node24.13",
+        "4.1047.100-debian13-node24.13-dev",
+        "4.1047.100-debian13-node24.14",
+        "4.1047.100-debian13-node24.14-dev",
+        "4.1048.100-debian13-node22.22",
+        "4.1048.100-debian13-node22.22-dev",
+        "4.1048.100-debian13-node24.14",
+        "4.1048.100-debian13-node24.14-dev",
+        "4.1048.200-debian13-node22.22",
+        "4.1048.200-debian13-node22.22-dev",
+        "4.1048.200-debian13-node24.14",
+        "4.1048.200-debian13-node24.14-dev",
+        "4.1049.100-debian13-node22.22",
+        "4.1049.100-debian13-node22.22-dev",
+        "4.1049.100-debian13-node24.14",
+        "4.1049.100-debian13-node24.14-dev",
+        "4.1049.200-debian13-node22.22",
+        "4.1049.200-debian13-node22.22-dev",
+        "4.1049.200-debian13-node24.14",
+        "4.1049.200-debian13-node24.14-dev",
+        "4.1049.200-debian13-node24.15",
+        "4.1049.200-debian13-node24.15-dev",
+        "4.1050.100-debian13-node22.22",
+        "4.1050.100-debian13-node22.22-dev",
+        "4.1050.100-debian13-node24.15",
+        "4.1050.100-debian13-node24.15-dev",
+        "4.1050.100-debian13-node24.16",
+        "4.1050.100-debian13-node24.16-dev",
+        "4.1051.100-debian13-node22.22",
+        "4.1051.100-debian13-node22.22-dev",
+        "4.1051.100-debian13-node24.16",
+        "4.1051.100-debian13-node24.16-dev",
+        "4.1051.200-debian13-node22.22",
+        "4.1051.200-debian13-node22.22-dev",
+        "4.1051.200-debian13-node24.16",
+        "4.1051.200-debian13-node24.16-dev",
+        "4.1051.300-debian13-node22.22",
+        "4.1051.300-debian13-node22.22-dev",
+        "4.1051.300-debian13-node24.16",
+        "4.1051.300-debian13-node24.16-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-python",
+        "purl": "pkg:docker/dhi/azure-functions-python?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "4.1037.1-python3.12-debian12",
+        "4.1039.200-python3.12-debian12",
+        "4.1039.300-python3.12-debian12",
+        "4.1039.400-python3.12-debian12",
+        "4.1039.500-python3.12-debian12",
+        "4.1039.600-python3.12-debian12",
+        "4.1040.100-python3.12-debian12",
+        "4.1040.200-python3.12-debian12",
+        "4.1040.300-python3.12-debian12",
+        "4.1041.100-python3.12-debian12",
+        "4.1041.200-python3.12-debian12",
+        "4.1042.100-python3.12-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-python",
+        "purl": "pkg:docker/dhi/azure-functions-python?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.1042.100-python3.12-debian13",
+        "4.1043.100-python3.12-debian13",
+        "4.1043.200-python3.12-debian13",
+        "4.1044.200-python3.12-debian13",
+        "4.1044.300-debian13-python3.12",
+        "4.1044.300-python3.12-debian13",
+        "4.1044.350-debian13-python3.12",
+        "4.1044.400-debian13-python3.12",
+        "4.1045.100-debian13-python3.12",
+        "4.1045.200-debian13-python3.12",
+        "4.1046.100-debian13-python3.12",
+        "4.1047.100-debian13-python3.12",
+        "4.1048.100-debian13-python3.12",
+        "4.1048.200-debian13-python3.12",
+        "4.1049.100-debian13-python3.12",
+        "4.1049.200-debian13-python3.12",
+        "4.1050.100-debian13-python3.12",
+        "4.1051.100-debian13-python3.12",
+        "4.1051.200-debian13-python3.12",
+        "4.1051.300-debian13-python3.12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-rsuk-u2rt-p742-kmmo"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-vh6j-jc39-fggf"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-48506"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/security/advisories/GHSA-vh6j-jc39-fggf"
+    }
+  ]
+}
