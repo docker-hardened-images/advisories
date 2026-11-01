@@ -1,0 +1,194 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-pcza-dnjf-7qez-xaf5",
+  "modified": "2026-11-01T12:49:41Z",
+  "published": "2026-11-01T12:49:41Z",
+  "upstream": [
+    "CVE-2026-48510"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nWhen MessagePack-CSharp decompresses `Lz4Block` or `Lz4BlockArray` payloads, it reads declared uncompressed lengths from the wire and allocates output buffers based on those lengths before validating that the compressed data is valid or that the declared expansion is reasonable.\n\nA small payload can claim a very large uncompressed length and force a large allocation before LZ4 decoding begins.\n\n## Impact\n\nApplications are affected when they deserialize attacker-controlled MessagePack payloads with `MessagePackCompression.Lz4Block` or `MessagePackCompression.Lz4BlockArray` enabled.\n\nIn the `Lz4Block` case, an attacker-controlled integer is used to request the destination span. In the `Lz4BlockArray` case, per-block uncompressed lengths and their aggregate can be attacker-controlled. Without a cap, the declared output size can be disproportionate to the input size, producing out-of-memory exceptions, process termination on constrained hosts, or severe memory pressure.\n\nThis advisory is about unbounded allocation from declared decompressed sizes. It is separate from the LZ4 source-buffer over-read issue, which concerns unsafe decoder reads beyond the compressed input buffer.\n\n## Affected components\n\n- Package: `MessagePack`\n- Feature: LZ4 compressed MessagePack payloads\n- APIs: `MessagePackSerializer` with `WithCompression(MessagePackCompression.Lz4Block)` or `WithCompression(MessagePackCompression.Lz4BlockArray)`\n- Internal routine: `MessagePackSerializer.TryDecompress`\n- Finding ID: `MESSAGEPACKCSHARP-OPEN-004`\n\n## Patches\n\nFixes are prepared and will be released in coordinated patch versions.\n\nUpgrade guidance:\n\n1. Upgrade `MessagePack` to the patched version for your release line.\n2. Upgrade companion MessagePack packages in the same dependency graph to the coordinated patched versions.\n\nThe fix should reject negative and excessive uncompressed lengths before allocation. It should also cap aggregate decompressed size for block arrays and expose or honor an appropriate maximum decompressed length policy.\n\n## Workarounds\n\nPatching is recommended.\n\nUntil a patched version is available, do not enable MessagePack-CSharp's built-in LZ4 compression modes for untrusted inputs. If compression is required, enforce strict compressed and decompressed size limits outside MessagePack-CSharp before deserialization.\n\n## Resources\n\n- `MESSAGEPACKCSHARP-OPEN-004`: LZ4 decompression allocation from unbounded uncompressed length\n- `MESSAGEPACKCSHARP-011`: duplicate decompression-bomb finding\n- CWE-409: Improper Handling of Highly Compressed Data\n- CWE-770: Allocation of Resources Without Limits or Throttling",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-node",
+        "purl": "pkg:docker/dhi/azure-functions-node?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "4.1037.1-node22.14.0-debian12",
+        "4.1039.200-node22.14.0-debian12",
+        "4.1039.300-node22.14.0-debian12",
+        "4.1039.400-node22.14-debian12",
+        "4.1039.400-node22.14.0-debian12",
+        "4.1039.500-node22.14-debian12",
+        "4.1039.500-node22.15-debian12",
+        "4.1039.600-node22.16-debian12",
+        "4.1040.100-node22.15-debian12",
+        "4.1040.100-node22.16-debian12",
+        "4.1040.200-node22.16-debian12",
+        "4.1040.300-node22.16-debian12",
+        "4.1041.100-node22.16-debian12",
+        "4.1041.100-node22.17-debian12",
+        "4.1041.200-node22.17-debian12",
+        "4.1041.200-node22.18-debian12",
+        "4.1042.100-node22.17-debian12",
+        "4.1042.100-node22.18-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-node",
+        "purl": "pkg:docker/dhi/azure-functions-node?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.1042.100-node22.19-debian13",
+        "4.1043.100-node22.18-debian13",
+        "4.1043.100-node22.19-debian13",
+        "4.1043.200-node22.19-debian13",
+        "4.1043.200-node22.20-debian13",
+        "4.1044.200-node22.20-debian13",
+        "4.1044.300-debian13-node22.20",
+        "4.1044.300-debian13-node22.21",
+        "4.1044.300-node22.20-debian13",
+        "4.1044.350-debian13-node22.21",
+        "4.1044.400-debian13-node22.21",
+        "4.1045.100-debian13-node22.21",
+        "4.1045.200-debian13-node22.21",
+        "4.1046.100-debian13-node22.22",
+        "4.1046.100-debian13-node22.22-dev",
+        "4.1046.100-debian13-node24.13",
+        "4.1046.100-debian13-node24.13-dev",
+        "4.1047.100-debian13-node22.22",
+        "4.1047.100-debian13-node22.22-dev",
+        "4.1047.100-debian13-node24.13",
+        "4.1047.100-debian13-node24.13-dev",
+        "4.1047.100-debian13-node24.14",
+        "4.1047.100-debian13-node24.14-dev",
+        "4.1048.100-debian13-node22.22",
+        "4.1048.100-debian13-node22.22-dev",
+        "4.1048.100-debian13-node24.14",
+        "4.1048.100-debian13-node24.14-dev",
+        "4.1048.200-debian13-node22.22",
+        "4.1048.200-debian13-node22.22-dev",
+        "4.1048.200-debian13-node24.14",
+        "4.1048.200-debian13-node24.14-dev",
+        "4.1049.100-debian13-node22.22",
+        "4.1049.100-debian13-node22.22-dev",
+        "4.1049.100-debian13-node24.14",
+        "4.1049.100-debian13-node24.14-dev",
+        "4.1049.200-debian13-node22.22",
+        "4.1049.200-debian13-node22.22-dev",
+        "4.1049.200-debian13-node24.14",
+        "4.1049.200-debian13-node24.14-dev",
+        "4.1049.200-debian13-node24.15",
+        "4.1049.200-debian13-node24.15-dev",
+        "4.1050.100-debian13-node22.22",
+        "4.1050.100-debian13-node22.22-dev",
+        "4.1050.100-debian13-node24.15",
+        "4.1050.100-debian13-node24.15-dev",
+        "4.1050.100-debian13-node24.16",
+        "4.1050.100-debian13-node24.16-dev",
+        "4.1051.100-debian13-node22.22",
+        "4.1051.100-debian13-node22.22-dev",
+        "4.1051.100-debian13-node24.16",
+        "4.1051.100-debian13-node24.16-dev",
+        "4.1051.200-debian13-node22.22",
+        "4.1051.200-debian13-node22.22-dev",
+        "4.1051.200-debian13-node24.16",
+        "4.1051.200-debian13-node24.16-dev",
+        "4.1051.300-debian13-node22.22",
+        "4.1051.300-debian13-node22.22-dev",
+        "4.1051.300-debian13-node24.16",
+        "4.1051.300-debian13-node24.16-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-python",
+        "purl": "pkg:docker/dhi/azure-functions-python?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "4.1037.1-python3.12-debian12",
+        "4.1039.200-python3.12-debian12",
+        "4.1039.300-python3.12-debian12",
+        "4.1039.400-python3.12-debian12",
+        "4.1039.500-python3.12-debian12",
+        "4.1039.600-python3.12-debian12",
+        "4.1040.100-python3.12-debian12",
+        "4.1040.200-python3.12-debian12",
+        "4.1040.300-python3.12-debian12",
+        "4.1041.100-python3.12-debian12",
+        "4.1041.200-python3.12-debian12",
+        "4.1042.100-python3.12-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-python",
+        "purl": "pkg:docker/dhi/azure-functions-python?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.1042.100-python3.12-debian13",
+        "4.1043.100-python3.12-debian13",
+        "4.1043.200-python3.12-debian13",
+        "4.1044.200-python3.12-debian13",
+        "4.1044.300-debian13-python3.12",
+        "4.1044.300-python3.12-debian13",
+        "4.1044.350-debian13-python3.12",
+        "4.1044.400-debian13-python3.12",
+        "4.1045.100-debian13-python3.12",
+        "4.1045.200-debian13-python3.12",
+        "4.1046.100-debian13-python3.12",
+        "4.1047.100-debian13-python3.12",
+        "4.1048.100-debian13-python3.12",
+        "4.1048.200-debian13-python3.12",
+        "4.1049.100-debian13-python3.12",
+        "4.1049.200-debian13-python3.12",
+        "4.1050.100-debian13-python3.12",
+        "4.1051.100-debian13-python3.12",
+        "4.1051.200-debian13-python3.12",
+        "4.1051.300-debian13-python3.12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-pcza-dnjf-7qez-xaf5"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-v72x-2h86-7f8m"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-48510"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/security/advisories/GHSA-v72x-2h86-7f8m"
+    }
+  ]
+}
