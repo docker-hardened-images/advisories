@@ -1,0 +1,194 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-3upv-v7ww-6tn6-ifuo",
+  "modified": "2026-11-01T12:54:52Z",
+  "published": "2026-11-01T12:54:52Z",
+  "upstream": [
+    "CVE-2026-48512"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nMessagePack-CSharp's JSON conversion helpers contain multiple recursion paths that do not consistently enforce a depth limit. These paths are in the JSON conversion component rather than normal typed MessagePack deserialization.\n\nThree related issues are covered by this advisory:\n\n1. `MessagePackSerializer.ConvertFromJson` recursively processes nested JSON arrays and objects in `FromJsonCore()` without consulting `MessagePackSecurity.MaximumObjectGraphDepth`.\n2. `TinyJsonReader.ReadNextToken()` recursively consumes comma and colon separator characters, allowing even malformed JSON with long separator runs to consume one stack frame per character.\n3. `MessagePackSerializer.ConvertToJson` applies depth checks to arrays and maps, but the typeless extension branch for ext-100 recursively calls `ToJsonCore()` without applying `MessagePackSecurity.DepthStep(ref reader)`.\n\nEach path can allow attacker-controlled input to exhaust the process stack and trigger an uncatchable `StackOverflowException` instead of failing with a catchable parse or serialization exception.\n\n## Impact\n\nApplications are affected when they call MessagePack-CSharp JSON conversion APIs on attacker-controlled data. This includes gateways, diagnostics endpoints, migration tools, logging paths, and services that convert between external JSON and MessagePack payloads.\n\nFor JSON-to-MessagePack conversion, deeply nested JSON arrays or objects can recurse through `FromJsonCore()` without applying the configured object graph depth limit. Separately, long runs of comma or colon separator characters can recurse through `TinyJsonReader.ReadNextToken()` before normal structural validation rejects the input.\n\nFor MessagePack-to-JSON conversion, nested typeless extension wrappers can recurse through `ToJsonCore()` without the depth guard that the same function applies to arrays and maps.\n\n`MessagePackSecurity.UntrustedData` does not fully mitigate these conversion paths because the missing checks occur inside JSON conversion and tokenization branches that do not consistently use the configured depth policy.\n\n## Affected components\n\n- Package: `MessagePack`\n- APIs: `MessagePackSerializer.ConvertFromJson`, `MessagePackSerializer.ConvertToJson`\n- Internal routines: `FromJsonCore`, `ToJsonCore`, `TinyJsonReader.ReadNextToken`\n- Data shapes: deeply nested JSON arrays/objects, long JSON separator runs, and nested typeless MessagePack extension values converted to JSON\n- Finding IDs: `MESSAGEPACKCSHARP-090`, `MESSAGEPACKCSHARP-091`, `MESSAGEPACKCSHARP-092`\n\n## Patches\n\nFixes are prepared and will be released in coordinated patch versions.\n\nUpgrade guidance:\n\n1. Upgrade `MessagePack` to the patched version for your release line.\n2. Upgrade companion MessagePack packages in the same dependency graph to the coordinated patched versions.\n\nThe JSON-to-MessagePack fix should add explicit JSON nesting-depth accounting to `FromJsonCore`, using the configured maximum object graph depth or an equivalent limit, or rewrite the conversion to use an iterative bounded stack.\n\nThe tokenizer fix should replace separator self-recursion in `TinyJsonReader.ReadNextToken()` with an iterative loop so consecutive commas, colons, and whitespace do not consume stack frames.\n\nThe MessagePack-to-JSON fix should apply `DepthStep` and matching `reader.Depth--` cleanup around recursive `ToJsonCore()` calls made from the typeless extension branch, consistent with the existing array and map conversion branches.\n\n## Workarounds\n\nPatching is recommended.\n\nUntil a patched version is available, do not pass untrusted JSON directly to `ConvertFromJson`, and do not call `ConvertToJson` on untrusted MessagePack payloads that may contain typeless extension values. Validate JSON nesting depth with a parser that enforces depth limits before calling MessagePack-CSharp, reject malformed JSON before conversion, and apply strict input-size limits.\n\nInput-size limits reduce exposure but do not remove the recursive behavior in affected versions.\n\n## References\n\n- `MESSAGEPACKCSHARP-090`: `ConvertFromJson` unbounded structural recursion\n- `MESSAGEPACKCSHARP-091`: `TinyJsonReader.ReadNextToken` separator self-recursion\n- `MESSAGEPACKCSHARP-092`: `ConvertToJson` ext-100 branch missing depth enforcement\n- CWE-674: Uncontrolled Recursion\n\n## CVE split rationale\n\nThese issues are grouped because they affect the same JSON conversion feature area and share the same failure mode: recursive conversion/tokenization paths do not consistently enforce depth or iteration bounds for attacker-controlled input. They are distinct from normal binary MessagePack skip recursion, dynamic union formatter depth accounting, DateTime stack allocation, and allocation-oriented denial-of-service issues.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-node",
+        "purl": "pkg:docker/dhi/azure-functions-node?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "4.1037.1-node22.14.0-debian12",
+        "4.1039.200-node22.14.0-debian12",
+        "4.1039.300-node22.14.0-debian12",
+        "4.1039.400-node22.14-debian12",
+        "4.1039.400-node22.14.0-debian12",
+        "4.1039.500-node22.14-debian12",
+        "4.1039.500-node22.15-debian12",
+        "4.1039.600-node22.16-debian12",
+        "4.1040.100-node22.15-debian12",
+        "4.1040.100-node22.16-debian12",
+        "4.1040.200-node22.16-debian12",
+        "4.1040.300-node22.16-debian12",
+        "4.1041.100-node22.16-debian12",
+        "4.1041.100-node22.17-debian12",
+        "4.1041.200-node22.17-debian12",
+        "4.1041.200-node22.18-debian12",
+        "4.1042.100-node22.17-debian12",
+        "4.1042.100-node22.18-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-node",
+        "purl": "pkg:docker/dhi/azure-functions-node?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.1042.100-node22.19-debian13",
+        "4.1043.100-node22.18-debian13",
+        "4.1043.100-node22.19-debian13",
+        "4.1043.200-node22.19-debian13",
+        "4.1043.200-node22.20-debian13",
+        "4.1044.200-node22.20-debian13",
+        "4.1044.300-debian13-node22.20",
+        "4.1044.300-debian13-node22.21",
+        "4.1044.300-node22.20-debian13",
+        "4.1044.350-debian13-node22.21",
+        "4.1044.400-debian13-node22.21",
+        "4.1045.100-debian13-node22.21",
+        "4.1045.200-debian13-node22.21",
+        "4.1046.100-debian13-node22.22",
+        "4.1046.100-debian13-node22.22-dev",
+        "4.1046.100-debian13-node24.13",
+        "4.1046.100-debian13-node24.13-dev",
+        "4.1047.100-debian13-node22.22",
+        "4.1047.100-debian13-node22.22-dev",
+        "4.1047.100-debian13-node24.13",
+        "4.1047.100-debian13-node24.13-dev",
+        "4.1047.100-debian13-node24.14",
+        "4.1047.100-debian13-node24.14-dev",
+        "4.1048.100-debian13-node22.22",
+        "4.1048.100-debian13-node22.22-dev",
+        "4.1048.100-debian13-node24.14",
+        "4.1048.100-debian13-node24.14-dev",
+        "4.1048.200-debian13-node22.22",
+        "4.1048.200-debian13-node22.22-dev",
+        "4.1048.200-debian13-node24.14",
+        "4.1048.200-debian13-node24.14-dev",
+        "4.1049.100-debian13-node22.22",
+        "4.1049.100-debian13-node22.22-dev",
+        "4.1049.100-debian13-node24.14",
+        "4.1049.100-debian13-node24.14-dev",
+        "4.1049.200-debian13-node22.22",
+        "4.1049.200-debian13-node22.22-dev",
+        "4.1049.200-debian13-node24.14",
+        "4.1049.200-debian13-node24.14-dev",
+        "4.1049.200-debian13-node24.15",
+        "4.1049.200-debian13-node24.15-dev",
+        "4.1050.100-debian13-node22.22",
+        "4.1050.100-debian13-node22.22-dev",
+        "4.1050.100-debian13-node24.15",
+        "4.1050.100-debian13-node24.15-dev",
+        "4.1050.100-debian13-node24.16",
+        "4.1050.100-debian13-node24.16-dev",
+        "4.1051.100-debian13-node22.22",
+        "4.1051.100-debian13-node22.22-dev",
+        "4.1051.100-debian13-node24.16",
+        "4.1051.100-debian13-node24.16-dev",
+        "4.1051.200-debian13-node22.22",
+        "4.1051.200-debian13-node22.22-dev",
+        "4.1051.200-debian13-node24.16",
+        "4.1051.200-debian13-node24.16-dev",
+        "4.1051.300-debian13-node22.22",
+        "4.1051.300-debian13-node22.22-dev",
+        "4.1051.300-debian13-node24.16",
+        "4.1051.300-debian13-node24.16-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-python",
+        "purl": "pkg:docker/dhi/azure-functions-python?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "4.1037.1-python3.12-debian12",
+        "4.1039.200-python3.12-debian12",
+        "4.1039.300-python3.12-debian12",
+        "4.1039.400-python3.12-debian12",
+        "4.1039.500-python3.12-debian12",
+        "4.1039.600-python3.12-debian12",
+        "4.1040.100-python3.12-debian12",
+        "4.1040.200-python3.12-debian12",
+        "4.1040.300-python3.12-debian12",
+        "4.1041.100-python3.12-debian12",
+        "4.1041.200-python3.12-debian12",
+        "4.1042.100-python3.12-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-python",
+        "purl": "pkg:docker/dhi/azure-functions-python?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.1042.100-python3.12-debian13",
+        "4.1043.100-python3.12-debian13",
+        "4.1043.200-python3.12-debian13",
+        "4.1044.200-python3.12-debian13",
+        "4.1044.300-debian13-python3.12",
+        "4.1044.300-python3.12-debian13",
+        "4.1044.350-debian13-python3.12",
+        "4.1044.400-debian13-python3.12",
+        "4.1045.100-debian13-python3.12",
+        "4.1045.200-debian13-python3.12",
+        "4.1046.100-debian13-python3.12",
+        "4.1047.100-debian13-python3.12",
+        "4.1048.100-debian13-python3.12",
+        "4.1048.200-debian13-python3.12",
+        "4.1049.100-debian13-python3.12",
+        "4.1049.200-debian13-python3.12",
+        "4.1050.100-debian13-python3.12",
+        "4.1051.100-debian13-python3.12",
+        "4.1051.200-debian13-python3.12",
+        "4.1051.300-debian13-python3.12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-3upv-v7ww-6tn6-ifuo"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-cj9g-3mj2-g8vv"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-48512"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/security/advisories/GHSA-cj9g-3mj2-g8vv"
+    }
+  ]
+}
