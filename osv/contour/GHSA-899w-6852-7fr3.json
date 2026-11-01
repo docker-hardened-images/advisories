@@ -1,0 +1,39 @@
+{
+  "modified": "2026-10-31T11:03:12Z",
+  "published": "2026-10-31T11:03:12Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-899w-6852-7fr3",
+  "details": "### Summary\r\n\r\nContour crashes when it processes an `Ingress` with a backend that does not point to a Service. A user who can create or update Ingress objects can cause this.\r\n\r\n### Details\r\n\r\nAn Ingress backend usually points to a `Service` with `spec.defaultBackend.service` or `spec.rules[].http.paths[].backend.service`. These fields are optional. A backend can instead point to another kind of object with `spec.defaultBackend.resource` or `spec.rules[].http.paths[].backend.resource` ([resource backends](https://kubernetes.io/docs/concepts/services-networking/ingress/#resource-backend)).  Contour expects every backend to have `service` set, and crashes when it is unset. The API server accepts such an Ingress, so the user gets no error when creating it.\r\n\r\n### Proof of concept\r\n\r\n```yaml\r\napiVersion: networking.k8s.io/v1\r\nkind: Ingress\r\nmetadata:\r\n  name: static\r\n  namespace: default\r\nspec:\r\n  rules:\r\n  - http:\r\n      paths:\r\n      - path: /static\r\n        pathType: Prefix\r\n        backend:\r\n          resource:\r\n            apiGroup: k8s.example.com\r\n            kind: StorageBucket\r\n            name: static-bucket\r\n```\r\n\r\nAfter this `Ingress` is applied, Contour pods crash with:\r\n\r\n```\r\npanic: runtime error: invalid memory address or nil pointer dereference\r\n```\r\n\r\nThis happens in `CrashLoopBackOff` until the `Ingress` is removed.\r\n\r\nList Ingresses with resource backends:\r\n\r\n```\r\nkubectl get ingress -A -o json | jq -r '.items[] | select(any(.spec | ..; .resource? != null)) | \"\\(.metadata.namespace)/\\(.metadata.name)\"'\r\n```\r\n\r\n### Impact\r\n\r\nAny user who can create or update an `Ingress` processed by Contour can crash it. While Contour is down, Envoy keeps its current routes but gets no updates. Newly started Envoy pods will not be able to receive configuration and they serve no traffic.\r\n\r\nWorkaround: delete the Ingresses found by the command above. To prevent new ones, limit who can create `Ingress` objects, or use a `ValidatingAdmissionPolicy` to reject Ingresses without `backend.service`.\r\n\r\n### References\r\n\r\n* https://github.com/projectcontour/contour/issues/7772\r\n* https://github.com/projectcontour/contour/pull/7773",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "contour",
+        "purl": "pkg:dhi/contour"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.13.0"
+            },
+            {
+              "fixed": "1.33.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "",
+        "source_package": ""
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/projectcontour/contour/security/advisories/GHSA-899w-6852-7fr3"
+    }
+  ]
+}

