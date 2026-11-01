@@ -1,0 +1,194 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-yf4f-6jza-rdrc-cehd",
+  "modified": "2026-11-01T12:52:48Z",
+  "published": "2026-11-01T12:52:48Z",
+  "upstream": [
+    "CVE-2026-48515"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nMessagePack-CSharp's multi-dimensional array formatters read dimension lengths directly from the payload and allocate `T[,]`, `T[,,]`, or `T[,,,]` before validating that the dimension product matches the encoded element count.\n\nThe formatter reads a guarded element array header, but allocation of the target multi-dimensional array happens before the dimensions are checked against that element count. A small payload can therefore declare large dimensions, provide an empty or tiny inner array, and cause a large heap allocation before element data is validated.\n\n## Impact\n\nApplications are affected when they deserialize untrusted MessagePack payloads into models containing multi-dimensional arrays such as `T[,]`, `T[,,]`, or `T[,,,]`.\n\nAn attacker can encode large dimension integers and a small guarded element array. The formatter allocates the target array from the dimensions before confirming that the product of dimensions is consistent with the element count.\n\nThe result can be out-of-memory exceptions, container termination on memory-constrained hosts, large object heap pressure, or severe CPU cost from zero-initializing oversized arrays. `MessagePackSecurity.UntrustedData` does not provide a general allocation cap for this path.\n\n## Affected components\n\n- Package: `MessagePack`\n- APIs: `TwoDimensionalArrayFormatter<T>.Deserialize`, `ThreeDimensionalArrayFormatter<T>.Deserialize`, `FourDimensionalArrayFormatter<T>.Deserialize`\n- Data shapes: `T[,]`, `T[,,]`, and `T[,,,]`\n- Finding IDs: `MESSAGEPACKCSHARP-040`, duplicate/open variant `MESSAGEPACKCSHARP-OPEN-003`\n\n## Patches\n\nFixes are prepared and will be released in coordinated patch versions.\n\nUpgrade guidance:\n\n1. Upgrade `MessagePack` to the patched version for your release line.\n2. Upgrade companion MessagePack packages in the same dependency graph to the coordinated patched versions.\n\nThe fix should validate dimensions before allocation. Dimension values should be non-negative, their checked product should match the encoded element count, and the product should be bounded by the available payload and any configured security limits before `new T[...]` is executed.\n\n## Workarounds\n\nPatching is recommended.\n\nUntil a patched version is available, avoid deserializing untrusted payloads into schemas containing multi-dimensional arrays. Prefer schema shapes that can be validated before allocation, such as bounded lists, dictionaries with application-level count limits, or jagged arrays with application-level limits.\n\nMessage-size limits reduce the blast radius but do not fully address allocation amplification where a small payload can encode disproportionate array dimensions.\n\n## Resources\n\n- `MESSAGEPACKCSHARP-040`: unchecked multi-dimensional array dimensions\n- `MESSAGEPACKCSHARP-OPEN-003`: duplicate/open finding for the multi-dimensional array issue\n- CWE-770: Allocation of Resources Without Limits or Throttling",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-node",
+        "purl": "pkg:docker/dhi/azure-functions-node?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "4.1037.1-node22.14.0-debian12",
+        "4.1039.200-node22.14.0-debian12",
+        "4.1039.300-node22.14.0-debian12",
+        "4.1039.400-node22.14-debian12",
+        "4.1039.400-node22.14.0-debian12",
+        "4.1039.500-node22.14-debian12",
+        "4.1039.500-node22.15-debian12",
+        "4.1039.600-node22.16-debian12",
+        "4.1040.100-node22.15-debian12",
+        "4.1040.100-node22.16-debian12",
+        "4.1040.200-node22.16-debian12",
+        "4.1040.300-node22.16-debian12",
+        "4.1041.100-node22.16-debian12",
+        "4.1041.100-node22.17-debian12",
+        "4.1041.200-node22.17-debian12",
+        "4.1041.200-node22.18-debian12",
+        "4.1042.100-node22.17-debian12",
+        "4.1042.100-node22.18-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-node",
+        "purl": "pkg:docker/dhi/azure-functions-node?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.1042.100-node22.19-debian13",
+        "4.1043.100-node22.18-debian13",
+        "4.1043.100-node22.19-debian13",
+        "4.1043.200-node22.19-debian13",
+        "4.1043.200-node22.20-debian13",
+        "4.1044.200-node22.20-debian13",
+        "4.1044.300-debian13-node22.20",
+        "4.1044.300-debian13-node22.21",
+        "4.1044.300-node22.20-debian13",
+        "4.1044.350-debian13-node22.21",
+        "4.1044.400-debian13-node22.21",
+        "4.1045.100-debian13-node22.21",
+        "4.1045.200-debian13-node22.21",
+        "4.1046.100-debian13-node22.22",
+        "4.1046.100-debian13-node22.22-dev",
+        "4.1046.100-debian13-node24.13",
+        "4.1046.100-debian13-node24.13-dev",
+        "4.1047.100-debian13-node22.22",
+        "4.1047.100-debian13-node22.22-dev",
+        "4.1047.100-debian13-node24.13",
+        "4.1047.100-debian13-node24.13-dev",
+        "4.1047.100-debian13-node24.14",
+        "4.1047.100-debian13-node24.14-dev",
+        "4.1048.100-debian13-node22.22",
+        "4.1048.100-debian13-node22.22-dev",
+        "4.1048.100-debian13-node24.14",
+        "4.1048.100-debian13-node24.14-dev",
+        "4.1048.200-debian13-node22.22",
+        "4.1048.200-debian13-node22.22-dev",
+        "4.1048.200-debian13-node24.14",
+        "4.1048.200-debian13-node24.14-dev",
+        "4.1049.100-debian13-node22.22",
+        "4.1049.100-debian13-node22.22-dev",
+        "4.1049.100-debian13-node24.14",
+        "4.1049.100-debian13-node24.14-dev",
+        "4.1049.200-debian13-node22.22",
+        "4.1049.200-debian13-node22.22-dev",
+        "4.1049.200-debian13-node24.14",
+        "4.1049.200-debian13-node24.14-dev",
+        "4.1049.200-debian13-node24.15",
+        "4.1049.200-debian13-node24.15-dev",
+        "4.1050.100-debian13-node22.22",
+        "4.1050.100-debian13-node22.22-dev",
+        "4.1050.100-debian13-node24.15",
+        "4.1050.100-debian13-node24.15-dev",
+        "4.1050.100-debian13-node24.16",
+        "4.1050.100-debian13-node24.16-dev",
+        "4.1051.100-debian13-node22.22",
+        "4.1051.100-debian13-node22.22-dev",
+        "4.1051.100-debian13-node24.16",
+        "4.1051.100-debian13-node24.16-dev",
+        "4.1051.200-debian13-node22.22",
+        "4.1051.200-debian13-node22.22-dev",
+        "4.1051.200-debian13-node24.16",
+        "4.1051.200-debian13-node24.16-dev",
+        "4.1051.300-debian13-node22.22",
+        "4.1051.300-debian13-node22.22-dev",
+        "4.1051.300-debian13-node24.16",
+        "4.1051.300-debian13-node24.16-dev"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-python",
+        "purl": "pkg:docker/dhi/azure-functions-python?os_name=debian&os_version=12"
+      },
+      "versions": [
+        "4.1037.1-python3.12-debian12",
+        "4.1039.200-python3.12-debian12",
+        "4.1039.300-python3.12-debian12",
+        "4.1039.400-python3.12-debian12",
+        "4.1039.500-python3.12-debian12",
+        "4.1039.600-python3.12-debian12",
+        "4.1040.100-python3.12-debian12",
+        "4.1040.200-python3.12-debian12",
+        "4.1040.300-python3.12-debian12",
+        "4.1041.100-python3.12-debian12",
+        "4.1041.200-python3.12-debian12",
+        "4.1042.100-python3.12-debian12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images",
+        "name": "azure-functions-python",
+        "purl": "pkg:docker/dhi/azure-functions-python?os_name=debian&os_version=13"
+      },
+      "versions": [
+        "4.1042.100-python3.12-debian13",
+        "4.1043.100-python3.12-debian13",
+        "4.1043.200-python3.12-debian13",
+        "4.1044.200-python3.12-debian13",
+        "4.1044.300-debian13-python3.12",
+        "4.1044.300-python3.12-debian13",
+        "4.1044.350-debian13-python3.12",
+        "4.1044.400-debian13-python3.12",
+        "4.1045.100-debian13-python3.12",
+        "4.1045.200-debian13-python3.12",
+        "4.1046.100-debian13-python3.12",
+        "4.1047.100-debian13-python3.12",
+        "4.1048.100-debian13-python3.12",
+        "4.1048.200-debian13-python3.12",
+        "4.1049.100-debian13-python3.12",
+        "4.1049.200-debian13-python3.12",
+        "4.1050.100-debian13-python3.12",
+        "4.1051.100-debian13-python3.12",
+        "4.1051.200-debian13-python3.12",
+        "4.1051.300-debian13-python3.12"
+      ],
+      "database_specific": {
+        "owner_kind": "IMAGE"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-yf4f-6jza-rdrc-cehd"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-cxmj-83gh-fp49"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-48515"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/security/advisories/GHSA-cxmj-83gh-fp49"
+    }
+  ]
+}
