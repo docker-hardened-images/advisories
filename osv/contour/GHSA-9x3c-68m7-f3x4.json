@@ -1,0 +1,39 @@
+{
+  "modified": "2026-10-31T11:03:34Z",
+  "published": "2026-10-31T11:03:33Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-9x3c-68m7-f3x4",
+  "details": "### Summary\r\n\r\nWhen two HTTPProxies use the same JWKS server for JWT verification, Envoy may fetch the JWKS for one of them with the settings of the other. Contour treats JWKS URIs with the same host as the same server, even when other settings are different.\r\n\r\n### Details\r\n\r\nContour configures Envoy with one connection for each JWKS host. If several HTTPProxies use the same JWKS host, this connection uses the JWKS settings of the `HTTPProxy` whose `spec.virtualhost.fqdn` comes first in alphabetical order. The other HTTPProxies fetch JWKS with these settings instead of their own. The affected settings are `validation`, the port in `uri`, and `dnsLookupFamily`. As a result, an `HTTPProxy` may fetch JWKS from a different port, or without the server certificate validation it has configured.\r\n\r\n### Proof of concept\r\n\r\nHTTPProxy `app` validates the JWKS server certificate against the CA certificate in `idp-ca` and the subject name `idp.example.com`:\r\n\r\n```yaml\r\napiVersion: projectcontour.io/v1\r\nkind: HTTPProxy\r\nmetadata:\r\n  name: app\r\n  namespace: tenant-a\r\nspec:\r\n  virtualhost:\r\n    fqdn: app.example.com\r\n    tls:\r\n      secretName: app-tls\r\n    jwtProviders:\r\n    - name: idp\r\n      default: true\r\n      remoteJWKS:\r\n        uri: https://idp.example.com/jwks.json\r\n        validation:\r\n          caSecret: idp-ca\r\n          subjectName: idp.example.com\r\n  routes:\r\n  - services:\r\n    - name: app\r\n      port: 80\r\n```\r\n\r\nHTTPProxy `other` uses the same JWKS host without `validation`:\r\n\r\n```yaml\r\napiVersion: projectcontour.io/v1\r\nkind: HTTPProxy\r\nmetadata:\r\n  name: other\r\n  namespace: tenant-b\r\nspec:\r\n  virtualhost:\r\n    fqdn: aaa.example.com\r\n    tls:\r\n      secretName: other-tls\r\n    jwtProviders:\r\n    - name: idp\r\n      remoteJWKS:\r\n        uri: https://idp.example.com/jwks.json\r\n  routes:\r\n  - services:\r\n    - name: other\r\n      port: 80\r\n```\r\n\r\n`aaa.example.com` comes first in alphabetical order. So `app` uses the settings of `other`, and the JWKS server certificate is no longer validated.\r\n\r\nTo list the JWKS URIs of all HTTPProxies:\r\n\r\n```\r\nkubectl get httpproxy -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,FQDN:.spec.virtualhost.fqdn,JWKS:.spec.virtualhost.jwtProviders[*].remoteJWKS.uri'\r\n```\r\n\r\nIf several HTTPProxies use the same JWKS host with different JWKS settings, they are affected.\r\n\r\n### Impact\r\n\r\nA user who can create an `HTTPProxy` can override the JWKS settings of other HTTPProxies that use the same JWKS host. This may allow making JWT verification fail, or turning off validation of the JWKS server certificate.\r\n\r\n### Credits\r\n\r\nReporter: VMware by Broadcom",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "contour",
+        "purl": "pkg:dhi/contour"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.23.0"
+            },
+            {
+              "fixed": "1.33.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "",
+        "source_package": ""
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/projectcontour/contour/security/advisories/GHSA-9x3c-68m7-f3x4"
+    }
+  ]
+}
