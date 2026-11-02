@@ -269,8 +269,11 @@ in the past.
 
 To verify an artifact published under a retired key, verify the commit that
 published it through GitHub's verification record, which was made when the
-commit was pushed. GitHub keeps that record for keys that remain registered to
-the signer, and retired keys stay registered.
+commit was pushed. GitHub keeps that
+[persistent record](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification)
+even after the key expires, is revoked, or is removed from the signer's
+account. Retired keys are removed from `dhi-bot` after a rotation, so a commit
+signed with a retired key and pushed later is not shown as verified.
 
 ## Limits
 
