@@ -79,12 +79,18 @@ DHI OS packages. Their `affected[].package.purl` values use
 `pkg:apk/dhi/...` or `pkg:deb/dhi/...`. Affected entries enumerate exact
 versions, provide native OSV `ECOSYSTEM` ranges, or provide both. Static
 validation treats those fields as a union, following the
-[OSV affected-version algorithm](https://ossf.github.io/osv-schema/#affected-fields),
-and derives the required `Docker Hardened Images:Alpine:<release>` or
-`Docker Hardened Images:Debian:<release>` ecosystem from each canonical PURL,
-rejects type/lineage mismatches, and checks that scanner
-`distro=dhi-<release>` resolves to the same release as canonical
-`os_version=<release>`.
+[OSV affected-version algorithm](https://ossf.github.io/osv-schema/#affected-fields).
+
+Static validation also checks the public package identity:
+- OSV package PURLs carry no qualifiers. They sit under a
+  `Docker Hardened Images:Alpine:<release>` or
+  `Docker Hardened Images:Debian:<release>` ecosystem whose lineage matches the
+  PURL type and whose release is `N` or `N.M`.
+- VEX products and each scenario's canonical package PURL carry exactly
+  `distro=dhi-<release>`.
+- The canonical package PURL must match the scanner-observed PURL by the
+  OpenVEX subset rule, with the same release.
+- No fixture PURL may carry `os_*` qualifiers.
 
 The affected/fixed scenarios also declare `range_only_matching_versions`:
 versions inside the fixture's affected range but absent from its explicit
@@ -137,9 +143,10 @@ data is available through the production advisory pipeline.
   advisories.
 - Fixture source evidence and production anchors belong in `expected.json` or
   the scenario manifest, not in target-shape OSV or VEX payload fields.
-- The `os_distro` qualifier is validated as part of the fixture and generated
-  feed shape; it is not a claim that the advisory generation pipeline currently
-  uses `os_distro` as an advisory lookup key.
+- Generated OSV package PURLs carry no qualifiers; their release is the OSV
+  ecosystem's. Generated VEX products carry exactly `distro=dhi-<release>` and
+  match the scanner-observed PURL by the OpenVEX subset rule. No generated PURL
+  carries `os_*` qualifiers.
 - Static validation derives expected findings from the union of OSV exact
   affected versions and affected ranges instead of trusting fixture metadata
   alone.

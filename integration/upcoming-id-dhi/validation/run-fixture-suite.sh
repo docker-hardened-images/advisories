@@ -76,7 +76,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, parse_qsl
 
 root = Path(sys.argv[1])
 scenarios_file = Path(sys.argv[2])
@@ -102,6 +102,7 @@ PLATFORM = re.compile(r"^linux/(amd64|arm64)$")
 SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
 LINEAGE_BY_PURL_TYPE = {"apk": "alpine", "deb": "debian"}
 ECOSYSTEM_LINEAGE_BY_PURL_TYPE = {"apk": "Alpine", "deb": "Debian"}
+RELEASE = re.compile(r"^[0-9]+(\.[0-9]+)?$")
 
 
 def fail(where: str, message: str) -> None:
@@ -138,43 +139,63 @@ def parse_dhi_purl(
     if not require_version and version is not None:
         fail(where, f"{field} must not include a package version: {purl}")
 
+    # Versioned DHI PURLs (canonical package identities and VEX products) carry
+    # exactly one qualifier, distro=dhi-<release>. Versionless OSV package
+    # PURLs carry none: their release lives only in the OSV ecosystem.
     query = match.group("query")
     parsed_qualifiers = {
         key: values[0]
         for key, values in parse_qs(query or "", keep_blank_values=True).items()
         if values
     }
+    if any(key.startswith("os_") for key in parsed_qualifiers):
+        fail(where, f"{field} must not carry os_* qualifiers: {purl}")
 
-    for qualifier in ("os_distro", "os_name", "os_version"):
-        if not parsed_qualifiers.get(qualifier):
-            fail(where, f"{field} must include {qualifier}: {purl}")
-
-    if parsed_qualifiers.get("os_name") != "dhi":
-        fail(where, f"{field} must use os_name=dhi: {purl}")
-
-    purl_type = match.group("type")
-    expected_distro = LINEAGE_BY_PURL_TYPE[purl_type]
-    if parsed_qualifiers.get("os_distro") != expected_distro:
-        fail(
-            where,
-            f"{field} type {purl_type} must use os_distro={expected_distro}: {purl}",
-        )
+    release = None
+    if version is not None:
+        distro = parsed_qualifiers.get("distro", "")
+        if set(parsed_qualifiers) != {"distro"} or not distro.startswith("dhi-"):
+            fail(where, f"{field} must carry exactly one qualifier, distro=dhi-<release>: {purl}")
+        elif not RELEASE.match(distro[len("dhi-"):]):
+            fail(where, f"{field} release must be N or N.M: {purl}")
+        else:
+            release = distro[len("dhi-"):]
+    elif query:
+        fail(where, f"{field} must not carry qualifiers; the release lives in the ecosystem: {purl}")
 
     return {
-        "type": purl_type,
+        "type": match.group("type"),
         "name": match.group("name"),
         "version": version[1:] if version else None,
-        "qualifiers": parsed_qualifiers,
+        "release": release,
     }
 
 
-def expected_ecosystem(parsed: dict[str, object]) -> str:
-    qualifiers = parsed["qualifiers"]
-    assert isinstance(qualifiers, dict)
-    return (
-        "Docker Hardened Images:"
-        f"{ECOSYSTEM_LINEAGE_BY_PURL_TYPE[str(parsed['type'])]}:"
-        f"{qualifiers.get('os_version', '')}"
+def ecosystem_for(purl_type: str, release: str) -> str:
+    return f"Docker Hardened Images:{ECOSYSTEM_LINEAGE_BY_PURL_TYPE[purl_type]}:{release}"
+
+
+def ecosystem_release(where: str, field: str, ecosystem: object, purl_type: str) -> str | None:
+    prefix = ecosystem_for(purl_type, "")
+    release = ecosystem[len(prefix):] if isinstance(ecosystem, str) and ecosystem.startswith(prefix) else ""
+    if not RELEASE.match(release):
+        fail(where, f"{field} must be {prefix}<release> with release N or N.M")
+        return None
+    return release
+
+
+def vex_product_matches(product: str, scanned: str) -> bool:
+    """Apply the OpenVEX subset rule: same type, namespace, name, and version,
+    and every product qualifier present with the same value on the scanned PURL."""
+    product_match, scanned_match = DHI_PURL.match(product), DHI_PURL.match(scanned)
+    if product_match is None or scanned_match is None:
+        return False
+    if any(product_match.group(part) != scanned_match.group(part) for part in ("type", "name", "version")):
+        return False
+    scanned_qualifiers = dict(parse_qsl(scanned_match.group("query") or "", keep_blank_values=True))
+    return all(
+        scanned_qualifiers.get(key) == value
+        for key, value in parse_qsl(product_match.group("query") or "", keep_blank_values=True)
     )
 
 
@@ -201,23 +222,12 @@ def parse_scanner_dhi_purl(where: str, purl: str) -> dict[str, str] | None:
         "name": match.group("name"),
         "version": match.group("version")[1:],
         "release": release,
-        "ecosystem": (
-            "Docker Hardened Images:"
-            f"{ECOSYSTEM_LINEAGE_BY_PURL_TYPE[purl_type]}:{release}"
-        ),
+        "ecosystem": ecosystem_for(purl_type, release),
     }
 
 
 def package_key(parsed: dict[str, object], *, include_version: bool) -> tuple[str, ...]:
-    parsed_qualifiers = parsed["qualifiers"]
-    assert isinstance(parsed_qualifiers, dict)
-    key = (
-        str(parsed["type"]),
-        str(parsed["name"]),
-        str(parsed_qualifiers.get("os_distro", "")),
-        str(parsed_qualifiers.get("os_name", "")),
-        str(parsed_qualifiers.get("os_version", "")),
-    )
+    key = (str(parsed["type"]), str(parsed["name"]), str(parsed["release"]))
     if include_version:
         return (*key, str(parsed["version"]))
     return key
@@ -492,17 +502,15 @@ for scenario in scenarios:
             fail(where, "upstream_like_package_purl must use upstream apk/deb namespace")
 
         if canonical_parsed is not None:
-            canonical_q = canonical_parsed["qualifiers"]
-            assert isinstance(canonical_q, dict)
-            if canonical_q.get("os_distro") != scenario.get("family"):
-                fail(where, "canonical_package_purl os_distro must match scenario family")
+            if LINEAGE_BY_PURL_TYPE[str(canonical_parsed["type"])] != scenario.get("family"):
+                fail(where, "canonical_package_purl type must match scenario family")
             primary_observed = observed_parsed.get(observed)
-            if primary_observed is not None:
+            if primary_observed is not None and canonical_parsed["release"] is not None:
                 canonical_identity = (
                     canonical_parsed["type"],
                     canonical_parsed["name"],
                     canonical_parsed["version"],
-                    canonical_q.get("os_version"),
+                    canonical_parsed["release"],
                 )
                 observed_identity = (
                     primary_observed["type"],
@@ -516,11 +524,19 @@ for scenario in scenarios:
                         "scanner-observed and canonical package PURLs must map to "
                         "the same type, name, version, and release",
                     )
-                if primary_observed["ecosystem"] != expected_ecosystem(canonical_parsed):
+                if primary_observed["ecosystem"] != ecosystem_for(
+                    str(canonical_parsed["type"]), str(canonical_parsed["release"])
+                ):
                     fail(
                         where,
                         "scanner-observed and canonical package PURLs must derive "
                         "the same release-scoped ecosystem",
+                    )
+                if not vex_product_matches(canonical, observed):
+                    fail(
+                        where,
+                        "canonical_package_purl must match scanner_observed_package_purl "
+                        "by the OpenVEX subset rule",
                     )
     else:
         if observed:
@@ -815,17 +831,18 @@ for scenario in scenarios:
                 field=f"OSV affected[{index}].package.purl",
             )
             if parsed_purl is not None:
-                required_ecosystem = expected_ecosystem(parsed_purl)
-                if package.get("ecosystem") != required_ecosystem:
-                    fail(
-                        where,
-                        f"OSV affected[{index}].package.ecosystem must be {required_ecosystem}",
-                    )
+                parsed_purl["release"] = ecosystem_release(
+                    where,
+                    f"OSV affected[{index}].package.ecosystem",
+                    package.get("ecosystem"),
+                    str(parsed_purl["type"]),
+                )
                 if package.get("name") != parsed_purl["name"]:
                     fail(where, f"OSV affected[{index}].package.name must match package.purl")
                 if (
                     routing == "dhi-os-package"
                     and canonical_parsed is not None
+                    and parsed_purl["release"] is not None
                     and package_key(parsed_purl, include_version=False)
                     == package_key(canonical_parsed, include_version=False)
                 ):
