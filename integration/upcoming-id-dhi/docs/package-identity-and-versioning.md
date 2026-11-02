@@ -9,10 +9,34 @@ an image has cut over to `/etc/os-release` `ID=dhi`.
 
 ## Contract
 
-| Base lineage and release | OSV ecosystem | OSV package PURL | Installed package PURL | Version comparison |
-| --- | --- | --- | --- | --- |
-| Alpine 3.24 | `Docker Hardened Images:Alpine:3.24` | `pkg:apk/dhi/<name>?os_distro=alpine&os_name=dhi&os_version=3.24` | `pkg:apk/dhi/<name>@<version>?...` | APK |
-| Debian 13 | `Docker Hardened Images:Debian:13` | `pkg:deb/dhi/<name>?os_distro=debian&os_name=dhi&os_version=13` | `pkg:deb/dhi/<name>@<version>?...` | Debian/dpkg |
+| Base lineage and release | OSV ecosystem | OSV package PURL | VEX product PURL | Installed package PURL | Version comparison |
+| --- | --- | --- | --- | --- | --- |
+| Alpine 3.24 | `Docker Hardened Images:Alpine:3.24` | `pkg:apk/dhi/<name>` | `pkg:apk/dhi/<name>@<version>?distro=dhi-3.24` | `pkg:apk/dhi/<name>@<version>?...` | APK |
+| Debian 13 | `Docker Hardened Images:Debian:13` | `pkg:deb/dhi/<name>` | `pkg:deb/dhi/<name>@<version>?distro=dhi-13` | `pkg:deb/dhi/<name>@<version>?...` | Debian/dpkg |
+
+Identity rules:
+
+- **The OSV package PURL is versionless and carries no qualifiers.** The
+  release appears only in the ecosystem, so route OSV matching by ecosystem.
+- **The release is the image's `VERSION_ID`:** the Alpine major and minor
+  version, such as `3.24`, or the Debian major version, such as `13`. It never
+  carries a point release.
+- **A VEX product carries exactly one qualifier, `distro=dhi-<release>`.** This
+  is the form Syft and Grype report for packages in `ID=dhi` images; see
+  [VEX context](vex-context.md#vex-product-identity) for matching.
+- **Encoding.** PURLs follow the PURL specification's percent-encoding: `+`
+  is encoded as `%2B`, while `:` and `~` stay raw. For example, Debian version
+  `1:1.3.dfsg+really1.3.1-1+dhi1` appears as
+  `@1:1.3.dfsg%2Breally1.3.1-1%2Bdhi1`. The OSV `name`, `versions`, and range
+  events carry the raw values.
+- **The package name is the installed binary package name** the package manager
+  reports, such as `libc6`, not its source package.
+- **No generated DHI record carries `os_*` qualifiers.** A consumer that
+  encounters one must check that it agrees with the ecosystem and reject the
+  entry if it does not.
+- **`arch` is reserved.** No current record carries it. A future OSV entry may
+  carry an `arch` qualifier to narrow it to one architecture, so consumers must
+  not reject an entry because of it.
 
 Generated DHI OSV records enumerate affected versions and include `ECOSYSTEM`
 ranges when the assessment defines an affected interval. A version is affected
@@ -36,10 +60,9 @@ VERSION_ID=<underlying distribution version>
 ```
 
 `ID=dhi` identifies the image as DHI. `ID_LIKE` and `VERSION_ID` supply the
-base lineage and release. Scanners carry those values into the normalized
-package identity as `os_distro` and `os_version`. The package PURL type,
-lineage, and release then select the release-scoped OSV ecosystem and native
-version comparator.
+base lineage and release. Together with the package PURL type, they select the
+release-scoped OSV ecosystem and native version comparator. Syft and Grype
+already report the release on each package as `distro=dhi-<VERSION_ID>`.
 
 ## Native Version Semantics
 
@@ -92,42 +115,39 @@ For each scanner-observed OS package:
 2. Parse the PURL and require namespace `dhi`.
 3. Read the base lineage and release from `ID_LIKE` and `VERSION_ID`.
 4. Require PURL type `apk` for Alpine or `deb` for Debian.
-5. Normalize the query PURL with `os_name=dhi`, the corresponding `os_distro`,
-   and `os_version=<VERSION_ID>`. A scanner-specific
-   `distro=dhi-<release>` qualifier is another representation of that release.
-6. Construct the release-scoped OSV ecosystem key:
+5. Construct the release-scoped OSV ecosystem key:
    `Docker Hardened Images:Alpine:<release>` for APK packages or
    `Docker Hardened Images:Debian:<release>` for Debian packages.
-7. Match an OSV affected package with the same exact ecosystem variant and
-   package identity.
-8. Check whether the installed version exactly equals an entry in
+6. Match an OSV affected package whose ecosystem equals that key and whose PURL
+   has the same type, namespace, and name. Feed PURLs carry no qualifiers, so
+   compare without the scanner's qualifiers.
+7. Check whether the installed version exactly equals an entry in
    `affected[].versions`. Independently evaluate every `ECOSYSTEM` range with
    the corresponding APK or dpkg version comparator.
-9. Report a finding when either exact-version membership or native range
+8. Report a finding when either exact-version membership or native range
    inclusion matches. If neither matches, do not report a finding for that
    advisory/package/version.
 
-Canonical feed PURLs and scanner-observed PURLs therefore map to the same
-package query identity:
+Feed PURLs and scanner-observed PURLs therefore reach the same OSV entry:
 
 ```text
-pkg:apk/dhi/coreutils?os_distro=alpine&os_name=dhi&os_version=3.24
-pkg:apk/dhi/coreutils@9.11-r0?arch=aarch64&distro=dhi-3.24
+feed:    pkg:apk/dhi/coreutils in Docker Hardened Images:Alpine:3.24
+scanner: pkg:apk/dhi/coreutils@9.11-r0?arch=aarch64&distro=dhi-3.24
   -> Docker Hardened Images:Alpine:3.24
   -> APK comparator
 
-pkg:deb/dhi/coreutils?os_distro=debian&os_name=dhi&os_version=13
-pkg:deb/dhi/coreutils@9.7-3%2Bdhi3?arch=arm64&distro=dhi-13
+feed:    pkg:deb/dhi/coreutils in Docker Hardened Images:Debian:13
+scanner: pkg:deb/dhi/coreutils@9.7-3%2Bdhi3?arch=arm64&distro=dhi-13
   -> Docker Hardened Images:Debian:13
   -> dpkg comparator
 ```
 
-The OSV package query identity is versionless. For VEX product matching, use
-the same normalized type, namespace, name, lineage, and release, and retain the
-exact installed package version:
+The OSV package query identity is versionless. A VEX product names the exact
+installed version and the release, and matches the scanner's PURL by the
+OpenVEX subset rule described in [VEX context](vex-context.md#vex-product-identity):
 
 ```text
-pkg:apk/dhi/coreutils@9.11-r0?os_distro=alpine&os_name=dhi&os_version=3.24
+pkg:apk/dhi/coreutils@9.11-r0?distro=dhi-3.24
 ```
 
 ## OSV Examples
@@ -146,7 +166,7 @@ APK affected entry:
   "package": {
     "ecosystem": "Docker Hardened Images:Alpine:3.24",
     "name": "coreutils",
-    "purl": "pkg:apk/dhi/coreutils?os_distro=alpine&os_name=dhi&os_version=3.24"
+    "purl": "pkg:apk/dhi/coreutils"
   },
   "ranges": [{
     "type": "ECOSYSTEM",
@@ -166,7 +186,7 @@ Debian affected entry:
   "package": {
     "ecosystem": "Docker Hardened Images:Debian:13",
     "name": "coreutils",
-    "purl": "pkg:deb/dhi/coreutils?os_distro=debian&os_name=dhi&os_version=13"
+    "purl": "pkg:deb/dhi/coreutils"
   },
   "ranges": [{
     "type": "ECOSYSTEM",
@@ -187,7 +207,7 @@ Alpine `under_investigation` entry with enumerated versions and no
   "package": {
     "ecosystem": "Docker Hardened Images:Alpine:3.23",
     "name": "python-3.12",
-    "purl": "pkg:apk/dhi/python-3.12?os_distro=alpine&os_name=dhi&os_version=3.23"
+    "purl": "pkg:apk/dhi/python-3.12"
   },
   "versions": ["3.12.13-r7"]
 }

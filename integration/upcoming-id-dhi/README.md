@@ -80,10 +80,10 @@ pkg:deb/dhi/<package>@<deb-version>...
 > such as `Docker Hardened Images:Alpine:3.24` for `pkg:apk/dhi/...` and
 > `Docker Hardened Images:Debian:13` for `pkg:deb/dhi/...`. The lineage selects
 > APK or dpkg ordering, and the release prevents matching across DHI base
-> releases. Implementations must preserve the lineage and release from
-> `ID_LIKE` and `VERSION_ID` in the normalized package identity, use versions
-> from the installed package database or SBOM PURL, and must not fall back to
-> SemVer. See
+> releases. Implementations must take the lineage and release from `ID_LIKE`
+> and `VERSION_ID` to select the ecosystem, use versions from the installed
+> package database or SBOM PURL, and must not fall back to SemVer. Feed PURLs
+> carry no `os_*` qualifiers; do not normalize scanner PURLs to them. See
 > [Package identity and versioning](docs/package-identity-and-versioning.md).
 
 `ID_LIKE` identifies the package manager family; it is not the advisory
@@ -159,6 +159,19 @@ Run the default static validation:
 ```bash
 integration/upcoming-id-dhi/validation/run-fixture-suite.sh
 ```
+
+## Changes
+
+- **2026-11-02:** the package identity contract no longer uses `os_*`
+  qualifiers.
+  - OSV package PURLs are qualifier-free, such as `pkg:apk/dhi/coreutils`, and
+    the release appears only in the ecosystem.
+  - VEX products are `pkg:<apk|deb>/dhi/<name>@<version>?distro=dhi-<release>`,
+    the form Syft and Grype report.
+  - Do not normalize scanner PURLs to `os_*`.
+  - The example and validation fixtures still show the previous form and are
+    being updated.
+  - See [Package identity and versioning](docs/package-identity-and-versioning.md).
 
 ## 📄 Resources
 

@@ -60,8 +60,9 @@ the VEX status to suppress the contradictory OSV finding.
 
 ## VEX Product Identity
 
-For cutover images, generated VEX statements for OS packages should include
-concrete DHI package product PURLs:
+For cutover images, generated VEX statements for OS packages name concrete DHI
+package product PURLs. A product carries the exact installed version and exactly
+one qualifier, `distro=dhi-<release>`:
 
 ```json
 {
@@ -71,7 +72,7 @@ concrete DHI package product PURLs:
   },
   "products": [
     {
-      "@id": "pkg:apk/dhi/coreutils@9.11-r0?os_distro=alpine&os_name=dhi&os_version=3.24"
+      "@id": "pkg:apk/dhi/coreutils@9.11-r0?distro=dhi-3.24"
     }
   ],
   "status": "affected",
@@ -79,11 +80,26 @@ concrete DHI package product PURLs:
 }
 ```
 
-Scanner integrations must construct the VEX product match key from the
-normalized DHI package identity defined in
-[Package identity and versioning](package-identity-and-versioning.md), retaining
-the exact installed package version. Do not substitute an upstream `ID_LIKE`
-package PURL or treat a subcomponent PURL as the product match key.
+Match a product against the scanner-observed package PURL with the OpenVEX
+subset rule:
+
+- type, namespace, name, and version must be equal;
+- every qualifier on the product must be present, with the same value, on the
+  scanned PURL;
+- extra qualifiers on the scanned PURL, such as `arch` or `upstream`, do not
+  prevent a match.
+
+Syft and Grype report packages in `ID=dhi` images as, for example,
+`pkg:apk/dhi/coreutils@9.11-r0?arch=aarch64&distro=dhi-3.24`, which matches the
+product above. The `distro` qualifier keeps a statement from applying to the
+same package version in another DHI release, so do not strip it. Encoding
+follows [Package identity and versioning](package-identity-and-versioning.md).
+
+A statement may list more than one product for the same package version.
+Match any of them.
+
+Do not substitute an upstream `ID_LIKE` package PURL or treat a subcomponent
+PURL as the product match key.
 
 ## VEX Is Context, Not The Source Of Discovery
 
@@ -95,8 +111,8 @@ finding exists. In particular, an `under_investigation` result is discoverable
 from OSV alone; VEX explains why that result is unresolved.
 
 When a scanner does consume VEX, every generated OSV affected package is
-expected to have a matching product in the paired VEX document using that
-normalized identity and exact version. A missing document or product match is a
+expected to have a matching product in the paired VEX document for the same
+package, release, and exact version. A missing document or product match is a
 feed integrity error, not a normal no-context path. Continue to report the OSV
 finding and surface the integrity error; do not suppress the finding.
 

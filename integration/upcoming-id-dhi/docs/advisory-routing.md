@@ -126,7 +126,7 @@ The affected package PURL is versionless. Coverage can enumerate exact
   "package": {
     "ecosystem": "Docker Hardened Images:Alpine:3.24",
     "name": "coreutils",
-    "purl": "pkg:apk/dhi/coreutils?os_distro=alpine&os_name=dhi&os_version=3.24"
+    "purl": "pkg:apk/dhi/coreutils"
   },
   "ranges": [
     {
@@ -159,12 +159,12 @@ observations include package PURLs like:
 pkg:apk/dhi/coreutils@9.11-r0?arch=aarch64&distro=dhi-3.24
 ```
 
-For OSV package queries, use `ID_LIKE` and `VERSION_ID` to normalize this
-scanner form to the canonical feed PURL with `os_distro=alpine`,
-`os_name=dhi`, and `os_version=3.24`. That normalized package identity selects
-the `Docker Hardened Images:Alpine:3.24` ecosystem. VEX product matching uses
-the same normalized package identity with the exact installed version retained;
-see [VEX context](vex-context.md).
+For OSV package queries, the PURL type, `ID_LIKE`, and `VERSION_ID` select the
+`Docker Hardened Images:Alpine:3.24` ecosystem. Within it, match the feed's
+qualifier-free package PURL `pkg:apk/dhi/coreutils` by type, namespace, and
+name. VEX products such as `pkg:apk/dhi/coreutils@9.11-r0?distro=dhi-3.24`
+match this scanner PURL directly by the OpenVEX subset rule; see
+[VEX context](vex-context.md).
 
 ## Advisory Availability
 
@@ -223,12 +223,17 @@ always in the same year directory, even when the OSV `published` year is
 different. The year is a layout detail only: advisory IDs, the OSV `id` and
 `published` fields, and the OpenVEX `@id` do not depend on it.
 
+The generated feed carries OS-package records only. Image-level DHI context
+stays in the existing `vex/` tree.
+
 Integration expectations:
 
 - Read each tree recursively. Do not assume a flat directory or work out a
   file's year from the advisory's content.
 - Identify records by advisory ID, not by path. The file name stem is the
   advisory ID.
+- A withdrawn OSV record, one with `withdrawn` set, may have no `affected`
+  entries. OSV allows this. Skip such a record; do not fail the import.
 - Checksum and signature sidecars (`.asc`, `.sha256`, `.sha256.asc`,
   `.sha512`, `.sha512.asc`), when published, sit beside their artifact. Their
   checksum lines name the full repository-relative path, including the year
