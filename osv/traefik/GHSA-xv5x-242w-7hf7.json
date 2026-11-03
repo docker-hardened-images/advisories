@@ -1,0 +1,63 @@
+{
+  "modified": "2026-11-02T09:15:05Z",
+  "published": "2026-11-02T09:15:05Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-xv5x-242w-7hf7",
+  "details": "## Summary\n\nThere is a high severity vulnerability in Traefik's NTLM and Kerberos backend connection handling. Since v2.11.58 and v3.7.14, Traefik allocates a dedicated backend transport to a client connection as soon as a request carries an `Authorization` header with the `NTLM` or `Negotiate` scheme, without any valid credential or backend challenge. This transport, its idle backend connection and its goroutines are not released when the client connection closes, and the same pattern exists in FastProxy. An unauthenticated client can therefore open many short-lived connections and exhaust the memory, file descriptors and backend connections of the Traefik process, regardless of whether NTLM or Kerberos backends are configured. Traefik v3.6 and earlier v3 lines, and Traefik v2.11.57 and earlier, are not affected: they only dedicate a transport after the backend answers with a `WWW-Authenticate: NTLM` or `Negotiate` challenge.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v2.11.61\n- https://github.com/traefik/traefik/releases/tag/v3.7.17\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.11.58"
+            },
+            {
+              "fixed": "2.11.61"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/traefik/traefik/v2"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.7.14"
+            },
+            {
+              "fixed": "3.7.17"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/traefik/traefik/v3"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-xv5x-242w-7hf7"
+    }
+  ]
+}
