@@ -237,3 +237,7 @@ Integration expectations:
 The examples and validation checks in this guide store fixtures in flat
 `osv/` and `vex/` directories for readability. Only the published feed uses
 year directories.
+
+Generated artifacts are signed; see
+[Verifying published artifacts](artifact-verification.md) for how to confirm an
+artifact was published by Docker at the path it was fetched from.
