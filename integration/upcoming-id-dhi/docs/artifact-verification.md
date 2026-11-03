@@ -5,7 +5,8 @@ OpenPGP key. This page explains how a scanner or importer can confirm that an
 artifact it fetched was published by Docker, unchanged, at the path it was
 fetched from.
 
-Generated artifacts live under `dhi/osv/` and `dhi/vex/`. They do not use the
+Generated artifacts live under `dhi/osv/` and `dhi/vex/`, in year directories
+(see [Feed Layout](advisory-routing.md#feed-layout)). They do not use the
 Cosign signatures documented in the [repository README](../../../README.md) for
 the `osv/` and `vex/` trees; see
 [Relationship to Cosign signatures](#relationship-to-cosign-signatures).
@@ -19,12 +20,12 @@ Two independent things are signed:
 - **Every artifact**, through five files published beside it:
 
 ```text
-dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json             the OSV record
-dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json.asc         signature over the record
-dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json.sha256      SHA-256 checksum line
-dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json.sha256.asc  signature over the checksum line
-dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json.sha512      SHA-512 checksum line
-dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json.sha512.asc  signature over the checksum line
+dhi/osv/2026/DHI-vdvh-b7bo-zxsy-xxkb.json             the OSV record
+dhi/osv/2026/DHI-vdvh-b7bo-zxsy-xxkb.json.asc         signature over the record
+dhi/osv/2026/DHI-vdvh-b7bo-zxsy-xxkb.json.sha256      SHA-256 checksum line
+dhi/osv/2026/DHI-vdvh-b7bo-zxsy-xxkb.json.sha256.asc  signature over the checksum line
+dhi/osv/2026/DHI-vdvh-b7bo-zxsy-xxkb.json.sha512      SHA-512 checksum line
+dhi/osv/2026/DHI-vdvh-b7bo-zxsy-xxkb.json.sha512.asc  signature over the checksum line
 ```
 
 VEX documents under `dhi/vex/` carry the same five files. Every advisory has a
@@ -37,7 +38,7 @@ A checksum file holds one line in coreutils format: the hex digest, two spaces,
 and the artifact's path relative to the repository root.
 
 ```text
-16b7492f…  dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json
+eb9a92dc…  dhi/osv/2026/DHI-vdvh-b7bo-zxsy-xxkb.json
 ```
 
 ## Signing Key
@@ -124,7 +125,7 @@ ref=$1 path=$2 key=$3
 
 case "$path" in
   dhi/osv/*.json | dhi/vex/*.json) ;;
-  *) echo "error: expected dhi/osv/<id>.json or dhi/vex/<id>.json" >&2; exit 2 ;;
+  *) echo "error: expected a .json path under dhi/osv/ or dhi/vex/" >&2; exit 2 ;;
 esac
 
 # Resolve the ref once so every file comes from the same commit.
@@ -190,7 +191,7 @@ echo "OK: $path at $commit is signed by $signer"
 ```
 
 ```bash
-./verify-dhi-artifact.sh main dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json dhi-bot.pub.asc
+./verify-dhi-artifact.sh main dhi/osv/2026/DHI-vdvh-b7bo-zxsy-xxkb.json dhi-bot.pub.asc
 ```
 
 The script refuses a key file holding any key that isn't pinned, and
@@ -204,7 +205,7 @@ The same check by hand, from the root of a clone:
 ```bash
 gpg --show-keys dhi-bot.pub.asc   # must list only pinned keys: 3C03F4C03E937E469287DADA74443225FBB34CE4
 export GNUPGHOME=$(mktemp -d) && gpg --import dhi-bot.pub.asc
-f=dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json
+f=dhi/osv/2026/DHI-vdvh-b7bo-zxsy-xxkb.json
 
 gpg --status-fd 1 --verify "$f.sha256.asc" "$f.sha256" | grep -E 'NEWSIG|SIG |VALIDSIG|NO_PUBKEY'
 # Expect exactly one NEWSIG, then GOODSIG, then VALIDSIG ending in a pinned
@@ -245,7 +246,7 @@ publisher's. Verify the commit that last changed the artifact you care about:
 
 ```bash
 repo=docker-hardened-images/advisories
-f=dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json
+f=dhi/osv/2026/DHI-vdvh-b7bo-zxsy-xxkb.json
 
 commit=$(curl -fsSL "https://api.github.com/repos/$repo/commits?sha=main&path=$f&per_page=1" | jq -r '.[0].sha')
 curl -fsSL "https://api.github.com/repos/$repo/commits/$commit" > commit.json
