@@ -174,17 +174,6 @@ For each retrieval:
 Content hashing and subject matching do not verify the attestation's signature.
 Cryptographic signature verification is a separate operation.
 
-### Validation record
-
-On 2026-11-03 at 20:23 UTC, authenticated HTTP retrieval against production
-`dhi.io/nginx:1.30-debian13` traversed three pages by following the returned
-next-page links at a page size of 50 and collected 129 tags exactly once,
-matching the unpaginated result.
-The final page omitted the next link. SPDX 2.3 and CycloneDX 1.6 statements were
-downloaded for both linux/amd64 and linux/arm64; content hashes and statement
-subjects matched. This was a bounded retrieval test, not a full-catalog scan or
-signature verification.
-
 ## Troubleshooting
 
 - **401:** follow the bearer challenge, check the Docker credentials, scope, and
