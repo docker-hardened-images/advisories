@@ -14,12 +14,14 @@ security scanners with Docker Hardened Images (DHI).
 1. Review the [Decision Trees](docs/decision-trees.md)
 2. For derived images, review
    [base discovery](../derived-image-base-discovery.md)
-3. Read the DHI docs to explore or get real images:
+3. Retrieve original SBOM attestations using the
+   [HTTP guide](../sbom-http.md)
+4. Read the DHI docs to explore or get real images:
    - [Explore DHI images](https://docs.docker.com/dhi/how-to/explore/)
    - [Mirror DHI images](https://docs.docker.com/dhi/how-to/mirror/)
-4. Run the [Go Reference Implementation](reference-implementations/go/)
-5. Try the [Example Images](examples/)
-6. Validate using the [Test Suite](validation/test-suite.md)
+5. Run the [Go Reference Implementation](reference-implementations/go/)
+6. Try the [Example Images](examples/)
+7. Validate using the [Test Suite](validation/test-suite.md)
 
 ## 🚀 Reference Implementation
 

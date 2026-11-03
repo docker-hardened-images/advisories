@@ -33,6 +33,9 @@ overview is explanatory and should not be used as a separate routing contract.
 Both models use the same
 [derived-image base-discovery procedure](derived-image-base-discovery.md) when
 a scanner needs the Docker-issued SBOM for a customer image's DHI base.
+Use the shared [SBOM retrieval over HTTP guide](sbom-http.md) to discover DHI
+repositories through the public catalog and download the resolved image's
+SPDX or CycloneDX attestation through authenticated OCI HTTP requests.
 
 ## New Model Summary
 
@@ -69,5 +72,6 @@ comparison, but it is not the advisory namespace for DHI-owned OS packages.
 - [Current production guide](current-production/README.md)
 - [Upcoming `ID=dhi` guide](upcoming-id-dhi/README.md)
 - [Derived-image base discovery](derived-image-base-discovery.md)
+- [SBOM retrieval over HTTP](sbom-http.md)
 - [OpenVEX Spec](https://openvex.dev/)
 - [OCI Referrers](https://github.com/opencontainers/distribution-spec/blob/main/spec.md#listing-referrers)

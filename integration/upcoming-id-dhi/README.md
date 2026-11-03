@@ -28,6 +28,8 @@ Docker. An OS package is covered by generated DHI advisory data when its exact
 package and version appear in the Docker-issued SBOM for that image. Obtain
 that SBOM by resolving the image's platform-manifest digest and retrieving its
 attached SPDX or CycloneDX OCI-referrer attestation.
+The shared [HTTP retrieval guide](../sbom-http.md) provides catalog discovery,
+authentication, pagination, and attestation download examples.
 
 Publication of an official image with `ID=dhi` signals that generated DHI
 advisory data is available for that image and its contents. Docker does not
