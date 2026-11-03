@@ -232,8 +232,12 @@ Integration expectations:
   file's year from the advisory's content.
 - Identify records by advisory ID, not by path. The file name stem is the
   advisory ID.
-- A withdrawn OSV record, one with `withdrawn` set, may have no `affected`
-  entries. OSV allows this. Skip such a record; do not fail the import.
+- Exclude a withdrawn OSV record, one with `withdrawn` set, from active
+  matching. An importer that retains earlier records must apply the
+  withdrawal by advisory ID, removing or deactivating the entry it imported
+  before. A withdrawn record may have no `affected` entries, which OSV
+  allows; an empty or absent `affected` list must not fail the import. A
+  database rebuilt from scratch can omit the withdrawn record.
 - Checksum and signature sidecars (`.asc`, `.sha256`, `.sha256.asc`,
   `.sha512`, `.sha512.asc`), when published, sit beside their artifact. Their
   checksum lines name the full repository-relative path, including the year
