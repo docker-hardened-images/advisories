@@ -56,9 +56,13 @@ and list retired keys with their validity periods there. -->
 Pin the fingerprint, not just the user ID or the key file. A signature from any
 other key, even one claiming `dhi@docker.com`, must be rejected.
 
-The key is rotated before it expires. Retired public keys remain published at
-the same location with the period each one was in use, so older artifacts stay
-verifiable; see [Verifying older artifacts](#verifying-older-artifacts).
+The key is rotated before it expires. At least a week before a new key starts
+signing, it is added to the table above with its fingerprint and the date it
+starts. From then until the old key expires, artifacts may be signed by either
+key: pin both fingerprints for that overlap. Retired public keys remain
+published at the same location with the period each one was in use, so older
+artifacts stay verifiable; see
+[Verifying older artifacts](#verifying-older-artifacts).
 
 The creation time on an artifact signature is the artifact's own lifecycle
 timestamp (the OSV `modified` or VEX `last_updated` value), not the time it was
@@ -84,9 +88,9 @@ line.
 A correct check has four parts, and each one matters:
 
 1. The checksum file's `.asc` holds exactly one signature, that signature is
-   good, **and** it was made by the pinned fingerprint. Verify with a keyring
-   that holds only the pinned key: with several keys imported, a good signature
-   from any of them can be mistaken for one from the pinned key.
+   good, **and** it was made by a pinned fingerprint. Verify with a keyring
+   that holds only pinned keys: with another key imported, a good signature
+   from it can be mistaken for one from a pinned key.
 2. The key is not revoked. `gpg --verify` exits 0 for a signature from a
    revoked key, so check its status output rather than its exit code.
 3. The checksum line names exactly the path you fetched, and the file has no
@@ -100,11 +104,13 @@ needs `bash`, `curl`, `git` and `gpg`:
 ```bash
 #!/usr/bin/env bash
 # Verify one DHI OSV or VEX artifact through its signed checksum files.
-# usage: verify-dhi-artifact.sh <ref> <artifact-path> <public-key.asc>
+# usage: verify-dhi-artifact.sh <ref> <artifact-path> <public-keys.asc>
+# The key file holds the pinned public keys, armored, one after the other.
 set -euo pipefail
 
 repo=docker-hardened-images/advisories
-expected_fpr=3C03F4C03E937E469287DADA74443225FBB34CE4
+# The fingerprints from the Signing Key table. During a rotation, both keys.
+pinned_fprs="3C03F4C03E937E469287DADA74443225FBB34CE4"
 ref=$1 path=$2 key=$3
 
 case "$path" in
@@ -122,13 +128,17 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 export GNUPGHOME="$work/gnupg"
 mkdir -m 700 "$GNUPGHOME"
-# Use exactly one key, the pinned one. With several keys in the keyring, a
-# signature from any of them would count as good.
+# Use pinned keys only. With another key in the keyring, a signature from it
+# would count as good.
+pinned() { case " $pinned_fprs " in *" $1 "*) ;; *) return 1 ;; esac; }
 grep -q 'BEGIN PGP PRIVATE KEY' "$key" && { echo "error: $key holds a private key" >&2; exit 2; }
 key_fprs=$(gpg --batch --with-colons --show-keys "$key" 2>/dev/null |
   awk -F: '$1 == "pub" {want = 1; next} want && $1 == "fpr" {print $10; want = 0}')
-[ "$key_fprs" = "$expected_fpr" ] ||
-  { echo "error: $key must hold only the pinned public key, $expected_fpr" >&2; exit 2; }
+[ -n "$key_fprs" ] || { echo "error: $key holds no public key" >&2; exit 2; }
+for fpr in $key_fprs; do
+  pinned "$fpr" ||
+    { echo "error: $key holds $fpr, which isn't pinned ($pinned_fprs)" >&2; exit 2; }
+done
 gpg --batch --quiet --import "$key"
 
 fetch() {
@@ -136,7 +146,7 @@ fetch() {
   curl -fsSL "https://raw.githubusercontent.com/$repo/$commit/$1" -o "$work/$1"
 }
 
-# Accept exactly one signature, good, made by the pinned primary key. gpg
+# Accept exactly one signature, good, made by a pinned primary key. gpg
 # exits 0 for a revoked key, so the status lines are checked as well. With a
 # single signature, GOODSIG and VALIDSIG necessarily describe the same one.
 check_sig() {
@@ -148,8 +158,8 @@ check_sig() {
     grep -qE '^\[GNUPG:\] (BADSIG|ERRSIG|EXPSIG|EXPKEYSIG|REVKEYSIG|NO_PUBKEY) ' <<<"$status"; then
     echo "FAIL: no good signature on $2" >&2; exit 1
   fi
-  awk '$2 == "VALIDSIG" {print $NF}' <<<"$status" | grep -qx "$expected_fpr" ||
-    { echo "FAIL: $2 is not signed by $expected_fpr" >&2; exit 1; }
+  signer=$(awk '$2 == "VALIDSIG" {print $NF}' <<<"$status")
+  pinned "$signer" || { echo "FAIL: $2 is not signed by a pinned key ($pinned_fprs)" >&2; exit 1; }
 }
 
 fetch "$path"
@@ -167,14 +177,14 @@ for alg in sha256 sha512; do
   [ "$actual" = "$digest" ] || { echo "FAIL: $alg digest mismatch for $path" >&2; exit 1; }
 done
 
-echo "OK: $path at $commit is signed by $expected_fpr"
+echo "OK: $path at $commit is signed by $signer"
 ```
 
 ```bash
 ./verify-dhi-artifact.sh main dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json dhi-bot.pub.asc
 ```
 
-The script refuses a key file holding any key other than the pinned one, and
+The script refuses a key file holding any key that isn't pinned, and
 an `.asc` holding more than one signature. `GOODSIG` is absent for an expired or
 revoked key, so it rejects both.
 On macOS, install GNU coreutils for `sha256sum` and `sha512sum`, or replace
@@ -183,13 +193,13 @@ them with `shasum -a 256` and `shasum -a 512`.
 The same check by hand, from the root of a clone:
 
 ```bash
-gpg --show-keys dhi-bot.pub.asc   # must list one key: 3C03F4C03E937E469287DADA74443225FBB34CE4
+gpg --show-keys dhi-bot.pub.asc   # must list only pinned keys: 3C03F4C03E937E469287DADA74443225FBB34CE4
 export GNUPGHOME=$(mktemp -d) && gpg --import dhi-bot.pub.asc
 f=dhi/osv/DHI-vdvh-b7bo-zxsy-xxkb.json
 
 gpg --status-fd 1 --verify "$f.sha256.asc" "$f.sha256" | grep -E 'NEWSIG|SIG |VALIDSIG|NO_PUBKEY'
-# Expect exactly one NEWSIG, then GOODSIG, then VALIDSIG ending in
-# 3C03F4C03E937E469287DADA74443225FBB34CE4, and nothing else
+# Expect exactly one NEWSIG, then GOODSIG, then VALIDSIG ending in a pinned
+# fingerprint (3C03F4C03E937E469287DADA74443225FBB34CE4), and nothing else
 
 cat "$f.sha256"      # must name exactly $f, on a single line
 sha256sum -c "$f.sha256"
@@ -208,8 +218,8 @@ one-step check:
 gpg --status-fd 1 --verify "$f.asc" "$f" | grep -E 'NEWSIG|SIG |VALIDSIG|NO_PUBKEY'
 ```
 
-Apply the same checks as above: one key in the keyring, one signature, `GOODSIG`
-and the pinned fingerprint. A good result means
+Apply the same checks as above: only pinned keys in the keyring, one signature,
+`GOODSIG` and a pinned fingerprint. A good result means
 Docker signed these bytes. It does not mean they belong at this path: the VEX
 document of an advisory, served at its OSV path with its own `.asc`, verifies.
 Use the checksum route when the path matters.
