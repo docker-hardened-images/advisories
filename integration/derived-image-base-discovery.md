@@ -57,7 +57,8 @@ dependencies, use the following procedure:
 6. Compute the ChainID of that prefix and require it to equal the derived
    image's `com.docker.dhi.chain-id` value.
 7. List OCI referrers for the verified DHI platform-manifest digest and select
-   its Docker-issued SPDX or CycloneDX SBOM.
+   its Docker-issued SPDX or CycloneDX SBOM using the shared
+   [HTTP retrieval procedure](sbom-http.md).
 8. Use the SBOM together with layer attribution to determine whether each
    package was inherited unchanged, added, replaced, or modified later.
 
