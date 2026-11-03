@@ -102,7 +102,13 @@ PLATFORM = re.compile(r"^linux/(amd64|arm64)$")
 SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
 LINEAGE_BY_PURL_TYPE = {"apk": "alpine", "deb": "debian"}
 ECOSYSTEM_LINEAGE_BY_PURL_TYPE = {"apk": "Alpine", "deb": "Debian"}
-RELEASE = re.compile(r"^[0-9]+(\.[0-9]+)?$")
+# A DHI base release in canonical form: Alpine major.minor, Debian major,
+# without leading zeros.
+RELEASE_BY_PURL_TYPE = {
+    "apk": re.compile(r"^[1-9][0-9]*\.(0|[1-9][0-9]*)$"),
+    "deb": re.compile(r"^[1-9][0-9]*$"),
+}
+RELEASE_SHAPE = "a canonical Alpine N.M or Debian N"
 
 
 def fail(where: str, message: str) -> None:
@@ -156,8 +162,8 @@ def parse_dhi_purl(
         distro = parsed_qualifiers.get("distro", "")
         if set(parsed_qualifiers) != {"distro"} or not distro.startswith("dhi-"):
             fail(where, f"{field} must carry exactly one qualifier, distro=dhi-<release>: {purl}")
-        elif not RELEASE.match(distro[len("dhi-"):]):
-            fail(where, f"{field} release must be N or N.M: {purl}")
+        elif not RELEASE_BY_PURL_TYPE[match.group("type")].match(distro[len("dhi-"):]):
+            fail(where, f"{field} release must be {RELEASE_SHAPE}: {purl}")
         else:
             release = distro[len("dhi-"):]
     elif query:
@@ -178,8 +184,8 @@ def ecosystem_for(purl_type: str, release: str) -> str:
 def ecosystem_release(where: str, field: str, ecosystem: object, purl_type: str) -> str | None:
     prefix = ecosystem_for(purl_type, "")
     release = ecosystem[len(prefix):] if isinstance(ecosystem, str) and ecosystem.startswith(prefix) else ""
-    if not RELEASE.match(release):
-        fail(where, f"{field} must be {prefix}<release> with release N or N.M")
+    if not RELEASE_BY_PURL_TYPE[purl_type].match(release):
+        fail(where, f"{field} must be {prefix}<release> with release {RELEASE_SHAPE}")
         return None
     return release
 
