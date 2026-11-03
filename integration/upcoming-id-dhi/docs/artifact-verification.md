@@ -48,20 +48,29 @@ and the artifact's path relative to the repository root.
 | User ID | `dhi-bot <dhi@docker.com>` |
 | Fingerprint | `3C03 F4C0 3E93 7E46 9287  DADA 7444 3225 FBB3 4CE4` |
 | Expires | 2027-09-04 |
-| Public key | `<PUBLIC-KEY-URL>` |
+| Public key | <https://dhi.io/signing-keys/3C03F4C03E937E469287DADA74443225FBB34CE4.asc> |
+| All keys, current and retired | <https://dhi.io/signing-keys/list.json> |
 
-<!-- TODO: replace <PUBLIC-KEY-URL> once the public key location is decided,
-and list retired keys with their validity periods there. -->
+```bash
+curl -fsSL https://dhi.io/signing-keys/3C03F4C03E937E469287DADA74443225FBB34CE4.asc -o dhi-bot.pub.asc
+```
 
 Pin the fingerprint, not just the user ID or the key file. A signature from any
 other key, even one claiming `dhi@docker.com`, must be rejected.
 
 The key is rotated before it expires. At least a week before a new key starts
 signing, it is added to the table above with its fingerprint and the date it
-starts. From then until the old key expires, artifacts may be signed by either
-key: pin both fingerprints for that overlap. Retired public keys remain
-published at the same location with the period each one was in use, so older
-artifacts stay verifiable; see
+starts, and published at `https://dhi.io/signing-keys/<FINGERPRINT>.asc`. From
+then until the old key expires, artifacts may be signed by either key: pin both
+fingerprints for that overlap, and download both keys into one key file, one
+after the other.
+
+Retired keys stay published, both at their own URL and in `list.json`. Each
+`list.json` entry has a `fingerprint`, the armored `public_key`, and the period
+the key signed in: `valid_from`, and `valid_until`, which is `null` for the
+current key. Read the list for the key that signed an artifact. Don't trust a
+key just because it's listed: the routes on this page reject an expired key
+whatever its listed period, for the reason in
 [Verifying older artifacts](#verifying-older-artifacts).
 
 The creation time on an artifact signature is the artifact's own lifecycle
@@ -275,7 +284,17 @@ the history before it.
 The checksum and artifact routes reject expired keys. A signer chooses its
 signature timestamps, so a signature cannot show that it was made before the
 key expired; anyone holding a retired private key could sign today and date it
-in the past.
+in the past. For the same reason, a retired key's `valid_until` in
+[`list.json`](#signing-key) records when Docker stopped using the key. It
+doesn't show that a signature dated before it was made before it.
+
+Docker's own importer accepts a listed key for a signature dated inside the
+key's period. It also bounds each record by its `modified` timestamp. A
+compromised key is revoked rather than given a `valid_until`: it leaves
+`list.json`, and its URL serves the key with its revocation, so a keyring that
+imported it can be updated. If
+you follow the same model, apply the same bounds. Otherwise, use the commit
+route below.
 
 To verify an artifact published under a retired key, verify the commit that
 published it through GitHub's verification record, which was made when the
