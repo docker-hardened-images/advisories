@@ -1,17 +1,17 @@
 {
   "schema_version": "1.8.0",
   "id": "DHI-mdok-4bar-ghos-3p7o",
-  "modified": "2026-10-23T22:27:07Z",
+  "modified": "2026-11-04T01:15:33Z",
   "published": "2026-09-21T15:48:22Z",
   "upstream": [
     "CVE-2026-55223"
   ],
-  "summary": "### Impact",
-  "details": "### Impact\n\nThe JDBC spec defines the interface `DataSource`, with a method called `getConnection()`, and `ConnectionPoolDataSource`, with a method called `getPooledConnection()`. These methods are potentially dangerous. One way or another they trigger calls into JDBC drivers, which themselves are complicated, flexible tools which may be, and in practice sometimes have proven to be, susceptible to abuse.\n\nUnfortunately, the JavaBean framework treats methods of this form, `getXXX()`, as JavaBean \"properties\", which JavaBean-related libraries often presume represent quick, safe-to-look-up, state or configuration.\n\nAttackers therefore can construct malicious `DataSource` objects — objects whose calls to `getConnection()` or `getPooledConnection()` would trigger attacks via vulnerable JDBC drivers — and bundle them in contexts that automatically look up bean properties on deserialization. If an attacker can smuggle such an object in serialized form to a location from which an application will deserialize it, an attack is triggered.\n\nIt's not easy. It requires that a susceptible JDBC `DataSource` or `ConnectionPoolDataSource` be available on the application `CLASSPATH`, along with a susceptible JDBC driver, and a carrier that will automatically look up JavaBean properties on deserialization. In practice, the most common such carrier is the composition of a collection and a `Comparator` implementation that sorts based on JavaBean properties from Apache [`commons-beanutils`](https://commons.apache.org/proper/commons-beanutils/).\n\nBut c3p0 prior to 0.14.0 offered the susceptible JDBC `DataSource` or `ConnectionPoolDataSource`, supplying an essential component of the trigger.\n\n### Patches\n\nc3p0 versions 0.14.0 and above no longer participate in this class of attack, because they include explicit `BeanInfo` classes which exclude `connection` and `pooledConnection` from the list of \"introspected\" JavaBean properties. Since `getConnection()` and `getPooledConnection()` no longer define JavaBean properties, classes that promiscuously read JavaBean properties do not call them, and the attack is averted.\n\n### Workarounds\n\nIf users can ensure the safety of all JDBC drivers on the application `CLASSPATH`, or that no libraries lie on the `CLASSPATH` that can be composed to trigger automatic JavaBean property lookups on deserialization, then this attack is prevented. Nevertheless, given the complexity of modern JDBC drivers and typical Java application transitive dependencies, it is strongly recommended that users upgrade to c3p0 version 0.14.0 or higher.\n\nSome versions of this attack are foiled by [the stronger encapsulation and restriction of reflective access introduced in Java 16](https://softwaregarden.dev/en/posts/new-java/illegal-access-in-java-16/). Running applications on Java 16+ is therefore a potential mitigation.\n\nThis attack is described by [Hans-Martin Münch](https://mogwailabs.de/en/authors/hans-martin-muench/) in a blog post called \"[Look Mama, no TemplatesImpl](https://mogwailabs.de/en/blog/2023/04/look-mama-no-templatesimpl/)\".",
+  "summary": "c3p0 is a JDBC Connection pooling library. In versions prior to 0.14.0,  c3p0 in combination with other libraries, can…",
+  "details": "c3p0 is a JDBC Connection pooling library. In versions prior to 0.14.0,  c3p0 in combination with other libraries, can compose to a \"sink\" for  deserialization gadgets. The JDBC spec's DataSource.getConnection() and  ConnectionPoolDataSource.getPooledConnection() match the getXXX() form, so JavaBean libraries treat them as \"properties\" assumed safe while they actually call into JDBC drivers. Attackers can thus craft malicious  DataSource objects whose property lookups invoke vulnerable drivers, then  smuggle them in serialized form to where an application deserializes and auto-resolves bean properties — triggering the attack. This requires a  susceptible DataSource/ConnectionPoolDataSource and JDBC driver on the  CLASSPATH, plus a carrier that auto-looks-up JavaBean properties on = deserialization, most commonly a collection paired with an Apache commons-beanutils Comparator that sorts by bean properties. c3p0 supplied that susceptible DataSource/ConnectionPoolDataSource, which was an  essential component of the trigger. This issue has been fixed in version 0.14.0.",
   "severity": [
     {
       "type": "CVSS_V4",
-      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N"
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
     }
   ],
   "affected": [
@@ -45,11 +45,15 @@
     },
     {
       "type": "ADVISORY",
-      "url": "https://github.com/advisories/GHSA-w6w4-rjh9-9r58"
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-55223"
     },
     {
       "type": "ADVISORY",
-      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-55223"
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-55223"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-w6w4-rjh9-9r58"
     },
     {
       "type": "ADVISORY",
@@ -62,10 +66,6 @@
     {
       "type": "WEB",
       "url": "https://github.com/swaldman/c3p0/releases/tag/v0.14.0"
-    },
-    {
-      "type": "ADVISORY",
-      "url": "https://security-tracker.debian.org/tracker/CVE-2026-55223"
     },
     {
       "type": "ADVISORY",
