@@ -173,8 +173,7 @@ integration/upcoming-id-dhi/validation/run-fixture-suite.sh
   - VEX products are `pkg:<apk|deb>/dhi/<name>@<version>?distro=dhi-<release>`,
     the form Syft and Grype report.
   - Do not normalize scanner PURLs to `os_*`.
-  - The example and validation fixtures still show the previous form and are
-    being updated.
+  - The examples and the validation suite use the new forms.
   - See [Package identity and versioning](docs/package-identity-and-versioning.md).
 
 ## 📄 Resources
