@@ -28,8 +28,8 @@ flowchart TD
   N -->|No| J
   N -->|Chain-ID/layer attribution or verified base SBOM match| D
   J --> R[Use normal upstream matching with APK or dpkg version rules]
-  D -->|apk| K[Resolve Alpine release from os_version or distro qualifier]
-  D -->|deb| L[Resolve Debian release from os_version or distro qualifier]
+  D -->|apk| K[Resolve Alpine release from VERSION_ID, reported as distro=dhi-release]
+  D -->|deb| L[Resolve Debian release from VERSION_ID, reported as distro=dhi-release]
   K --> G[Exact DHI Alpine release ecosystem, APK version rules]
   L --> H[Exact DHI Debian release ecosystem, dpkg version rules]
   G --> O{Exact version or affected range matches?}

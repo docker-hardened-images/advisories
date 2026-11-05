@@ -122,10 +122,11 @@ Generated OSV affected entries use a release-scoped ecosystem variant, such as
 `Docker Hardened Images:Alpine:3.24` or
 `Docker Hardened Images:Debian:13`. The lineage selects the
 package-manager-native ordering and the release prevents cross-release
-advisory matches. Scanner PURLs with `distro=dhi-<release>` must normalize to
-the same variant as canonical feed PURLs with `os_version=<release>`. These
-entries can enumerate exact affected `versions`, provide native `ECOSYSTEM`
-ranges, or provide both. `ECOSYSTEM` ranges must not fall back to SemVer. See
+advisory matches. Feed package PURLs carry no qualifiers, so route by
+ecosystem: a scanner PURL with `distro=dhi-<release>` selects the variant for
+that release. VEX products carry `distro=dhi-<release>` themselves and match
+scanner PURLs directly. These entries can enumerate exact affected `versions`,
+provide native `ECOSYSTEM` ranges, or provide both. `ECOSYSTEM` ranges must not fall back to SemVer. See
 [Package identity and versioning](upcoming-id-dhi/docs/package-identity-and-versioning.md)
 for the complete contract.
 
@@ -167,5 +168,4 @@ images and the generated DHI OSV/VEX model.
 
 ## Timeline
 
-Work is ongoing. Current planning targets Summer 2026 for release. Docker will
-share more specific dates as the release approaches.
+Work is ongoing. Docker will share specific dates as the release approaches.
