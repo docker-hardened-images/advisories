@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-vxyw-zlwq-u6wj-2mwk",
+  "modified": "2026-11-08T03:42:33Z",
+  "published": "2026-11-08T03:42:33Z",
+  "upstream": [
+    "GHSA-3pv8-6f4r-ffg2"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nWhen a tar stream contains multiple \"header\" entries prior to a file entry, tar-rs applies the PAX header (`x`) to the _next_ entry in the stream, regardless of type. For example, a stream of `x -> L -> file` (PAX, GNU longname, file) would result in `x`'s extensions being applied to `L` rather than to `file`.\n\n[Per POSIX pax](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/pax.html), this is incorrect: a PAX header always applies to a file entry, not any intermediary entries. See the \"pax Header Block\" section for the specific prescription there.\n\nAs a result of this, an attacker can contrive a tar containing a sequence of tar headers such that tar-rs applies the PAX header's `size` extension to the next header in sequence, effectively desynchronizing the stream and enabling tar-rs specific skippage/extraction of members. In other words, a file can be contrived to extract differently on tar-rs than on other tar parsers.\n\n### PoC\n\n[This tar](https://github.com/user-attachments/files/27141941/pax-overrides-extension-header.tar.zip) (zipped for size) demonstrates the desynchronization: with `tar tvf`:\n\n```\n% tar tvf tests/archives/pax-overrides-extension-header.tar \n----------  0 0      0        2048 Dec 31  1969 longname.txt\n----------  0 0      0           0 Dec 31  1969 file_b\n```\n\nwith `tar-rs`:\n\n```\n---- pax_size_does_not_apply_to_extension_headers stdout ----\n\nthread 'pax_size_does_not_apply_to_extension_headers' (250476889) panicked at tests/all.rs:2121:27:\ncalled `Result::unwrap()` on an `Err` value: Custom { kind: Other, error: \"numeric field was not a number: AAAAAAAA when getting cksum for AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\" }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n```\n\nIn the above case, the PoC is not weaponized, so it jumps into the middle of an entry and subsequently fails the checksum test rather than silently continuing with attacker-controlled archive state.\n\n### Impact\n\nThis is very similar to GHSA-j5gw-2vrg-8fgx and GHSA-fp55-jw48-c537 in impact -- an attacker can use this to extract (or not extract) files from a tar stream depending on the tar parser used, which in turn can be used to obscure the presence of malicious files.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "rust",
+        "purl": "pkg:apk/dhi/rust"
+      },
+      "versions": [
+        "1.91.1-r0",
+        "1.91.1-r2",
+        "1.91.1-r3",
+        "1.91.1-r4",
+        "1.93.1-r0",
+        "1.93.1-r1",
+        "1.94.0-r0",
+        "1.94.0-r1",
+        "1.94.1-r0",
+        "1.94.1-r1",
+        "1.95.0-r0",
+        "1.96.0-r0",
+        "1.96.1-r0",
+        "1.97.0-r0",
+        "1.97.0-r1",
+        "1.98.1-r0",
+        "1.99.0-r2",
+        "1.99.1-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-vxyw-zlwq-u6wj-2mwk"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-3pv8-6f4r-ffg2"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/composefs/tar-rs/security/advisories/GHSA-3pv8-6f4r-ffg2"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/composefs/tar-rs/pull/454"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/composefs/tar-rs/commit/bab14dd84b411ac16ecb56d4f2d2f7bfb88a9838"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/composefs/tar-rs/releases/tag/0.4.46"
+    }
+  ]
+}
