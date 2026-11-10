@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-x63z-xexl-ir5f-yshw",
+  "modified": "2026-11-10T08:02:41Z",
+  "published": "2026-11-10T08:02:41Z",
+  "upstream": [
+    "CVE-2026-34988"
+  ],
+  "summary": "Wasmtime is a runtime for WebAssembly. From 28.0.0 to before 36.0.7, 42.0.2, and 43.0.1, Wasmtime's implementation of…",
+  "details": "Wasmtime is a runtime for WebAssembly. From 28.0.0 to before 36.0.7, 42.0.2, and 43.0.1, Wasmtime's implementation of its pooling allocator contains a bug where in certain configurations the contents of linear memory can be leaked from one instance to the next. The implementation of resetting the virtual memory permissions for linear memory used the wrong predicate to determine if resetting was necessary, where the compilation process used a different predicate. This divergence meant that the pooling allocator incorrectly deduced at runtime that resetting virtual memory permissions was not necessary while compile-time determine that virtual memory could be relied upon. The pooling allocator must be in use, Config::memory_guard_size configuration option must be 0, Config::memory_reservation configuration must be less than 4GiB, and pooling allocator must be configured with max_memory_size the same as the memory_reservation value in order to exploit this vulnerability. If all of these conditions are applicable then when a linear memory is reused the VM permissions of the previous iteration are not reset. This means that the compiled code, which is assuming out-of-bounds loads will segfault, will not actually segfault and can read the previous contents of linear memory if it was previously mapped. This represents a data leakage vulnerability between guest WebAssembly instances which breaks WebAssembly's semantics and additionally breaks the sandbox that Wasmtime provides. Wasmtime is not vulnerable to this issue with its default settings, nor with the default settings of the pooling allocator, but embeddings are still allowed to configure these values to cause this vulnerability. This vulnerability is fixed in 36.0.7, 42.0.2, and 43.0.1.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:C/C:H/I:N/A:N"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:H/AT:P/PR:L/UI:N/VC:L/VI:N/VA:N/SC:L/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "apisix-3",
+        "purl": "pkg:deb/dhi/apisix-3"
+      },
+      "versions": [
+        "3.17.0-0",
+        "3.18.0-0",
+        "3.18.0-1",
+        "3.18.0-2",
+        "3.18.0-3",
+        "3.19.0-0",
+        "3.19.0-1",
+        "3.19.0-2",
+        "3.19.0-3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-x63z-xexl-ir5f-yshw"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34988"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/bytecodealliance/wasmtime/security/advisories/GHSA-6wgr-89rj-399p"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-34988"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-6wgr-89rj-399p"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0088.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-34988"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-34988"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0088"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/bytecodealliance/wasmtime/pull/13008"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-34988"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-34988"
+    }
+  ]
+}
