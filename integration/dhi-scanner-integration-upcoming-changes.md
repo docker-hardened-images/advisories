@@ -168,4 +168,5 @@ images and the generated DHI OSV/VEX model.
 
 ## Timeline
 
-Work is ongoing. Docker will share specific dates as the release approaches.
+Work is ongoing. The release is planned for the end of November 2026. Docker
+will share more specific dates as the release approaches.
