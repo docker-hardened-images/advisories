@@ -1,0 +1,155 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-74y2-hb6e-472z-gt3r",
+  "modified": "2026-11-10T03:11:17Z",
+  "published": "2026-11-10T03:11:17Z",
+  "upstream": [
+    "CVE-2026-56684"
+  ],
+  "summary": "## Impact",
+  "details": "## Impact\r\n\r\nA use-after-free vulnerability exists in Valkey's TLS connection handling that can crash the server that can potentially lead to remote code execution. When TLS is enabled, the server keeps a list of connections that have leftover data waiting to be read. While working through that list, one connection being closed can cause Valkey to access memory belonging to another connection that was just freed.\r\n\r\nThis happens when an authenticated client closes a connection (for example, via CLIENT KILL) while another TLS connection still has buffered data pending. The freed memory could in principle be reclaimed and controlled via heap grooming which can lead to a potential remote code execution.\r\n\r\nThis issue only affects deployments with TLS enabled. Non-TLS deployments are not affected.\r\n\r\n## Workarounds\r\n\r\nThere is no complete workaround that covers the trigger path without upgrading, but the following mitigations reduce exposure:\r\n\r\n- **Restrict the CLIENT command via ACLs** — Disable `CLIENT KILL` for users who don't need it: `ACL SETUSER <user> -client`\r\n- **Disable TLS if not required** — The vulnerability is only reachable when TLS is enabled. Deployments not using TLS are unaffected.\r\n- **Network isolation** — Restrict network access to the Valkey server to trusted clients only.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "valkey",
+        "purl": "pkg:apk/dhi/valkey"
+      },
+      "versions": [
+        "9.0.0-r1",
+        "9.0.3-r0",
+        "9.0.4-r0",
+        "9.0.7-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "valkey",
+        "purl": "pkg:apk/dhi/valkey"
+      },
+      "versions": [
+        "9.0.4-r0",
+        "9.0.7-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-74y2-hb6e-472z-gt3r"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/valkey-io/valkey/security/advisories/GHSA-53mc-f3m3-99vh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.almalinux.org/9/ALSA-2026-64807.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/errata/RHSA-2026:64807"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-56684"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-2011.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63639"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-56684"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-56684"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/valkey-io/valkey/pull/4234"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/valkey-io/valkey/commit/7cd5bcb7575d750ec2de618db80da58680a10fe3"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/valkey-io/valkey/releases/tag/9.1.1"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/valkey-io/valkey/releases/tag/9.0.5"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/valkey-io/valkey/releases/tag/8.1.9"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/valkey-io/valkey/releases/tag/8.0.10"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/valkey-io/valkey/releases/tag/7.2.14"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-56684"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-64796-0.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-64796-0.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-64807-0.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-64807-0.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:64796"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:64807"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-56684"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-56684"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/valkey-io/valkey/commit/33b14adf2026cfd8728607b026edb24843805844"
+    }
+  ]
+}
