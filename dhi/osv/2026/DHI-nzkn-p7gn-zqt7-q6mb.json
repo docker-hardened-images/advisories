@@ -1,0 +1,108 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-nzkn-p7gn-zqt7-q6mb",
+  "modified": "2026-11-11T19:56:08Z",
+  "published": "2026-11-11T19:56:08Z",
+  "upstream": [
+    "CVE-2026-81928"
+  ],
+  "summary": "Net::DNS versions before 1.57 for Perl allow memory exhaustion via unbounded recursion in sig_data when re-encoding a…",
+  "details": "Net::DNS versions before 1.57 for Perl allow memory exhaustion via unbounded recursion in sig_data when re-encoding a message with a misplaced TSIG record.\n\nsig_data signs a message by re-encoding it, and removes TSIG records only from the additional section. A TSIG decoded into the answer or authority section survives that step and is signed again, so encoding re-enters sig_data with no termination condition. Decoding does not reject such a message: a TSIG that is not the last record on the wire raises \"misplaced or corrupt TSIG\", but the error is caught, reported as a warning, and the record is left in the packet. RFC 8945 section 5.2 requires the message to be dropped.\n\nThe recursion is reached only when the decoded TSIG carries an empty MAC, since a MAC recovered from the wire short-circuits the signing step. It is reached only from code that re-encodes a message it decoded, such as a forwarder or a proxy. A decoded message that is never re-encoded is unaffected. Message direction does not matter: a query reaches the same path as a response.\n\nEach cycle re-encodes the whole message, so fewer than 100 bytes on the wire exhaust available memory and terminate the process.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "perl-net-dns",
+        "purl": "pkg:apk/dhi/perl-net-dns"
+      },
+      "versions": [
+        "1.53-r0",
+        "1.54-r0",
+        "1.57-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-nzkn-p7gn-zqt7-q6mb"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-81928"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.almalinux.org/9/ALSA-2026-68786.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/errata/RHSA-2026:68786"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.almalinux.org/8/ALSA-2026-68787.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/errata/RHSA-2026:68787"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-81928"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-3094.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-81928"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-81928"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-68786.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-68786.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-68787.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-68787.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:68786"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:68787"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-81928"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-81928"
+    }
+  ]
+}
