@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-xom5-ynbf-aney-akri",
+  "modified": "2026-11-11T19:35:36Z",
+  "published": "2026-11-11T19:35:36Z",
+  "upstream": [
+    "CVE-2026-40199"
+  ],
+  "summary": "Net::CIDR::Lite versions before 0.23 for Perl mishandles IPv4 mapped IPv6 addresses, which may allow IP ACL bypass.",
+  "details": "Net::CIDR::Lite versions before 0.23 for Perl mishandles IPv4 mapped IPv6 addresses, which may allow IP ACL bypass.\n\n_pack_ipv6() includes the sentinel byte from _pack_ipv4() when building the packed representation of IPv4 mapped addresses like ::ffff:192.168.1.1. This produces an 18 byte value instead of 17 bytes, misaligning the IPv4 part of the address.\n\nThe wrong length causes incorrect results in mask operations (bitwise AND truncates to the shorter operand) and in find() / bin_find() which use Perl string comparison (lt/gt). This can cause find() to incorrectly match or miss addresses.\n\nExample:\n\n  my $cidr = Net::CIDR::Lite->new(\"::ffff:192.168.1.0/120\");\n  $cidr->find(\"::ffff:192.168.2.0\");  # incorrectly returns true\n\nThis is triggered by valid RFC 4291 IPv4 mapped addresses (::ffff:x.x.x.x).\n\nSee also CVE-2026-40198, a related issue in the same function affecting malformed IPv6 addresses.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "perl-net-cidr-lite",
+        "purl": "pkg:apk/dhi/perl-net-cidr-lite"
+      },
+      "versions": [
+        "0.22-r2",
+        "0.23-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-xom5-ynbf-aney-akri"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-40199"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-40198"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/stigtsp/Net-CIDR-Lite/commit/b7166b1fa17b3b14b4c795ace5b3fbf71a0bd04a.patch"
+    },
+    {
+      "type": "WEB",
+      "url": "https://metacpan.org/release/STIGTSP/Net-CIDR-Lite-0.23/changes"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-40199"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-1624.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-40199"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-40198"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-40199"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-40199"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-40199"
+    }
+  ]
+}

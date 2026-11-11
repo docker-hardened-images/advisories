@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-62o5-f3cb-ixi4-pvdh",
+  "modified": "2026-11-11T19:35:36Z",
+  "published": "2026-11-11T19:35:36Z",
+  "upstream": [
+    "CVE-2026-40198"
+  ],
+  "summary": "Net::CIDR::Lite versions before 0.23 for Perl does not validate IPv6 group count, which may allow IP ACL bypass.",
+  "details": "Net::CIDR::Lite versions before 0.23 for Perl does not validate IPv6 group count, which may allow IP ACL bypass.\n\n_pack_ipv6() does not check that uncompressed IPv6 addresses (without ::) have exactly 8 hex groups. Inputs like \"abcd\", \"1:2:3\", or \"1:2:3:4:5:6:7\" are accepted and produce packed values of wrong length (3, 7, or 15 bytes instead of 17).\n\nThe packed values are used internally for mask and comparison operations. find() and bin_find() use Perl string comparison (lt/gt) on these values, and comparing strings of different lengths gives wrong results. This can cause find() to incorrectly report an address as inside or outside a range.\n\nExample:\n\n  my $cidr = Net::CIDR::Lite->new(\"::/8\");\n  $cidr->find(\"1:2:3\");  # invalid input, incorrectly returns true\n\nThis is the same class of input validation issue as CVE-2021-47154 (IPv4 leading zeros) previously fixed in this module.\n\nSee also CVE-2026-40199, a related issue in the same function affecting IPv4 mapped IPv6 addresses.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "perl-net-cidr-lite",
+        "purl": "pkg:apk/dhi/perl-net-cidr-lite"
+      },
+      "versions": [
+        "0.22-r2",
+        "0.23-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-62o5-f3cb-ixi4-pvdh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-40198"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-40199"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/stigtsp/Net-CIDR-Lite/commit/25d65f85dbe4885959a10471725ec9d250a589c3.patch"
+    },
+    {
+      "type": "WEB",
+      "url": "https://metacpan.org/release/STIGTSP/Net-CIDR-Lite-0.23/changes"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-40198"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-1624.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-40199"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-40198"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-40198"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-40198"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-40198"
+    }
+  ]
+}
