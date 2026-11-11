@@ -1,0 +1,159 @@
+{
+  "modified": "2026-11-10T17:47:29Z",
+  "published": "2026-11-10T17:47:29Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-gqrr-4j89-5267",
+  "details": "### Impact\r\n\r\nA **Gradle client** (the `gradle`/`gradlew` CLI or an IDE using the Tooling API) finds running **Gradle daemons** through a registry file, which records the address of each daemon and the secret token used to connect to it. By default the registry is in the Gradle user home, and the `org.gradle.daemon.registry.base` property changes its location. This advisory is about a vulnerability in how the client reads and uses this registry.\r\n\r\nThe `org.gradle.daemon.registry.base` property is honoured when it is set in a project's `gradle.properties`, so a project can make the client read a registry file that the project itself ships. The client trusts the content of that file:\r\n\r\n* it deserializes parts of the file with Java serialization;\r\n* it connects to any address listed in the file, including a remote host, although daemons only ever listen locally;\r\n* it sends its request to that address, including the client's environment variables and system properties for a build, and deserializes the replies, also with Java serialization.\r\n\r\nWhen the client is an IDE or another tool using the Tooling API, a crafted reply makes the client load and run code from a jar URL chosen by the attacker, with the privileges of the user.\r\n\r\nA project that sets `org.gradle.daemon.registry.base` is not a safe setup: the property makes the client use daemons, and send them its environment, through a file the project chooses, before any build logic runs. Like a project-set `systemProp.gradle.user.home`, it has to be checked before running Gradle on an untrusted project. Gradle did not document it as such, so users who relied on a validated Wrapper for commands that run no build logic, such as `gradle --status` and `gradle --stop`, or on a review of the build scripts before an IDE synchronizes the project, could run code that appears in none of the project's reviewable sources.\r\n\r\nUsers who open or inspect untrusted repositories, for example pull requests from forks, are the most at risk.\r\n\r\nThe attacker must get the user to clone the malicious repository, then run Gradle on it or open it in an IDE.\r\n\r\n### Patches\r\n\r\nThe fixed versions harden how the client reads and uses the daemon registry. They do not make a registry location set by a project safe.\r\n\r\nThe client no longer uses Java serialization to read the daemon registry. It accepts only the address types Gradle itself writes, and fails on anything else. It also connects only to addresses of the local machine and skips any other address listed in the registry. Together with the mutual authentication of the connection that fixes [GHSA-pcp8-98xm-c6pr](https://github.com/gradle/gradle/security/advisories/GHSA-pcp8-98xm-c6pr), this means a local process that is not a Gradle daemon no longer receives the client's request.\r\n\r\n`org.gradle.daemon.registry.base` is still honoured in a project's `gradle.properties`, and a local process holding a token from a registry the project ships still receives the client's request. Check for this property before running Gradle on an untrusted project, also with a fixed version, as described under Workarounds.\r\n\r\n| Fix version | Availability |\r\n| ---------- | ----------- |\r\n| 9.9.1 | OSS |\r\n| 9.8.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.7.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.6.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.5.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.4.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.3.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.2.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 8.14.7 | OSS |\r\n| 7.6.8 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n\r\n### Workarounds\r\n\r\nUpgrading Gradle reduces the impact, but does not make a project that sets `org.gradle.daemon.registry.base` safe. With any Gradle version, before running any Gradle command on an untrusted repository or opening it in an IDE:\r\n\r\n* **Check the project's `gradle.properties` for `org.gradle.daemon.registry.base`.** A project has no reason to set it; do not run Gradle on a project that does.\r\n* **Check that no daemon registry is committed.** `git ls-files | grep 'registry.bin$'` lists committed registry files.\r\n\r\n### Forensics\r\n\r\nA repository that exploits this vulnerability sets `org.gradle.daemon.registry.base` in `gradle.properties` and contains a `registry.bin` file. To check a repository's history, including removed files:\r\n\r\n    git log --all -p -- '*gradle.properties' | grep 'org.gradle.daemon.registry.base'\r\n    git log --all --name-only --format= | grep 'registry.bin$'\r\n\r\nA fixed version reports a crafted registry instead of using it:\r\n\r\n* An entry with an address type Gradle does not write fails the command with `Could not read cache value from '\u003cpath\u003e/registry.bin'.`, caused by `Unexpected address type \u003cn\u003e in the daemon registry.`\r\n* An entry with an address of another machine is skipped. With `--info`, the client logs `Removing daemon from the registry due to communication failure. Daemon information: …`. With `--debug`, it also logs `Address \u003caddress\u003e is not an address of this machine, skipping.`\r\n\r\n\u003e [!IMPORTANT]\r\n\u003e The lack of such files in a repository cannot be used to conclude no such attack was performed. Their presence is not a confirmation that an attack happened, but an indication that more investigations are needed.\r\n\r\n### References\r\n\r\n* [Deserialization of untrusted Java objects before authentication in the client - daemon communication](https://github.com/gradle/gradle/security/advisories/GHSA-xwqc-3h47-hg64)\r\n* [Daemon client trusts stale registry entries (port squatting)](https://github.com/gradle/gradle/security/advisories/GHSA-pcp8-98xm-c6pr)\r\n* [Gradle architecture standard ADR-0002](https://github.com/gradle/gradle/blob/master/architecture/standards/0002-avoid-using-java-serialization.md), \"Avoid using Java serialization\" — Gradle's own guidance to move off Java serialization, citing deserialization security among the reasons.\r\n* [JEP 290: Filter Incoming Serialization Data](https://openjdk.org/jeps/290)\r\n\r\nMore about this type of vulnerabilities:\r\n\r\n* https://cwe.mitre.org/data/definitions/502.html\r\n* https://cwe.mitre.org/data/definitions/941.html",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/gradle/gradle/security/advisories/GHSA-gqrr-4j89-5267"
+    }
+  ]
+}

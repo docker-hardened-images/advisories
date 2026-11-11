@@ -1,0 +1,159 @@
+{
+  "modified": "2026-11-10T17:47:43Z",
+  "published": "2026-11-10T17:47:43Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-3cfg-jpcr-gfp3",
+  "details": "### Impact\r\n\r\nA Gradle [version catalog](https://docs.gradle.org/current/userguide/version_catalogs.html) declares the versions, dependency coordinates and plugin ids a build uses. A build defines its own catalogs in `gradle/libs.versions.toml`, in other TOML files or in the settings script, and can import catalogs published to a repository. Gradle generates type-safe accessors for each catalog, such as `libs.guava`, by generating Java source, compiling it, and loading it while the settings are evaluated. This advisory is about a vulnerability in the generation of version catalog accessors.\r\n\r\nGradle writes catalog values into the generated source without escaping them. A version, dependency coordinate or plugin id crafted for this adds code to the accessor classes, and that code runs when Gradle loads the catalog, with the privileges of the user running the build. It runs in every build that imports or defines the catalog, before any build script, including when an IDE synchronizes the project, even when the build uses none of the catalog's entries. This can expose the secrets available to the build, including repository and publishing credentials. This has been demonstrated with a proof-of-concept. This advisory does not publish the proof-of-concept.\r\n\r\nBuilds that import a published version catalog are the most at risk. Its publisher, or anyone able to publish a version of it that the build resolves, can run code in the build, while importing a catalog is expected to run no code. Dependency verification does not prevent this when it accepts the catalog version that carries the payload. Users who review an untrusted project before building it or opening it in an IDE are also at risk, since the code is in a catalog file and not in a build script. Commands that evaluate no settings, such as `gradle --version`, are not affected.\r\n\r\nThe attacker does not need access to the machine running the build: publishing a catalog the build imports is enough.\r\n\r\n### Patches\r\n\r\nGradle now rejects version catalog entries that contain `*/` or `\\u`. This covers versions (including strict, preferred and rejected versions, and branches), groups, names and plugin ids. The build fails while the catalog is loaded, before any accessor is generated, with a problem such as `In version catalog libs, on alias 'example' version '…' contains '*/', which is not allowed`. Gradle also escapes these sequences in other text it copies into the generated accessors, such as a catalog's description. No valid version, coordinate or plugin id contains them, so valid catalogs are not affected.\r\n\r\n| Fix version | Availability |\r\n| ---------- | ----------- |\r\n| 9.9.1 | OSS |\r\n| 9.8.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.7.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.6.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.5.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.4.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.3.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.2.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 8.14.7 | OSS |\r\n| 7.6.8 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n\r\n### Workarounds\r\n\r\nUpgrading Gradle is our recommended fix.\r\n\r\nIf you cannot upgrade immediately:\r\n\r\n* **Check the values of every version catalog a build imports or defines.** This covers `gradle/libs.versions.toml`, other catalog files, catalogs defined in the settings script, and the TOML file of each published catalog the settings script imports. No valid version, group, name or plugin id contains `*/` or `\\u`; do not build, or open in an IDE, a project whose catalogs contain them. For local files:\r\n\r\n  ```\r\n  grep -rn -e '\\*/' -e '\\\\u' --include='*.toml' .\r\n  ```\r\n\r\n* **Import published catalogs at a fixed, checked version.** Do not import a catalog with a dynamic version (`1.+`, `latest.release`) or a changing one (`-SNAPSHOT`), which picks up new content with no change to the build. With [dependency verification](https://docs.gradle.org/current/userguide/securing_dependencies.html), a different file published under the checked version then fails the build.\r\n\r\n### Forensics\r\n\r\nGradle keeps the source it generates for catalog accessors in the Gradle user home, under `caches/\u003cGradle version\u003e/dependencies-accessors/`. A value that adds code shows as text after the end of a comment, `*/`, on a line of that source:\r\n\r\n    grep -rnE '\\*/.*[^[:space:]]' ~/.gradle/caches/*/dependencies-accessors/\r\n\r\nThe catalog files themselves, and their history in version control, show the same values.\r\n\r\nAfter upgrading, a build that fails with `… contains '*/', which is not allowed` or `… contains '\\u', which is not allowed` declares a catalog carrying a payload.\r\n\r\n\u003e [!IMPORTANT]\r\n\u003e The lack of such traces cannot be used to conclude no such attack was performed. Their presence is not a confirmation that an attack happened, but an indication that more investigations are needed.\r\n\r\n### References\r\n\r\n* [Version catalogs](https://docs.gradle.org/current/userguide/version_catalogs.html)\r\n* [Verifying dependencies](https://docs.gradle.org/current/userguide/securing_dependencies.html)\r\n\r\nMore about this type of vulnerabilities:\r\n\r\n* https://cwe.mitre.org/data/definitions/94.html\r\n* https://cwe.mitre.org/data/definitions/116.html",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "7.0.0"
+            },
+            {
+              "fixed": "8.14.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "7.0.0"
+            },
+            {
+              "fixed": "8.14.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "7.0.0"
+            },
+            {
+              "fixed": "8.14.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/gradle/gradle/security/advisories/GHSA-3cfg-jpcr-gfp3"
+    }
+  ]
+}
