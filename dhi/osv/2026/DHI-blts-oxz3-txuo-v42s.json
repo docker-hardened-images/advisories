@@ -1,0 +1,393 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-blts-oxz3-txuo-v42s",
+  "modified": "2026-11-11T23:08:47Z",
+  "published": "2026-11-11T23:08:47Z",
+  "upstream": [
+    "GHSA-cq8v-f236-94qc"
+  ],
+  "summary": "It has been reported (by @lopopolo) that the `rand` library is…",
+  "details": "It has been reported (by @lopopolo) that the `rand` library is [unsound](https://rust-lang.github.io/unsafe-code-guidelines/glossary.html#soundness-of-code--of-a-library) (i.e. that safe code using the public API can cause Undefined Behaviour) when all the following conditions are met:\n\n- The `log` and `thread_rng` features are enabled\n- A [custom logger](https://docs.rs/log/latest/log/#implementing-a-logger) is defined\n- The custom logger accesses `rand::rng()` (previously `rand::thread_rng()`) and calls any `TryRng` (previously `RngCore`) methods on `ThreadRng`\n- The `ThreadRng` (attempts to) reseed while called from the custom logger (this happens every 64 kB of generated data)\n- Trace-level logging is enabled or warn-level logging is enabled and the random source (the `getrandom` crate) is unable to provide a new seed\n\n`TryRng` (previously `RngCore`) methods for `ThreadRng` use `unsafe` code to cast `*mut BlockRng<ReseedingCore>` to `&mut BlockRng<ReseedingCore>`. When all the above conditions are met this results in an aliased mutable reference, violating the Stacked Borrows rules. Miri is able to detect this violation in sample code. Since construction of [aliased mutable references is Undefined Behaviour](https://doc.rust-lang.org/stable/nomicon/references.html), the behaviour of optimized builds is hard to predict.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitlab-rails-18",
+        "purl": "pkg:apk/dhi/gitlab-rails-18"
+      },
+      "versions": [
+        "18.11.11-r0",
+        "18.11.11-r1",
+        "18.11.11-r2",
+        "18.11.12-r0",
+        "18.11.12-r1",
+        "18.11.12-r2",
+        "18.11.12-r3",
+        "18.11.12-r4",
+        "18.11.14-r0",
+        "18.11.14-r1",
+        "18.11.14-r2",
+        "18.11.14-r3",
+        "18.11.14-r4",
+        "18.11.14-r5",
+        "18.11.14-r6",
+        "18.11.14-r7",
+        "18.11.14-r8",
+        "18.11.14-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitlab-rails-19",
+        "purl": "pkg:apk/dhi/gitlab-rails-19"
+      },
+      "versions": [
+        "19.1.8-r0",
+        "19.1.8-r1",
+        "19.4.1-r0",
+        "19.4.1-r1",
+        "19.4.1-r2",
+        "19.4.1-r3",
+        "19.4.2-r0",
+        "19.5.3-r0",
+        "19.5.3-r1",
+        "19.5.3-r2",
+        "19.5.3-r3",
+        "19.5.3-r4",
+        "19.5.3-r5",
+        "19.5.3-r6",
+        "19.5.3-r7",
+        "19.5.3-r8",
+        "19.5.4-r0",
+        "19.5.4-r1",
+        "19.5.5-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "libpathrs",
+        "purl": "pkg:apk/dhi/libpathrs"
+      },
+      "versions": [
+        "0.2.5-r1",
+        "0.2.6-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "libpathrs",
+        "purl": "pkg:apk/dhi/libpathrs"
+      },
+      "versions": [
+        "0.2.5-r1",
+        "0.2.6-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "rust",
+        "purl": "pkg:apk/dhi/rust"
+      },
+      "versions": [
+        "1.91.1-r0",
+        "1.91.1-r2",
+        "1.91.1-r3",
+        "1.91.1-r4",
+        "1.93.1-r0",
+        "1.93.1-r1",
+        "1.94.0-r0",
+        "1.94.0-r1",
+        "1.94.1-r0",
+        "1.94.1-r1",
+        "1.95.0-r0",
+        "1.96.0-r0",
+        "1.96.1-r0",
+        "1.97.0-r0",
+        "1.97.0-r1",
+        "1.98.1-r0",
+        "1.99.0-r2",
+        "1.99.1-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "gitlab-rails-18",
+        "purl": "pkg:deb/dhi/gitlab-rails-18"
+      },
+      "versions": [
+        "18.11.11-0",
+        "18.11.11-1",
+        "18.11.11-2",
+        "18.11.12-0",
+        "18.11.12-1",
+        "18.11.12-2",
+        "18.11.14-0",
+        "18.11.14-1",
+        "18.11.14-10",
+        "18.11.14-2",
+        "18.11.14-3",
+        "18.11.14-4",
+        "18.11.14-5",
+        "18.11.14-6",
+        "18.11.14-7",
+        "18.11.14-8",
+        "18.11.14-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "gitlab-rails-19",
+        "purl": "pkg:deb/dhi/gitlab-rails-19"
+      },
+      "versions": [
+        "19.1.8-0",
+        "19.1.8-1",
+        "19.4.1-0",
+        "19.4.1-1",
+        "19.4.1-2",
+        "19.4.2-0",
+        "19.5.3-0",
+        "19.5.3-1",
+        "19.5.3-2",
+        "19.5.3-3",
+        "19.5.3-4",
+        "19.5.3-5",
+        "19.5.3-6",
+        "19.5.3-7",
+        "19.5.3-8",
+        "19.5.3-9",
+        "19.5.4-0",
+        "19.5.4-1",
+        "19.5.5-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "qdrant",
+        "purl": "pkg:deb/dhi/qdrant"
+      },
+      "versions": [
+        "1.18.3-0",
+        "1.18.3-1",
+        "1.18.3-2",
+        "1.19.0-0",
+        "1.19.0-1",
+        "1.19.0-2",
+        "1.19.0-3",
+        "1.19.0-4",
+        "1.19.0-5",
+        "1.19.0-6",
+        "1.19.1-1",
+        "1.19.1-2",
+        "1.19.1-3",
+        "1.19.1-4",
+        "1.19.1-5",
+        "1.19.1-6",
+        "1.19.1-7",
+        "1.19.2-0",
+        "1.19.2-1",
+        "1.19.2-2",
+        "1.20.0-0",
+        "1.20.0-1",
+        "1.20.0-2",
+        "1.20.0-3",
+        "1.20.0-4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "ztunnel-1.29-fips",
+        "purl": "pkg:deb/dhi/ztunnel-1.29-fips"
+      },
+      "versions": [
+        "1.29.10-0",
+        "1.29.10-1",
+        "1.29.7-0",
+        "1.29.7-1",
+        "1.29.8-0",
+        "1.29.9-0",
+        "1.29.9-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "ztunnel-1.29",
+        "purl": "pkg:deb/dhi/ztunnel-1.29"
+      },
+      "versions": [
+        "1.29.10-0",
+        "1.29.10-1",
+        "1.29.7-0",
+        "1.29.7-1",
+        "1.29.8-0",
+        "1.29.9-0",
+        "1.29.9-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "ztunnel-1.30-fips",
+        "purl": "pkg:deb/dhi/ztunnel-1.30-fips"
+      },
+      "versions": [
+        "1.30.4-0",
+        "1.30.4-1",
+        "1.30.5-0",
+        "1.30.6-0",
+        "1.30.6-1",
+        "1.30.7-0",
+        "1.30.8-0",
+        "1.30.8-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "ztunnel-1.30",
+        "purl": "pkg:deb/dhi/ztunnel-1.30"
+      },
+      "versions": [
+        "1.30.4-0",
+        "1.30.4-1",
+        "1.30.5-0",
+        "1.30.6-0",
+        "1.30.6-1",
+        "1.30.7-0",
+        "1.30.8-0",
+        "1.30.8-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "ztunnel-1.31-fips",
+        "purl": "pkg:deb/dhi/ztunnel-1.31-fips"
+      },
+      "versions": [
+        "1.31.0-0",
+        "1.31.1-0",
+        "1.31.2-0",
+        "1.31.2-1",
+        "1.31.3-0",
+        "1.31.4-0",
+        "1.31.4-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "ztunnel-1.31",
+        "purl": "pkg:deb/dhi/ztunnel-1.31"
+      },
+      "versions": [
+        "1.31.0-0",
+        "1.31.1-0",
+        "1.31.2-0",
+        "1.31.2-1",
+        "1.31.3-0",
+        "1.31.4-0",
+        "1.31.4-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "ztunnel-1.32-fips",
+        "purl": "pkg:deb/dhi/ztunnel-1.32-fips"
+      },
+      "versions": [
+        "1.32.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "ztunnel-1.32",
+        "purl": "pkg:deb/dhi/ztunnel-1.32"
+      },
+      "versions": [
+        "1.32.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-blts-oxz3-txuo-v42s"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-cq8v-f236-94qc"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0097.html"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/rust-random/rand/pull/1763"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0097"
+    }
+  ]
+}
