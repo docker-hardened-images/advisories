@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-jjja-6kfk-io7w-gg4i",
+  "modified": "2026-11-11T16:05:21Z",
+  "published": "2026-11-11T16:05:21Z",
+  "upstream": [
+    "GHSA-gq4g-fpc9-vjfq"
+  ],
+  "summary": "## Impact",
+  "details": "## Impact\n\n`Webauthn\\SimpleFakeCredentialGenerator` is the library-provided default implementation of the `FakeCredentialGenerator` interface. It returns a stable list of decoy `PublicKeyCredentialDescriptor` objects for a given username so that an assertion request for an unknown user looks the same as a request for a real one, which mitigates username enumeration.\n\nThe generator derives the whole decoy list from a single seed:\n\n```php\n$seed = hash('sha256', $username . $this->secret, true);\n```\n\nWhen it is constructed without a secret (its constructor default, `$secret = ''`), the seed depends only on the username. The username is attacker-chosen and the algorithm is public, so an unauthenticated requester can recompute the exact, byte-for-byte decoy list the server returns for any username. The attacker then compares a probed username's response against the locally computed list and decides whether the account is real or fake, which is precisely the distinction the mechanism is meant to hide.\n\nWith any non-empty secret the seed becomes a value the attacker cannot evaluate and the mitigation holds. The defect is the empty default, not the algorithm.\n\n## Affected configurations\n\n- Direct use of the library (`web-auth/webauthn-lib`) where `SimpleFakeCredentialGenerator` is instantiated without a secret.\n- Any integration that wires the generator with an empty secret.\n\nThe Symfony bundle is not affected with its default configuration: it injects the application secret (`kernel.secret`) into the generator, so out-of-the-box deployments already use a non-empty secret. Deployments that set an empty `kernel.secret` are affected.\n\n## Patches\n\nFixed in 5.3.5. The generator now emits a deprecation when it is constructed without a secret, which surfaces the misconfiguration in logs and the Symfony profiler. A non-empty secret will be required in 6.0.0. The recommended remediation is to always provide a non-empty, deployment-specific secret.\n\n## Workarounds\n\nConstruct `SimpleFakeCredentialGenerator` with a non-empty secret value (for example the application secret), or provide a custom `FakeCredentialGenerator` implementation seeded with a secret.\n\n## Proof of concept\n\n```php\n<?php\ndeclare(strict_types=1);\n\nrequire $src . '/PublicKeyCredentialDescriptor.php';\nrequire $src . '/FakeCredentialGenerator.php';\nrequire $src . '/SimpleFakeCredentialGenerator.php';\n\nuse Webauthn\\PublicKeyCredentialDescriptor;\nuse Webauthn\\SimpleFakeCredentialGenerator;\n\n$username = 'alice@example.com';\n\n// 1. The \"server\" runs the library default wiring (cache=null, secret='').\n$server = new SimpleFakeCredentialGenerator();\n$refl = new ReflectionMethod(SimpleFakeCredentialGenerator::class, 'generateCredentials');\n$refl->setAccessible(true);\n$serverDescriptors = $refl->invoke($server, $username);\n\n// 2. The \"attacker\" recomputes the same algorithm, knowing only the username.\nfunction attackerRecompute(string $username): array {\n    $transports = [\n        PublicKeyCredentialDescriptor::AUTHENTICATOR_TRANSPORT_USB,\n        PublicKeyCredentialDescriptor::AUTHENTICATOR_TRANSPORT_NFC,\n        PublicKeyCredentialDescriptor::AUTHENTICATOR_TRANSPORT_BLE,\n        PublicKeyCredentialDescriptor::AUTHENTICATOR_TRANSPORT_HYBRID,\n        PublicKeyCredentialDescriptor::AUTHENTICATOR_TRANSPORT_INTERNAL,\n        PublicKeyCredentialDescriptor::AUTHENTICATOR_TRANSPORT_SMART_CARD,\n    ];\n    $seed = hash('sha256', $username . '', true); // empty secret\n    $count = (ord($seed[0]) % 3) + 1;\n    $out = [];\n    for ($i = 0; $i < $count; $i++) {\n        $credSeed = hash('sha256', $seed . pack('N', $i), true);\n        $transportCount = (ord($credSeed[0]) % 2) + 1;\n        $sel = [];\n        for ($j = 0; $j < $transportCount; $j++) {\n            $sel[] = $transports[ord($credSeed[$j + 1]) % count($transports)];\n        }\n        $sel = array_values(array_unique($sel));\n        $out[] = ['type' => PublicKeyCredentialDescriptor::CREDENTIAL_TYPE_PUBLIC_KEY,\n                  'id' => hash('sha256', $credSeed . $username), 'transports' => $sel];\n    }\n    return $out;\n}\n\n// 3. The two lists match byte-for-byte, so the decoy is reproducible.\n//    The same call with a non-empty secret diverges, confirming the defect\n//    is the default value rather than the algorithm.\n```\n\nWith the default empty secret the library's fake-credential list is bit-for-bit reproducible from the public username alone, which defeats the username enumeration mitigation. The same call with a non-empty secret diverges.\n\n## Severity\n\nLow. The decoy responses are still well-formed and the issue only re-enables username enumeration, and only when the generator is used without a secret (which is not the case for default Symfony bundle deployments).\n\n## Credits\n\nFound during an internal security audit of the project.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N/E:P"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "nextcloud-34",
+        "purl": "pkg:deb/dhi/nextcloud-34"
+      },
+      "versions": [
+        "34.0.4-0",
+        "34.0.5-0",
+        "34.0.5-1",
+        "34.0.5-2",
+        "34.0.5-3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "nextcloud-35",
+        "purl": "pkg:deb/dhi/nextcloud-35"
+      },
+      "versions": [
+        "35.0.1-0",
+        "35.0.2-0",
+        "35.0.2-1",
+        "35.0.2-2",
+        "35.0.2-3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "nextcloud",
+        "purl": "pkg:deb/dhi/nextcloud"
+      },
+      "versions": [
+        "34.0.3-0",
+        "34.0.4-0",
+        "35.0.1-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-jjja-6kfk-io7w-gg4i"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-gq4g-fpc9-vjfq"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/web-auth/webauthn-framework/security/advisories/GHSA-gq4g-fpc9-vjfq"
+    }
+  ]
+}
