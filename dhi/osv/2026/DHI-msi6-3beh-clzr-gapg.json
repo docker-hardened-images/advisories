@@ -1,0 +1,417 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-msi6-3beh-clzr-gapg",
+  "modified": "2026-11-11T23:20:44Z",
+  "published": "2026-11-11T23:20:44Z",
+  "upstream": [
+    "CVE-2026-88011"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nThere is a medium severity vulnerability in Traefik's handling of request headers whose name aliases another header name. Go canonicalizes header names on dashes only, so `X-Auth-User`, `X_Auth_User` and `X.Auth.User` are three distinct headers to Traefik, while backends that derive variable names from header names (CGI, WSGI, PHP, NGINX, and others) collapse all of them into the same variable. A client can therefore smuggle an alias of a header that Traefik manages past the middleware managing it — for example a dot-form `X.Authenticated.User` alongside the canonical `X-Authenticated-User` written by the ForwardAuth middleware — and have such a backend read the client-supplied value instead of the identity Traefik asserted. Any header Traefik sets is exposed, not only ForwardAuth's. This is an incomplete-fix sibling of GHSA-x677-9fxg-v5c5, which blocked only the underscore form.\n\nThe mitigation is the new `aliasHeadersStrategy` entry point option. It defaults to `keep`, which preserves the previous behavior for backwards compatibility, so it must be explicitly set to `delete` or `reject` to take effect.\n\nTraefik v1.x, the v2 releases up to v2.11.55 and the v3 releases from v3.0.0 to v3.7.11 are affected. The unmaintained lines among them will not receive a patch of their own, and the remedy for their users is to upgrade to v2.11.56 or v3.7.12 and set `aliasHeadersStrategy`.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v2.11.56\n- https://github.com/traefik/traefik/releases/tag/v3.7.12\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\n\n<details>\n<summary>Original Description</summary>\n\n### Summary\r\nTraefik's ForwardAuth middleware removes the configured canonical identity header before copying the value returned by the auth service. However, a client-supplied dot-form alias such as `X.Authenticated.User` survives both this replacement and `underscoreHeadersStrategy: delete`.\r\n\r\nThe tested PHP 8.2 built-in SAPI maps `X-Authenticated-User` and `X.Authenticated.User` to the same `HTTP_X_AUTHENTICATED_USER` server variable. In Traefik's tested HTTP/1 backend path, the client value is serialized last and overrides the identity asserted by ForwardAuth.\r\n\r\nA client whom ForwardAuth permits as a lower-privilege identity can therefore be treated by the backend as another user or role.\r\n\r\n### Details\r\nAt `v3.7.10`, `pkg/server/server_entrypoint_tcp.go:800-818` removes or rejects only names containing `_`. After successful authentication, `pkg/middlewares/auth/forward.go:314-326` deletes and replaces only the canonical `authResponseHeaders` key. The dot alias remains in `req.Header` and the standard reverse proxy forwards both legal field names.\r\n\r\nGo's HTTP/1 writer sorts header names lexically, placing `X-Authenticated-User` before `X.Authenticated.User`. PHP then collapses both into one `$_SERVER` key, so the attacker value deterministically wins.\r\n\r\nThis is an incomplete-fix sibling of `GHSA-x677-9fxg-v5c5`: the published underscore input is blocked by the new entry-point strategy, while the dot input bypasses that mitigation on the current stable release.\r\n\r\n### PoC\r\n[traefik-dot-forwardauth-poc.zip](https://github.com/user-attachments/files/30898195/traefik-dot-forwardauth-poc.zip)\r\n\r\nrun:\r\n```bash\r\ndocker compose up -d\r\nbash verify.sh\r\ndocker compose down\r\n```\r\n\r\nThe decisive request is:\r\n\r\n```http\r\nGET /probe HTTP/1.1\r\nHost: 127.0.0.1:18080\r\nX.Authenticated.User: admin\r\nConnection: close\r\n```\r\n\r\nExpected backend identity: `lab-user`, as returned by ForwardAuth.\r\n\r\nObserved on `v3.7.10`: `admin`.\r\n\r\nThe script also verifies that requests without the alias, with the canonical header, and with the already-fixed underscore alias all produce `lab-user`.\r\n\r\n### Impact\r\nApplications that authorize requests using a ForwardAuth-provided identity header can receive an attacker-selected username or role instead. This was runtime-verified with PHP 8.2.27 and 8.2.33; impact on other normalization-prone backends is conditional. A lower-privilege permitted client may consequently impersonate another user or administrative role, affecting confidentiality and integrity.\r\n\r\nThis report does not claim bypass of a ForwardAuth denial: the auth service must first permit the request.\r\n\n\n</details>\n",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:H/SI:H/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.6-dev",
+        "purl": "pkg:apk/dhi/traefik-3.6-dev"
+      },
+      "versions": [
+        "3.6.21-r1",
+        "3.6.22-r0",
+        "3.6.22-r1",
+        "3.6.22-r2",
+        "3.6.24-r0",
+        "3.6.25-r0",
+        "3.6.25-r2",
+        "3.6.25-r3",
+        "3.6.25-r4",
+        "3.6.25-r5",
+        "3.6.25-r6",
+        "3.6.25-r7",
+        "3.6.25-r8",
+        "3.6.25-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.6-fips-dev",
+        "purl": "pkg:apk/dhi/traefik-3.6-fips-dev"
+      },
+      "versions": [
+        "3.6.21-r1",
+        "3.6.22-r0",
+        "3.6.22-r1",
+        "3.6.22-r2",
+        "3.6.24-r0",
+        "3.6.25-r0",
+        "3.6.25-r2",
+        "3.6.25-r3",
+        "3.6.25-r4",
+        "3.6.25-r5",
+        "3.6.25-r6",
+        "3.6.25-r7",
+        "3.6.25-r8",
+        "3.6.25-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.6-fips",
+        "purl": "pkg:apk/dhi/traefik-3.6-fips"
+      },
+      "versions": [
+        "3.6.21-r1",
+        "3.6.22-r0",
+        "3.6.22-r1",
+        "3.6.22-r2",
+        "3.6.24-r0",
+        "3.6.25-r0",
+        "3.6.25-r2",
+        "3.6.25-r3",
+        "3.6.25-r4",
+        "3.6.25-r5",
+        "3.6.25-r6",
+        "3.6.25-r7",
+        "3.6.25-r8",
+        "3.6.25-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.6",
+        "purl": "pkg:apk/dhi/traefik-3.6"
+      },
+      "versions": [
+        "3.6.21-r1",
+        "3.6.22-r0",
+        "3.6.22-r1",
+        "3.6.22-r2",
+        "3.6.24-r0",
+        "3.6.25-r0",
+        "3.6.25-r2",
+        "3.6.25-r3",
+        "3.6.25-r4",
+        "3.6.25-r5",
+        "3.6.25-r6",
+        "3.6.25-r7",
+        "3.6.25-r8",
+        "3.6.25-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.7-dev",
+        "purl": "pkg:apk/dhi/traefik-3.7-dev"
+      },
+      "versions": [
+        "3.7.10-r0",
+        "3.7.10-r2",
+        "3.7.11-r0",
+        "3.7.11-r1",
+        "3.7.11-r2",
+        "3.7.12-r0",
+        "3.7.12-r1",
+        "3.7.13-r0",
+        "3.7.13-r1",
+        "3.7.13-r2",
+        "3.7.14-r0",
+        "3.7.14-r1",
+        "3.7.15-r0",
+        "3.7.16-r0",
+        "3.7.16-r1",
+        "3.7.16-r2",
+        "3.7.17-r0",
+        "3.7.18-r0",
+        "3.7.18-r1",
+        "3.7.5-r1",
+        "3.7.6-r0",
+        "3.7.6-r1",
+        "3.7.6-r2",
+        "3.7.9-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.7-fips-dev",
+        "purl": "pkg:apk/dhi/traefik-3.7-fips-dev"
+      },
+      "versions": [
+        "3.7.10-r0",
+        "3.7.10-r2",
+        "3.7.11-r0",
+        "3.7.11-r1",
+        "3.7.11-r2",
+        "3.7.12-r0",
+        "3.7.12-r1",
+        "3.7.13-r0",
+        "3.7.13-r1",
+        "3.7.13-r2",
+        "3.7.14-r0",
+        "3.7.14-r1",
+        "3.7.15-r0",
+        "3.7.16-r0",
+        "3.7.16-r1",
+        "3.7.16-r2",
+        "3.7.17-r0",
+        "3.7.18-r0",
+        "3.7.18-r1",
+        "3.7.5-r1",
+        "3.7.6-r0",
+        "3.7.6-r1",
+        "3.7.6-r2",
+        "3.7.9-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.7-fips",
+        "purl": "pkg:apk/dhi/traefik-3.7-fips"
+      },
+      "versions": [
+        "3.7.10-r0",
+        "3.7.10-r2",
+        "3.7.11-r0",
+        "3.7.11-r1",
+        "3.7.11-r2",
+        "3.7.12-r0",
+        "3.7.12-r1",
+        "3.7.13-r0",
+        "3.7.13-r1",
+        "3.7.13-r2",
+        "3.7.14-r0",
+        "3.7.14-r1",
+        "3.7.15-r0",
+        "3.7.16-r0",
+        "3.7.16-r1",
+        "3.7.16-r2",
+        "3.7.17-r0",
+        "3.7.18-r0",
+        "3.7.18-r1",
+        "3.7.5-r1",
+        "3.7.6-r0",
+        "3.7.6-r1",
+        "3.7.6-r2",
+        "3.7.9-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.7",
+        "purl": "pkg:apk/dhi/traefik-3.7"
+      },
+      "versions": [
+        "3.7.10-r0",
+        "3.7.10-r2",
+        "3.7.11-r0",
+        "3.7.11-r1",
+        "3.7.11-r2",
+        "3.7.12-r0",
+        "3.7.12-r1",
+        "3.7.13-r0",
+        "3.7.13-r1",
+        "3.7.13-r2",
+        "3.7.14-r0",
+        "3.7.14-r1",
+        "3.7.15-r0",
+        "3.7.16-r0",
+        "3.7.16-r1",
+        "3.7.16-r2",
+        "3.7.17-r0",
+        "3.7.18-r0",
+        "3.7.18-r1",
+        "3.7.5-r1",
+        "3.7.6-r0",
+        "3.7.6-r1",
+        "3.7.6-r2",
+        "3.7.9-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-dev",
+        "purl": "pkg:apk/dhi/traefik-dev"
+      },
+      "versions": [
+        "3.6.17-r0",
+        "3.6.17-r1",
+        "3.6.17-r2",
+        "3.6.18-r0",
+        "3.6.19-r0",
+        "3.6.20-r0",
+        "3.6.21-r0",
+        "3.6.21-r1",
+        "3.7.1-r0",
+        "3.7.1-r1",
+        "3.7.1-r2",
+        "3.7.2-r0",
+        "3.7.3-r0",
+        "3.7.4-r0",
+        "3.7.5-r0",
+        "3.7.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-fips-dev",
+        "purl": "pkg:apk/dhi/traefik-fips-dev"
+      },
+      "versions": [
+        "3.6.17-r0",
+        "3.6.17-r1",
+        "3.6.17-r2",
+        "3.6.18-r0",
+        "3.6.19-r0",
+        "3.6.20-r0",
+        "3.6.21-r0",
+        "3.6.21-r1",
+        "3.7.1-r0",
+        "3.7.1-r1",
+        "3.7.1-r2",
+        "3.7.2-r0",
+        "3.7.3-r0",
+        "3.7.4-r0",
+        "3.7.5-r0",
+        "3.7.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-fips",
+        "purl": "pkg:apk/dhi/traefik-fips"
+      },
+      "versions": [
+        "3.6.17-r0",
+        "3.6.17-r1",
+        "3.6.17-r2",
+        "3.6.18-r0",
+        "3.6.19-r0",
+        "3.6.20-r0",
+        "3.6.21-r0",
+        "3.6.21-r1",
+        "3.7.1-r0",
+        "3.7.1-r1",
+        "3.7.1-r2",
+        "3.7.2-r0",
+        "3.7.3-r0",
+        "3.7.4-r0",
+        "3.7.5-r0",
+        "3.7.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik",
+        "purl": "pkg:apk/dhi/traefik"
+      },
+      "versions": [
+        "3.6.17-r0",
+        "3.6.17-r1",
+        "3.6.17-r2",
+        "3.6.18-r0",
+        "3.6.19-r0",
+        "3.6.20-r0",
+        "3.6.21-r0",
+        "3.6.21-r1",
+        "3.7.1-r0",
+        "3.7.1-r1",
+        "3.7.1-r2",
+        "3.7.2-r0",
+        "3.7.3-r0",
+        "3.7.4-r0",
+        "3.7.5-r0",
+        "3.7.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-msi6-3beh-clzr-gapg"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-rf44-j88r-hh8c"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-rf44-j88r-hh8c"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-88011"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/traefik/traefik/pull/13720"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/traefik/traefik/commit/0331801c72329e0eaeb850e53ccce87c57fbecf8"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/releases/tag/v3.7.12"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/releases/tag/v2.11.56"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-6455"
+    }
+  ]
+}
