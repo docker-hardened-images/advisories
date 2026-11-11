@@ -1,0 +1,98 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-rlzt-gtvl-gvds-bvhd",
+  "modified": "2026-11-11T16:59:50Z",
+  "published": "2026-11-11T16:59:50Z",
+  "upstream": [
+    "CVE-2026-80213"
+  ],
+  "summary": "An issue was discovered in the resolv gem before 0.7.2 for Ruby. Resolv::DNS::MessageEncoder wrote a DNS label's length…",
+  "details": "An issue was discovered in the resolv gem before 0.7.2 for Ruby. Resolv::DNS::MessageEncoder wrote a DNS label's length into a single octet without checking its range. A label longer than 255 octets had its length stored modulo 256 but the label data was written unchanged, and thus the bytes on the wire described a different name than the one the application asked to encode. RFC 1035 section 2.3.4 limits a label to 63 octets, and the two high bits of the length octet are reserved for compression pointers. put_string packed the length with put_pack(\"C\", d.length) and put_label used it for labels, and thus any value from 0 to 255 could end up as a label length octet, including the reserved 0x40-0xBF range and the 0xC0-0xFF pointer range. Resolv::DNS::Name.create did not check per-label or total name length either, and thus an attacker-controlled hostname reached the encoder unchanged. An application that resolves an attacker-controlled hostname sends a query whose wire bytes name a domain the attacker chose. A hostname suffix that the application validates against an allowlist becomes padding that never appears on the wire, and thus allowlist and egress checks can be bypassed. The recursive resolver caches the response under the attacker's name, and DNS logs record that name rather than the one the application asked for. A label length whose low octet lands in the 0xC0-0xFF range produces a length octet that conforming parsers read as the start of a compression pointer, with the following attacker-controlled byte as the offset.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:N/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "ruby",
+        "purl": "pkg:apk/dhi/ruby"
+      },
+      "versions": [
+        "3.2.11-r1",
+        "3.3.12-r3",
+        "3.4.10-r2",
+        "3.4.10-r3",
+        "3.4.12-r0",
+        "3.4.12-r1",
+        "3.4.8-r0",
+        "3.4.9-r0",
+        "4.0.6-r3",
+        "4.0.6-r4",
+        "4.0.7-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "ruby",
+        "purl": "pkg:apk/dhi/ruby"
+      },
+      "versions": [
+        "3.2.11-r1",
+        "3.3.12-r3",
+        "3.4.10-r2",
+        "3.4.10-r3",
+        "3.4.12-r0",
+        "3.4.12-r1",
+        "3.4.9-r0",
+        "4.0.6-r3",
+        "4.0.6-r4",
+        "4.0.7-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-rlzt-gtvl-gvds-bvhd"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-80213"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-80213"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-2144.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-80213"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-80212"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-2145.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-80213"
+    }
+  ]
+}
