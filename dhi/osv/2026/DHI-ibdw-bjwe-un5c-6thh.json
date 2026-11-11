@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ibdw-bjwe-un5c-6thh",
+  "modified": "2026-11-11T22:51:07Z",
+  "published": "2026-11-11T22:51:07Z",
+  "upstream": [
+    "RUSTSEC-2026-0306"
+  ],
+  "summary": "`faster_hex::hex_decode_unchecked` is a safe function. On x86 and x86_64, when AVX2 is enabled, `hex_decode_avx2` keeps…",
+  "details": "`faster_hex::hex_decode_unchecked` is a safe function. On x86 and x86_64, when AVX2 is enabled, `hex_decode_avx2` keeps decoding while `dst.len() >= 32` and then loads 32 bytes from `src` and 32 bytes from `src[32..]`. Nothing in that loop requires `src` to contain 64 bytes.\n\nA safe caller can pass a short `src` and a `dst` of at least 32 bytes. The AVX2 load then reads outside `src`.\n\nThe function has had this shape since 0.3.0. 0.10.0 is the last release with the unbounded AVX2 read. The maintainer agreed to this advisory and shipped the backport in 0.10.1 (pull request 74): the AVX2 loop now requires `src.len() >= 64` before those loads. 1.0.0 rewrites `hex_decode_unchecked` so the decoded length is `min(src.len() / 2, dst.len())`. Both are covered by `>= 0.10.1`. Other architectures take the scalar fallback and are outside this advisory.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "mise",
+        "purl": "pkg:deb/dhi/mise"
+      },
+      "versions": [
+        "2026.10.0-0",
+        "2026.10.1-0",
+        "2026.10.10-0",
+        "2026.10.12-0",
+        "2026.10.13-0",
+        "2026.10.14-0",
+        "2026.10.15-0",
+        "2026.10.17-0",
+        "2026.10.18-0",
+        "2026.10.19-0",
+        "2026.10.20-0",
+        "2026.10.21-0",
+        "2026.10.22-0",
+        "2026.10.23-0",
+        "2026.10.24-0",
+        "2026.10.25-0",
+        "2026.10.3-0",
+        "2026.10.4-0",
+        "2026.10.5-0",
+        "2026.10.7-0",
+        "2026.10.8-0",
+        "2026.10.9-0",
+        "2026.11.0-0",
+        "2026.11.1-0",
+        "2026.11.2-0",
+        "2026.11.3-0",
+        "2026.11.4-0",
+        "2026.11.5-0",
+        "2026.11.6-0",
+        "2026.9.10-0",
+        "2026.9.18-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ibdw-bjwe-un5c-6thh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0306"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0306.html"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/nervosnetwork/faster-hex/pull/74"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/nervosnetwork/faster-hex/pull/72"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/nervosnetwork/faster-hex/issues/73"
+    }
+  ]
+}
