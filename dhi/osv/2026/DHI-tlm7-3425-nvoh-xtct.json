@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-tlm7-3425-nvoh-xtct",
+  "modified": "2026-11-11T18:54:50Z",
+  "published": "2026-11-11T18:54:50Z",
+  "upstream": [
+    "RUSTSEC-2026-0344"
+  ],
+  "summary": "A crafted `.zst` input under 128 KB can force `ruzstd` to allocate several gigabytes at once, crashing the process with…",
+  "details": "A crafted `.zst` input under 128 KB can force `ruzstd` to allocate several gigabytes at once, crashing the process with an out-of-memory condition. Since `ruzstd` is a decoder for untrusted input, a single small file is enough to take down anything decoding it.\n\nThe compressed size of a block was capped at 128 KB, but a compressed block's **decompressed** size was never checked against `Block_Maximum_Size = min(Window_Size, 128 KiB)` (RFC 8878). In `execute_sequences` the output was built with no running bound and no flush between blocks, so one block could expand to gigabytes — bypassing both the configured window-size limit and the block-by-block streaming that would otherwise release memory. (A related `u32` counter overflow on such a block caused an additional panic.)\n\nThis is a denial of service only; memory access stays in bounds (no corruption, no RCE).\n\n`ruzstd` is also built as a dependency of the Rust standard library via `rustc-dep-of-std`; in the toolchain it is used only to load zstd-compressed debug symbols, so the toolchain-side impact is limited.\n\n**Fixed in 0.9.1** (commit `d3907c9`), which enforces the per-block output bound. Upgrade to `ruzstd >= 0.9.1`.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "rust",
+        "purl": "pkg:apk/dhi/rust"
+      },
+      "versions": [
+        "1.91.1-r0",
+        "1.91.1-r2",
+        "1.91.1-r3",
+        "1.91.1-r4",
+        "1.93.1-r0",
+        "1.93.1-r1",
+        "1.94.0-r0",
+        "1.94.0-r1",
+        "1.94.1-r0",
+        "1.94.1-r1",
+        "1.95.0-r0",
+        "1.96.0-r0",
+        "1.96.1-r0",
+        "1.97.0-r0",
+        "1.97.0-r1",
+        "1.98.1-r0",
+        "1.99.0-r2",
+        "1.99.1-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "qdrant",
+        "purl": "pkg:deb/dhi/qdrant"
+      },
+      "versions": [
+        "1.18.3-0",
+        "1.18.3-1",
+        "1.18.3-2",
+        "1.19.0-0",
+        "1.19.0-1",
+        "1.19.0-2",
+        "1.19.0-3",
+        "1.19.0-4",
+        "1.19.0-5",
+        "1.19.0-6",
+        "1.19.1-1",
+        "1.19.1-2",
+        "1.19.1-3",
+        "1.19.1-4",
+        "1.19.1-5",
+        "1.19.1-6",
+        "1.19.1-7",
+        "1.19.2-0",
+        "1.19.2-1",
+        "1.19.2-2",
+        "1.20.0-0",
+        "1.20.0-1",
+        "1.20.0-2",
+        "1.20.0-3",
+        "1.20.0-4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-tlm7-3425-nvoh-xtct"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0344"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0344.html"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/KillingSpark/zstd-rs/commit/d3907c960ca4a1aa44cc38340137c5679dd98f5a"
+    }
+  ]
+}
