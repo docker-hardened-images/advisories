@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-y3wi-jm7w-ygts-finl",
+  "modified": "2026-11-11T19:12:35Z",
+  "published": "2026-11-11T19:12:35Z",
+  "upstream": [
+    "CVE-2026-48095"
+  ],
+  "summary": "7-Zip is a file archiver with a high compression ratio. Versions 26.00 and prior contain a heap buffer overflow…",
+  "details": "7-Zip is a file archiver with a high compression ratio. Versions 26.00 and prior contain a heap buffer overflow vulnerability caused by an under-allocation in the NTFS compressed stream buffer (GetCuSize shift UB), potentially allowing attackers to cause arbitrary code execution or application crashes. CInStream::GetCuSize() in the NTFS handler computes the compression-unit buffer size as (UInt32)1 << (BlockSizeLog + CompressionUnit), and a crafted image with ClusterSizeLog >= 28 and CompressionUnit == 4 drives the exponent to 32, which is undefined behavior and collapses on x86/x64 so _inBuf is allocated as 1 byte. ReadStream_FALSE then writes up to 256 MB of attacker-controlled data into that 1-byte buffer in 64 KB iterations, and because the CInStream object sits only 304 bytes after _inBuf, its vtable pointer is overwritten and the next dispatched call achieves a vtable hijack. On 32-bit builds the overflow is unconditionally reached; on 64-bit it requires the parallel 8 GB _outBuf allocation to succeed, otherwise failing closed to denial of service. The NTFS handler is enabled by default in stock 7z.dll and, via signature-based fallback matching \"NTFS    \" at offset 3, will open a crafted image regardless of file extension during extraction or testing. Version 26.01 fixes the issue.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "7zip",
+        "purl": "pkg:apk/dhi/7zip"
+      },
+      "versions": [
+        "26.00-r0",
+        "26.01-r0",
+        "26.01-r1",
+        "26.01-r2",
+        "26.02-r0",
+        "26.04-r0",
+        "26.05-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-y3wi-jm7w-ygts-finl"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-48095"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://securitylab.github.com/advisories/GHSL-2026-140_7-Zip/"
+    },
+    {
+      "type": "WEB",
+      "url": "https://sourceforge.net/p/sevenzip/discussion/45797/thread/555e132ba4"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-48095"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-1820.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-48095"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-48095"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-48095"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-48095"
+    }
+  ]
+}
