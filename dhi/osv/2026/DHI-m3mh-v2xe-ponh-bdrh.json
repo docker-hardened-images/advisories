@@ -1,0 +1,105 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-m3mh-v2xe-ponh-bdrh",
+  "modified": "2026-11-11T17:18:35Z",
+  "published": "2026-11-11T17:18:35Z",
+  "upstream": [
+    "CVE-2026-111879"
+  ],
+  "summary": "DBI versions before 1.656 for Perl hang on a later open of a DBD::DBM table because a failed open_data does not release…",
+  "details": "DBI versions before 1.656 for Perl hang on a later open of a DBD::DBM table because a failed open_data does not release the table's lock.\n\nopen_data creates the table's lock file and takes an exclusive flock on it for a CREATE, before the checks that can croak: a dbm_mldbm value that is not a module name, a failing tie, or a missing data file. The croak unwinds before the table object is blessed, so nothing releases the lock, and the meta data holding the open descriptor stays cached on the database handle.\n\nThe dbm_mldbm and dbm_type values come from the DSN or the connect attributes, so a caller that chooses the serializer or the storage backend can trigger the failure.\n\nThe flock has no timeout, so a later open of that table (even through a separate database handle) blocks for as long as the handle holding the stale lock lives, in the same process or any other.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "perl-dbi",
+        "purl": "pkg:apk/dhi/perl-dbi"
+      },
+      "versions": [
+        "1.648-r0",
+        "1.651-r0",
+        "1.651-r1",
+        "1.651-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-m3mh-v2xe-ponh-bdrh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-111879"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-111879"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2/ALAS-2026-4077.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-88816"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-88815"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-111879"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-108518"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-3414.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-111879"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-111879"
+    },
+    {
+      "type": "FIX",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-111879"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/perl5-dbi/dbi/commit/99bbf2ab9d137e6f042a770bd3bbba3bc0b3a901.patch"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/perl5-dbi/dbi/security/advisories/GHSA-8cx8-9vj9-9x7j"
+    },
+    {
+      "type": "FIX",
+      "url": "https://metacpan.org/release/HMBRAND/DBI-1.656/changes"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-111879"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-111879"
+    }
+  ]
+}
