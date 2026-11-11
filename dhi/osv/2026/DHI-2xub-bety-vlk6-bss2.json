@@ -1,0 +1,1182 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-2xub-bety-vlk6-bss2",
+  "modified": "2026-11-11T15:57:18Z",
+  "published": "2026-11-11T15:57:18Z",
+  "upstream": [
+    "CVE-2026-40179"
+  ],
+  "summary": "### Impact",
+  "details": "### Impact\r\n\r\nStored cross-site scripting (XSS) via crafted metric names in the Prometheus web UI:\r\n\r\n* **Old React UI + New Mantine UI:** When a user hovers over a chart tooltip on the Graph page, metric names containing HTML/JavaScript are injected into `innerHTML` without escaping, causing arbitrary script execution in the user's browser.\r\n* **Old React UI only:** When a user opens the Metric Explorer (globe icon next to the PromQL expression input field), and a metric name containing HTML/JavaScript is rendered in the fuzzy search results, it is injected into `innerHTML` without escaping, causing arbitrary script execution in the user's browser.\r\n* **Old React UI only:** When a user views a heatmap chart and hovers over a cell, the `le` label values of the underlying histogram buckets are interpolated into `innerHTML` without escaping. While `le` is conventionally a numeric bucket boundary, Prometheus does not enforce this — arbitrary UTF-8 strings are accepted as label values, allowing script injection via a crafted scrape target or remote write.\r\n\r\nWith Prometheus v3.x defaulting to UTF-8 metric and label name validation, characters like `<`, `>`, and `\"` are now valid in metric names and labels, making this exploitable.\r\n\r\nAn attacker who can inject metrics (via a compromised scrape target, remote write, or OTLP receiver endpoint) can execute JavaScript in the browser of any Prometheus user who views the metric in the Graph UI. From the XSS context, an attacker could for example:\r\n\r\n- Read `/api/v1/status/config` to extract sensitive configuration (although credentials / secrets are redacted by the server)\r\n- Call `/-/quit` to shut down Prometheus (only if `--web.enable-lifecycle` is set)\r\n- Call `/api/v1/admin/tsdb/delete_series` to delete data (only if `--web.enable-admin-api` is set)\r\n- Exfiltrate metric data to an external server\r\n\r\nBoth the new Mantine UI and the old React UI are affected. The vulnerable code paths are:\r\n\r\n- `web/ui/mantine-ui/src/pages/query/uPlotChartHelpers.ts` — tooltip `innerHTML` with unescaped `labels.__name__`\r\n- `web/ui/react-app/src/pages/graph/GraphHelpers.ts` — tooltip content with unescaped `labels.__name__`\r\n- `web/ui/react-app/src/pages/graph/MetricsExplorer.tsx` — fuzzy search results rendered via `dangerouslySetInnerHTML` without sanitization\r\n- `web/ui/react-app/src/vendor/flot/jquery.flot.heatmap.js` — heatmap tooltip with unescaped label values\r\n\r\n### Patches\r\n\r\nA patch has been published in Prometheus 3.5.2 LTS and Prometheus 3.11.2. The fix applies `escapeHTML()` to all user-controlled values (metric names and label values) before inserting them into `innerHTML`. This advisory will be updated with the patched version once released.\r\n\r\n### Workarounds\r\n\r\n- If using the remote write receiver (`--web.enable-remote-write-receiver`), ensure it is not exposed to untrusted sources.\r\n- If using the OTLP receiver (`--web.enable-otlp-receiver`), ensure it is not exposed to untrusted sources.\r\n- Ensure scrape targets are trusted and not under attacker control.\r\n- Do not enable admin / mutating API endpoints (e.g. `--web.enable-admin-api` or `web.enable-lifecycle`) in cases where you cannot prevent untrusted data from being ingested.\r\n- Users should avoid clicking untrusted links, especially those containing functions such as label_replace, as they may generate poisoned label names and values.\r\n\r\n### References\r\n\r\n- CVE-2019-10215 — prior stored DOM XSS vulnerability in Prometheus query history, fixed in v2.7.2\r\n\r\n### Acknowledgements\r\n\r\nThanks to @gladiator9797 (Duc Anh Nguyen from TinyxLab) for reporting this.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "loki-canary-2.9-dev",
+        "purl": "pkg:apk/dhi/loki-canary-2.9-dev"
+      },
+      "versions": [
+        "2.9.17-r1",
+        "2.9.17-r10",
+        "2.9.17-r11",
+        "2.9.17-r12",
+        "2.9.17-r2",
+        "2.9.17-r3",
+        "2.9.17-r4",
+        "2.9.17-r5",
+        "2.9.17-r7",
+        "2.9.17-r8",
+        "2.9.17-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "loki-canary-2.9-fips-dev",
+        "purl": "pkg:apk/dhi/loki-canary-2.9-fips-dev"
+      },
+      "versions": [
+        "2.9.17-r1",
+        "2.9.17-r10",
+        "2.9.17-r11",
+        "2.9.17-r12",
+        "2.9.17-r2",
+        "2.9.17-r3",
+        "2.9.17-r4",
+        "2.9.17-r5",
+        "2.9.17-r7",
+        "2.9.17-r8",
+        "2.9.17-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "loki-canary-2.9-fips",
+        "purl": "pkg:apk/dhi/loki-canary-2.9-fips"
+      },
+      "versions": [
+        "2.9.17-r1",
+        "2.9.17-r10",
+        "2.9.17-r11",
+        "2.9.17-r12",
+        "2.9.17-r2",
+        "2.9.17-r3",
+        "2.9.17-r4",
+        "2.9.17-r5",
+        "2.9.17-r7",
+        "2.9.17-r8",
+        "2.9.17-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "loki-canary-2.9",
+        "purl": "pkg:apk/dhi/loki-canary-2.9"
+      },
+      "versions": [
+        "2.9.17-r1",
+        "2.9.17-r10",
+        "2.9.17-r11",
+        "2.9.17-r12",
+        "2.9.17-r2",
+        "2.9.17-r3",
+        "2.9.17-r4",
+        "2.9.17-r5",
+        "2.9.17-r7",
+        "2.9.17-r8",
+        "2.9.17-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "metrics-server-dev",
+        "purl": "pkg:apk/dhi/metrics-server-dev"
+      },
+      "versions": [
+        "0.8.1-r0",
+        "0.8.1-r1",
+        "0.8.1-r10",
+        "0.8.1-r11",
+        "0.8.1-r12",
+        "0.8.1-r2",
+        "0.8.1-r3",
+        "0.8.1-r4",
+        "0.8.1-r5",
+        "0.8.1-r6",
+        "0.8.1-r7",
+        "0.8.1-r8",
+        "0.8.1-r9",
+        "0.9.0-r0",
+        "0.9.0-r1",
+        "0.9.0-r10",
+        "0.9.0-r11",
+        "0.9.0-r12",
+        "0.9.0-r2",
+        "0.9.0-r3",
+        "0.9.0-r4",
+        "0.9.0-r5",
+        "0.9.0-r6",
+        "0.9.0-r7",
+        "0.9.0-r8",
+        "0.9.0-r9",
+        "0.9.1-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "metrics-server-fips-dev",
+        "purl": "pkg:apk/dhi/metrics-server-fips-dev"
+      },
+      "versions": [
+        "0.8.1-r0",
+        "0.8.1-r1",
+        "0.8.1-r10",
+        "0.8.1-r11",
+        "0.8.1-r12",
+        "0.8.1-r2",
+        "0.8.1-r3",
+        "0.8.1-r4",
+        "0.8.1-r5",
+        "0.8.1-r6",
+        "0.8.1-r7",
+        "0.8.1-r8",
+        "0.8.1-r9",
+        "0.9.0-r0",
+        "0.9.0-r1",
+        "0.9.0-r10",
+        "0.9.0-r11",
+        "0.9.0-r12",
+        "0.9.0-r2",
+        "0.9.0-r3",
+        "0.9.0-r4",
+        "0.9.0-r5",
+        "0.9.0-r6",
+        "0.9.0-r7",
+        "0.9.0-r8",
+        "0.9.0-r9",
+        "0.9.1-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "metrics-server-fips",
+        "purl": "pkg:apk/dhi/metrics-server-fips"
+      },
+      "versions": [
+        "0.8.1-r0",
+        "0.8.1-r1",
+        "0.8.1-r10",
+        "0.8.1-r11",
+        "0.8.1-r12",
+        "0.8.1-r2",
+        "0.8.1-r3",
+        "0.8.1-r4",
+        "0.8.1-r5",
+        "0.8.1-r6",
+        "0.8.1-r7",
+        "0.8.1-r8",
+        "0.8.1-r9",
+        "0.9.0-r0",
+        "0.9.0-r1",
+        "0.9.0-r10",
+        "0.9.0-r11",
+        "0.9.0-r12",
+        "0.9.0-r2",
+        "0.9.0-r3",
+        "0.9.0-r4",
+        "0.9.0-r5",
+        "0.9.0-r6",
+        "0.9.0-r7",
+        "0.9.0-r8",
+        "0.9.0-r9",
+        "0.9.1-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "metrics-server",
+        "purl": "pkg:apk/dhi/metrics-server"
+      },
+      "versions": [
+        "0.8.1-r0",
+        "0.8.1-r1",
+        "0.8.1-r10",
+        "0.8.1-r11",
+        "0.8.1-r12",
+        "0.8.1-r2",
+        "0.8.1-r3",
+        "0.8.1-r4",
+        "0.8.1-r5",
+        "0.8.1-r6",
+        "0.8.1-r7",
+        "0.8.1-r8",
+        "0.8.1-r9",
+        "0.9.0-r0",
+        "0.9.0-r1",
+        "0.9.0-r10",
+        "0.9.0-r11",
+        "0.9.0-r12",
+        "0.9.0-r2",
+        "0.9.0-r3",
+        "0.9.0-r4",
+        "0.9.0-r5",
+        "0.9.0-r6",
+        "0.9.0-r7",
+        "0.9.0-r8",
+        "0.9.0-r9",
+        "0.9.1-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "minio-els",
+        "purl": "pkg:apk/dhi/minio-els"
+      },
+      "versions": [
+        "0.20251015.172955-r14",
+        "0.20251015.172955-r15",
+        "0.20251015.172955-r16",
+        "0.20251015.172955-r5",
+        "0.20251015.172955-r6",
+        "0.20251015.172955-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "minio-operator-sidecar-7-dev",
+        "purl": "pkg:apk/dhi/minio-operator-sidecar-7-dev"
+      },
+      "versions": [
+        "7.1.1-r0",
+        "7.1.1-r1",
+        "7.1.1-r10",
+        "7.1.1-r11",
+        "7.1.1-r2",
+        "7.1.1-r3",
+        "7.1.1-r4",
+        "7.1.1-r5",
+        "7.1.1-r6",
+        "7.1.1-r7",
+        "7.1.1-r8",
+        "7.1.1-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "minio-operator-sidecar-7-fips-dev",
+        "purl": "pkg:apk/dhi/minio-operator-sidecar-7-fips-dev"
+      },
+      "versions": [
+        "7.1.1-r0",
+        "7.1.1-r1",
+        "7.1.1-r10",
+        "7.1.1-r11",
+        "7.1.1-r2",
+        "7.1.1-r3",
+        "7.1.1-r4",
+        "7.1.1-r5",
+        "7.1.1-r6",
+        "7.1.1-r7",
+        "7.1.1-r8",
+        "7.1.1-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "minio-operator-sidecar-7-fips",
+        "purl": "pkg:apk/dhi/minio-operator-sidecar-7-fips"
+      },
+      "versions": [
+        "7.1.1-r0",
+        "7.1.1-r1",
+        "7.1.1-r10",
+        "7.1.1-r11",
+        "7.1.1-r2",
+        "7.1.1-r3",
+        "7.1.1-r4",
+        "7.1.1-r5",
+        "7.1.1-r6",
+        "7.1.1-r7",
+        "7.1.1-r8",
+        "7.1.1-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "minio-operator-sidecar-7",
+        "purl": "pkg:apk/dhi/minio-operator-sidecar-7"
+      },
+      "versions": [
+        "7.1.1-r0",
+        "7.1.1-r1",
+        "7.1.1-r10",
+        "7.1.1-r11",
+        "7.1.1-r2",
+        "7.1.1-r3",
+        "7.1.1-r4",
+        "7.1.1-r5",
+        "7.1.1-r6",
+        "7.1.1-r7",
+        "7.1.1-r8",
+        "7.1.1-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "minio",
+        "purl": "pkg:apk/dhi/minio"
+      },
+      "versions": [
+        "0.20251015.172955-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "prometheus-3.5-dev",
+        "purl": "pkg:apk/dhi/prometheus-3.5-dev"
+      },
+      "versions": [
+        "3.5.5-r1",
+        "3.5.5-r10",
+        "3.5.5-r11",
+        "3.5.5-r12",
+        "3.5.5-r13",
+        "3.5.5-r14",
+        "3.5.5-r15",
+        "3.5.5-r16",
+        "3.5.5-r17",
+        "3.5.5-r18",
+        "3.5.5-r19",
+        "3.5.5-r2",
+        "3.5.5-r20",
+        "3.5.5-r21",
+        "3.5.5-r22",
+        "3.5.5-r23",
+        "3.5.5-r3",
+        "3.5.5-r4",
+        "3.5.5-r5",
+        "3.5.5-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "prometheus-3.5-fips-dev",
+        "purl": "pkg:apk/dhi/prometheus-3.5-fips-dev"
+      },
+      "versions": [
+        "3.5.5-r1",
+        "3.5.5-r10",
+        "3.5.5-r11",
+        "3.5.5-r12",
+        "3.5.5-r13",
+        "3.5.5-r14",
+        "3.5.5-r15",
+        "3.5.5-r16",
+        "3.5.5-r17",
+        "3.5.5-r18",
+        "3.5.5-r19",
+        "3.5.5-r2",
+        "3.5.5-r20",
+        "3.5.5-r21",
+        "3.5.5-r22",
+        "3.5.5-r23",
+        "3.5.5-r3",
+        "3.5.5-r4",
+        "3.5.5-r5",
+        "3.5.5-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "prometheus-3.5-fips",
+        "purl": "pkg:apk/dhi/prometheus-3.5-fips"
+      },
+      "versions": [
+        "3.5.5-r1",
+        "3.5.5-r10",
+        "3.5.5-r11",
+        "3.5.5-r12",
+        "3.5.5-r13",
+        "3.5.5-r14",
+        "3.5.5-r15",
+        "3.5.5-r16",
+        "3.5.5-r17",
+        "3.5.5-r18",
+        "3.5.5-r19",
+        "3.5.5-r2",
+        "3.5.5-r20",
+        "3.5.5-r21",
+        "3.5.5-r22",
+        "3.5.5-r23",
+        "3.5.5-r3",
+        "3.5.5-r4",
+        "3.5.5-r5",
+        "3.5.5-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "prometheus-3.5",
+        "purl": "pkg:apk/dhi/prometheus-3.5"
+      },
+      "versions": [
+        "3.5.5-r1",
+        "3.5.5-r10",
+        "3.5.5-r11",
+        "3.5.5-r12",
+        "3.5.5-r13",
+        "3.5.5-r14",
+        "3.5.5-r15",
+        "3.5.5-r16",
+        "3.5.5-r17",
+        "3.5.5-r18",
+        "3.5.5-r19",
+        "3.5.5-r2",
+        "3.5.5-r20",
+        "3.5.5-r21",
+        "3.5.5-r22",
+        "3.5.5-r23",
+        "3.5.5-r3",
+        "3.5.5-r4",
+        "3.5.5-r5",
+        "3.5.5-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "prometheus-config-reloader-dev",
+        "purl": "pkg:apk/dhi/prometheus-config-reloader-dev"
+      },
+      "versions": [
+        "0.89.0-r0",
+        "0.89.0-r1",
+        "0.89.0-r2",
+        "0.89.0-r3",
+        "0.90.0-r0",
+        "0.90.1-r0",
+        "0.90.1-r1",
+        "0.90.1-r2",
+        "0.91.0-r0",
+        "0.91.0-r1",
+        "0.91.0-r2",
+        "0.91.0-r3",
+        "0.91.0-r4",
+        "0.92.0-r0",
+        "0.92.1-r0",
+        "0.92.1-r1",
+        "0.92.1-r2",
+        "0.93.0-r0",
+        "0.93.1-r0",
+        "0.93.1-r1",
+        "0.93.1-r2",
+        "0.93.1-r3",
+        "0.93.1-r4",
+        "0.93.1-r5",
+        "0.93.1-r6",
+        "0.94.0-r0",
+        "0.94.0-r1",
+        "0.94.1-r0",
+        "0.94.1-r1",
+        "0.94.1-r2",
+        "0.94.1-r3",
+        "0.94.2-r0",
+        "0.94.2-r1",
+        "0.95.0-r0",
+        "0.95.1-r0",
+        "0.95.1-r1",
+        "0.95.2-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "prometheus-config-reloader-fips-dev",
+        "purl": "pkg:apk/dhi/prometheus-config-reloader-fips-dev"
+      },
+      "versions": [
+        "0.89.0-r0",
+        "0.89.0-r1",
+        "0.89.0-r2",
+        "0.89.0-r3",
+        "0.90.0-r0",
+        "0.90.1-r0",
+        "0.90.1-r1",
+        "0.90.1-r2",
+        "0.91.0-r0",
+        "0.91.0-r1",
+        "0.91.0-r2",
+        "0.91.0-r3",
+        "0.91.0-r4",
+        "0.92.0-r0",
+        "0.92.1-r0",
+        "0.92.1-r1",
+        "0.92.1-r2",
+        "0.93.0-r0",
+        "0.93.1-r0",
+        "0.93.1-r1",
+        "0.93.1-r2",
+        "0.93.1-r3",
+        "0.93.1-r4",
+        "0.93.1-r5",
+        "0.93.1-r6",
+        "0.94.0-r0",
+        "0.94.0-r1",
+        "0.94.1-r0",
+        "0.94.1-r1",
+        "0.94.1-r2",
+        "0.94.1-r3",
+        "0.94.2-r0",
+        "0.94.2-r1",
+        "0.95.0-r0",
+        "0.95.1-r0",
+        "0.95.1-r1",
+        "0.95.2-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "prometheus-config-reloader-fips",
+        "purl": "pkg:apk/dhi/prometheus-config-reloader-fips"
+      },
+      "versions": [
+        "0.89.0-r0",
+        "0.89.0-r1",
+        "0.89.0-r2",
+        "0.89.0-r3",
+        "0.90.0-r0",
+        "0.90.1-r0",
+        "0.90.1-r1",
+        "0.90.1-r2",
+        "0.91.0-r0",
+        "0.91.0-r1",
+        "0.91.0-r2",
+        "0.91.0-r3",
+        "0.91.0-r4",
+        "0.92.0-r0",
+        "0.92.1-r0",
+        "0.92.1-r1",
+        "0.92.1-r2",
+        "0.93.0-r0",
+        "0.93.1-r0",
+        "0.93.1-r1",
+        "0.93.1-r2",
+        "0.93.1-r3",
+        "0.93.1-r4",
+        "0.93.1-r5",
+        "0.93.1-r6",
+        "0.94.0-r0",
+        "0.94.0-r1",
+        "0.94.1-r0",
+        "0.94.1-r1",
+        "0.94.1-r2",
+        "0.94.1-r3",
+        "0.94.2-r0",
+        "0.94.2-r1",
+        "0.95.0-r0",
+        "0.95.1-r0",
+        "0.95.1-r1",
+        "0.95.2-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "prometheus-config-reloader",
+        "purl": "pkg:apk/dhi/prometheus-config-reloader"
+      },
+      "versions": [
+        "0.89.0-r0",
+        "0.89.0-r1",
+        "0.89.0-r2",
+        "0.89.0-r3",
+        "0.90.0-r0",
+        "0.90.1-r0",
+        "0.90.1-r1",
+        "0.90.1-r2",
+        "0.91.0-r0",
+        "0.91.0-r1",
+        "0.91.0-r2",
+        "0.91.0-r3",
+        "0.91.0-r4",
+        "0.92.0-r0",
+        "0.92.1-r0",
+        "0.92.1-r1",
+        "0.92.1-r2",
+        "0.93.0-r0",
+        "0.93.1-r0",
+        "0.93.1-r1",
+        "0.93.1-r2",
+        "0.93.1-r3",
+        "0.93.1-r4",
+        "0.93.1-r5",
+        "0.93.1-r6",
+        "0.94.0-r0",
+        "0.94.0-r1",
+        "0.94.1-r0",
+        "0.94.1-r1",
+        "0.94.1-r2",
+        "0.94.1-r3",
+        "0.94.2-r0",
+        "0.94.2-r1",
+        "0.95.0-r0",
+        "0.95.1-r0",
+        "0.95.1-r1",
+        "0.95.2-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "pushgateway-dev",
+        "purl": "pkg:apk/dhi/pushgateway-dev"
+      },
+      "versions": [
+        "1.11.2-r0",
+        "1.11.2-r1",
+        "1.11.2-r2",
+        "1.11.2-r3",
+        "1.11.2-r4",
+        "1.11.2-r5",
+        "1.11.2-r6",
+        "1.11.2-r7",
+        "1.11.3-r0",
+        "1.11.3-r1",
+        "1.11.3-r10",
+        "1.11.3-r2",
+        "1.11.3-r3",
+        "1.11.3-r4",
+        "1.11.3-r5",
+        "1.11.3-r6",
+        "1.11.3-r7",
+        "1.11.3-r8",
+        "1.11.3-r9",
+        "1.11.4-r0",
+        "1.11.4-r1",
+        "1.11.4-r2",
+        "1.11.5-r0",
+        "1.11.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "pushgateway-fips-dev",
+        "purl": "pkg:apk/dhi/pushgateway-fips-dev"
+      },
+      "versions": [
+        "1.11.2-r0",
+        "1.11.2-r1",
+        "1.11.2-r2",
+        "1.11.2-r3",
+        "1.11.2-r4",
+        "1.11.2-r5",
+        "1.11.2-r6",
+        "1.11.2-r7",
+        "1.11.3-r0",
+        "1.11.3-r1",
+        "1.11.3-r10",
+        "1.11.3-r2",
+        "1.11.3-r3",
+        "1.11.3-r4",
+        "1.11.3-r5",
+        "1.11.3-r6",
+        "1.11.3-r7",
+        "1.11.3-r8",
+        "1.11.3-r9",
+        "1.11.4-r0",
+        "1.11.4-r1",
+        "1.11.4-r2",
+        "1.11.5-r0",
+        "1.11.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "pushgateway-fips",
+        "purl": "pkg:apk/dhi/pushgateway-fips"
+      },
+      "versions": [
+        "1.11.2-r0",
+        "1.11.2-r1",
+        "1.11.2-r2",
+        "1.11.2-r3",
+        "1.11.2-r4",
+        "1.11.2-r5",
+        "1.11.2-r6",
+        "1.11.2-r7",
+        "1.11.3-r0",
+        "1.11.3-r1",
+        "1.11.3-r10",
+        "1.11.3-r2",
+        "1.11.3-r3",
+        "1.11.3-r4",
+        "1.11.3-r5",
+        "1.11.3-r6",
+        "1.11.3-r7",
+        "1.11.3-r8",
+        "1.11.3-r9",
+        "1.11.4-r0",
+        "1.11.4-r1",
+        "1.11.4-r2",
+        "1.11.5-r0",
+        "1.11.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "pushgateway",
+        "purl": "pkg:apk/dhi/pushgateway"
+      },
+      "versions": [
+        "1.11.2-r0",
+        "1.11.2-r1",
+        "1.11.2-r2",
+        "1.11.2-r3",
+        "1.11.2-r4",
+        "1.11.2-r5",
+        "1.11.2-r6",
+        "1.11.2-r7",
+        "1.11.3-r0",
+        "1.11.3-r1",
+        "1.11.3-r10",
+        "1.11.3-r2",
+        "1.11.3-r3",
+        "1.11.3-r4",
+        "1.11.3-r5",
+        "1.11.3-r6",
+        "1.11.3-r7",
+        "1.11.3-r8",
+        "1.11.3-r9",
+        "1.11.4-r0",
+        "1.11.4-r1",
+        "1.11.4-r2",
+        "1.11.5-r0",
+        "1.11.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "thanos-dev",
+        "purl": "pkg:apk/dhi/thanos-dev"
+      },
+      "versions": [
+        "0.42.4-r0",
+        "0.42.4-r1",
+        "0.42.4-r2",
+        "0.42.4-r3",
+        "0.42.4-r5",
+        "0.42.4-r6",
+        "0.42.4-r7",
+        "0.42.4-r8",
+        "0.42.5-r0",
+        "0.42.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "thanos-fips-dev",
+        "purl": "pkg:apk/dhi/thanos-fips-dev"
+      },
+      "versions": [
+        "0.42.4-r0",
+        "0.42.4-r1",
+        "0.42.4-r2",
+        "0.42.4-r3",
+        "0.42.4-r5",
+        "0.42.4-r6",
+        "0.42.4-r7",
+        "0.42.4-r8",
+        "0.42.5-r0",
+        "0.42.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "thanos-fips",
+        "purl": "pkg:apk/dhi/thanos-fips"
+      },
+      "versions": [
+        "0.42.4-r0",
+        "0.42.4-r1",
+        "0.42.4-r2",
+        "0.42.4-r3",
+        "0.42.4-r5",
+        "0.42.4-r6",
+        "0.42.4-r7",
+        "0.42.4-r8",
+        "0.42.5-r0",
+        "0.42.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "thanos",
+        "purl": "pkg:apk/dhi/thanos"
+      },
+      "versions": [
+        "0.42.4-r0",
+        "0.42.4-r1",
+        "0.42.4-r2",
+        "0.42.4-r3",
+        "0.42.4-r5",
+        "0.42.4-r6",
+        "0.42.4-r7",
+        "0.42.4-r8",
+        "0.42.5-r0",
+        "0.42.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "grafana-13.0-dev",
+        "purl": "pkg:deb/dhi/grafana-13.0-dev"
+      },
+      "versions": [
+        "13.0.10-0",
+        "13.0.10-1",
+        "13.0.10-2",
+        "13.0.10-3",
+        "13.0.11-0",
+        "13.0.11-1",
+        "13.0.11-2",
+        "13.0.11-3",
+        "13.0.11-4",
+        "13.0.12-0",
+        "13.0.12-1",
+        "13.0.12-2",
+        "13.0.12-3",
+        "13.0.12-4",
+        "13.0.12-5",
+        "13.0.12-6",
+        "13.0.12-7",
+        "13.0.12-8",
+        "13.0.12-9",
+        "13.0.8-0",
+        "13.0.8-1",
+        "13.0.8-2",
+        "13.0.9-0",
+        "13.0.9-1",
+        "13.0.9-2",
+        "13.0.9-3",
+        "13.0.9-4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "grafana-13.0-fips-dev",
+        "purl": "pkg:deb/dhi/grafana-13.0-fips-dev"
+      },
+      "versions": [
+        "13.0.10-0",
+        "13.0.10-1",
+        "13.0.10-2",
+        "13.0.10-3",
+        "13.0.11-0",
+        "13.0.11-1",
+        "13.0.11-2",
+        "13.0.11-3",
+        "13.0.11-4",
+        "13.0.12-0",
+        "13.0.12-1",
+        "13.0.12-2",
+        "13.0.12-3",
+        "13.0.12-4",
+        "13.0.12-5",
+        "13.0.12-6",
+        "13.0.12-7",
+        "13.0.12-8",
+        "13.0.12-9",
+        "13.0.8-0",
+        "13.0.8-1",
+        "13.0.8-2",
+        "13.0.9-0",
+        "13.0.9-1",
+        "13.0.9-2",
+        "13.0.9-3",
+        "13.0.9-4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "grafana-13.0-fips",
+        "purl": "pkg:deb/dhi/grafana-13.0-fips"
+      },
+      "versions": [
+        "13.0.10-0",
+        "13.0.10-1",
+        "13.0.10-2",
+        "13.0.10-3",
+        "13.0.11-0",
+        "13.0.11-1",
+        "13.0.11-2",
+        "13.0.11-3",
+        "13.0.11-4",
+        "13.0.12-0",
+        "13.0.12-1",
+        "13.0.12-2",
+        "13.0.12-3",
+        "13.0.12-4",
+        "13.0.12-5",
+        "13.0.12-6",
+        "13.0.12-7",
+        "13.0.12-8",
+        "13.0.12-9",
+        "13.0.8-0",
+        "13.0.8-1",
+        "13.0.8-2",
+        "13.0.9-0",
+        "13.0.9-1",
+        "13.0.9-2",
+        "13.0.9-3",
+        "13.0.9-4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "grafana-13.0",
+        "purl": "pkg:deb/dhi/grafana-13.0"
+      },
+      "versions": [
+        "13.0.10-0",
+        "13.0.10-1",
+        "13.0.10-2",
+        "13.0.10-3",
+        "13.0.11-0",
+        "13.0.11-1",
+        "13.0.11-2",
+        "13.0.11-3",
+        "13.0.11-4",
+        "13.0.12-0",
+        "13.0.12-1",
+        "13.0.12-2",
+        "13.0.12-3",
+        "13.0.12-4",
+        "13.0.12-5",
+        "13.0.12-6",
+        "13.0.12-7",
+        "13.0.12-8",
+        "13.0.12-9",
+        "13.0.8-0",
+        "13.0.8-1",
+        "13.0.8-2",
+        "13.0.9-0",
+        "13.0.9-1",
+        "13.0.9-2",
+        "13.0.9-3",
+        "13.0.9-4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "netdata",
+        "purl": "pkg:deb/dhi/netdata"
+      },
+      "versions": [
+        "2.11.0-0",
+        "2.11.0-1",
+        "2.11.0-2",
+        "2.11.0-3",
+        "2.11.0-4",
+        "2.11.0-5",
+        "2.11.0-6",
+        "2.11.1-0",
+        "2.12.0-0",
+        "2.12.1-0",
+        "2.12.1-1",
+        "2.12.1-2",
+        "2.12.2-0",
+        "2.12.2-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-2xub-bety-vlk6-bss2"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/prometheus/prometheus/security/advisories/GHSA-vffh-x6r8-xx99"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-40179"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-40179"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/prometheus/prometheus/pull/18506"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/prometheus/prometheus/commit/07c6232d159bfb474a077788be184d87adcfac3c"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-40179"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-vffh-x6r8-xx99"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-5662"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-40179"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-40179"
+    }
+  ]
+}
