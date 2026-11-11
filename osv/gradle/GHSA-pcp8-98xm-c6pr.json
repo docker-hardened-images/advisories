@@ -1,0 +1,159 @@
+{
+  "modified": "2026-11-10T17:47:12Z",
+  "published": "2026-11-10T17:47:12Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-pcp8-98xm-c6pr",
+  "details": "### Impact\r\n\r\nA **Gradle client** (the `gradle`/`gradlew` CLI or an IDE using the Tooling API) looks up running **Gradle daemons** in a registry file under the Gradle user home, then connects to an idle daemon over a loopback TCP connection and sends it the build to run. The client authenticates itself to the daemon with a secret token, but the daemon is not authenticated to the client, and the client does not check that the daemon process recorded in the registry is still running. This advisory is about a vulnerability on this communication channel.\r\n\r\nWhen a daemon terminates without removing itself from the registry, for example when it is killed with `kill -9`, stopped by the out-of-memory killer or crashes, its loopback port becomes free while the registry still points to it. Another local user who binds that port receives the next build request from the victim's client. That request contains the client's environment variables, system properties and standard input, which commonly hold credentials and CI tokens. The attacker can then answer with crafted messages that the client deserializes:\r\n\r\n* in an IDE or any other Tooling API client, a crafted reply makes the client process load and run code from a jar chosen by the attacker;\r\n* on the command line, deserializing a hostile object graph can lead to code execution in the client, depending on the classes available, or to a denial of service.\r\n\r\nCode execution in the client runs with the privileges of the user running the build. This has been demonstrated with a proof-of-concept. This advisory does not publish the proof-of-concept.\r\n\r\nBuilds running on **shared / multi-user build hosts** are the most at risk. The vulnerability requires a daemon to have terminated abnormally, leaving a stale entry in the registry, and the attacker to listen on that daemon's port when the victim next starts a build or synchronizes a project in an IDE.\r\n\r\nThis vulnerability is not exploitable from a remote network connection.\r\n\r\n### Patches\r\n\r\nThe client and the daemon now authenticate each other as soon as a connection opens, before any message is exchanged. The connection token in the registry holds two secrets. The client proves it holds the first one, and only then does the daemon answer with the second. The client checks that answer before it sends anything else. A process listening on the port of a terminated daemon cannot produce the daemon's secret. The client therefore drops the connection, removes the stale entry from the registry, and uses or starts another daemon. That process only receives the client's half of the token of a daemon that no longer exists.\r\n\r\nThe fix depends on the Gradle version used by the build, not on the Tooling API version of the IDE.\r\n\r\n| Fix version | Availability |\r\n| ---------- | ----------- |\r\n| 9.9.1 | OSS |\r\n| 9.8.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.7.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.6.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.5.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.4.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.3.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.2.3 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 8.14.7 | OSS |\r\n| 7.6.8 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n\r\n### Workarounds\r\n\r\nUpgrading Gradle is our recommended fix.\r\n\r\nIf you cannot upgrade immediately:\r\n\r\n* **Do not run builds on shared, multi-user machines.** Ensure only trusted users have local (same-host) access to a machine where Gradle builds run. On CI, prefer single-tenant, ephemeral runners rather than shared hosts. The attacker must be a co-located local principal to gain access to the Gradle build.\r\n* **Clear the daemon registry after a daemon terminated abnormally, before the next build.** Delete `\u003cGradle user home\u003e/daemon/\u003cGradle version\u003e/registry.bin`. This is safe while daemons are running. Clients no longer find the running daemons and start new ones, and the unregistered daemons stop after their idle timeout (3 hours by default). On an affected version, do not use `gradle --status` or `gradle --stop` for this: both connect to every daemon in the registry, including stale entries.\r\n\r\nIf you cannot apply these mitigations, restrict which users and processes share a host with your builds until you can upgrade.\r\n\r\n### Forensics\r\n\r\nGradle's output does not tell a process squatting a daemon's port apart from a daemon whose port is free. Look for the conditions of the attack on the build host instead:\r\n\r\n* A daemon that terminated abnormally leaves a log file, `\u003cGradle user home\u003e/daemon/\u003cGradle version\u003e/daemon-\u003cpid\u003e.out.log`, that does not end with `Daemon vm is shutting down...` even though process `\u003cpid\u003e` is no longer running. Its port is on the line `Daemon starting at: …, with address: [… port:\u003cport\u003e, …]`.\r\n* A process of another user listening on that port indicates an attempt. On Linux and macOS: `lsof -nP -iTCP:\u003cport\u003e -sTCP:LISTEN`.\r\n\r\n\u003e [!IMPORTANT]\r\n\u003e These checks reveal the conditions for the attack, not the attack itself: by default, Gradle does not record which process a client sent its request to. Daemons also terminate abnormally for ordinary reasons, such as the out-of-memory killer, a crash or a machine reboot, so a log file without a shutdown line is not evidence of an attack. A squatting process only shows while it is still listening, and Gradle deletes daemon log files after 14 days by default, so finding neither does not rule out an attack.\r\n\r\n### References\r\n\r\n* [Deserialization of untrusted Java objects before authentication in the client - daemon communication](https://github.com/gradle/gradle/security/advisories/GHSA-xwqc-3h47-hg64)\r\n* [Project-controlled daemon registry location](https://github.com/gradle/gradle/security/advisories/GHSA-gqrr-4j89-5267)\r\n* [Gradle architecture standard ADR-0002](https://github.com/gradle/gradle/blob/master/architecture/standards/0002-avoid-using-java-serialization.md), \"Avoid using Java serialization\" — Gradle's own guidance to move off Java serialization, citing deserialization security among the reasons.\r\n* [JEP 290: Filter Incoming Serialization Data](https://openjdk.org/jeps/290)\r\n\r\nMore about this type of vulnerabilities:\r\n\r\n* https://cwe.mitre.org/data/definitions/287.html\r\n* https://cwe.mitre.org/data/definitions/502.html",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/gradle/gradle/security/advisories/GHSA-pcp8-98xm-c6pr"
+    }
+  ]
+}
