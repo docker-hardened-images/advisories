@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-acwk-ts26-kudt-ur53",
+  "modified": "2026-11-11T19:38:05Z",
+  "published": "2026-11-11T19:38:05Z",
+  "upstream": [
+    "CVE-2026-56017"
+  ],
+  "summary": "JavaScript::Minifier::XS versions before 0.16 for Perl crash with a NULL pointer dereference when the first meaningful…",
+  "details": "JavaScript::Minifier::XS versions before 0.16 for Perl crash with a NULL pointer dereference when the first meaningful token of the input is a slash.\n\nThe regexp versus division disambiguator in JsTokenizeString (XS.xs) inspects the previous token's last byte to choose between a regexp literal and a division operator. When a slash is the first meaningful token, with the start of input or only whitespace and comments before it, there is no valid preceding token: the walk back over whitespace and comment nodes runs off the head of the node list to NULL, and the byte lookup reads through a NULL contents pointer at an underflowed length index. The following identifier check dereferences the same NULL pointer.\n\nThe crash is reachable through the public minify() API, so input as small as a single slash byte crashes the calling process. A service that minifies untrusted or third-party JavaScript can be crashed by a remote request, causing denial of service.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "perl-javascript-minifier-xs",
+        "purl": "pkg:apk/dhi/perl-javascript-minifier-xs"
+      },
+      "versions": [
+        "0.15-r5",
+        "0.16-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-acwk-ts26-kudt-ur53"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-56017"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-56017"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-56017"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-56017"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-56017"
+    }
+  ]
+}
