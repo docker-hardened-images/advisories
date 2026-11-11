@@ -1,0 +1,161 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-57gs-vewg-hjr4-ye7o",
+  "modified": "2026-11-11T15:48:51Z",
+  "published": "2026-11-11T15:48:51Z",
+  "upstream": [
+    "CVE-2026-19730"
+  ],
+  "summary": "The 'podman quadlet install --replace' command opens the existing destination file with O_CREATE|O_WRONLY but omits…",
+  "details": "The 'podman quadlet install --replace' command opens the existing destination file with O_CREATE|O_WRONLY but omits O_TRUNC. When the initial reflink copy attempt fails (common on non-reflink-capable filesystems including many RHEL default XFS configurations), the fallback in ReflinkOrCopy uses io.Copy which performs a non-truncating write. If the original Quadlet is larger than the new Quadlet, the file is not truncated and content from the original is preserved. The command completes with no warning.\n\nThere is no risk of information leakage as the user already had access to the Quadlet in order to replace it, and in most cases, this would only lead to invalid Quadlet files. However, security-related options from the end of the old Quadlet could be included in the new Quadlet, and if the truncation resulted in a valid Quadlet file, this could result in undesirable behavior. For example, running podman quadlet install --replace to remove a single line from the end of a Quadlet - including security-sensitive content, like AddCapability - will fail, and the option will continue to be used. Further, with Volume Quadlets, this can include additional mounts which can cause content to be unintentionally exposed into containers. If, later, the image is updated then compromised content might be leaked to an attacker.\n\nThe vulnerable code paths are in pkg/domain/infra/abi/quadlet.go (lines 338-360, O_CREATE|O_WRONLY without O_TRUNC) and vendor/go.podman.io/storage/pkg/fileutils/reflink_linux.go (lines 12-19, non-truncating io.Copy fallback).",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:L"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "falco",
+        "purl": "pkg:deb/dhi/falco"
+      },
+      "versions": [
+        "0.44.1-0",
+        "0.44.1-1",
+        "0.44.1-3",
+        "0.44.1-4",
+        "0.44.1-5",
+        "0.44.1-7",
+        "0.44.1-8",
+        "0.44.1-9",
+        "0.45.0-0",
+        "0.45.0-1",
+        "0.45.0-2",
+        "0.45.0-3",
+        "0.45.0-4",
+        "0.45.0-5",
+        "0.45.1-0",
+        "0.45.1-1",
+        "0.45.2-0",
+        "0.45.2-1",
+        "0.45.2-2",
+        "0.45.2-3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-57gs-vewg-hjr4-ye7o"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-19730"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.almalinux.org/9/ALSA-2026-69961.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/errata/RHSA-2026:69961"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-19730"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-19730"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-fx76-2j3w-2mx6"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/podman-container-tools/podman/security/advisories/GHSA-fx76-2j3w-2mx6"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-19730"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/errata/RHSA-2026:70201"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/podman-container-tools/podman/pull/27980"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/podman-container-tools/podman/commit/d4fe9154ec6e32a02d5fcd096c4a27c38f2040f4"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/podman-container-tools/podman/commit/d3adfdeec7d5c9eee5a6978df3bee62a866c958d"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/podman-container-tools/podman/commit/a38a9b7d20915c55e6f3c451101ae72d6da33742"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/podman-container-tools/podman/commit/0ea4eaee70b7458bcc99d875529761faf5172651"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/podman-container-tools/podman/releases/tag/v6.0.0"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/podman-container-tools/podman/releases/tag/v5.8.6"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/podman-container-tools/podman/issues/29013"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-6588"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-69961.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-69961.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-70201.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-70201.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:69961"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:70201"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-19730"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-19730"
+    }
+  ]
+}
