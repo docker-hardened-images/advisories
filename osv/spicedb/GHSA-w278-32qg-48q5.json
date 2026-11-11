@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-10T19:37:58Z",
+  "published": "2026-11-10T19:37:57Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-w278-32qg-48q5",
+  "details": "### Summary\r\n\r\nAn error in code that optimizes the behavior of SpiceDB checks resulted in expired relationships being included in the computation of permissionship under specific circumstances. When a `relation` was defined as the union (`|`) of a type with expiration (e.g. `foo with expiration`) and that same type with a nonterminal subject relation (e.g. `foo#bar`), a check over that relation would discard the expiration. This could result in incorrect permission checks if the expiration of one of those relationships had passed, up to the time when that relationship is garbage collected.\r\n\r\n### Details\r\n\r\nOne optimization in SpiceDB is that if a check of a particular relationship doesn't require considering the expiration of the relationship, it doesn't include expiration in the datastore query. SpiceDB does a similar optimization if it determines that a caveat isn't involved either.\r\n\r\nIn the check path, this is computed by [asking whether the count of direct subjects and wildcards without expiration is equal to the total count of direct subjects and wildcards](https://github.com/authzed/spicedb/blob/v1.56.0/internal/graph/check.go#L386). However, the count logic was incorrect for relations whose subject relation matched the type of the relation itself.\r\n\r\nFor the purposes of this discussion, asking whether the \"direct subject\" of a relation matches the subject of a check is asking whether the subject of the check matches the type defined in the relation. If you're asking whether a `user` can view a `document` in the check, you're asking whether the type referenced in the relation is exactly `user`.\r\n\r\nIf we're considering the schema below together with [this code block](https://github.com/authzed/spicedb/blob/v1.56.0/internal/graph/check.go#L341-L355), both `user with expiration` and `user#manager` match the condition defined on [line 341](https://github.com/authzed/spicedb/blob/v1.56.0/internal/graph/check.go#L341), but `user#manager` *should not* be counted as a \"direct subject\" for this logic. This code was looking at `user with expiration` and saying \"that is a direct subject with an expiration\" and it was looking at `user#manager` and saying \"that is a direct subject without expiration.\" Instead, it should have been looking at `user#manager` and saying \"this is not a direct subject.\"\r\n\r\nThis misinterpretation led to the expiration check getting skipped [here](https://github.com/authzed/spicedb/blob/v1.56.0/internal/graph/check.go#L466), and an expired relationship being returned for the check when it should not have been returned.\r\n\r\n#### Exposure Window\r\nPostgres and MySQL both run with a 3m GC interval by default. Spanner and CockroachDB both use row-level TTLs which run a cleanup job once daily by default. Outside of your datastore's window you are not affected.\r\n\r\n### Proof of concept\r\n\r\nThis schema:\r\n\r\n```zed\r\nuse expiration\r\n\r\ndefinition user {\r\nrelation manager: user\r\n}\r\n\r\ndefinition document {\r\nrelation viewer: user with expiration | user#manager\r\npermission view = viewer\r\n}\r\n```\r\n\r\nAnd this relationship:\r\n\r\n```\r\ndocument:somedoc#viewer@user:alice[expiration:2020-01-01T00:00:00Z]\r\n```\r\n\r\nWill result in this check:\r\n\r\n```\r\ndocument:somedoc#view@user:alice\r\n```\r\n\r\nreturning `HAS_PERMISSION` incorrectly.\r\n\r\n### Impact\r\n\r\nIf all of these apply:\r\n- You have a  `relation` declaration that uses `with expiration`\r\n- It is unioned (`|` operator) with the same type as the `with expiration` type\r\n- That unioned type references a different relation or permission using `#`\r\n\r\nThen a check for a permission that references an expired relationship can result in the inclusion of that expired relationship, resulting in an incorrect permission evaluation. See the Proof of Concept for a concrete example.\r\n\r\nReported by Sathwik Yadlapati.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "spicedb",
+        "purl": "pkg:dhi/spicedb"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.40.0"
+            },
+            {
+              "fixed": "1.57.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/authzed/spicedb"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/authzed/spicedb/security/advisories/GHSA-w278-32qg-48q5"
+    }
+  ]
+}
