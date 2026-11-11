@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-zfan-aqkt-bofa-e5sa",
+  "modified": "2026-11-11T15:57:48Z",
+  "published": "2026-11-11T15:57:48Z",
+  "upstream": [
+    "GHSA-8678-w3jw-xfc2"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nThe `NONET` parse option, which Nokogiri turns on by default for `Nokogiri::XML::Schema` (see [CVE-2020-26247](https://github.com/sparklemotion/nokogiri/security/advisories/GHSA-vr8q-g5c7-m54m)), was not correctly enforced on the JRuby implementation. As a result, a schema parsed with default options could still cause external resources to be fetched over the network, potentially enabling SSRF or XXE attacks.\n\nNokogiri 1.19.4 replaces the scheme denylist with an allowlist. When `NONET` is enabled, only local resources (a `file:` scheme, or a relative or absolute path with no scheme) are resolved, and every network scheme is blocked, case-insensitively. This brings the JRuby behavior in line with CRuby.\n\nOnly the JRuby implementation is affected. CRuby is not affected, because libxml2's `xmlNoNetExternalEntityLoader` blocks all network schemes at the I/O layer regardless of scheme or case.\n\n### Severity\n\nThe Nokogiri maintainers have evaluated this as low severity (CVSS 2.6, `CVSS:3.0/AV:N/AC:H/PR:L/UI:R/S:U/C:L/I:N/A:N`). It is a bypass of CVE-2020-26247, which was scored the same way.\n\n### Mitigation\n\nUpgrade to Nokogiri 1.19.4 or later.\n\nThere are no known workarounds for affected versions.\n\nThis change properly enforces `NONET` on JRuby, which is a breaking change for any code that (perhaps unknowingly) relied on the previous behavior to load network resources with default parse options. If you trust your input and want to allow external resources to be accessed over the network, you can explicitly disable `NONET`, exactly as documented for CVE-2020-26247:\n\n1. Ensure the input is trusted. Do not enable this option for untrusted input.\n2. Pass a `Nokogiri::XML::ParseOptions` with the `NONET` flag turned off:\n\n``` ruby\n# allows resources to be accessed over the network for trusted input\nschema = Nokogiri::XML::Schema.new(trusted_schema, Nokogiri::XML::ParseOptions.new.nononet)\n```\n\n### References\n\n- Bypass of: https://github.com/sparklemotion/nokogiri/security/advisories/GHSA-vr8q-g5c7-m54m\n\n### Credit\n\nThis issue was responsibly reported by @bilerden.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:L/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitlab-rails-18",
+        "purl": "pkg:apk/dhi/gitlab-rails-18"
+      },
+      "versions": [
+        "18.11.11-r0",
+        "18.11.11-r1",
+        "18.11.11-r2",
+        "18.11.12-r0",
+        "18.11.12-r1",
+        "18.11.12-r2",
+        "18.11.12-r3",
+        "18.11.12-r4",
+        "18.11.14-r0",
+        "18.11.14-r1",
+        "18.11.14-r2",
+        "18.11.14-r3",
+        "18.11.14-r4",
+        "18.11.14-r5",
+        "18.11.14-r6",
+        "18.11.14-r7",
+        "18.11.14-r8",
+        "18.11.14-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitlab-rails-19",
+        "purl": "pkg:apk/dhi/gitlab-rails-19"
+      },
+      "versions": [
+        "19.1.8-r0",
+        "19.1.8-r1",
+        "19.4.1-r0",
+        "19.4.1-r1",
+        "19.4.1-r2",
+        "19.4.1-r3",
+        "19.4.2-r0",
+        "19.5.3-r0",
+        "19.5.3-r1",
+        "19.5.3-r2",
+        "19.5.3-r3",
+        "19.5.3-r4",
+        "19.5.3-r5",
+        "19.5.3-r6",
+        "19.5.3-r7",
+        "19.5.3-r8",
+        "19.5.4-r0",
+        "19.5.4-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "gitlab-rails-19",
+        "purl": "pkg:deb/dhi/gitlab-rails-19"
+      },
+      "versions": [
+        "19.1.8-0",
+        "19.1.8-1",
+        "19.4.1-0",
+        "19.4.1-1",
+        "19.4.1-2",
+        "19.4.2-0",
+        "19.5.3-0",
+        "19.5.3-1",
+        "19.5.3-2",
+        "19.5.3-3",
+        "19.5.3-4",
+        "19.5.3-5",
+        "19.5.3-6",
+        "19.5.3-7",
+        "19.5.3-8",
+        "19.5.3-9",
+        "19.5.4-0",
+        "19.5.4-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-zfan-aqkt-bofa-e5sa"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-8678-w3jw-xfc2"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/sparklemotion/nokogiri/security/advisories/GHSA-8678-w3jw-xfc2"
+    }
+  ]
+}

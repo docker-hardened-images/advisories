@@ -1,0 +1,117 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-2kqs-eyaz-4gon-4zp4",
+  "modified": "2026-11-11T15:57:48Z",
+  "published": "2026-11-11T15:57:48Z",
+  "upstream": [
+    "GHSA-wfpw-mmfh-qq69"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nXInclude substitution performed by `Nokogiri::XML::Node#do_xinclude` replaced each `<xi:include>` in place, freeing the include node along with its children (such as `<xi:fallback>` and its descendants) and any namespaces declared on them. If an application had already exposed one of those nodes or namespaces to Ruby, the corresponding Ruby object was left pointing at freed memory. Using the object could result in invalid reads or writes to memory.\n\nNokogiri 1.19.4 substitutes each `<xi:include>` on a defensive copy by default, so the structures libxml2 frees are never the ones bound to live Ruby objects.\n\nOnly the CRuby implementation is affected; JRuby is not affected.\n\n### Severity\n\nThe Nokogiri maintainers have evaluated this as low severity. Reaching it requires an unusual API-usage pattern that does not arise during normal use. The application must parse a document without XInclude, traverse into an `<xi:include>` subtree to expose its nodes or namespaces to Ruby, and only then invoke XInclude processing. The common case, requesting XInclude at parse time, operates on a freshly parsed document whose nodes are not yet exposed to Ruby and is not affected. Nokogiri 1.19.4 makes this pattern safe by default and requires no change to application code.\n\n### Mitigation\n\nUpgrade to Nokogiri 1.19.4 or later.\n\nAs a workaround for earlier versions, perform XInclude substitution at parse time (with the `xinclude` parse option) rather than calling `#do_xinclude` on a document that has already been traversed. A freshly parsed document has no nodes exposed to Ruby, so the substitution is safe.\n\n### Credit\n\nThis issue was responsibly reported by Zheng Yu from depthfirst.com.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitlab-rails-18",
+        "purl": "pkg:apk/dhi/gitlab-rails-18"
+      },
+      "versions": [
+        "18.11.11-r0",
+        "18.11.11-r1",
+        "18.11.11-r2",
+        "18.11.12-r0",
+        "18.11.12-r1",
+        "18.11.12-r2",
+        "18.11.12-r3",
+        "18.11.12-r4",
+        "18.11.14-r0",
+        "18.11.14-r1",
+        "18.11.14-r2",
+        "18.11.14-r3",
+        "18.11.14-r4",
+        "18.11.14-r5",
+        "18.11.14-r6",
+        "18.11.14-r7",
+        "18.11.14-r8",
+        "18.11.14-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitlab-rails-19",
+        "purl": "pkg:apk/dhi/gitlab-rails-19"
+      },
+      "versions": [
+        "19.1.8-r0",
+        "19.1.8-r1",
+        "19.4.1-r0",
+        "19.4.1-r1",
+        "19.4.1-r2",
+        "19.4.1-r3",
+        "19.4.2-r0",
+        "19.5.3-r0",
+        "19.5.3-r1",
+        "19.5.3-r2",
+        "19.5.3-r3",
+        "19.5.3-r4",
+        "19.5.3-r5",
+        "19.5.3-r6",
+        "19.5.3-r7",
+        "19.5.3-r8",
+        "19.5.4-r0",
+        "19.5.4-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "gitlab-rails-19",
+        "purl": "pkg:deb/dhi/gitlab-rails-19"
+      },
+      "versions": [
+        "19.1.8-0",
+        "19.1.8-1",
+        "19.4.1-0",
+        "19.4.1-1",
+        "19.4.1-2",
+        "19.4.2-0",
+        "19.5.3-0",
+        "19.5.3-1",
+        "19.5.3-2",
+        "19.5.3-3",
+        "19.5.3-4",
+        "19.5.3-5",
+        "19.5.3-6",
+        "19.5.3-7",
+        "19.5.3-8",
+        "19.5.3-9",
+        "19.5.4-0",
+        "19.5.4-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-2kqs-eyaz-4gon-4zp4"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-wfpw-mmfh-qq69"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/sparklemotion/nokogiri/security/advisories/GHSA-wfpw-mmfh-qq69"
+    }
+  ]
+}
