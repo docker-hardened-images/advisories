@@ -1,0 +1,2447 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-d2nq-scyb-hmdn-bncm",
+  "modified": "2026-11-11T19:27:42Z",
+  "published": "2026-11-11T19:27:42Z",
+  "upstream": [
+    "CVE-2026-48702"
+  ],
+  "summary": "Rekor is a software supply chain transparency log. Starting in version 0.3.0 and prior to version 1.5.2, the…",
+  "details": "Rekor is a software supply chain transparency log. Starting in version 0.3.0 and prior to version 1.5.2, the `Package.Unmarshal()` function in `pkg/types/alpine/apk.go` decompresses the signature and control gzip members of an APK file into in-memory buffers without bounding the total decompressed size. The existing `max_apk_metadata_size` check (default 1MB) is only applied to individual tar entry header sizes after decompression completes, so it does not prevent a decompression bomb from consuming unbounded heap memory. An attacker can craft a gzip stream that compresses at a ~1000:1 ratio (e.g., 2MB compressed zeros → 2GB decompressed). When submitted as spec.package.content in an Alpine `ProposedEntry`, the server decompresses the full payload into memory during request processing, triggering a fatal Go runtime out-of-memory error or OS OOM-kill that cannot be caught by the server's recover() middleware. This is reachable via two unauthenticated endpoints, `POST /api/v1/log/entries (createLogEntry)` and `POST /api/v1/log/entries/retrieve (searchLogQuery)`. Both invoke `V001Entry.Canonicalize()` → `fetchExternalEntities()` → `apk.Unmarshal(packageData)`, which performs the unbounded decompression. Version 1.5.2 patches the issue. There is no effective workaround. Setting `max_request_body_size` reduces but does not eliminate exposure due to the ~1000:1 compression ratio (a 1MB body limit still allows ~1GB heap allocation). Setting `max_apk_metadata_size` has no effect on this vulnerability since the check is applied after decompression.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cosign-2-dev",
+        "purl": "pkg:apk/dhi/cosign-2-dev"
+      },
+      "versions": [
+        "2.6.2-r0",
+        "2.6.2-r1",
+        "2.6.2-r2",
+        "2.6.2-r3",
+        "2.6.3-r0",
+        "2.6.3-r1",
+        "2.6.3-r10",
+        "2.6.3-r2",
+        "2.6.3-r3",
+        "2.6.3-r4",
+        "2.6.3-r5",
+        "2.6.3-r6",
+        "2.6.3-r7",
+        "2.6.3-r8",
+        "2.6.3-r9",
+        "2.6.4-r0",
+        "2.6.4-r1",
+        "2.6.5-r0",
+        "2.6.5-r1",
+        "2.6.5-r10",
+        "2.6.5-r11",
+        "2.6.5-r12",
+        "2.6.5-r13",
+        "2.6.5-r2",
+        "2.6.5-r3",
+        "2.6.5-r4",
+        "2.6.5-r5",
+        "2.6.5-r6",
+        "2.6.5-r7",
+        "2.6.5-r8",
+        "2.6.5-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cosign-2-fips-dev",
+        "purl": "pkg:apk/dhi/cosign-2-fips-dev"
+      },
+      "versions": [
+        "2.6.2-r0",
+        "2.6.2-r1",
+        "2.6.2-r2",
+        "2.6.2-r3",
+        "2.6.3-r0",
+        "2.6.3-r1",
+        "2.6.3-r10",
+        "2.6.3-r2",
+        "2.6.3-r3",
+        "2.6.3-r4",
+        "2.6.3-r5",
+        "2.6.3-r6",
+        "2.6.3-r7",
+        "2.6.3-r8",
+        "2.6.3-r9",
+        "2.6.4-r0",
+        "2.6.4-r1",
+        "2.6.5-r0",
+        "2.6.5-r1",
+        "2.6.5-r10",
+        "2.6.5-r11",
+        "2.6.5-r12",
+        "2.6.5-r13",
+        "2.6.5-r2",
+        "2.6.5-r3",
+        "2.6.5-r4",
+        "2.6.5-r5",
+        "2.6.5-r6",
+        "2.6.5-r7",
+        "2.6.5-r8",
+        "2.6.5-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cosign-2-fips",
+        "purl": "pkg:apk/dhi/cosign-2-fips"
+      },
+      "versions": [
+        "2.6.2-r0",
+        "2.6.2-r1",
+        "2.6.2-r2",
+        "2.6.2-r3",
+        "2.6.3-r0",
+        "2.6.3-r1",
+        "2.6.3-r10",
+        "2.6.3-r2",
+        "2.6.3-r3",
+        "2.6.3-r4",
+        "2.6.3-r5",
+        "2.6.3-r6",
+        "2.6.3-r7",
+        "2.6.3-r8",
+        "2.6.3-r9",
+        "2.6.4-r0",
+        "2.6.4-r1",
+        "2.6.5-r0",
+        "2.6.5-r1",
+        "2.6.5-r10",
+        "2.6.5-r11",
+        "2.6.5-r12",
+        "2.6.5-r13",
+        "2.6.5-r2",
+        "2.6.5-r3",
+        "2.6.5-r4",
+        "2.6.5-r5",
+        "2.6.5-r6",
+        "2.6.5-r7",
+        "2.6.5-r8",
+        "2.6.5-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cosign-2",
+        "purl": "pkg:apk/dhi/cosign-2"
+      },
+      "versions": [
+        "2.6.2-r0",
+        "2.6.2-r1",
+        "2.6.2-r2",
+        "2.6.2-r3",
+        "2.6.3-r0",
+        "2.6.3-r1",
+        "2.6.3-r10",
+        "2.6.3-r2",
+        "2.6.3-r3",
+        "2.6.3-r4",
+        "2.6.3-r5",
+        "2.6.3-r6",
+        "2.6.3-r7",
+        "2.6.3-r8",
+        "2.6.3-r9",
+        "2.6.4-r0",
+        "2.6.4-r1",
+        "2.6.5-r0",
+        "2.6.5-r1",
+        "2.6.5-r10",
+        "2.6.5-r11",
+        "2.6.5-r12",
+        "2.6.5-r13",
+        "2.6.5-r2",
+        "2.6.5-r3",
+        "2.6.5-r4",
+        "2.6.5-r5",
+        "2.6.5-r6",
+        "2.6.5-r7",
+        "2.6.5-r8",
+        "2.6.5-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cosign-3-dev",
+        "purl": "pkg:apk/dhi/cosign-3-dev"
+      },
+      "versions": [
+        "3.0.4-r0",
+        "3.0.5-r0",
+        "3.0.5-r1",
+        "3.0.5-r2",
+        "3.0.5-r3",
+        "3.0.6-r0",
+        "3.0.6-r1",
+        "3.0.6-r2",
+        "3.0.6-r3",
+        "3.0.6-r4",
+        "3.0.6-r5",
+        "3.0.6-r6",
+        "3.1.1-r0",
+        "3.1.1-r1",
+        "3.1.1-r2",
+        "3.1.2-r0",
+        "3.1.2-r1",
+        "3.1.3-r0",
+        "3.1.3-r1",
+        "3.1.3-r10",
+        "3.1.3-r11",
+        "3.1.3-r12",
+        "3.1.3-r13",
+        "3.1.3-r2",
+        "3.1.3-r3",
+        "3.1.3-r4",
+        "3.1.3-r5",
+        "3.1.3-r6",
+        "3.1.3-r7",
+        "3.1.3-r8",
+        "3.1.3-r9",
+        "3.1.4-r0",
+        "3.1.4-r1",
+        "3.1.4-r2",
+        "3.1.4-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cosign-3-fips-dev",
+        "purl": "pkg:apk/dhi/cosign-3-fips-dev"
+      },
+      "versions": [
+        "3.0.4-r0",
+        "3.0.5-r0",
+        "3.0.5-r1",
+        "3.0.5-r2",
+        "3.0.5-r3",
+        "3.0.6-r0",
+        "3.0.6-r1",
+        "3.0.6-r2",
+        "3.0.6-r3",
+        "3.0.6-r4",
+        "3.0.6-r5",
+        "3.0.6-r6",
+        "3.1.1-r0",
+        "3.1.1-r1",
+        "3.1.1-r2",
+        "3.1.2-r0",
+        "3.1.2-r1",
+        "3.1.3-r0",
+        "3.1.3-r1",
+        "3.1.3-r10",
+        "3.1.3-r11",
+        "3.1.3-r12",
+        "3.1.3-r13",
+        "3.1.3-r2",
+        "3.1.3-r3",
+        "3.1.3-r4",
+        "3.1.3-r5",
+        "3.1.3-r6",
+        "3.1.3-r7",
+        "3.1.3-r8",
+        "3.1.3-r9",
+        "3.1.4-r0",
+        "3.1.4-r1",
+        "3.1.4-r2",
+        "3.1.4-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cosign-3-fips",
+        "purl": "pkg:apk/dhi/cosign-3-fips"
+      },
+      "versions": [
+        "3.0.4-r0",
+        "3.0.5-r0",
+        "3.0.5-r1",
+        "3.0.5-r2",
+        "3.0.5-r3",
+        "3.0.6-r0",
+        "3.0.6-r1",
+        "3.0.6-r2",
+        "3.0.6-r3",
+        "3.0.6-r4",
+        "3.0.6-r5",
+        "3.0.6-r6",
+        "3.1.1-r0",
+        "3.1.1-r1",
+        "3.1.1-r2",
+        "3.1.2-r0",
+        "3.1.2-r1",
+        "3.1.3-r0",
+        "3.1.3-r1",
+        "3.1.3-r10",
+        "3.1.3-r11",
+        "3.1.3-r12",
+        "3.1.3-r13",
+        "3.1.3-r2",
+        "3.1.3-r3",
+        "3.1.3-r4",
+        "3.1.3-r5",
+        "3.1.3-r6",
+        "3.1.3-r7",
+        "3.1.3-r8",
+        "3.1.3-r9",
+        "3.1.4-r0",
+        "3.1.4-r1",
+        "3.1.4-r2",
+        "3.1.4-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cosign-3",
+        "purl": "pkg:apk/dhi/cosign-3"
+      },
+      "versions": [
+        "3.0.4-r0",
+        "3.0.5-r0",
+        "3.0.5-r1",
+        "3.0.5-r2",
+        "3.0.5-r3",
+        "3.0.6-r0",
+        "3.0.6-r1",
+        "3.0.6-r2",
+        "3.0.6-r3",
+        "3.0.6-r4",
+        "3.0.6-r5",
+        "3.0.6-r6",
+        "3.1.1-r0",
+        "3.1.1-r1",
+        "3.1.1-r2",
+        "3.1.2-r0",
+        "3.1.2-r1",
+        "3.1.3-r0",
+        "3.1.3-r1",
+        "3.1.3-r10",
+        "3.1.3-r11",
+        "3.1.3-r12",
+        "3.1.3-r13",
+        "3.1.3-r2",
+        "3.1.3-r3",
+        "3.1.3-r4",
+        "3.1.3-r5",
+        "3.1.3-r6",
+        "3.1.3-r7",
+        "3.1.3-r8",
+        "3.1.3-r9",
+        "3.1.4-r0",
+        "3.1.4-r1",
+        "3.1.4-r2",
+        "3.1.4-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-background-controller-dev",
+        "purl": "pkg:apk/dhi/kyverno-background-controller-dev"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-background-controller-fips-dev",
+        "purl": "pkg:apk/dhi/kyverno-background-controller-fips-dev"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-background-controller-fips",
+        "purl": "pkg:apk/dhi/kyverno-background-controller-fips"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-background-controller",
+        "purl": "pkg:apk/dhi/kyverno-background-controller"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-cleanup-controller-dev",
+        "purl": "pkg:apk/dhi/kyverno-cleanup-controller-dev"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-cleanup-controller-fips-dev",
+        "purl": "pkg:apk/dhi/kyverno-cleanup-controller-fips-dev"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-cleanup-controller-fips",
+        "purl": "pkg:apk/dhi/kyverno-cleanup-controller-fips"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-cleanup-controller",
+        "purl": "pkg:apk/dhi/kyverno-cleanup-controller"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-cli-dev",
+        "purl": "pkg:apk/dhi/kyverno-cli-dev"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-cli-fips-dev",
+        "purl": "pkg:apk/dhi/kyverno-cli-fips-dev"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-cli-fips",
+        "purl": "pkg:apk/dhi/kyverno-cli-fips"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-cli",
+        "purl": "pkg:apk/dhi/kyverno-cli"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-dev",
+        "purl": "pkg:apk/dhi/kyverno-dev"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-fips-dev",
+        "purl": "pkg:apk/dhi/kyverno-fips-dev"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-fips",
+        "purl": "pkg:apk/dhi/kyverno-fips"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-init-dev",
+        "purl": "pkg:apk/dhi/kyverno-init-dev"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-init-fips-dev",
+        "purl": "pkg:apk/dhi/kyverno-init-fips-dev"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-init-fips",
+        "purl": "pkg:apk/dhi/kyverno-init-fips"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-init",
+        "purl": "pkg:apk/dhi/kyverno-init"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-readiness-checker-dev",
+        "purl": "pkg:apk/dhi/kyverno-readiness-checker-dev"
+      },
+      "versions": [
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-readiness-checker-fips-dev",
+        "purl": "pkg:apk/dhi/kyverno-readiness-checker-fips-dev"
+      },
+      "versions": [
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-readiness-checker-fips",
+        "purl": "pkg:apk/dhi/kyverno-readiness-checker-fips"
+      },
+      "versions": [
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-readiness-checker",
+        "purl": "pkg:apk/dhi/kyverno-readiness-checker"
+      },
+      "versions": [
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-reports-controller-dev",
+        "purl": "pkg:apk/dhi/kyverno-reports-controller-dev"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-reports-controller-fips-dev",
+        "purl": "pkg:apk/dhi/kyverno-reports-controller-fips-dev"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-reports-controller-fips",
+        "purl": "pkg:apk/dhi/kyverno-reports-controller-fips"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno-reports-controller",
+        "purl": "pkg:apk/dhi/kyverno-reports-controller"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kyverno",
+        "purl": "pkg:apk/dhi/kyverno"
+      },
+      "versions": [
+        "1.15.3-r0",
+        "1.15.3-r3",
+        "1.16.3-r0",
+        "1.16.4-r0",
+        "1.16.4-r2",
+        "1.16.4-r3",
+        "1.16.4-r4",
+        "1.16.4-r5",
+        "1.16.4-r6",
+        "1.16.4-r7",
+        "1.16.4-r8",
+        "1.16.4-r9",
+        "1.17.1-r0",
+        "1.17.2-r0",
+        "1.17.2-r1",
+        "1.17.2-r2",
+        "1.17.2-r3",
+        "1.17.2-r4",
+        "1.17.2-r5",
+        "1.17.2-r6",
+        "1.17.2-r7",
+        "1.17.2-r8",
+        "1.17.2-r9",
+        "1.18.0-r0",
+        "1.18.0-r1",
+        "1.18.0-r2",
+        "1.18.1-r0",
+        "1.18.1-r1",
+        "1.18.1-r2",
+        "1.18.1-r3",
+        "1.18.1-r4",
+        "1.18.1-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "reports-server-dev",
+        "purl": "pkg:apk/dhi/reports-server-dev"
+      },
+      "versions": [
+        "0.1.7-r0",
+        "0.1.7-r1",
+        "0.1.7-r10",
+        "0.1.7-r11",
+        "0.1.7-r12",
+        "0.1.7-r13",
+        "0.1.7-r14",
+        "0.1.7-r15",
+        "0.1.7-r16",
+        "0.1.7-r17",
+        "0.1.7-r18",
+        "0.1.7-r2",
+        "0.1.7-r3",
+        "0.1.7-r4",
+        "0.1.7-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "reports-server-fips-dev",
+        "purl": "pkg:apk/dhi/reports-server-fips-dev"
+      },
+      "versions": [
+        "0.1.7-r0",
+        "0.1.7-r1",
+        "0.1.7-r10",
+        "0.1.7-r11",
+        "0.1.7-r12",
+        "0.1.7-r13",
+        "0.1.7-r14",
+        "0.1.7-r15",
+        "0.1.7-r16",
+        "0.1.7-r17",
+        "0.1.7-r18",
+        "0.1.7-r2",
+        "0.1.7-r3",
+        "0.1.7-r4",
+        "0.1.7-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "reports-server-fips",
+        "purl": "pkg:apk/dhi/reports-server-fips"
+      },
+      "versions": [
+        "0.1.7-r0",
+        "0.1.7-r1",
+        "0.1.7-r10",
+        "0.1.7-r11",
+        "0.1.7-r12",
+        "0.1.7-r13",
+        "0.1.7-r14",
+        "0.1.7-r15",
+        "0.1.7-r16",
+        "0.1.7-r17",
+        "0.1.7-r18",
+        "0.1.7-r2",
+        "0.1.7-r3",
+        "0.1.7-r4",
+        "0.1.7-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "reports-server",
+        "purl": "pkg:apk/dhi/reports-server"
+      },
+      "versions": [
+        "0.1.7-r0",
+        "0.1.7-r1",
+        "0.1.7-r10",
+        "0.1.7-r11",
+        "0.1.7-r12",
+        "0.1.7-r13",
+        "0.1.7-r14",
+        "0.1.7-r15",
+        "0.1.7-r16",
+        "0.1.7-r17",
+        "0.1.7-r18",
+        "0.1.7-r2",
+        "0.1.7-r3",
+        "0.1.7-r4",
+        "0.1.7-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-cli-dev",
+        "purl": "pkg:apk/dhi/scout-cli-dev"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r2",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r7",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-cli-fips-dev",
+        "purl": "pkg:apk/dhi/scout-cli-fips-dev"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r2",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r7",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-cli-fips",
+        "purl": "pkg:apk/dhi/scout-cli-fips"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r2",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r7",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-cli",
+        "purl": "pkg:apk/dhi/scout-cli"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r2",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r7",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-sbom-indexer-dev",
+        "purl": "pkg:apk/dhi/scout-sbom-indexer-dev"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.20.4-r5",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.21.0-r3",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4",
+        "1.29.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-sbom-indexer-fips-dev",
+        "purl": "pkg:apk/dhi/scout-sbom-indexer-fips-dev"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.20.4-r5",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.21.0-r3",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4",
+        "1.29.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-sbom-indexer-fips-oci-config",
+        "purl": "pkg:apk/dhi/scout-sbom-indexer-fips-oci-config"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.20.4-r5",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.21.0-r3",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4",
+        "1.29.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-sbom-indexer-fips",
+        "purl": "pkg:apk/dhi/scout-sbom-indexer-fips"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.20.4-r5",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.21.0-r3",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4",
+        "1.29.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-sbom-indexer-oci-config",
+        "purl": "pkg:apk/dhi/scout-sbom-indexer-oci-config"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.20.4-r5",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.21.0-r3",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4",
+        "1.29.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-sbom-indexer",
+        "purl": "pkg:apk/dhi/scout-sbom-indexer"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.20.4-r5",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.21.0-r3",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4",
+        "1.29.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "trivy-dev",
+        "purl": "pkg:apk/dhi/trivy-dev"
+      },
+      "versions": [
+        "0.69.1-r0",
+        "0.69.2-r0",
+        "0.69.3-r0",
+        "0.69.3-r1",
+        "0.69.3-r2",
+        "0.69.3-r3",
+        "0.69.3-r4",
+        "0.69.3-r5",
+        "0.69.3-r6",
+        "0.69.3-r7",
+        "0.70.0-r0",
+        "0.70.0-r1",
+        "0.70.0-r2",
+        "0.70.0-r3",
+        "0.70.0-r4",
+        "0.70.0-r5",
+        "0.70.0-r6",
+        "0.71.0-r0",
+        "0.71.0-r1",
+        "0.71.2-r0",
+        "0.71.2-r1",
+        "0.71.2-r2",
+        "0.71.2-r3",
+        "0.73.0-r0",
+        "0.73.0-r2",
+        "0.74.0-r0",
+        "0.74.0-r1",
+        "0.74.0-r10",
+        "0.74.0-r11",
+        "0.74.0-r2",
+        "0.74.0-r3",
+        "0.74.0-r4",
+        "0.74.0-r5",
+        "0.74.0-r6",
+        "0.74.0-r7",
+        "0.74.0-r8",
+        "0.74.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "trivy-fips-dev",
+        "purl": "pkg:apk/dhi/trivy-fips-dev"
+      },
+      "versions": [
+        "0.69.1-r0",
+        "0.69.2-r0",
+        "0.69.3-r0",
+        "0.69.3-r1",
+        "0.69.3-r2",
+        "0.69.3-r3",
+        "0.69.3-r4",
+        "0.69.3-r5",
+        "0.69.3-r6",
+        "0.69.3-r7",
+        "0.70.0-r0",
+        "0.70.0-r1",
+        "0.70.0-r2",
+        "0.70.0-r3",
+        "0.70.0-r4",
+        "0.70.0-r5",
+        "0.70.0-r6",
+        "0.71.0-r0",
+        "0.71.0-r1",
+        "0.71.2-r0",
+        "0.71.2-r1",
+        "0.71.2-r2",
+        "0.71.2-r3",
+        "0.73.0-r0",
+        "0.73.0-r2",
+        "0.74.0-r0",
+        "0.74.0-r1",
+        "0.74.0-r10",
+        "0.74.0-r11",
+        "0.74.0-r2",
+        "0.74.0-r3",
+        "0.74.0-r4",
+        "0.74.0-r5",
+        "0.74.0-r6",
+        "0.74.0-r7",
+        "0.74.0-r8",
+        "0.74.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "trivy-fips",
+        "purl": "pkg:apk/dhi/trivy-fips"
+      },
+      "versions": [
+        "0.69.1-r0",
+        "0.69.2-r0",
+        "0.69.3-r0",
+        "0.69.3-r1",
+        "0.69.3-r2",
+        "0.69.3-r3",
+        "0.69.3-r4",
+        "0.69.3-r5",
+        "0.69.3-r6",
+        "0.69.3-r7",
+        "0.70.0-r0",
+        "0.70.0-r1",
+        "0.70.0-r2",
+        "0.70.0-r3",
+        "0.70.0-r4",
+        "0.70.0-r5",
+        "0.70.0-r6",
+        "0.71.0-r0",
+        "0.71.0-r1",
+        "0.71.2-r0",
+        "0.71.2-r1",
+        "0.71.2-r2",
+        "0.71.2-r3",
+        "0.73.0-r0",
+        "0.73.0-r2",
+        "0.74.0-r0",
+        "0.74.0-r1",
+        "0.74.0-r10",
+        "0.74.0-r11",
+        "0.74.0-r2",
+        "0.74.0-r3",
+        "0.74.0-r4",
+        "0.74.0-r5",
+        "0.74.0-r6",
+        "0.74.0-r7",
+        "0.74.0-r8",
+        "0.74.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "trivy",
+        "purl": "pkg:apk/dhi/trivy"
+      },
+      "versions": [
+        "0.69.1-r0",
+        "0.69.2-r0",
+        "0.69.3-r0",
+        "0.69.3-r1",
+        "0.69.3-r2",
+        "0.69.3-r3",
+        "0.69.3-r4",
+        "0.69.3-r5",
+        "0.69.3-r6",
+        "0.69.3-r7",
+        "0.70.0-r0",
+        "0.70.0-r1",
+        "0.70.0-r2",
+        "0.70.0-r3",
+        "0.70.0-r4",
+        "0.70.0-r5",
+        "0.70.0-r6",
+        "0.71.0-r0",
+        "0.71.0-r1",
+        "0.71.2-r0",
+        "0.71.2-r1",
+        "0.71.2-r2",
+        "0.71.2-r3",
+        "0.73.0-r0",
+        "0.73.0-r2",
+        "0.74.0-r0",
+        "0.74.0-r1",
+        "0.74.0-r10",
+        "0.74.0-r11",
+        "0.74.0-r2",
+        "0.74.0-r3",
+        "0.74.0-r4",
+        "0.74.0-r5",
+        "0.74.0-r6",
+        "0.74.0-r7",
+        "0.74.0-r8",
+        "0.74.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "zarf-dev",
+        "purl": "pkg:apk/dhi/zarf-dev"
+      },
+      "versions": [
+        "0.78.0-r0",
+        "0.79.0-r0",
+        "0.80.0-r0",
+        "0.80.0-r1",
+        "0.81.0-r0",
+        "0.81.1-r0",
+        "0.82.0-r0",
+        "0.82.0-r1",
+        "0.83.0-r0",
+        "0.83.0-r1",
+        "0.83.0-r2",
+        "0.83.0-r3",
+        "0.84.0-r0",
+        "0.84.0-r1",
+        "0.84.0-r2",
+        "0.85.0-r0",
+        "0.85.0-r1",
+        "0.85.0-r2",
+        "0.86.0-r0",
+        "0.86.0-r1",
+        "0.87.0-r0",
+        "0.87.0-r1",
+        "0.87.0-r2",
+        "0.87.0-r3",
+        "0.88.0-r0",
+        "0.88.0-r1",
+        "0.88.0-r2",
+        "0.88.0-r3",
+        "0.89.0-r0",
+        "0.89.0-r1",
+        "0.89.0-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "zarf-fips-dev",
+        "purl": "pkg:apk/dhi/zarf-fips-dev"
+      },
+      "versions": [
+        "0.78.0-r0",
+        "0.79.0-r0",
+        "0.80.0-r0",
+        "0.80.0-r1",
+        "0.81.0-r0",
+        "0.81.1-r0",
+        "0.82.0-r0",
+        "0.82.0-r1",
+        "0.83.0-r0",
+        "0.83.0-r1",
+        "0.83.0-r2",
+        "0.83.0-r3",
+        "0.84.0-r0",
+        "0.84.0-r1",
+        "0.84.0-r2",
+        "0.85.0-r0",
+        "0.85.0-r1",
+        "0.85.0-r2",
+        "0.86.0-r0",
+        "0.86.0-r1",
+        "0.87.0-r0",
+        "0.87.0-r1",
+        "0.87.0-r2",
+        "0.87.0-r3",
+        "0.88.0-r0",
+        "0.88.0-r1",
+        "0.88.0-r2",
+        "0.88.0-r3",
+        "0.89.0-r0",
+        "0.89.0-r1",
+        "0.89.0-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "zarf-fips",
+        "purl": "pkg:apk/dhi/zarf-fips"
+      },
+      "versions": [
+        "0.78.0-r0",
+        "0.79.0-r0",
+        "0.80.0-r0",
+        "0.80.0-r1",
+        "0.81.0-r0",
+        "0.81.1-r0",
+        "0.82.0-r0",
+        "0.82.0-r1",
+        "0.83.0-r0",
+        "0.83.0-r1",
+        "0.83.0-r2",
+        "0.83.0-r3",
+        "0.84.0-r0",
+        "0.84.0-r1",
+        "0.84.0-r2",
+        "0.85.0-r0",
+        "0.85.0-r1",
+        "0.85.0-r2",
+        "0.86.0-r0",
+        "0.86.0-r1",
+        "0.87.0-r0",
+        "0.87.0-r1",
+        "0.87.0-r2",
+        "0.87.0-r3",
+        "0.88.0-r0",
+        "0.88.0-r1",
+        "0.88.0-r2",
+        "0.88.0-r3",
+        "0.89.0-r0",
+        "0.89.0-r1",
+        "0.89.0-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "zarf",
+        "purl": "pkg:apk/dhi/zarf"
+      },
+      "versions": [
+        "0.78.0-r0",
+        "0.79.0-r0",
+        "0.80.0-r0",
+        "0.80.0-r1",
+        "0.81.0-r0",
+        "0.81.1-r0",
+        "0.82.0-r0",
+        "0.82.0-r1",
+        "0.83.0-r0",
+        "0.83.0-r1",
+        "0.83.0-r2",
+        "0.83.0-r3",
+        "0.84.0-r0",
+        "0.84.0-r1",
+        "0.84.0-r2",
+        "0.85.0-r0",
+        "0.85.0-r1",
+        "0.85.0-r2",
+        "0.86.0-r0",
+        "0.86.0-r1",
+        "0.87.0-r0",
+        "0.87.0-r1",
+        "0.87.0-r2",
+        "0.87.0-r3",
+        "0.88.0-r0",
+        "0.88.0-r1",
+        "0.88.0-r2",
+        "0.88.0-r3",
+        "0.89.0-r0",
+        "0.89.0-r1",
+        "0.89.0-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-d2nq-scyb-hmdn-bncm"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-48702"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-2023.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-49835"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-49478"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-48702"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42505"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-39822"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-48702"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-47q9-m4ww-924m"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/sigstore/rekor/security/advisories/GHSA-47q9-m4ww-924m"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-5778"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-48702"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-48702"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/sigstore/rekor/pull/2831"
+    }
+  ]
+}
