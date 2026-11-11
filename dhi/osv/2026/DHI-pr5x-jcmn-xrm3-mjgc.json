@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-pr5x-jcmn-xrm3-mjgc",
+  "modified": "2026-11-11T15:39:09Z",
+  "published": "2026-11-11T15:39:09Z",
+  "upstream": [
+    "GHSA-frvp-7c67-39w9"
+  ],
+  "summary": "The same as the `hono` core [Path traversal in `serve-static` on Windows via encoded backslash…",
+  "details": "The same as the `hono` core [Path traversal in `serve-static` on Windows via encoded backslash (`%5C`)](https://github.com/honojs/hono/security/advisories/GHSA-wwfh-h76j-fc44).\n\n### Summary\n\nOn Windows hosts, an encoded backslash (`%5C`) in the request path decodes to `\\`, which the Windows path resolver treats as a separator. `serve-static` then resolves a single URL segment such as `admin\\secret.txt` into a nested file under the root and serves it, letting an attacker read static files meant to be protected behind prefix-mounted middleware. Directory escape (`..`) remains blocked.\n\n### Details\n\nThe router splits paths only on `/`, so `/admin%5Csecret.txt` is one segment and middleware on `/admin/*` does not run. The `serve-static` guard rejects `.`/`..` and consecutive separators but lets a lone `\\` through; on Windows the file resolver re-splits it into the protected subtree.\n\nThis affects Windows hosts serving static files via the Node, Bun, or Deno adapters that guard a static subtree with prefix-mounted middleware.\n\n### Impact\n\nAn unauthenticated attacker can read static files under a middleware-guarded prefix on Windows hosts. The read stays within the configured root; escape outside the root is not possible.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-3",
+        "purl": "pkg:deb/dhi/langfuse-3"
+      },
+      "versions": [
+        "3.225.0-0",
+        "3.225.0-1",
+        "3.225.1-0",
+        "3.225.1-1",
+        "3.225.10-0",
+        "3.225.11-0",
+        "3.225.12-0",
+        "3.225.12-1",
+        "3.225.12-2",
+        "3.225.14-0",
+        "3.225.15-0",
+        "3.225.15-1",
+        "3.225.15-2",
+        "3.225.2-0",
+        "3.225.3-0",
+        "3.225.4-0",
+        "3.225.5-0",
+        "3.225.5-1",
+        "3.225.7-0",
+        "3.225.7-1",
+        "3.225.8-0",
+        "3.225.8-1",
+        "3.225.9-0",
+        "3.227.0-0",
+        "3.227.0-1",
+        "3.227.1-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-pr5x-jcmn-xrm3-mjgc"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-frvp-7c67-39w9"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/honojs/node-server/security/advisories/GHSA-frvp-7c67-39w9"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/honojs/node-server/commit/cd076e117cfe4cb8d31f9eb11d2e8f38a6cb8faf"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/honojs/node-server/releases/tag/v2.0.5"
+    }
+  ]
+}
