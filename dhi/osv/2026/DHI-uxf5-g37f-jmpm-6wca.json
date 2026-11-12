@@ -1,0 +1,699 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-uxf5-g37f-jmpm-6wca",
+  "modified": "2026-11-12T06:10:31Z",
+  "published": "2026-11-12T06:10:31Z",
+  "upstream": [
+    "CVE-2026-55092"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nWhen Trivy downloads an OCI artifact, it uses the `org.opencontainers.image.title` annotation from the artifact manifest as the destination filename without validation. An attacker who can make Trivy fetch an attacker-controlled artifact can supply a crafted annotation that resolves to a path outside the intended destination, causing Trivy to write the layer content to an arbitrary location on the host filesystem.\n\n## Affected configurations\n\nExploitation requires the attacker to direct Trivy at an attacker-controlled OCI artifact via one of the following inputs:\n\n| Input | Used for |\n| --- | --- |\n| `--db-repository` flag, `TRIVY_DB_REPOSITORY` environment variable, or `db.repository` in `trivy.yaml` | Vulnerability database |\n| `--java-db-repository` flag, `TRIVY_JAVA_DB_REPOSITORY` environment variable, or `db.java-repository` in `trivy.yaml` | Java vulnerability database |\n| `--checks-bundle-repository` flag (and the deprecated `--policy-bundle-repository` alias), `TRIVY_CHECKS_BUNDLE_REPOSITORY` environment variable, or `misconfiguration.checks-bundle-repository` in `trivy.yaml` | Misconfiguration checks bundle |\n| Repository argument to `trivy module install <REPO>` | WASM module installation |\n\nRealistic scenarios in which an attacker may influence these inputs include a copy-pasted command or documentation snippet pointing to an untrusted mirror, or a third-party mirror that turns out to be hostile.\n\nTrivy's default configuration, which downloads these artifacts from Aqua-operated repositories, is not affected. The risk applies only when one of the inputs above is overridden to download a different artifact.\n\n## Impact\n\nAn attacker who satisfies the conditions above can overwrite or create arbitrary files on the host filesystem within the privilege boundary of the user running Trivy. The vulnerability does not grant any privileges beyond what that user already has.\n\nThe practical impact depends on the deployment. In environments where the running user can overwrite files such as SSH `authorized_keys`, shell startup files, cron entries, or binaries on `PATH`, the file write may be leveraged to achieve code execution as that user. In more restricted deployments, the impact is bounded to the user's writable scope but may still allow tampering with scan results, build artifacts, or other files consumed by subsequent steps in the same pipeline.\n\n## Patches\n\nFixed in Trivy `0.71.1`. Users should upgrade to that release or later.\n\n## Workarounds\n\nIf upgrading is not immediately possible, do not download Trivy artifacts (vulnerability database, Java database, misconfiguration checks bundle, modules, etc.) from OCI repositories you do not operate or trust.\n\n## Credits\n\nReported by @ikkebr.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-cli-dev",
+        "purl": "pkg:apk/dhi/scout-cli-dev"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r2",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r7",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-cli-fips-dev",
+        "purl": "pkg:apk/dhi/scout-cli-fips-dev"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r2",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r7",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-cli-fips",
+        "purl": "pkg:apk/dhi/scout-cli-fips"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r2",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r7",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-cli",
+        "purl": "pkg:apk/dhi/scout-cli"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r2",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r7",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-sbom-indexer-dev",
+        "purl": "pkg:apk/dhi/scout-sbom-indexer-dev"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.20.4-r5",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.21.0-r3",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4",
+        "1.29.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-sbom-indexer-fips-dev",
+        "purl": "pkg:apk/dhi/scout-sbom-indexer-fips-dev"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.20.4-r5",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.21.0-r3",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4",
+        "1.29.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-sbom-indexer-fips-oci-config",
+        "purl": "pkg:apk/dhi/scout-sbom-indexer-fips-oci-config"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.20.4-r5",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.21.0-r3",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4",
+        "1.29.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-sbom-indexer-fips",
+        "purl": "pkg:apk/dhi/scout-sbom-indexer-fips"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.20.4-r5",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.21.0-r3",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4",
+        "1.29.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-sbom-indexer-oci-config",
+        "purl": "pkg:apk/dhi/scout-sbom-indexer-oci-config"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.20.4-r5",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.21.0-r3",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4",
+        "1.29.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "scout-sbom-indexer",
+        "purl": "pkg:apk/dhi/scout-sbom-indexer"
+      },
+      "versions": [
+        "1.20.4-r1",
+        "1.20.4-r2",
+        "1.20.4-r3",
+        "1.20.4-r4",
+        "1.20.4-r5",
+        "1.21.0-r0",
+        "1.21.0-r1",
+        "1.21.0-r2",
+        "1.21.0-r3",
+        "1.23.1-r0",
+        "1.23.1-r1",
+        "1.23.1-r10",
+        "1.23.1-r3",
+        "1.23.1-r4",
+        "1.23.1-r5",
+        "1.23.1-r6",
+        "1.23.1-r8",
+        "1.23.1-r9",
+        "1.26.0-r1",
+        "1.26.0-r2",
+        "1.26.0-r3",
+        "1.26.0-r4",
+        "1.29.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "trivy-dev",
+        "purl": "pkg:apk/dhi/trivy-dev"
+      },
+      "versions": [
+        "0.69.1-r0",
+        "0.69.2-r0",
+        "0.69.3-r0",
+        "0.69.3-r1",
+        "0.69.3-r2",
+        "0.69.3-r3",
+        "0.69.3-r4",
+        "0.69.3-r5",
+        "0.69.3-r6",
+        "0.69.3-r7",
+        "0.70.0-r0",
+        "0.70.0-r1",
+        "0.70.0-r2",
+        "0.70.0-r3",
+        "0.70.0-r4",
+        "0.70.0-r5",
+        "0.70.0-r6",
+        "0.71.0-r0",
+        "0.71.0-r1",
+        "0.71.2-r0",
+        "0.71.2-r1",
+        "0.71.2-r2",
+        "0.71.2-r3",
+        "0.73.0-r0",
+        "0.73.0-r2",
+        "0.74.0-r0",
+        "0.74.0-r1",
+        "0.74.0-r10",
+        "0.74.0-r11",
+        "0.74.0-r2",
+        "0.74.0-r3",
+        "0.74.0-r4",
+        "0.74.0-r5",
+        "0.74.0-r6",
+        "0.74.0-r7",
+        "0.74.0-r8",
+        "0.74.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "trivy-fips-dev",
+        "purl": "pkg:apk/dhi/trivy-fips-dev"
+      },
+      "versions": [
+        "0.69.1-r0",
+        "0.69.2-r0",
+        "0.69.3-r0",
+        "0.69.3-r1",
+        "0.69.3-r2",
+        "0.69.3-r3",
+        "0.69.3-r4",
+        "0.69.3-r5",
+        "0.69.3-r6",
+        "0.69.3-r7",
+        "0.70.0-r0",
+        "0.70.0-r1",
+        "0.70.0-r2",
+        "0.70.0-r3",
+        "0.70.0-r4",
+        "0.70.0-r5",
+        "0.70.0-r6",
+        "0.71.0-r0",
+        "0.71.0-r1",
+        "0.71.2-r0",
+        "0.71.2-r1",
+        "0.71.2-r2",
+        "0.71.2-r3",
+        "0.73.0-r0",
+        "0.73.0-r2",
+        "0.74.0-r0",
+        "0.74.0-r1",
+        "0.74.0-r10",
+        "0.74.0-r11",
+        "0.74.0-r2",
+        "0.74.0-r3",
+        "0.74.0-r4",
+        "0.74.0-r5",
+        "0.74.0-r6",
+        "0.74.0-r7",
+        "0.74.0-r8",
+        "0.74.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "trivy-fips",
+        "purl": "pkg:apk/dhi/trivy-fips"
+      },
+      "versions": [
+        "0.69.1-r0",
+        "0.69.2-r0",
+        "0.69.3-r0",
+        "0.69.3-r1",
+        "0.69.3-r2",
+        "0.69.3-r3",
+        "0.69.3-r4",
+        "0.69.3-r5",
+        "0.69.3-r6",
+        "0.69.3-r7",
+        "0.70.0-r0",
+        "0.70.0-r1",
+        "0.70.0-r2",
+        "0.70.0-r3",
+        "0.70.0-r4",
+        "0.70.0-r5",
+        "0.70.0-r6",
+        "0.71.0-r0",
+        "0.71.0-r1",
+        "0.71.2-r0",
+        "0.71.2-r1",
+        "0.71.2-r2",
+        "0.71.2-r3",
+        "0.73.0-r0",
+        "0.73.0-r2",
+        "0.74.0-r0",
+        "0.74.0-r1",
+        "0.74.0-r10",
+        "0.74.0-r11",
+        "0.74.0-r2",
+        "0.74.0-r3",
+        "0.74.0-r4",
+        "0.74.0-r5",
+        "0.74.0-r6",
+        "0.74.0-r7",
+        "0.74.0-r8",
+        "0.74.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "trivy-operator-dev",
+        "purl": "pkg:apk/dhi/trivy-operator-dev"
+      },
+      "versions": [
+        "0.31.1-r0",
+        "0.31.1-r1",
+        "0.31.1-r10",
+        "0.31.1-r11",
+        "0.31.1-r12",
+        "0.31.1-r13",
+        "0.31.1-r3",
+        "0.31.1-r4",
+        "0.31.1-r5",
+        "0.31.1-r6",
+        "0.31.1-r7",
+        "0.31.1-r8",
+        "0.31.1-r9",
+        "0.36.1-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "trivy-operator-fips-dev",
+        "purl": "pkg:apk/dhi/trivy-operator-fips-dev"
+      },
+      "versions": [
+        "0.31.1-r0",
+        "0.31.1-r1",
+        "0.31.1-r10",
+        "0.31.1-r11",
+        "0.31.1-r12",
+        "0.31.1-r13",
+        "0.31.1-r3",
+        "0.31.1-r4",
+        "0.31.1-r5",
+        "0.31.1-r6",
+        "0.31.1-r7",
+        "0.31.1-r8",
+        "0.31.1-r9",
+        "0.36.1-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "trivy-operator-fips",
+        "purl": "pkg:apk/dhi/trivy-operator-fips"
+      },
+      "versions": [
+        "0.31.1-r0",
+        "0.31.1-r1",
+        "0.31.1-r10",
+        "0.31.1-r11",
+        "0.31.1-r12",
+        "0.31.1-r13",
+        "0.31.1-r3",
+        "0.31.1-r4",
+        "0.31.1-r5",
+        "0.31.1-r6",
+        "0.31.1-r7",
+        "0.31.1-r8",
+        "0.31.1-r9",
+        "0.36.1-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "trivy-operator",
+        "purl": "pkg:apk/dhi/trivy-operator"
+      },
+      "versions": [
+        "0.31.1-r0",
+        "0.31.1-r1",
+        "0.31.1-r10",
+        "0.31.1-r11",
+        "0.31.1-r12",
+        "0.31.1-r13",
+        "0.31.1-r3",
+        "0.31.1-r4",
+        "0.31.1-r5",
+        "0.31.1-r6",
+        "0.31.1-r7",
+        "0.31.1-r8",
+        "0.31.1-r9",
+        "0.36.1-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "trivy",
+        "purl": "pkg:apk/dhi/trivy"
+      },
+      "versions": [
+        "0.69.1-r0",
+        "0.69.2-r0",
+        "0.69.3-r0",
+        "0.69.3-r1",
+        "0.69.3-r2",
+        "0.69.3-r3",
+        "0.69.3-r4",
+        "0.69.3-r5",
+        "0.69.3-r6",
+        "0.69.3-r7",
+        "0.70.0-r0",
+        "0.70.0-r1",
+        "0.70.0-r2",
+        "0.70.0-r3",
+        "0.70.0-r4",
+        "0.70.0-r5",
+        "0.70.0-r6",
+        "0.71.0-r0",
+        "0.71.0-r1",
+        "0.71.2-r0",
+        "0.71.2-r1",
+        "0.71.2-r2",
+        "0.71.2-r3",
+        "0.73.0-r0",
+        "0.73.0-r2",
+        "0.74.0-r0",
+        "0.74.0-r1",
+        "0.74.0-r10",
+        "0.74.0-r11",
+        "0.74.0-r2",
+        "0.74.0-r3",
+        "0.74.0-r4",
+        "0.74.0-r5",
+        "0.74.0-r6",
+        "0.74.0-r7",
+        "0.74.0-r8",
+        "0.74.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-uxf5-g37f-jmpm-6wca"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/aquasecurity/trivy/security/advisories/GHSA-mcj4-mphf-j9ff"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-mcj4-mphf-j9ff"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-55092"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/aquasecurity/trivy/commit/a72d9a4d997c25fbb6534e231b4e206c9b202b31"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/aquasecurity/trivy/commit/39e0b132260c60d59fa746c3f6dd10374b0ff6e4"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/aquasecurity/trivy/releases/tag/v0.71.1"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-6294"
+    }
+  ]
+}
