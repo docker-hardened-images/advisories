@@ -1,0 +1,297 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-mrde-7pcb-pono-x2b7",
+  "modified": "2026-11-12T07:03:03Z",
+  "published": "2026-11-12T07:03:03Z",
+  "upstream": [
+    "CVE-2026-59880"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\n`Immutable.Map` and `Immutable.Set` keep keys that share the same 32-bit hash in a collision bucket that is scanned linearly. The string hash is public and deterministic, so an attacker who controls the **keys** inserted into a Map can craft many keys that all collide, degrading insertion and lookup from amortized O(1) to O(n) per operation — and O(n²) to build or read the whole set. A small, attacker-shaped payload can therefore consume disproportionate CPU and, on a single-threaded runtime such as Node.js, stall the event loop and deny service.\n\n## Details\n\nThe string hash uses the JVM-style polynomial `hashed = (31 * hashed + charCode) | 0`. Strings such as `\"Aa\"` and `\"BB\"` hash to the same value (`65*31+97 == 66*31+66 == 2112`), and concatenating such blocks yields `2^n` distinct strings sharing one hash (40 characters ⇒ >1,000,000 colliding keys). \nAll such keys route to a single `HashCollisionNode`, whose `get`/`update` walk the entire bucket testing `is()`. There is no per-process salt, so the colliding set is fully precomputable from the open-source algorithm.\n\n## Proof of concept\n\nInserting N colliding keys (e.g. via `Immutable.Map(obj)` / `Immutable.fromJS(obj)`) is O(N²). Measured on one machine, ~8,000 colliding\nkeys take ~0.7 s to build and ~0.6 s to read, scaling ×4 per doubling; ~16,000 keys exceed several seconds.\n\n## Impact\n\nCPU-bound denial of service in applications that ingest attacker-controlled object **keys** into Immutable structures, e.g. `Immutable.Map(req.body)`, `Immutable.fromJS(req.body)`, `state.merge(userObject)` / `mergeDeep(...)`. Applications that only store attacker input as **values** under fixed keys are not affected.\n\n## Affected versions\n\n- >= 4.0.0-beta.1, < 4.3.9\n- >= 5.0.0-beta.1, < 5.1.8\n- < 3.8.4\n\n## Patches\n\nFixed in `5.1.8` _(adjust to the actual release)_: large collision buckets are indexed by a per-process **seeded** secondary hash, restoring near-linear behavior for the affected paths. The public `hash()` is unchanged (no breaking change), and `is()` remains the sole authority on key equality. Also fixed in 4.3.9 and 3.8.4.\n\n## Workarounds\n\nBefore passing untrusted data to Immutable.js: cap request body size, limit object key count/length, and reject high-cardinality payloads; avoid building Maps directly from untrusted object keys.\n\n## References\n\n- CWE-407 (Inefficient Algorithmic Complexity), CWE-400 (Uncontrolled Resource Consumption)\n- OWASP API4:2023 (Unrestricted Resource Consumption)",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "karma-dev",
+        "purl": "pkg:apk/dhi/karma-dev"
+      },
+      "versions": [
+        "0.131-r0",
+        "0.131-r1",
+        "0.131-r3",
+        "0.132-r0",
+        "0.132-r1",
+        "0.132-r2",
+        "0.132-r3",
+        "0.133-r0",
+        "0.133-r1",
+        "0.133-r2",
+        "0.133-r3",
+        "0.134-r0",
+        "0.134-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "karma-fips-dev",
+        "purl": "pkg:apk/dhi/karma-fips-dev"
+      },
+      "versions": [
+        "0.131-r0",
+        "0.131-r1",
+        "0.131-r3",
+        "0.132-r0",
+        "0.132-r1",
+        "0.132-r2",
+        "0.132-r3",
+        "0.133-r0",
+        "0.133-r1",
+        "0.133-r2",
+        "0.133-r3",
+        "0.134-r0",
+        "0.134-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "karma-fips",
+        "purl": "pkg:apk/dhi/karma-fips"
+      },
+      "versions": [
+        "0.131-r0",
+        "0.131-r1",
+        "0.131-r3",
+        "0.132-r0",
+        "0.132-r1",
+        "0.132-r2",
+        "0.132-r3",
+        "0.133-r0",
+        "0.133-r1",
+        "0.133-r2",
+        "0.133-r3",
+        "0.134-r0",
+        "0.134-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "karma",
+        "purl": "pkg:apk/dhi/karma"
+      },
+      "versions": [
+        "0.131-r0",
+        "0.131-r1",
+        "0.131-r3",
+        "0.132-r0",
+        "0.132-r1",
+        "0.132-r2",
+        "0.132-r3",
+        "0.133-r0",
+        "0.133-r1",
+        "0.133-r2",
+        "0.133-r3",
+        "0.134-r0",
+        "0.134-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "openshift-console-dev",
+        "purl": "pkg:apk/dhi/openshift-console-dev"
+      },
+      "versions": [
+        "4.22.10-r1",
+        "4.22.10-r2",
+        "4.22.12-r1",
+        "4.22.13-r0",
+        "4.22.13-r1",
+        "4.22.14-r0",
+        "4.22.15-r0",
+        "4.22.15-r1",
+        "4.22.15-r2",
+        "4.22.16-r0",
+        "4.22.16-r1",
+        "4.22.16-r2",
+        "4.22.17-r0",
+        "4.22.17-r1",
+        "4.22.17-r2",
+        "4.22.19-r0",
+        "4.22.19-r1",
+        "4.22.22-r0",
+        "4.22.22-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "openshift-console-fips-dev",
+        "purl": "pkg:apk/dhi/openshift-console-fips-dev"
+      },
+      "versions": [
+        "4.22.10-r1",
+        "4.22.10-r2",
+        "4.22.12-r1",
+        "4.22.13-r0",
+        "4.22.13-r1",
+        "4.22.14-r0",
+        "4.22.15-r0",
+        "4.22.15-r1",
+        "4.22.15-r2",
+        "4.22.16-r0",
+        "4.22.16-r1",
+        "4.22.16-r2",
+        "4.22.17-r0",
+        "4.22.17-r1",
+        "4.22.17-r2",
+        "4.22.19-r0",
+        "4.22.19-r1",
+        "4.22.22-r0",
+        "4.22.22-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "openshift-console-fips",
+        "purl": "pkg:apk/dhi/openshift-console-fips"
+      },
+      "versions": [
+        "4.22.10-r1",
+        "4.22.10-r2",
+        "4.22.12-r1",
+        "4.22.13-r0",
+        "4.22.13-r1",
+        "4.22.14-r0",
+        "4.22.15-r0",
+        "4.22.15-r1",
+        "4.22.15-r2",
+        "4.22.16-r0",
+        "4.22.16-r1",
+        "4.22.16-r2",
+        "4.22.17-r0",
+        "4.22.17-r1",
+        "4.22.17-r2",
+        "4.22.19-r0",
+        "4.22.19-r1",
+        "4.22.22-r0",
+        "4.22.22-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "openshift-console",
+        "purl": "pkg:apk/dhi/openshift-console"
+      },
+      "versions": [
+        "4.22.10-r1",
+        "4.22.10-r2",
+        "4.22.12-r1",
+        "4.22.13-r0",
+        "4.22.13-r1",
+        "4.22.14-r0",
+        "4.22.15-r0",
+        "4.22.15-r1",
+        "4.22.15-r2",
+        "4.22.16-r0",
+        "4.22.16-r1",
+        "4.22.16-r2",
+        "4.22.17-r0",
+        "4.22.17-r1",
+        "4.22.17-r2",
+        "4.22.19-r0",
+        "4.22.19-r1",
+        "4.22.22-r0",
+        "4.22.22-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-mrde-7pcb-pono-x2b7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-xvcm-6775-5m9r"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-59880"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/immutable-js/immutable-js/security/advisories/GHSA-xvcm-6775-5m9r"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/immutable-js/immutable-js/commit/e51d49fc612ded5ec4dfb94ff294d22074269b0f"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/immutable-js/immutable-js/commit/3dd7e5655012597a41873e328bf9142a8901527b"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/immutable-js/immutable-js/releases/tag/v5.1.8"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/immutable-js/immutable-js/releases/tag/v4.3.9"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/immutable-js/immutable-js/releases/tag/v3.8.4"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-59880"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-59880"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-59880"
+    }
+  ]
+}
