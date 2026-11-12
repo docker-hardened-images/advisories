@@ -1,0 +1,184 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-w6sl-6wws-pdo4-ed4m",
+  "modified": "2026-11-12T02:51:27Z",
+  "published": "2026-11-12T02:51:27Z",
+  "upstream": [
+    "GHSA-r4xh-jqrq-34v2"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\n`parse()` has a quadratic-time path in `parseKey`, reachable on default options with ordinary valid input. For every key line and table-header line, `parseKey` (dist/struct.js, lines 58 and 86) finds the dotted-key separator with `ctx.s.indexOf('.', ctx.p)`, where `ctx.s` is the whole document. When a key has no `.` ahead of it, that search runs all the way to the end of the input, and the result is then clamped back to the line terminator `endPtr` - so everything scanned past the current line is wasted. `parseKey` runs once per line, so a document of N dot-free keys costs O(n^2).\n\nThe most ordinary TOML shape triggers it: a flat list of `key = value` lines, or a repeated `[[a]]` table. No dotted keys, no special options, valid input throughout.\n\n### Proof of concept\n\n```js\nimport { parse } from 'smol-toml'\n\nlet doc = ''\nfor (let i = 0; i < 256000; i++) doc += 'k' + i + ' = 1\\n'\n\nconsole.time('parse')\nparse(doc) // ~2.8 MB of valid TOML, default options\nconsole.timeEnd('parse')\n```\n\nDoubling the line count roughly quadruples the time:\n\n| lines | size | parse() |\n|---|---|---|\n| 32k | 0.3 MB | 0.3 s |\n| 64k | 0.7 MB | 1.0 s |\n| 128k | 1.4 MB | 3.5 s |\n| 256k | 2.8 MB | 14 s |\n\n### Impact\nAny service that runs `parse()` on attacker-supplied TOML can be stalled. The work is synchronous, so it blocks the whole event loop, and the quadratic is unbounded: a ~7 MB body pins a core for about a minute, larger bodies for several.\n\n### Patches\nVersion 1.9.0 uses a different implementation for parsing keys which is strictly linear.\n\n### Workarounds\nLimit the maximum document size accepted when parsing arbitrary documents.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "karma-dev",
+        "purl": "pkg:apk/dhi/karma-dev"
+      },
+      "versions": [
+        "0.131-r0",
+        "0.131-r1",
+        "0.131-r3",
+        "0.132-r0",
+        "0.132-r1",
+        "0.132-r2",
+        "0.132-r3",
+        "0.133-r0",
+        "0.133-r1",
+        "0.133-r2",
+        "0.133-r3",
+        "0.134-r0",
+        "0.134-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "karma-fips-dev",
+        "purl": "pkg:apk/dhi/karma-fips-dev"
+      },
+      "versions": [
+        "0.131-r0",
+        "0.131-r1",
+        "0.131-r3",
+        "0.132-r0",
+        "0.132-r1",
+        "0.132-r2",
+        "0.132-r3",
+        "0.133-r0",
+        "0.133-r1",
+        "0.133-r2",
+        "0.133-r3",
+        "0.134-r0",
+        "0.134-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "karma-fips",
+        "purl": "pkg:apk/dhi/karma-fips"
+      },
+      "versions": [
+        "0.131-r0",
+        "0.131-r1",
+        "0.131-r3",
+        "0.132-r0",
+        "0.132-r1",
+        "0.132-r2",
+        "0.132-r3",
+        "0.133-r0",
+        "0.133-r1",
+        "0.133-r2",
+        "0.133-r3",
+        "0.134-r0",
+        "0.134-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "karma",
+        "purl": "pkg:apk/dhi/karma"
+      },
+      "versions": [
+        "0.131-r0",
+        "0.131-r1",
+        "0.131-r3",
+        "0.132-r0",
+        "0.132-r1",
+        "0.132-r2",
+        "0.132-r3",
+        "0.133-r0",
+        "0.133-r1",
+        "0.133-r2",
+        "0.133-r3",
+        "0.134-r0",
+        "0.134-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "kibana-9.5",
+        "purl": "pkg:deb/dhi/kibana-9.5"
+      },
+      "versions": [
+        "9.5.5-0",
+        "9.5.5-1",
+        "9.5.5-10",
+        "9.5.5-11",
+        "9.5.5-12",
+        "9.5.5-2",
+        "9.5.5-3",
+        "9.5.5-4",
+        "9.5.5-5",
+        "9.5.5-6",
+        "9.5.5-7",
+        "9.5.5-9",
+        "9.5.6-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "linstor-gui-2",
+        "purl": "pkg:deb/dhi/linstor-gui-2"
+      },
+      "versions": [
+        "2.5.0-1",
+        "2.5.0-2",
+        "2.6.0-0",
+        "2.6.0-2",
+        "2.6.0-3",
+        "2.7.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-w6sl-6wws-pdo4-ed4m"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-r4xh-jqrq-34v2"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/squirrelchat/smol-toml/security/advisories/GHSA-r4xh-jqrq-34v2"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/squirrelchat/smol-toml/commit/99102aa57fc932f760ea9c15b4cf1c181f952d24"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/squirrelchat/smol-toml/releases/tag/v1.9.0"
+    }
+  ]
+}
