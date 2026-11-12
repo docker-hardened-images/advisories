@@ -1,0 +1,87 @@
+{
+  "modified": "2026-09-30T17:37:12Z",
+  "published": "2026-09-30T17:37:12Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-6ggm-xmc9-8ffg",
+  "details": "### Impact\r\n\r\npg_query_normalize() can read and write heap memory out of bounds when given specially crafted query text. This affects any application that passes untrusted SQL to pg_query_normalize, either directly or through a language binding that bundles libpg_query, for example pg_query (Ruby), pg_query_go, pg_query.rs or pglast (Python). Other APIs, such as parsing, fingerprinting and deparsing, are not affected.\r\n\r\n### Patches\r\n\r\nThe fix removes the text search entirely. A patch to the bundled Postgres grammar now records the exact start of these string constants. The new fields are DefElem.arg_location, CreateSubscriptionStmt.conninfo_location, AlterSubscriptionStmt.conninfo_location and NotifyStmt.payload_location. The normalizer also checks at runtime, in all builds, that constant locations don't overlap or run past the end of the query.\r\n\r\nThese new location fields appear in parse tree output (JSON/protobuf), however like other location fields, they are excluded from fingerprints, so fingerprint values don't change.\r\n\r\n### Workarounds\r\n\r\nApplications using a vulnerable library version should not call pg_query_normalize on untrusted input.\r\n\r\nAlternatively, building with assertions enabled (USE_ASSERT_CHECKING) turns the out-of-bounds write into an abort, safely terminating the program. Note this only reduces the impact and doesn't fix the underlying bug.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "duckdb",
+        "purl": "pkg:dhi/duckdb"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.2.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "pg_query_go"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "duckdb",
+        "purl": "pkg:dhi/duckdb"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.2.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rubygems",
+        "source_package": "pg_query"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "duckdb",
+        "purl": "pkg:dhi/duckdb"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.2.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "rust",
+        "source_package": "pg_query"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/pganalyze/libpg_query/security/advisories/GHSA-6ggm-xmc9-8ffg"
+    }
+  ]
+}
