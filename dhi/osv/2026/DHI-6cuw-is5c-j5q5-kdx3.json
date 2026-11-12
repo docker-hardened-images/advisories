@@ -1,0 +1,754 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-6cuw-is5c-j5q5-kdx3",
+  "modified": "2026-11-12T00:42:35Z",
+  "published": "2026-11-12T00:42:35Z",
+  "upstream": [
+    "CVE-2026-82417"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\n\n\n`qs.stringify` throws a `TypeError` when it serializes an object whose own `constructor` property has a truthy, non-callable `isBuffer` member. `utils.isBuffer` duck-types buffers by calling `obj.constructor.isBuffer(obj)` after checking only that the property is truthy, so a value such as `{ constructor: { isBuffer: \"x\" } }` makes the call throw `TypeError: obj.constructor.isBuffer is not a function`.\n\n\n\n### Details\n\n\n\n`lib/stringify.js:127` calls `utils.isBuffer` on every non-primitive value it serializes. `utils.isBuffer` (`lib/utils.js:332`) reads `obj.constructor.isBuffer` and invokes it without verifying that it is a function. `constructor` and `isBuffer` are ordinary property names, so any object carrying them as own properties reaches the unchecked call.\n\n\n\nSuch an object can be built from untrusted input. `qs.parse(\"x[constructor][isBuffer]=y\", { plainObjects: true })` or `{ allowPrototypes: true }` keeps the `constructor` key as an own property (the default parse options drop it), and `JSON.parse(\"{\\\"a\\\":{\\\"constructor\\\":{\\\"isBuffer\\\":\\\"x\\\"}}}\")` produces the same shape with no qs option involved. Express 4 with its default `query parser` setting and body-parser with `extended: true` both call `qs.parse` with `allowPrototypes: true`, so on those stacks `req.query` and `req.body` can carry the shape directly.\n\n\n\n#### PoC\n\n\n\n```js\n\n\n\nvar qs = require(\"qs\");\n\n\n\nqs.stringify(qs.parse(\"x[constructor][isBuffer]=y\", { plainObjects: true }));\n\n\n\nqs.stringify(JSON.parse(\"{\\\"a\\\":{\\\"constructor\\\":{\\\"isBuffer\\\":\\\"x\\\"}}}\"));\n\n\n\n// TypeError: obj.constructor.isBuffer is not a function\n\n\n\n//     at Object.isBuffer (lib/utils.js:332:78)\n\n\n\n//     at stringify (lib/stringify.js:127:45)\n\n\n\n```\n\n\n\n#### Fix\n\n\n\n`lib/utils.js`, applied in e83d321 on `main` and released as v6.16.0:\n\n\n\n```diff\n\n\n\n- return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));\n\n\n\n+ return !!(obj.constructor && typeof obj.constructor.isBuffer === \"function\" && obj.constructor.isBuffer(obj));\n\n\n\n```\n\n\n\nReal `Buffer`, `safer-buffer`, and browserify `buffer` polyfill instances serialize exactly as before; only the throw is removed.\n\n\n\n### Affected versions\n\n\n\n`>=2.2.5 <6.16.0`, fixed in v6.16.0.\n\n\n\nThe unguarded duck-type was introduced in 3768a75 and first shipped in v2.2.5 (September 2014). v2.2.4 and earlier used `Buffer.isBuffer` and are not affected. Every release from v2.2.5 through v6.15.3 contains the unguarded call.\n\n\n\n### Impact\n\n\n\nAn unauthenticated request can make any code path that re-serializes attacker-influenced data with `qs.stringify` (for example, rebuilding a query string from `req.query` for a redirect or an upstream request, or serializing a parsed JSON body) throw synchronously. In a typical Node.js HTTP framework the throw is caught by the framework error boundary and the affected request returns a 500; the process survives and other requests are unaffected. Where the call runs outside an error boundary, such as an `async` Express 4 handler (where the throw becomes an unhandled promise rejection) or a background job, the process exits, so the impact in that case depends on the application error handling rather than on qs.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "argocd-3.3-dev",
+        "purl": "pkg:apk/dhi/argocd-3.3-dev"
+      },
+      "versions": [
+        "3.3.14-r1",
+        "3.3.14-r2",
+        "3.3.14-r3",
+        "3.3.14-r4",
+        "3.3.14-r5",
+        "3.3.14-r6",
+        "3.3.14-r7",
+        "3.3.14-r8",
+        "3.3.14-r9",
+        "3.3.15-r0",
+        "3.3.15-r1",
+        "3.3.16-r0",
+        "3.3.16-r1",
+        "3.3.17-r0",
+        "3.3.17-r1",
+        "3.3.17-r2",
+        "3.3.18-r0",
+        "3.3.18-r1",
+        "3.3.18-r2",
+        "3.3.18-r3",
+        "3.3.18-r4",
+        "3.3.19-r0",
+        "3.3.19-r1",
+        "3.3.19-r2",
+        "3.3.19-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "argocd-3.3",
+        "purl": "pkg:apk/dhi/argocd-3.3"
+      },
+      "versions": [
+        "3.3.14-r1",
+        "3.3.14-r2",
+        "3.3.14-r3",
+        "3.3.14-r4",
+        "3.3.14-r5",
+        "3.3.14-r6",
+        "3.3.14-r7",
+        "3.3.14-r8",
+        "3.3.14-r9",
+        "3.3.15-r0",
+        "3.3.15-r1",
+        "3.3.16-r0",
+        "3.3.16-r1",
+        "3.3.17-r0",
+        "3.3.17-r1",
+        "3.3.17-r2",
+        "3.3.18-r0",
+        "3.3.18-r1",
+        "3.3.18-r2",
+        "3.3.18-r3",
+        "3.3.18-r4",
+        "3.3.19-r0",
+        "3.3.19-r1",
+        "3.3.19-r2",
+        "3.3.19-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "argocd-3.4-dev",
+        "purl": "pkg:apk/dhi/argocd-3.4-dev"
+      },
+      "versions": [
+        "3.4.10-r0",
+        "3.4.10-r1",
+        "3.4.11-r0",
+        "3.4.11-r1",
+        "3.4.12-r0",
+        "3.4.12-r1",
+        "3.4.12-r2",
+        "3.4.12-r3",
+        "3.4.12-r4",
+        "3.4.12-r5",
+        "3.4.12-r6",
+        "3.4.12-r7",
+        "3.4.13-r0",
+        "3.4.13-r1",
+        "3.4.13-r2",
+        "3.4.13-r3",
+        "3.4.7-r1",
+        "3.4.7-r2",
+        "3.4.8-r0",
+        "3.4.8-r1",
+        "3.4.8-r2",
+        "3.4.8-r3",
+        "3.4.8-r4",
+        "3.4.8-r5",
+        "3.4.8-r6",
+        "3.4.9-r0",
+        "3.4.9-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "argocd-3.4",
+        "purl": "pkg:apk/dhi/argocd-3.4"
+      },
+      "versions": [
+        "3.4.10-r0",
+        "3.4.10-r1",
+        "3.4.11-r0",
+        "3.4.11-r1",
+        "3.4.12-r0",
+        "3.4.12-r1",
+        "3.4.12-r2",
+        "3.4.12-r3",
+        "3.4.12-r4",
+        "3.4.12-r5",
+        "3.4.12-r6",
+        "3.4.12-r7",
+        "3.4.13-r0",
+        "3.4.13-r1",
+        "3.4.13-r2",
+        "3.4.13-r3",
+        "3.4.7-r1",
+        "3.4.7-r2",
+        "3.4.8-r0",
+        "3.4.8-r1",
+        "3.4.8-r2",
+        "3.4.8-r3",
+        "3.4.8-r4",
+        "3.4.8-r5",
+        "3.4.8-r6",
+        "3.4.9-r0",
+        "3.4.9-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "argocd-3.5-dev",
+        "purl": "pkg:apk/dhi/argocd-3.5-dev"
+      },
+      "versions": [
+        "3.5.1-r1",
+        "3.5.1-r2",
+        "3.5.2-r0",
+        "3.5.2-r1",
+        "3.5.2-r2",
+        "3.5.2-r3",
+        "3.5.2-r4",
+        "3.5.2-r5",
+        "3.5.3-r0",
+        "3.5.3-r1",
+        "3.5.4-r0",
+        "3.5.4-r1",
+        "3.5.5-r0",
+        "3.5.5-r1",
+        "3.5.6-r0",
+        "3.5.6-r1",
+        "3.5.6-r2",
+        "3.5.6-r3",
+        "3.5.6-r4",
+        "3.5.6-r5",
+        "3.5.6-r6",
+        "3.5.6-r7",
+        "3.5.7-r0",
+        "3.5.7-r1",
+        "3.5.7-r2",
+        "3.5.7-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "argocd-3.5",
+        "purl": "pkg:apk/dhi/argocd-3.5"
+      },
+      "versions": [
+        "3.5.1-r1",
+        "3.5.1-r2",
+        "3.5.2-r0",
+        "3.5.2-r1",
+        "3.5.2-r2",
+        "3.5.2-r3",
+        "3.5.2-r4",
+        "3.5.2-r5",
+        "3.5.3-r0",
+        "3.5.3-r1",
+        "3.5.4-r0",
+        "3.5.4-r1",
+        "3.5.5-r0",
+        "3.5.5-r1",
+        "3.5.6-r0",
+        "3.5.6-r1",
+        "3.5.6-r2",
+        "3.5.6-r3",
+        "3.5.6-r4",
+        "3.5.6-r5",
+        "3.5.6-r6",
+        "3.5.6-r7",
+        "3.5.7-r0",
+        "3.5.7-r1",
+        "3.5.7-r2",
+        "3.5.7-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "headlamp-fips",
+        "purl": "pkg:apk/dhi/headlamp-fips"
+      },
+      "versions": [
+        "0.44.0-r0",
+        "0.44.0-r1",
+        "0.44.0-r2",
+        "0.45.0-r0",
+        "0.45.0-r1",
+        "0.45.0-r2",
+        "0.45.0-r3",
+        "0.45.0-r4",
+        "0.45.0-r5",
+        "0.45.0-r6",
+        "0.45.0-r7",
+        "0.45.0-r8",
+        "0.45.0-r9",
+        "0.46.0-r0",
+        "0.46.0-r1",
+        "0.46.0-r2",
+        "0.46.0-r3",
+        "0.46.0-r4",
+        "0.46.0-r5",
+        "0.46.0-r6",
+        "0.46.0-r7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "headlamp",
+        "purl": "pkg:apk/dhi/headlamp"
+      },
+      "versions": [
+        "0.44.0-r0",
+        "0.44.0-r1",
+        "0.44.0-r2",
+        "0.45.0-r0",
+        "0.45.0-r1",
+        "0.45.0-r2",
+        "0.45.0-r3",
+        "0.45.0-r4",
+        "0.45.0-r5",
+        "0.45.0-r6",
+        "0.45.0-r7",
+        "0.45.0-r8",
+        "0.45.0-r9",
+        "0.46.0-r0",
+        "0.46.0-r1",
+        "0.46.0-r2",
+        "0.46.0-r3",
+        "0.46.0-r4",
+        "0.46.0-r5",
+        "0.46.0-r6",
+        "0.46.0-r7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "postman-mcp",
+        "purl": "pkg:apk/dhi/postman-mcp"
+      },
+      "versions": [
+        "2.11.0-r0",
+        "2.11.1-r0",
+        "2.11.1-r1",
+        "2.11.2-r1",
+        "2.11.2-r2",
+        "2.11.2-r3",
+        "2.11.2-r4",
+        "2.11.2-r5",
+        "2.12.0-r0",
+        "2.12.2-r0",
+        "2.12.3-r0",
+        "2.13.0-r0",
+        "2.14.0-r0",
+        "2.15.0-r0",
+        "2.15.0-r1",
+        "2.9.1-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "socket-cli-2",
+        "purl": "pkg:apk/dhi/socket-cli-2"
+      },
+      "versions": [
+        "2.1.0-r0",
+        "2.1.0-r1",
+        "2.1.0-r2",
+        "2.1.0-r3",
+        "2.1.0-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "arangodb",
+        "purl": "pkg:deb/dhi/arangodb"
+      },
+      "versions": [
+        "3.12.10-0",
+        "3.12.10-1",
+        "3.12.10-2",
+        "3.12.10-3",
+        "3.12.10-4",
+        "3.12.11-0",
+        "3.12.11-1",
+        "3.12.11-2",
+        "3.12.11-4",
+        "3.12.11-5",
+        "3.12.12-0",
+        "3.12.12-1",
+        "3.12.12-2",
+        "3.12.12-3",
+        "3.12.12-4",
+        "3.12.12-5",
+        "3.12.13-0",
+        "3.12.13-1",
+        "3.12.13-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "datahub-ingestion",
+        "purl": "pkg:deb/dhi/datahub-ingestion"
+      },
+      "versions": [
+        "1.5.0.7-0",
+        "1.6.0.1-0",
+        "1.6.0.1-1",
+        "1.6.0.1-2",
+        "1.6.0.1-3",
+        "1.6.0.2-0",
+        "1.6.0.2-1",
+        "1.7.0.10-0",
+        "1.7.0.12-0",
+        "1.7.0.13-0",
+        "1.7.0.14-0",
+        "1.7.0.14-1",
+        "1.7.0.14-2",
+        "1.7.0.16-0",
+        "1.7.0.16-1",
+        "1.7.0.17-0",
+        "1.7.0.17-1",
+        "1.7.0.17-2",
+        "1.7.0.17-3",
+        "1.7.0.18-0",
+        "1.7.0.19-0",
+        "1.7.0.19-1",
+        "1.7.0.19-2",
+        "1.7.0.19-3",
+        "1.7.0.19-4",
+        "1.7.0.19-5",
+        "1.7.0.19-6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "grist",
+        "purl": "pkg:deb/dhi/grist"
+      },
+      "versions": [
+        "1.7.17-0",
+        "1.7.17-1",
+        "1.7.17-2",
+        "1.7.17-3",
+        "1.7.17-4",
+        "1.7.17-5",
+        "1.7.17-6",
+        "1.7.19-2",
+        "1.7.19-3",
+        "1.7.19-4",
+        "1.7.19-5",
+        "1.7.19-6",
+        "1.7.20-0",
+        "1.7.20-10",
+        "1.7.20-7",
+        "1.7.20-8",
+        "1.7.20-9",
+        "1.7.21-0",
+        "1.7.21-1",
+        "1.7.21-2",
+        "1.7.21-3",
+        "1.7.21-4",
+        "1.7.21-5",
+        "1.7.21-6",
+        "1.7.21-7",
+        "1.7.21-8",
+        "1.7.21-9",
+        "1.7.22-1",
+        "1.7.22-10",
+        "1.7.22-2",
+        "1.7.22-3",
+        "1.7.22-4",
+        "1.7.22-5",
+        "1.7.22-6",
+        "1.7.22-7",
+        "1.7.22-8",
+        "1.7.22-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "kubeflow-pipelines-frontend",
+        "purl": "pkg:deb/dhi/kubeflow-pipelines-frontend"
+      },
+      "versions": [
+        "2.17.0-0",
+        "2.17.0-1",
+        "2.17.0-2",
+        "2.17.0-3",
+        "2.17.0-4",
+        "2.17.1-0",
+        "2.17.1-1",
+        "2.17.2-0",
+        "2.17.2-1",
+        "2.17.2-2",
+        "2.17.2-3",
+        "2.17.2-4",
+        "2.17.2-5",
+        "2.17.3-0",
+        "2.18.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-2",
+        "purl": "pkg:deb/dhi/langfuse-2"
+      },
+      "versions": [
+        "2.95.12-0",
+        "2.95.12-1",
+        "2.95.12-10",
+        "2.95.12-11",
+        "2.95.12-2",
+        "2.95.12-3",
+        "2.95.12-4",
+        "2.95.12-5",
+        "2.95.12-6",
+        "2.95.12-7",
+        "2.95.12-8",
+        "2.95.12-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-3",
+        "purl": "pkg:deb/dhi/langfuse-3"
+      },
+      "versions": [
+        "3.225.0-0",
+        "3.225.0-1",
+        "3.225.1-0",
+        "3.225.1-1",
+        "3.225.10-0",
+        "3.225.11-0",
+        "3.225.12-0",
+        "3.225.12-1",
+        "3.225.12-2",
+        "3.225.14-0",
+        "3.225.15-0",
+        "3.225.15-1",
+        "3.225.15-2",
+        "3.225.2-0",
+        "3.225.3-0",
+        "3.225.4-0",
+        "3.225.5-0",
+        "3.225.5-1",
+        "3.225.7-0",
+        "3.225.7-1",
+        "3.225.8-0",
+        "3.225.8-1",
+        "3.225.9-0",
+        "3.227.0-0",
+        "3.227.0-1",
+        "3.227.1-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-4",
+        "purl": "pkg:deb/dhi/langfuse-4"
+      },
+      "versions": [
+        "4.10.0-0",
+        "4.11.0-0",
+        "4.12.0-0",
+        "4.13.0-0",
+        "4.14.0-0",
+        "4.15.0-0",
+        "4.26.0-0",
+        "4.3.1-0",
+        "4.36.1-0",
+        "4.38.0-0",
+        "4.4.0-0",
+        "4.41.0-0",
+        "4.43.0-0",
+        "4.44.0-0",
+        "4.46.0-0",
+        "4.47.0-0",
+        "4.48.0-0",
+        "4.5.0-0",
+        "4.5.0-1",
+        "4.50.0-0",
+        "4.53.0-0",
+        "4.6.0-0",
+        "4.63.0-0",
+        "4.67.0-0",
+        "4.69.0-0",
+        "4.70.0-0",
+        "4.70.1-0",
+        "4.71.0-0",
+        "4.71.0-1",
+        "4.72.0-1",
+        "4.74.0-0",
+        "4.75.0-0",
+        "4.76.0-0",
+        "4.76.0-1",
+        "4.77.0-0",
+        "4.78.0-0",
+        "4.9.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "opencost-ui",
+        "purl": "pkg:deb/dhi/opencost-ui"
+      },
+      "versions": [
+        "1.121.0-0",
+        "1.121.1-0",
+        "1.121.1-1",
+        "1.121.1-2",
+        "1.121.2-0",
+        "1.121.3-0",
+        "1.121.3-2",
+        "1.121.3-3",
+        "1.121.3-4",
+        "1.121.3-5",
+        "1.121.3-6",
+        "1.121.3-7",
+        "1.121.4-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "postman-mcp",
+        "purl": "pkg:deb/dhi/postman-mcp"
+      },
+      "versions": [
+        "2.11.0-0",
+        "2.11.1-0",
+        "2.11.1-1",
+        "2.11.2-0",
+        "2.11.2-1",
+        "2.11.2-2",
+        "2.11.2-3",
+        "2.11.2-5",
+        "2.12.0-0",
+        "2.12.2-0",
+        "2.12.3-0",
+        "2.13.0-0",
+        "2.13.0-1",
+        "2.14.0-0",
+        "2.15.0-0",
+        "2.15.0-1",
+        "2.9.1-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "superset",
+        "purl": "pkg:deb/dhi/superset"
+      },
+      "versions": [
+        "6.1.0-0",
+        "6.1.0-1",
+        "6.1.0-10",
+        "6.1.0-11",
+        "6.1.0-12",
+        "6.1.0-13",
+        "6.1.0-14",
+        "6.1.0-15",
+        "6.1.0-16",
+        "6.1.0-17",
+        "6.1.0-18",
+        "6.1.0-19",
+        "6.1.0-2",
+        "6.1.0-20",
+        "6.1.0-21",
+        "6.1.0-22",
+        "6.1.0-23",
+        "6.1.0-24",
+        "6.1.0-25",
+        "6.1.0-26",
+        "6.1.0-27",
+        "6.1.0-28",
+        "6.1.0-29",
+        "6.1.0-3",
+        "6.1.0-30",
+        "6.1.0-31",
+        "6.1.0-32",
+        "6.1.0-33",
+        "6.1.0-34",
+        "6.1.0-35",
+        "6.1.0-36",
+        "6.1.0-37",
+        "6.1.0-38",
+        "6.1.0-4",
+        "6.1.0-5",
+        "6.1.0-6",
+        "6.1.0-7",
+        "6.1.0-8",
+        "6.1.0-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-6cuw-is5c-j5q5-kdx3"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-82417"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-82417"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-4mjr-xmp4-gh2g"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/ljharb/qs/security/advisories/GHSA-4mjr-xmp4-gh2g"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/ljharb/qs/commit/e83d321ffafb38cf210683ac31714fce6ce1c6c6"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-82417"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-82417"
+    }
+  ]
+}
