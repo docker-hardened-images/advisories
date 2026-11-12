@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-gp2k-5g4k-qhli-whyn",
+  "modified": "2026-11-12T23:14:20Z",
+  "published": "2026-11-12T23:14:20Z",
+  "upstream": [
+    "GHSA-cp6q-959q-f8rh"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\n`@tiptap/core`'s public `mergeAttributes()` helper uses ordinary bracket assignment on keys returned by `Object.entries()`. An own `__proto__` key from JSON therefore invokes the legacy prototype setter on the fresh merged object. The function returns an object whose prototype is attacker-controlled, while `Object.keys()` and ordinary own-property checks show no attacker attributes.\n\nWhen that result is used as a ProseMirror DOMOutputSpec attribute object, `prosemirror-model`'s `DOMSerializer.renderSpec()` enumerates it with `for...in` and applies inherited values with `setAttribute()`. In a browser proof, inherited `src` and `onerror` values were copied to an `<img>` and the error handler executed once. This is per-object prototype manipulation; the proof does not modify global `Object.prototype`.\n\n## Root cause\n\nThe affected loop is conceptually:\n\n```ts\nconst mergedAttributes = { ...items }\nfor (const [key, value] of Object.entries(item)) {\n  const exists = mergedAttributes[key]\n  // ...\n  mergedAttributes[key] = value\n}\n```\n\n`Object.entries(JSON.parse('{\"__proto__\": {...}}'))` includes `__proto__`. Reading `mergedAttributes['__proto__']` resolves the inherited `Object.prototype`; assigning to the same key invokes `Object.prototype.__proto__`'s setter and replaces `mergedAttributes`' prototype.\n\n## Browser reproduction\n\nThe following shape was tested with exact `@tiptap/core` 3.29.2 and `prosemirror-model` 1.25.11:\n\n```js\nconst input = JSON.parse(`{\n  \"__proto__\": {\n    \"data-inherited-canary\": \"present\",\n    \"src\": \"x-invalid://canary\",\n    \"onerror\": \"globalThis.__tiptapXss += 1\"\n  }\n}`)\n\nconst attrs = mergeAttributes(input)\n// Object.keys(attrs) === []\n// Object.getPrototypeOf(attrs) === input.__proto__\n\nconst schema = new Schema({\n  nodes: {\n    doc: { content: 'image' },\n    image: { toDOM: () => ['img', attrs] },\n    text: {},\n  },\n})\nconst doc = schema.node('doc', null, [schema.node('image')])\nconst fragment = DOMSerializer.fromSchema(schema).serializeFragment(doc.content)\ndocument.body.append(fragment)\n```\n\nChromium produced an image with `data-inherited-canary`, `src`, and `onerror`; the handler executed exactly once. `Object.prototype` remained clean.\n\n## Impact and preconditions\n\nApplications that merge untrusted imported document, plugin, CMS, API, tenant, or AI-derived attribute objects can receive a prototype-manipulated result. Consumers that enumerate inherited keys, including ProseMirror's DOM serializer, can turn the hidden properties into DOM attributes and execute JavaScript in the application's origin. Own-key validation, object spread, JSON serialization, and logging can miss the inherited values. Other component consumers can read inherited authorization or configuration fields.\n\nTiptap's standard fixed ProseMirror schemas discard unknown document attributes, so arbitrary Tiptap JSON is not automatically exploitable in every application. A vulnerable application needs an untrusted object boundary into `mergeAttributes()` or a dynamic/custom extension or schema that preserves the relevant attribute object.\n\n## Affected versions\n\nThe unsafe assignment was introduced in commit `ecadf7ea0a7f8f39a8496a60edf0ac8f379e6eb3` and is present in the first package tag `@tiptap/core@2.0.0-alpha.0`, v2.0.0, v2.27.1, v3.0.0, and current v3.29.2 source. No fixed release was found.\n\n## Recommended remediation\n\nReject `__proto__` before reading or assigning the key, or define copied keys as own data properties without invoking legacy setters. A minimal hardening is to skip `key === '__proto__'`. Add regression tests using an own JSON-origin `__proto__` key and assert that the result keeps `Object.prototype` as its prototype, exposes no inherited attacker keys, and cannot create an event-handler attribute through `DOMSerializer`.\n\nThis was found during authorized dependency review and is being reported privately. No public zero-day issue has been opened.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:H/SI:H/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "metabase",
+        "purl": "pkg:apk/dhi/metabase"
+      },
+      "versions": [
+        "0.63.16.9-r0",
+        "0.63.17.3-r0",
+        "0.63.18-r0",
+        "0.63.18.1-r0",
+        "0.63.18.2-r0",
+        "0.63.18.4-r0",
+        "0.63.18.5-r0",
+        "0.63.19-r0",
+        "0.63.19.1-r0",
+        "0.63.19.2-r0",
+        "0.63.19.2-r1",
+        "0.64.2.8-r0",
+        "0.64.2.9-r0",
+        "0.64.3.2-r0",
+        "0.64.3.4-r0",
+        "0.64.3.4-r1",
+        "0.64.3.5-r0",
+        "0.64.3.5-r1",
+        "0.65.2.2-r0",
+        "0.65.3.6-r0",
+        "0.65.3.7-r0",
+        "0.65.4-r0",
+        "0.65.4.1-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-gp2k-5g4k-qhli-whyn"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-cp6q-959q-f8rh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/ueberdosis/tiptap/security/advisories/GHSA-cp6q-959q-f8rh"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/ueberdosis/tiptap/commit/01d7af8c983ee5954c63734f4fa46cb23ae3246d"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/ueberdosis/tiptap/releases/tag/v3.30.4"
+    }
+  ]
+}
