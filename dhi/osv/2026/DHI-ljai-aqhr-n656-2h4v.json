@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ljai-aqhr-n656-2h4v",
+  "modified": "2026-11-13T23:37:21Z",
+  "published": "2026-11-13T23:37:21Z",
+  "upstream": [
+    "GHSA-hp8f-xmx4-4qrg"
+  ],
+  "summary": "cap-primitives resolves a path inside a sandboxed directory one component at a time and opens the last component with…",
+  "details": "cap-primitives resolves a path inside a sandboxed directory one component at a time and opens the last component with `O_NOFOLLOW`, so that a symlink there cannot lead out of the directory. When the path ended in `/`, the resolver added the slash back to the last component before opening it. With a trailing slash the operating system no longer treats that component as the last one, so `O_NOFOLLOW` does not apply, the symlink is followed, and the resulting file descriptor was returned without further checks.\n\nA symlink inside the sandbox that points outside it, such as `escape -> ../outside` or a link to `/`, can therefore be opened as `escape/`. If the symlink's own target ends in `/`, the caller's path does not need a trailing slash at all, so removing trailing slashes from untrusted input is not a workaround. The maintainers' advisory reports reads and writes outside the sandbox through `open`, `open_dir`, `read_dir` and `canonicalize`, and directory creation, removal and renames outside it through `create_dir`, `remove_dir` and `rename`.\n\nThis resolver is used on Windows and macOS, on FreeBSD when `O_RESOLVE_BENEATH` is not available, and on Linux when `openat2` is not available (kernels before 5.6, or a seccomp policy that rejects it). cap-std and other crates built on cap-primitives are affected through it. Wasmtime's WASI filesystem support was affected as well; that is covered by RUSTSEC-2026-0269.\n\nThe fix stops re-adding the trailing slash and is in 3.4.6 and 4.0.3.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uv",
+        "purl": "pkg:deb/dhi/uv"
+      },
+      "versions": [
+        "0.11.22-0",
+        "0.11.26-0",
+        "0.11.27-0",
+        "0.11.28-0",
+        "0.12.1-0",
+        "0.12.10-0",
+        "0.12.11-0",
+        "0.12.12-0",
+        "0.12.13-0",
+        "0.12.15-0",
+        "0.12.17-0",
+        "0.12.18-0",
+        "0.12.19-0",
+        "0.12.2-0",
+        "0.12.20-0",
+        "0.12.21-0",
+        "0.12.22-0",
+        "0.12.23-0",
+        "0.12.24-0",
+        "0.12.3-0",
+        "0.12.4-0",
+        "0.12.5-0",
+        "0.12.6-0",
+        "0.12.7-0",
+        "0.12.8-0",
+        "0.12.9-0",
+        "0.13.0-0",
+        "0.13.1-0",
+        "0.13.2-0",
+        "0.13.4-0",
+        "0.13.4-1",
+        "0.13.5-0",
+        "0.13.6-0",
+        "0.13.7-0",
+        "0.13.7-1",
+        "0.13.7-2",
+        "0.13.7-3",
+        "0.13.8-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ljai-aqhr-n656-2h4v"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0482"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0482.html"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/bytecodealliance/cap-std/pull/419"
+    }
+  ]
+}
