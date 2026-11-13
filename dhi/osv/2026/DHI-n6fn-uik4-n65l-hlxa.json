@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-n6fn-uik4-n65l-hlxa",
+  "modified": "2026-11-13T23:35:14Z",
+  "published": "2026-11-13T23:35:14Z",
+  "upstream": [
+    "GHSA-vfvv-c25p-m7mm"
+  ],
+  "summary": "`InlineVec::clear()` and `SerVec::clear()` in `rkyv` were not panic-safe. Both functions iterate over their elements…",
+  "details": "`InlineVec::clear()` and `SerVec::clear()` in `rkyv` were not panic-safe. Both functions iterate over their elements and call `drop_in_place` on each, updating `self.len` only *after* the loop. If an element's `Drop` implementation panics during the loop, `self.len` is left at its original value.\n\nA subsequent invocation of `clear()` on the same container then re-visits the already-freed elements:\n\n- `InlineVec::clear()` is called again from `InlineVec`'s own `Drop` implementation when the value is later dropped.\n- `SerVec::clear()` is called again by `SerVec::with_capacity()` after the  user closure returns.\n\n\n## Technical Impact\n\n- **CWE-415 (Double Free):** Heap corruption when element type holds `Box<T>`  \n- **CWE-416 (Use-After-Free):** Memory corruption when element reads from heap during `Drop`\n\nBoth vulnerabilities are triggerable entirely from safe Rust via `std::panic::catch_unwind` and require no special privileges.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "rust",
+        "purl": "pkg:apk/dhi/rust"
+      },
+      "versions": [
+        "1.91.1-r0",
+        "1.91.1-r2",
+        "1.91.1-r3",
+        "1.91.1-r4",
+        "1.93.1-r0",
+        "1.93.1-r1",
+        "1.94.0-r0",
+        "1.94.0-r1",
+        "1.94.1-r0",
+        "1.94.1-r1",
+        "1.95.0-r0",
+        "1.96.0-r0",
+        "1.96.1-r0",
+        "1.97.0-r0",
+        "1.97.0-r1",
+        "1.98.1-r0",
+        "1.99.0-r2",
+        "1.99.1-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-n6fn-uik4-n65l-hlxa"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-vfvv-c25p-m7mm"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0122.html"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/rkyv/rkyv/commit/5828cf5c27b664eb4432c4a93d4769e12e5e42fb"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0122"
+    }
+  ]
+}
