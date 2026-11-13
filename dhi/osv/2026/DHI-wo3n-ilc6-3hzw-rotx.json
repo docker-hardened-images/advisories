@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-wo3n-ilc6-3hzw-rotx",
+  "modified": "2026-11-12T23:57:09Z",
+  "published": "2026-11-12T23:57:09Z",
+  "upstream": [
+    "GHSA-8w8g-wq8h-fq33"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nDulwich's `porcelain.checkout(paths=[...])` code path writes files using raw `os.open(file_path, O_WRONLY|O_CREAT|O_TRUNC, mode)` followed by `f.write(obj.data)`. This code path does NOT call `build_file_from_blob()` at all, completely bypassing any symlink protections (including the unreleased d09f8af fix). `os.open` without `O_NOFOLLOW` follows symlinks at both the target file and intermediate directories, allowing arbitrary file writes.\n\n## Root Cause\n\nAt `dulwich/porcelain/__init__.py:5661-5675`, the `checkout(paths=[...])` implementation:\n\n```python\nfile_path = _checked_worktree_path(r, path)\nos.makedirs(os.path.dirname(file_path), exist_ok=True)\nflags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC\nwith os.fdopen(os.open(file_path, flags, mode), \"wb\") as f:\n    f.write(obj.data)\n```\n\n`_checked_worktree_path()` (line 601-631) only performs name validation — checking that the path doesn't start with `/` or `\\\\` and that components pass `INVALID_DOTNAMES` checks. It performs zero filesystem symlink detection.\n\n## Impact\n\nAn attacker can craft a malicious repository that, when a victim clones it and runs `checkout(paths=[...])`, writes attacker-controlled content (with attacker-controlled permissions) to any filesystem location accessible to the user. Writing to `.git/hooks/post-checkout` achieves RCE on the next git checkout.\n\n## Attack Scenario\n\n1. Attacker creates a repository where HEAD has `trigger` as a symlink (mode 120000, content `../../.git/hooks/post-checkout`), and tag `v1.0` has `trigger` as an executable file (mode 100755, content `#!/bin/sh\\nmalicious_payload`)\n2. Victim clones the repository — worktree has `trigger` → `../../.git/hooks/post-checkout` (a symlink)\n3. Victim runs `porcelain.checkout(repo, target=\"v1.0\", paths=[\"trigger\"])` to restore a specific file from a tag\n4. `_checked_worktree_path(r, \"trigger\")` passes — name validation only, no symlink check\n5. `os.open(\"trigger\", O_WRONLY|O_CREAT|O_TRUNC, 0o755)` follows the symlink → opens `.git/hooks/post-checkout` for writing\n6. `f.write(obj.data)` writes the malicious payload to the hook\n7. Next checkout operation triggers the hook → RCE\n\n## Suggested Fix\n\nReplace the raw `os.open` path with a call to `build_file_from_blob` (once that function is hardened against intermediate symlinks), or add explicit symlink detection: resolve the path with `os.path.realpath()` and verify it stays within the worktree root before opening.\n\nReported by **zx (Jace)**",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "netbox",
+        "purl": "pkg:deb/dhi/netbox"
+      },
+      "versions": [
+        "4.6.10-0",
+        "4.6.10-1",
+        "4.6.7-0",
+        "4.6.8-0",
+        "4.6.8-1",
+        "4.6.8-2",
+        "4.6.8-3",
+        "4.6.9-0",
+        "4.6.9-1",
+        "4.6.9-2",
+        "4.7.1-0",
+        "4.7.1-1",
+        "4.7.1-2",
+        "4.7.1-3",
+        "4.7.1-4",
+        "4.7.1-5",
+        "4.7.1-6",
+        "4.7.2-0",
+        "4.7.2-1",
+        "4.7.2-2",
+        "4.7.2-3",
+        "4.7.2-4",
+        "4.7.3-0",
+        "4.7.3-1",
+        "4.7.3-2",
+        "4.7.3-3",
+        "4.7.3-4",
+        "4.7.4-0",
+        "4.7.4-1",
+        "4.7.4-2",
+        "4.7.4-3",
+        "4.7.4-4",
+        "4.7.4-5",
+        "4.7.4-6",
+        "4.7.5-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-wo3n-ilc6-3hzw-rotx"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-8w8g-wq8h-fq33"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/jelmer/dulwich/security/advisories/GHSA-8w8g-wq8h-fq33"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/jelmer/dulwich/commit/9389fcb5cb9113adfc7f207d8be86a56904db3e8"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/jelmer/dulwich/releases/tag/dulwich-1.2.8"
+    }
+  ]
+}

