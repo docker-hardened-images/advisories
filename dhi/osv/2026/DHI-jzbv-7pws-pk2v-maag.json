@@ -1,0 +1,521 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-jzbv-7pws-pk2v-maag",
+  "modified": "2026-11-13T22:30:30Z",
+  "published": "2026-11-13T22:30:30Z",
+  "upstream": [
+    "GHSA-c2m8-h5v5-343r"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\nStaticFileHandler allows an unauthenticated attacker to read arbitrary files from the server's filesystem by requesting a path that resolves to a symbolic link placed inside the static root directory. Any application that serves user-uploadable content, or whose static directory is populated by a build/deploy pipeline that creates symlinks (e.g. npm link, webpack, Docker volume mounts, CDN sync tools), is affected. An attacker who can trigger the creation of a symlink pointing outside the static root—or exploit one that already exists—can retrieve sensitive files such as /etc/passwd, private keys, configuration files, or application secrets.\n\n\n\n### Details\nThe vulnerability is in tornado.web.StaticFileHandler, specifically in the interaction between two methods in [tornado/web.py](vscode-webview://1grdaaa6v64itrol06qu70pq3d1b9h9im5c3npvvc9snaprc1q9f/tornado/web.py):\n- [get_absolute_path](https://github.com/tornadoweb/tornado/blob/0ca3c5f8279d402b245718d16522bc18a8f5d958/tornado/web.py#L2932) uses `os.path.abspath()` to resolve the requested path:\n- [validate_absolute_path](https://github.com/tornadoweb/tornado/blob/0ca3c5f8279d402b245718d16522bc18a8f5d958/tornado/web.py#L2935) uses the same `os.path.abspath()` on the root, then performs a string prefix check:\n\n`os.path.abspath()` normalises . and .. segments but does not resolve symbolic links. As a result, a path like `/var/www/static/link` passes the `startswith(\"/var/www/static/\")` check regardless of where `link` actually points.\n\nImmediately after, `os.path.exists()` and `os.path.isfile()`  **do follow symlinks**, so the file they ultimately open is the symlink's target. The fix would be to replace os.path.abspath() with os.path.realpath() in both methods, so the resolved real path of the symlink target is validated against the root, not just its string representation inside the static directory.\n\n### PoC\n_Complete instructions, including specific configuration details, to reproduce the vulnerability._\nPrerequisites: Python 3.x, Tornado installed.\n1. Create the environment\n```\nmkdir -p /tmp/static\necho \"DB_PASSWORD=s3cr3t\" > /tmp/secret.conf   \nln -s /tmp/secret.conf /tmp/static/config.conf \n```\n2. Minimal vulnerable server (server.py):\n```\nimport tornado.web, tornado.ioloop\n\napp = tornado.web.Application([\n    (r\"/static/(.*)\", tornado.web.StaticFileHandler, {\"path\": \"/tmp/static\"}),\n])\napp.listen(8888)\ntornado.ioloop.IOLoop.current().start()\n```\n3. Exploit:\n`curl http://localhost:8888/static/config.conf`\n\n### Impact\nAny application using StaticFileHandler is potentially affected if:\n- the static directory contains symlinks pointing outside it (common with build tooling), or\n- the application allows file uploads into the static directory without stripping symlinks.\n\nAn unauthenticated remote attacker can read any file readable by the process user: application secrets, private TLS keys, database credentials, /etc/shadow, SSH keys, or source code (depending on the process's filesystem permissions).",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "jupyterhub-k8s-hub",
+        "purl": "pkg:apk/dhi/jupyterhub-k8s-hub"
+      },
+      "versions": [
+        "4.4.1-r0",
+        "4.4.2-r0",
+        "4.4.2-r1",
+        "4.4.2-r2",
+        "4.4.2-r3",
+        "4.4.2-r4",
+        "4.4.2-r5",
+        "4.4.2-r6",
+        "4.4.3-r0",
+        "4.4.4-r0",
+        "4.4.4-r1",
+        "4.4.4-r2",
+        "4.4.4-r3",
+        "4.4.5-r0",
+        "4.4.5-r1",
+        "4.4.5-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database-1.94",
+        "purl": "pkg:apk/dhi/litellm-database-1.94"
+      },
+      "versions": [
+        "1.94.3-r0",
+        "1.94.3-r1",
+        "1.94.3-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database-1.95",
+        "purl": "pkg:apk/dhi/litellm-database-1.95"
+      },
+      "versions": [
+        "1.95.1-r0",
+        "1.95.1-r1",
+        "1.95.1-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database-1.96",
+        "purl": "pkg:apk/dhi/litellm-database-1.96"
+      },
+      "versions": [
+        "1.96.2-r0",
+        "1.96.2-r1",
+        "1.96.2-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database-1.97",
+        "purl": "pkg:apk/dhi/litellm-database-1.97"
+      },
+      "versions": [
+        "1.97.0-r0",
+        "1.97.0-r1",
+        "1.97.0-r2",
+        "1.97.1-r0",
+        "1.97.1-r3",
+        "1.97.1-r4",
+        "1.97.1-r5",
+        "1.97.1-r6",
+        "1.97.1-r7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database",
+        "purl": "pkg:apk/dhi/litellm-database"
+      },
+      "versions": [
+        "1.94.0-r0",
+        "1.94.0-r1",
+        "1.94.1-r0",
+        "1.94.2-r0",
+        "1.94.2-r1",
+        "1.94.2-r2",
+        "1.94.3-r0",
+        "1.95.1-r0",
+        "1.96.2-r0",
+        "1.97.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "datahub-ingestion",
+        "purl": "pkg:deb/dhi/datahub-ingestion"
+      },
+      "versions": [
+        "1.5.0.7-0",
+        "1.6.0.1-0",
+        "1.6.0.1-1",
+        "1.6.0.1-2",
+        "1.6.0.1-3",
+        "1.6.0.2-0",
+        "1.6.0.2-1",
+        "1.7.0.10-0",
+        "1.7.0.12-0",
+        "1.7.0.13-0",
+        "1.7.0.14-0",
+        "1.7.0.14-1",
+        "1.7.0.14-2",
+        "1.7.0.16-0",
+        "1.7.0.16-1",
+        "1.7.0.17-0",
+        "1.7.0.17-1",
+        "1.7.0.17-2",
+        "1.7.0.17-3",
+        "1.7.0.18-0",
+        "1.7.0.19-0",
+        "1.7.0.19-1",
+        "1.7.0.19-2",
+        "1.7.0.19-3",
+        "1.7.0.19-4",
+        "1.7.0.19-5",
+        "1.7.0.19-6",
+        "1.7.0.20-6",
+        "1.7.0.20-7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "datascience-notebook",
+        "purl": "pkg:deb/dhi/datascience-notebook"
+      },
+      "versions": [
+        "2026.07.28-0",
+        "2026.07.28-1",
+        "2026.07.28-10",
+        "2026.07.28-11",
+        "2026.07.28-12",
+        "2026.07.28-13",
+        "2026.07.28-14",
+        "2026.07.28-15",
+        "2026.07.28-16",
+        "2026.07.28-17",
+        "2026.07.28-18",
+        "2026.07.28-19",
+        "2026.07.28-2",
+        "2026.07.28-20",
+        "2026.07.28-3",
+        "2026.07.28-4",
+        "2026.07.28-5",
+        "2026.07.28-6",
+        "2026.07.28-7",
+        "2026.07.28-8",
+        "2026.07.28-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "jupyterhub-k8s-hub",
+        "purl": "pkg:deb/dhi/jupyterhub-k8s-hub"
+      },
+      "versions": [
+        "4.4.1-0",
+        "4.4.2-0",
+        "4.4.2-1",
+        "4.4.2-2",
+        "4.4.2-3",
+        "4.4.2-4",
+        "4.4.2-5",
+        "4.4.2-6",
+        "4.4.3-0",
+        "4.4.4-0",
+        "4.4.4-1",
+        "4.4.4-2",
+        "4.4.4-3",
+        "4.4.4-4",
+        "4.4.4-5",
+        "4.4.4-6",
+        "4.4.5-0",
+        "4.4.5-1",
+        "4.4.5-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "jupyterhub",
+        "purl": "pkg:deb/dhi/jupyterhub"
+      },
+      "versions": [
+        "5.5.0-0",
+        "5.5.0-1",
+        "5.5.1-0",
+        "5.5.2-0",
+        "5.5.2-1",
+        "5.5.2-2",
+        "5.5.2-3",
+        "5.5.2-4",
+        "5.5.2-5",
+        "5.5.2-6",
+        "5.5.3-0",
+        "5.5.4-0",
+        "5.5.4-1",
+        "5.5.4-2",
+        "5.5.4-3",
+        "5.5.4-4",
+        "5.5.4-5",
+        "5.5.4-6",
+        "5.5.5-0",
+        "5.5.5-1",
+        "5.5.5-2",
+        "5.5.5-3",
+        "5.5.5-4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.100",
+        "purl": "pkg:deb/dhi/litellm-database-1.100"
+      },
+      "versions": [
+        "1.100.1-0",
+        "1.100.1-1",
+        "1.100.2-0",
+        "1.100.3-0",
+        "1.100.3-1",
+        "1.100.4-0",
+        "1.100.4-1",
+        "1.100.5-0",
+        "1.100.5-2",
+        "1.100.5-3",
+        "1.100.5-4",
+        "1.100.5-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.101",
+        "purl": "pkg:deb/dhi/litellm-database-1.101"
+      },
+      "versions": [
+        "1.101.0-0",
+        "1.101.0-1",
+        "1.101.1-0",
+        "1.101.2-0",
+        "1.101.2-1",
+        "1.101.3-0",
+        "1.101.4-0",
+        "1.101.4-1",
+        "1.101.5-0",
+        "1.101.6-0",
+        "1.101.6-2",
+        "1.101.6-3",
+        "1.101.6-4",
+        "1.101.6-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.102",
+        "purl": "pkg:deb/dhi/litellm-database-1.102"
+      },
+      "versions": [
+        "1.102.1-0",
+        "1.102.2-0",
+        "1.102.2-1",
+        "1.102.3-0",
+        "1.102.4-0",
+        "1.102.4-2",
+        "1.102.4-3",
+        "1.102.4-4",
+        "1.102.4-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.94",
+        "purl": "pkg:deb/dhi/litellm-database-1.94"
+      },
+      "versions": [
+        "1.94.3-0",
+        "1.94.3-1",
+        "1.94.3-2",
+        "1.94.3-3",
+        "1.94.3-4",
+        "1.94.3-5",
+        "1.94.3-6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.95",
+        "purl": "pkg:deb/dhi/litellm-database-1.95"
+      },
+      "versions": [
+        "1.95.1-0",
+        "1.95.1-1",
+        "1.95.1-2",
+        "1.95.1-3",
+        "1.95.1-4",
+        "1.95.1-5",
+        "1.95.1-6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.96",
+        "purl": "pkg:deb/dhi/litellm-database-1.96"
+      },
+      "versions": [
+        "1.96.2-0",
+        "1.96.2-1",
+        "1.96.2-2",
+        "1.96.2-3",
+        "1.96.2-4",
+        "1.96.2-5",
+        "1.96.2-6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.97",
+        "purl": "pkg:deb/dhi/litellm-database-1.97"
+      },
+      "versions": [
+        "1.97.0-0",
+        "1.97.0-1",
+        "1.97.0-2",
+        "1.97.0-3",
+        "1.97.0-4",
+        "1.97.1-0",
+        "1.97.1-1",
+        "1.97.1-10",
+        "1.97.1-2",
+        "1.97.1-3",
+        "1.97.1-4",
+        "1.97.1-5",
+        "1.97.1-7",
+        "1.97.1-8",
+        "1.97.1-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.98",
+        "purl": "pkg:deb/dhi/litellm-database-1.98"
+      },
+      "versions": [
+        "1.98.0-0",
+        "1.98.0-1",
+        "1.98.0-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.99",
+        "purl": "pkg:deb/dhi/litellm-database-1.99"
+      },
+      "versions": [
+        "1.99.0-0",
+        "1.99.1-0",
+        "1.99.1-1",
+        "1.99.1-2",
+        "1.99.1-3",
+        "1.99.3-0",
+        "1.99.4-0",
+        "1.99.4-1",
+        "1.99.4-2",
+        "1.99.4-4",
+        "1.99.4-5",
+        "1.99.4-6",
+        "1.99.4-7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database",
+        "purl": "pkg:deb/dhi/litellm-database"
+      },
+      "versions": [
+        "1.94.0-0",
+        "1.94.0-1",
+        "1.94.1-0",
+        "1.94.2-0",
+        "1.94.2-1",
+        "1.94.3-0",
+        "1.95.1-0",
+        "1.96.2-0",
+        "1.97.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-jzbv-7pws-pk2v-maag"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-c2m8-h5v5-343r"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/tornadoweb/tornado/security/advisories/GHSA-c2m8-h5v5-343r"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/tornadoweb/tornado/pull/3719"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/tornadoweb/tornado/commit/f9f50b8bab265a2abf9f2415a3d2da6264a5450b"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/tornadoweb/tornado/commit/437ab5f76565403b3403438d2e555d11f8128d32"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/tornadoweb/tornado/releases/tag/v6.5.9"
+    }
+  ]
+}

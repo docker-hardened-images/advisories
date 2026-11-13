@@ -1,0 +1,521 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-qsib-oi5m-7a32-lgif",
+  "modified": "2026-11-13T22:30:30Z",
+  "published": "2026-11-13T22:30:30Z",
+  "upstream": [
+    "GHSA-3hv7-mjh2-fv65"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\n`HTTPServerRequest.__init__` in `tornado/httputil.py` parses the URL query string via\n`parse_qs_bytes()` with no field-count limit — while the sibling POST-body parsing path\n(`parse_body_arguments`) received a `max_num_fields=1000` cap added earlier in this exact\nsame release (v6.5.8, commit `8d6363ed`), explicitly to bound parsing cost for the identical\nunderlying primitive. This leaves the query-string path with the resource-exhaustion exposure\nthe body-path fix was meant to close.\n\n**File**: `tornado/httputil.py`, line 553 (`HTTPServerRequest.__init__`)\n\n### Root Cause\n\n```python\n# tornado/httputil.py:553 (before fix)\nself.arguments = parse_qs_bytes(self.query, keep_blank_values=True)\n```\n\nCompare with the POST-body path fixed one commit earlier in the same release:\n\n```python\n# tornado/httputil.py:1038-1041\nuri_arguments = parse_qs_bytes(\n    body,\n    keep_blank_values=True,\n    max_num_fields=config.urlencoded.max_arguments,  # default 1000\n)\n```\n\nBoth call sites funnel through the same `tornado.escape.parse_qs_bytes` (a thin wrapper over\n`urllib.parse.parse_qs`), which is exactly why `max_num_fields` was added to\n`urllib.parse.parse_qsl` upstream — to let frameworks bound field count. The fix was applied\nonly to the body path; the query-string path was missed.\n\nThe request line + headers together are capped at `max_header_size` (default 65536 bytes), so\nthis is not literally unbounded, but a single ~64KB request line can carry thousands of short\n`key=value` pairs — far beyond the 1000-field limit the maintainer judged appropriate for the\nstructurally identical body case.\n\n### Attack Scenario\n\n1. Attacker sends a `GET` request whose query string is packed with thousands of short fields\n   (e.g. `k0=1&k1=1&...&k7799=1`, ~61KB), fitting comfortably under `max_header_size`. No\n   authentication, cookies, or prior state required.\n2. Tornado accepts and parses this with no field-count cap, unlike the equivalent POST-body\n   request (which is correctly rejected with 400 once >1000 fields are present).\n3. Parsing thousands of fields is CPU work performed synchronously inside Tornado's\n   single-threaded `IOLoop`. Several such requests in flight concurrently stall the event\n   loop, delaying processing of *all* other connections on that loop — not just the\n   attacker's own request.\n\n### Verification (dynamic, local reproduction against v6.5.8)\n\nRan the unmodified v6.5.8 source directly (no external dependencies needed) with a minimal\n`tornado.web.Application` on `127.0.0.1:8888`.\n\n- Identical 7800-field/~61KB payload sent as GET query string → `200 OK`; sent as POST body\n  (`application/x-www-form-urlencoded`) → `400 Bad Request` (correctly rejected by the\n  existing `max_num_fields` body-path limit). This confirms the asymmetry directly.\n- Per-request parse cost: baseline (`/?a=1`) averaged 1.86ms; the 7800-field query string\n  averaged 25.1ms (~13x).\n- Event-loop-blocking amplification (raw-socket test, isolating server-side stall from\n  client overhead): with 10 sequential baseline probe requests fired with no load, average\n  latency was 1.47ms (max 5.9ms). With 5 concurrent 61KB/7800-field requests in flight,\n  the same baseline probes averaged 13.0ms (max 118.1ms) — an **8.9x average slowdown** for\n  unrelated clients, produced by ~305KB of unauthenticated attacker traffic.\n\n### Impact\n\nAll Tornado servers/applications are affected — this triggers on every request with a query\nstring, independent of application/handler logic. An unauthenticated, unprivileged remote\nattacker can measurably degrade response times for all other clients sharing the same\n`IOLoop`, using a small amount of bandwidth and no special conditions. This is an\navailability/DoS concern; no confidentiality or integrity impact.\n\n### Recommended Fix\n\n```python\n# tornado/httputil.py — HTTPServerRequest.__init__\nif uri is not None:\n    self.path, sep, self.query = uri.partition(\"?\")\ntry:\n    self.arguments = parse_qs_bytes(\n        self.query,\n        keep_blank_values=True,\n        max_num_fields=_DEFAULT_PARSE_BODY_CONFIG.urlencoded.max_arguments,\n    )\nexcept ValueError as e:\n    raise HTTPInputError(\"Invalid query string: %s\" % e) from e\n```\n\nThis reuses the existing `ParseUrlEncodedConfig.max_arguments` default (1000) via the\nmodule's `_DEFAULT_PARSE_BODY_CONFIG`, matching the POST-body limit and honoring any global\noverride via `set_parse_body_config()`. The `try/except` is necessary because — unlike\n`parse_body_arguments`, which already wraps its call and converts `ValueError` into a clean\n`HTTPInputError`/400 — the query-string call site currently has no such handling, so without\nit, a request exceeding the limit would raise an uncaught `ValueError` instead of a clean 400.\n\nVerified: with the fix applied, requests with ≤1000 query-string fields are unaffected;\nrequests with >1000 fields are rejected with `400 Bad Request` (consistent with the POST-body\nbehavior); Tornado's own `httputil_test` and `web_test` suites (256 tests) pass unchanged.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "jupyterhub-k8s-hub",
+        "purl": "pkg:apk/dhi/jupyterhub-k8s-hub"
+      },
+      "versions": [
+        "4.4.1-r0",
+        "4.4.2-r0",
+        "4.4.2-r1",
+        "4.4.2-r2",
+        "4.4.2-r3",
+        "4.4.2-r4",
+        "4.4.2-r5",
+        "4.4.2-r6",
+        "4.4.3-r0",
+        "4.4.4-r0",
+        "4.4.4-r1",
+        "4.4.4-r2",
+        "4.4.4-r3",
+        "4.4.5-r0",
+        "4.4.5-r1",
+        "4.4.5-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database-1.94",
+        "purl": "pkg:apk/dhi/litellm-database-1.94"
+      },
+      "versions": [
+        "1.94.3-r0",
+        "1.94.3-r1",
+        "1.94.3-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database-1.95",
+        "purl": "pkg:apk/dhi/litellm-database-1.95"
+      },
+      "versions": [
+        "1.95.1-r0",
+        "1.95.1-r1",
+        "1.95.1-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database-1.96",
+        "purl": "pkg:apk/dhi/litellm-database-1.96"
+      },
+      "versions": [
+        "1.96.2-r0",
+        "1.96.2-r1",
+        "1.96.2-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database-1.97",
+        "purl": "pkg:apk/dhi/litellm-database-1.97"
+      },
+      "versions": [
+        "1.97.0-r0",
+        "1.97.0-r1",
+        "1.97.0-r2",
+        "1.97.1-r0",
+        "1.97.1-r3",
+        "1.97.1-r4",
+        "1.97.1-r5",
+        "1.97.1-r6",
+        "1.97.1-r7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database",
+        "purl": "pkg:apk/dhi/litellm-database"
+      },
+      "versions": [
+        "1.94.0-r0",
+        "1.94.0-r1",
+        "1.94.1-r0",
+        "1.94.2-r0",
+        "1.94.2-r1",
+        "1.94.2-r2",
+        "1.94.3-r0",
+        "1.95.1-r0",
+        "1.96.2-r0",
+        "1.97.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "datahub-ingestion",
+        "purl": "pkg:deb/dhi/datahub-ingestion"
+      },
+      "versions": [
+        "1.5.0.7-0",
+        "1.6.0.1-0",
+        "1.6.0.1-1",
+        "1.6.0.1-2",
+        "1.6.0.1-3",
+        "1.6.0.2-0",
+        "1.6.0.2-1",
+        "1.7.0.10-0",
+        "1.7.0.12-0",
+        "1.7.0.13-0",
+        "1.7.0.14-0",
+        "1.7.0.14-1",
+        "1.7.0.14-2",
+        "1.7.0.16-0",
+        "1.7.0.16-1",
+        "1.7.0.17-0",
+        "1.7.0.17-1",
+        "1.7.0.17-2",
+        "1.7.0.17-3",
+        "1.7.0.18-0",
+        "1.7.0.19-0",
+        "1.7.0.19-1",
+        "1.7.0.19-2",
+        "1.7.0.19-3",
+        "1.7.0.19-4",
+        "1.7.0.19-5",
+        "1.7.0.19-6",
+        "1.7.0.20-6",
+        "1.7.0.20-7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "datascience-notebook",
+        "purl": "pkg:deb/dhi/datascience-notebook"
+      },
+      "versions": [
+        "2026.07.28-0",
+        "2026.07.28-1",
+        "2026.07.28-10",
+        "2026.07.28-11",
+        "2026.07.28-12",
+        "2026.07.28-13",
+        "2026.07.28-14",
+        "2026.07.28-15",
+        "2026.07.28-16",
+        "2026.07.28-17",
+        "2026.07.28-18",
+        "2026.07.28-19",
+        "2026.07.28-2",
+        "2026.07.28-20",
+        "2026.07.28-3",
+        "2026.07.28-4",
+        "2026.07.28-5",
+        "2026.07.28-6",
+        "2026.07.28-7",
+        "2026.07.28-8",
+        "2026.07.28-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "jupyterhub-k8s-hub",
+        "purl": "pkg:deb/dhi/jupyterhub-k8s-hub"
+      },
+      "versions": [
+        "4.4.1-0",
+        "4.4.2-0",
+        "4.4.2-1",
+        "4.4.2-2",
+        "4.4.2-3",
+        "4.4.2-4",
+        "4.4.2-5",
+        "4.4.2-6",
+        "4.4.3-0",
+        "4.4.4-0",
+        "4.4.4-1",
+        "4.4.4-2",
+        "4.4.4-3",
+        "4.4.4-4",
+        "4.4.4-5",
+        "4.4.4-6",
+        "4.4.5-0",
+        "4.4.5-1",
+        "4.4.5-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "jupyterhub",
+        "purl": "pkg:deb/dhi/jupyterhub"
+      },
+      "versions": [
+        "5.5.0-0",
+        "5.5.0-1",
+        "5.5.1-0",
+        "5.5.2-0",
+        "5.5.2-1",
+        "5.5.2-2",
+        "5.5.2-3",
+        "5.5.2-4",
+        "5.5.2-5",
+        "5.5.2-6",
+        "5.5.3-0",
+        "5.5.4-0",
+        "5.5.4-1",
+        "5.5.4-2",
+        "5.5.4-3",
+        "5.5.4-4",
+        "5.5.4-5",
+        "5.5.4-6",
+        "5.5.5-0",
+        "5.5.5-1",
+        "5.5.5-2",
+        "5.5.5-3",
+        "5.5.5-4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.100",
+        "purl": "pkg:deb/dhi/litellm-database-1.100"
+      },
+      "versions": [
+        "1.100.1-0",
+        "1.100.1-1",
+        "1.100.2-0",
+        "1.100.3-0",
+        "1.100.3-1",
+        "1.100.4-0",
+        "1.100.4-1",
+        "1.100.5-0",
+        "1.100.5-2",
+        "1.100.5-3",
+        "1.100.5-4",
+        "1.100.5-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.101",
+        "purl": "pkg:deb/dhi/litellm-database-1.101"
+      },
+      "versions": [
+        "1.101.0-0",
+        "1.101.0-1",
+        "1.101.1-0",
+        "1.101.2-0",
+        "1.101.2-1",
+        "1.101.3-0",
+        "1.101.4-0",
+        "1.101.4-1",
+        "1.101.5-0",
+        "1.101.6-0",
+        "1.101.6-2",
+        "1.101.6-3",
+        "1.101.6-4",
+        "1.101.6-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.102",
+        "purl": "pkg:deb/dhi/litellm-database-1.102"
+      },
+      "versions": [
+        "1.102.1-0",
+        "1.102.2-0",
+        "1.102.2-1",
+        "1.102.3-0",
+        "1.102.4-0",
+        "1.102.4-2",
+        "1.102.4-3",
+        "1.102.4-4",
+        "1.102.4-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.94",
+        "purl": "pkg:deb/dhi/litellm-database-1.94"
+      },
+      "versions": [
+        "1.94.3-0",
+        "1.94.3-1",
+        "1.94.3-2",
+        "1.94.3-3",
+        "1.94.3-4",
+        "1.94.3-5",
+        "1.94.3-6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.95",
+        "purl": "pkg:deb/dhi/litellm-database-1.95"
+      },
+      "versions": [
+        "1.95.1-0",
+        "1.95.1-1",
+        "1.95.1-2",
+        "1.95.1-3",
+        "1.95.1-4",
+        "1.95.1-5",
+        "1.95.1-6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.96",
+        "purl": "pkg:deb/dhi/litellm-database-1.96"
+      },
+      "versions": [
+        "1.96.2-0",
+        "1.96.2-1",
+        "1.96.2-2",
+        "1.96.2-3",
+        "1.96.2-4",
+        "1.96.2-5",
+        "1.96.2-6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.97",
+        "purl": "pkg:deb/dhi/litellm-database-1.97"
+      },
+      "versions": [
+        "1.97.0-0",
+        "1.97.0-1",
+        "1.97.0-2",
+        "1.97.0-3",
+        "1.97.0-4",
+        "1.97.1-0",
+        "1.97.1-1",
+        "1.97.1-10",
+        "1.97.1-2",
+        "1.97.1-3",
+        "1.97.1-4",
+        "1.97.1-5",
+        "1.97.1-7",
+        "1.97.1-8",
+        "1.97.1-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.98",
+        "purl": "pkg:deb/dhi/litellm-database-1.98"
+      },
+      "versions": [
+        "1.98.0-0",
+        "1.98.0-1",
+        "1.98.0-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.99",
+        "purl": "pkg:deb/dhi/litellm-database-1.99"
+      },
+      "versions": [
+        "1.99.0-0",
+        "1.99.1-0",
+        "1.99.1-1",
+        "1.99.1-2",
+        "1.99.1-3",
+        "1.99.3-0",
+        "1.99.4-0",
+        "1.99.4-1",
+        "1.99.4-2",
+        "1.99.4-4",
+        "1.99.4-5",
+        "1.99.4-6",
+        "1.99.4-7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database",
+        "purl": "pkg:deb/dhi/litellm-database"
+      },
+      "versions": [
+        "1.94.0-0",
+        "1.94.0-1",
+        "1.94.1-0",
+        "1.94.2-0",
+        "1.94.2-1",
+        "1.94.3-0",
+        "1.95.1-0",
+        "1.96.2-0",
+        "1.97.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-qsib-oi5m-7a32-lgif"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-3hv7-mjh2-fv65"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/tornadoweb/tornado/security/advisories/GHSA-3hv7-mjh2-fv65"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/tornadoweb/tornado/pull/3719"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/tornadoweb/tornado/commit/8a61dd6005f42733015160f3c23a2bcffe200542"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/tornadoweb/tornado/commit/03945136ea9746eccf61caf88edae39642e59c93"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/tornadoweb/tornado/releases/tag/v6.5.9"
+    }
+  ]
+}

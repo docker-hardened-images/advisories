@@ -1,0 +1,321 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-3cyg-qhom-yuua-bqet",
+  "modified": "2026-11-13T22:30:30Z",
+  "published": "2026-11-13T22:30:30Z",
+  "upstream": [
+    "GHSA-wwv5-g3v4-889x"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\nThe CVE-2026-35536 fix added a validation loop that rejects `[\\x00-\\x20\\x3b\\x7f]`, but only for the\nhardcoded **lowercase** keys `name`/`domain`/`path`/`samesite`. The still-live deprecated `**kwargs` path\nwrites attacker-supplied attribute values straight into the `Morsel` with no validation, and because\n`Morsel.__setitem__` is case-insensitive, a capitalized kwarg (`Domain=`, `Path=`, `SameSite=`, `Max-Age=`)\nroutes to the same reserved attribute while bypassing the loop — re-opening `;`-delimited attribute injection.\n\n```python\nself.set_cookie(\"sid\", \"abc\", Domain=\"evil.com; Secure; SameSite=None\")\n#  -> Set-Cookie: sid=abc; Domain=evil.com; Secure; SameSite=None; Path=/\n# Sanity (the canonical lowercase named arg IS blocked):\nself.set_cookie(\"sid\", \"abc\", domain=\"evil.com; Secure\")   # -> http.cookies.CookieError\n```\n\nThe patch's regression test (`SetCookieForbiddenCharHandler`) only exercises the four named params, never the\n`**kwargs` path, so the gap is not regression-covered.\n\n## Affected code\n- `tornado/web.py` → `RequestHandler.set_cookie`: the validation loop covers only the lowercase named args;\n  the trailing `if kwargs:` loop does `morsel[k] = v` with no character validation.\n\n## Steps to reproduce\n`GET /upper` (uses `Domain=` kwarg) emits `Set-Cookie: c_upper=v; Domain=evil.com; Secure; SameSite=None; Path=/`; `GET /lower` (uses lowercase\n`domain=`) returns a `CookieError`.\n\n## Impact\nInjection of independent cookie attributes (force/drop `Secure`/`HttpOnly`/`SameSite`, rebind `Domain`/`Path`)\n— the same impact CVE-2026-35536 closed, via the sibling path the patch missed. Conditional on the app using\na capitalized/legacy keyword.\n\n## Suggested remediation\nApply the same `[\\x00-\\x20\\x3b\\x7f]` validation to every entry in the `**kwargs` loop (after normalizing the\nkey case), or remove the deprecated kwargs path; add a regression test for capitalized kwargs.\n\n## Credit\nReported as part of an incomplete-patch measurement study (responsible disclosure).",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database-1.94",
+        "purl": "pkg:apk/dhi/litellm-database-1.94"
+      },
+      "versions": [
+        "1.94.3-r0",
+        "1.94.3-r1",
+        "1.94.3-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database-1.95",
+        "purl": "pkg:apk/dhi/litellm-database-1.95"
+      },
+      "versions": [
+        "1.95.1-r0",
+        "1.95.1-r1",
+        "1.95.1-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database-1.96",
+        "purl": "pkg:apk/dhi/litellm-database-1.96"
+      },
+      "versions": [
+        "1.96.2-r0",
+        "1.96.2-r1",
+        "1.96.2-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database-1.97",
+        "purl": "pkg:apk/dhi/litellm-database-1.97"
+      },
+      "versions": [
+        "1.97.0-r0",
+        "1.97.0-r1",
+        "1.97.0-r2",
+        "1.97.1-r0",
+        "1.97.1-r3",
+        "1.97.1-r4",
+        "1.97.1-r5",
+        "1.97.1-r6",
+        "1.97.1-r7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database",
+        "purl": "pkg:apk/dhi/litellm-database"
+      },
+      "versions": [
+        "1.94.0-r0",
+        "1.94.0-r1",
+        "1.94.1-r0",
+        "1.94.2-r0",
+        "1.94.2-r1",
+        "1.94.2-r2",
+        "1.94.3-r0",
+        "1.95.1-r0",
+        "1.96.2-r0",
+        "1.97.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "jupyterhub",
+        "purl": "pkg:deb/dhi/jupyterhub"
+      },
+      "versions": [
+        "5.5.0-0",
+        "5.5.0-1",
+        "5.5.1-0",
+        "5.5.2-0",
+        "5.5.2-1",
+        "5.5.2-2",
+        "5.5.2-3",
+        "5.5.2-4",
+        "5.5.2-5",
+        "5.5.2-6",
+        "5.5.3-0",
+        "5.5.4-0",
+        "5.5.4-1",
+        "5.5.4-2",
+        "5.5.4-3",
+        "5.5.4-4",
+        "5.5.4-5",
+        "5.5.4-6",
+        "5.5.5-0",
+        "5.5.5-1",
+        "5.5.5-2",
+        "5.5.5-3",
+        "5.5.5-4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.94",
+        "purl": "pkg:deb/dhi/litellm-database-1.94"
+      },
+      "versions": [
+        "1.94.3-0",
+        "1.94.3-1",
+        "1.94.3-2",
+        "1.94.3-3",
+        "1.94.3-4",
+        "1.94.3-5",
+        "1.94.3-6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.95",
+        "purl": "pkg:deb/dhi/litellm-database-1.95"
+      },
+      "versions": [
+        "1.95.1-0",
+        "1.95.1-1",
+        "1.95.1-2",
+        "1.95.1-3",
+        "1.95.1-4",
+        "1.95.1-5",
+        "1.95.1-6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.96",
+        "purl": "pkg:deb/dhi/litellm-database-1.96"
+      },
+      "versions": [
+        "1.96.2-0",
+        "1.96.2-1",
+        "1.96.2-2",
+        "1.96.2-3",
+        "1.96.2-4",
+        "1.96.2-5",
+        "1.96.2-6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.97",
+        "purl": "pkg:deb/dhi/litellm-database-1.97"
+      },
+      "versions": [
+        "1.97.0-0",
+        "1.97.0-1",
+        "1.97.0-2",
+        "1.97.0-3",
+        "1.97.0-4",
+        "1.97.1-0",
+        "1.97.1-1",
+        "1.97.1-10",
+        "1.97.1-2",
+        "1.97.1-3",
+        "1.97.1-4",
+        "1.97.1-5",
+        "1.97.1-7",
+        "1.97.1-8",
+        "1.97.1-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.98",
+        "purl": "pkg:deb/dhi/litellm-database-1.98"
+      },
+      "versions": [
+        "1.98.0-0",
+        "1.98.0-1",
+        "1.98.0-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.99",
+        "purl": "pkg:deb/dhi/litellm-database-1.99"
+      },
+      "versions": [
+        "1.99.0-0",
+        "1.99.1-0",
+        "1.99.1-1",
+        "1.99.1-2",
+        "1.99.1-3",
+        "1.99.3-0",
+        "1.99.4-0",
+        "1.99.4-1",
+        "1.99.4-2",
+        "1.99.4-4",
+        "1.99.4-5",
+        "1.99.4-6",
+        "1.99.4-7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database",
+        "purl": "pkg:deb/dhi/litellm-database"
+      },
+      "versions": [
+        "1.94.0-0",
+        "1.94.0-1",
+        "1.94.1-0",
+        "1.94.2-0",
+        "1.94.2-1",
+        "1.94.3-0",
+        "1.95.1-0",
+        "1.96.2-0",
+        "1.97.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-3cyg-qhom-yuua-bqet"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-wwv5-g3v4-889x"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/tornadoweb/tornado/security/advisories/GHSA-wwv5-g3v4-889x"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/tornadoweb/tornado/pull/3706"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/tornadoweb/tornado/pull/3704"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/tornadoweb/tornado/commit/da284767eae8e1f0484f123b8c3225f6465b09c7"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/tornadoweb/tornado/commit/6ef836e43e1278530041376adb32504daa977b91"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/tornadoweb/tornado/releases/tag/v6.5.8"
+    }
+  ]
+}
