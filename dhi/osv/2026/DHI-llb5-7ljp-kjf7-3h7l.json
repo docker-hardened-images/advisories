@@ -1,0 +1,99 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-llb5-7ljp-kjf7-3h7l",
+  "modified": "2026-11-13T17:09:52Z",
+  "published": "2026-11-13T17:09:52Z",
+  "upstream": [
+    "GHSA-c33x-vcv4-vg3g"
+  ],
+  "summary": "Cedar users must be using all of the following features to be affected by this advisory: JSON format policies, policy…",
+  "details": "Cedar users must be using all of the following features to be affected by this advisory: JSON format policies, policy templates, and the `is in` scope condition. This advisory only affects JSON-formatted Cedar policy templates containing `is in` scope conditions that are **malformed** according to the Cedar syntax. It does **not** affect syntactically well-formed policies.\n\nUsers of Cedar who author policies in the JSON format were able to write Cedar policies using the `is in` condition with an incorrect slot identifier in the principal and resource scope constraints (e.g., `?principal` in the resource scope constraint) even though this is not allowed when parsing policies from the Cedar policy syntax. Internally, the slot identifiers were silently corrected (e.g. `?resource` is placed in the resource scope constraint). \n\nIf the policy contains *exactly one slot* in either the principal or resource position, then any attempt to create a linked policy from the template results in an error: the internal representation of the template does not contain the slot identifier as written in the malformed JSON policy (it has been corrected silently), so attempting to fill that slot is an error. If instead the template is linked using slot identifier expected internally (i.e., not what is written in the JSON template), the linking will initially succeed, but a subsequent invariant violation will cause a panic.\n\nWhen the template contains *slots in both the principal and resource* position, then both slots will be present in the internal representation: linking succeeds, but with each slot bound to the value intended for the other (the silent correction). The linked policy is then semantically different from the malformed policy the user intended, and any subsequent authorization decision made against that policy may lead to accesses being unintentionally allowed or denied.\n\nConcretely, consider the following JSON format policy template intended to deny users in a particular project from accessing documents with a particular classification.\n```\n{\n  \"effect\": \"forbid\",\n  \"principal\": {\n    \"op\": \"is\",\n    \"entity_type\": \"User\",\n    \"in\": { \"slot\": \"?resource\" }\n  },\n  \"action\": { \"op\": \"All\" },\n  \"resource\": {\n    \"op\": \"is\",\n    \"entity_type\": \"Doc\",\n    \"in\": { \"slot\": \"?principal\" }\n  },\n  \"conditions\": []\n}\n```\n\nLinked with `?principal = Classification::\"topsecret\"` and `?resource = Project::\"alpha\"`, the author expects to create the policy:\n```\nforbid(principal is User in Project::\"alpha\", action, resource is Doc in Classification::\"topsecret\");\n```\n\nBut because Cedar internally links slots by scope position (not by name), the actual policy evaluated by the engine is:\n```\nforbid(principal is User in Classification::\"topsecret\", action, resource is Doc in Project::\"alpha\");\n```\n\nIf a user is in `Project::\"alpha\"` but not `Classification::\"topsecret\"`, the `forbid` policy does not apply, and access is unintentionally allowed.\n\n## Patches\n\nThis advisory is patched in version 4.11.1 and 3.4.3, both available on Crates.io and NPM.\n\n## Workarounds\n\nIf you cannot update to a patched version, you can determine if you are affected by checking your JSON format policy templates for the following two patterns.\n\n```\n  \"principal\": {\n    \"op\": \"is\",\n    \"entity_type\": \"User\",\n    \"in\": { \"slot\": \"?resource\" }\n  }\n```\n\nand\n```\n  \"resource\": {\n    \"op\": \"is\",\n    \"entity_type\": \"Doc\",\n    \"in\": { \"slot\": \"?principal\" }\n  }\n```\n\n## References\n* [Cedar Policy Language Reference Guide - Cedar Policy Templates](https://docs.cedarpolicy.com/policies/templates.html)\n* [Cedar Policy Language Reference Guide - JSON Policy Format](https://docs.cedarpolicy.com/policies/json-format.html)",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:H/UI:N/VC:N/VI:N/VA:L/SC:L/SI:L/SA:L"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "gitlab-rails-19",
+        "purl": "pkg:apk/dhi/gitlab-rails-19"
+      },
+      "versions": [
+        "19.1.8-r0",
+        "19.1.8-r1",
+        "19.4.1-r0",
+        "19.4.1-r1",
+        "19.4.1-r2",
+        "19.4.1-r3",
+        "19.4.2-r0",
+        "19.5.3-r0",
+        "19.5.3-r1",
+        "19.5.3-r2",
+        "19.5.3-r3",
+        "19.5.3-r4",
+        "19.5.3-r5",
+        "19.5.3-r6",
+        "19.5.3-r7",
+        "19.5.3-r8",
+        "19.5.4-r0",
+        "19.5.4-r1",
+        "19.5.5-r0",
+        "19.5.5-r1",
+        "19.5.5-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "gitlab-rails-19",
+        "purl": "pkg:deb/dhi/gitlab-rails-19"
+      },
+      "versions": [
+        "19.1.8-0",
+        "19.1.8-1",
+        "19.4.1-0",
+        "19.4.1-1",
+        "19.4.1-2",
+        "19.4.2-0",
+        "19.5.3-0",
+        "19.5.3-1",
+        "19.5.3-2",
+        "19.5.3-3",
+        "19.5.3-4",
+        "19.5.3-5",
+        "19.5.3-6",
+        "19.5.3-7",
+        "19.5.3-8",
+        "19.5.3-9",
+        "19.5.4-0",
+        "19.5.4-1",
+        "19.5.5-0",
+        "19.5.5-1",
+        "19.5.5-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-llb5-7ljp-kjf7-3h7l"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-c33x-vcv4-vg3g"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/cedar-policy/cedar/security/advisories/GHSA-c33x-vcv4-vg3g"
+    }
+  ]
+}
