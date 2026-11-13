@@ -215,6 +215,30 @@ covering versions from the earliest known covered version within its lineage and
 }
 ```
 
+### Separate Python version lines already have separate package identities
+
+The published [OSV record for `DHI-3czz-efwu-b2ii-jquo`](https://github.com/docker-hardened-images/advisories/blob/d1572e5f00b10cc8204dd9e67ebd43057940a129/dhi/osv/2026/DHI-3czz-efwu-b2ii-jquo.json)
+(`PSF-2018-8`), pinned to commit `d1572e5f`, contains two separate
+`affected[]` entries in `Docker Hardened Images:Alpine:3.23`:
+
+| Package PURL | Enumerated versions in this snapshot |
+| --- | ---: |
+| `pkg:apk/dhi/python-3.11` | 23 |
+| `pkg:apk/dhi/python-3.12` | 23 |
+
+The [paired VEX record](https://github.com/docker-hardened-images/advisories/blob/d1572e5f00b10cc8204dd9e67ebd43057940a129/dhi/vex/2026/DHI-3czz-efwu-b2ii-jquo.json)
+has separate `under_investigation` statements for those packages, each naming
+its own 23 exact products. The published OSV snapshot enumerates versions and
+contains no ranges for these entries. This change preserves those existing
+identities and adds an independent open-ended range to each package, starting
+at that package's native earliest covered version. A range on `python-3.11`
+does not match `python-3.12`, even in the same ecosystem.
+
+No version-line inference or new package identity is needed for this Python
+case. This does not assume that every package encodes its version line in its
+name: parallel lines sharing one package identity remain conservatively covered
+unless vulnerability-specific evidence supports refinement.
+
 ### Why this under-investigation boundary is safe for the DHI universe
 
 The producer's working package set is complete for the DHI package universe
