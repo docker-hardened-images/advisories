@@ -1,0 +1,115 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-joym-f2wg-krvb-5rgw",
+  "modified": "2026-11-13T00:27:04Z",
+  "published": "2026-11-13T00:27:04Z",
+  "upstream": [
+    "CVE-2026-58076"
+  ],
+  "summary": "Apache Airflow's serialization layer reconstructed exception nodes by calling `import_string()` on a class name taken…",
+  "details": "Apache Airflow's serialization layer reconstructed exception nodes by calling `import_string()` on a class name taken from the serialized blob and instantiating it with arguments from the same blob, with no restriction on what could be imported. An operator's `executor_config` reaches that branch, so a Dag author could place a value there that causes an arbitrary callable to be imported and invoked -- for example `subprocess.check_output`, or `builtins.eval` on the `builtins`-prefixed variant. The code runs in the **Scheduler**, which reconstructs serialized Dags in its normal loop with no request involved, and in the **API server**, on any authenticated read of the Dag such as `GET /api/v2/dags/{dag_id}/details`. Both are components the Airflow security model states must never execute Dag-author code, and both hold the metadata database credentials and the JWT signing secret. No non-default configuration is required. This is a **different sink from CVE-2026-33264**, which covered only the trigger branch of the same deserializer: deployments that upgraded in response to that advisory are still affected through the exception branch and must upgrade again. Users are advised to upgrade to apache-airflow 3.3.1 or later, which restricts the imported class to a subclass of `BaseException`.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "airflow",
+        "purl": "pkg:deb/dhi/airflow"
+      },
+      "versions": [
+        "3.3.0-0",
+        "3.3.0-1",
+        "3.3.0-2",
+        "3.3.0-3",
+        "3.3.1-0",
+        "3.3.1-1",
+        "3.3.1-10",
+        "3.3.1-11",
+        "3.3.1-12",
+        "3.3.1-13",
+        "3.3.1-14",
+        "3.3.1-15",
+        "3.3.1-2",
+        "3.3.1-3",
+        "3.3.1-4",
+        "3.3.1-5",
+        "3.3.1-6",
+        "3.3.1-7",
+        "3.3.1-8",
+        "3.3.1-9",
+        "3.3.2-0",
+        "3.3.2-1",
+        "3.3.2-10",
+        "3.3.2-11",
+        "3.3.2-12",
+        "3.3.2-13",
+        "3.3.2-14",
+        "3.3.2-15",
+        "3.3.2-16",
+        "3.3.2-17",
+        "3.3.2-18",
+        "3.3.2-19",
+        "3.3.2-2",
+        "3.3.2-3",
+        "3.3.2-4",
+        "3.3.2-5",
+        "3.3.2-6",
+        "3.3.2-7",
+        "3.3.2-8",
+        "3.3.2-9",
+        "3.4.0-0",
+        "3.4.0-1",
+        "3.4.0-2",
+        "3.4.0-3",
+        "3.4.0-4",
+        "3.4.0-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-joym-f2wg-krvb-5rgw"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-58076"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://lists.apache.org/thread/t81p688t15jozxsng8521o60nh2kfsos"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/apache/airflow/pull/68511"
+    },
+    {
+      "type": "WEB",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-33264"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-8prw-8m6x-8w6f"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/apache/airflow/commit/560f117525d201ed64327c4185050705339e07b1"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/apache/airflow/commit/3a08a3d7792335ac9456cd44c92d8de3ae0d6ec1"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/apache/airflow/releases/tag/3.3.1"
+    }
+  ]
+}
