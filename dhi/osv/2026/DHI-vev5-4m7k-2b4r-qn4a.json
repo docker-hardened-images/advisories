@@ -1,0 +1,175 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-vev5-4m7k-2b4r-qn4a",
+  "modified": "2026-11-13T02:41:01Z",
+  "published": "2026-11-13T02:41:01Z",
+  "upstream": [
+    "GHSA-g2pf-6v5v-qcc8"
+  ],
+  "summary": "An attacker able to alter bundle bytes could supply arbitrary policy and data to an OPA that was…",
+  "details": "An attacker able to alter bundle bytes could supply arbitrary policy and data to an OPA that was [configured](https://www.openpolicyagent.org/docs/configuration#bundles) \r\nto verify bundle signatures. This could happen if the attacker controls any of: \r\n\r\n- OPA bundle/discovery service (including an artifact store it uses)\r\n- MitM between OPA and bundle/discovery service\r\n- write access to a file:// bundle path or the bundle persistence directory\r\n\r\nTwo separate side-steps are fixed:\r\n\r\n#### Issue 1. Signature verification keyed on `keyid` rather than on the `signing` block\r\n\r\nOPA only required a `.signatures.json` file when `signing.keyid` was set, so a bundle stripped of its signature was\r\naccepted if only e.g. `bundles[_].signing` was set instead of `bundles[_].signing.keyid`. Verification now depends on \r\nthe presence of a `signing` block, as documented; `keyid` only selects which key to use.\r\n\r\n**Affected:**\r\n\r\n- `bundles[_].signing` or `discovery.signing` configured without `keyid`: an empty block, or one with only `scope` or\r\n  `exclude_files`.\r\n- Embedders (SDK, custom plugins, `v1/loader`, `v1/compile`) calling `bundle.NewVerificationConfig(keys, \"\", ...)` with\r\n  an empty key id.\r\n\r\n**Not affected:**\r\n\r\n- Configurations with an explicit `bundles[_].signing.keyid` or `discovery.signing.keyid`.\r\n- `opa run`/`opa eval`/`opa build` with `--verification-key`, which defaults `--verification-key-id` to `default`.\r\n  Passing `--verification-key-id \"\"` explicitly was affected.\r\n- Configurations with top-level `keys` but no `signing` block: not a verification opt-in before or after this fix.\r\n  Unsigned bundles are still accepted, and OPA now logs a warning at startup for bundles in this state.\r\n\r\n**Workaround:** on affected versions, set an explicit `keyid` on every bundle that must be signed:\r\n\r\n```yaml\r\nbundles:\r\n  authz:\r\n    service: acmecorp\r\n    resource: bundle.tar.gz\r\n    signing:\r\n      keyid: my_key # must name an entry under the top-level `keys`\r\ndiscovery:\r\n  resource: /discovery.tar.gz\r\n  signing:\r\n    keyid: my_discovery_key\r\n\r\nkeys:\r\n  my_key:\r\n    algorithm: RS256\r\n    key: |\r\n      -----BEGIN PUBLIC KEY-----\r\n      ...\r\n```\r\n\r\nFurther behaviour changes:\r\n\r\n- A `signing` block with no entries under the top-level `keys` is now a startup configuration error, rather than a\r\n  configuration that rejects every signed bundle while accepting unsigned ones.\r\n- `bundle.NewVerificationConfig` now requires signatures by default. Embedders can opt out with\r\n  `WithSkipBundleVerification(true)` or the new `(*VerificationConfig).WithOptionalSignature()`.\r\n\r\n#### Issue 2. Unsigned _delta_ bundle downgrade\r\n\r\n_Delta_ bundles skipped verification entirely, so an attacker could replace a signed _snapshot_ bundle with an unsigned\r\n_delta_ bundle on the same resource. The signed policy stays active while the attacker controls any data inside the\r\nbundle's roots. _Delta_ bundles [not supporting signing](https://www.openpolicyagent.org/docs/management-bundles#current-limitations)\r\nwas documented, but unenforced. OPA now rejects them with `delta bundles do not support signature verification`.\r\n\r\n**Affected:**\r\n\r\n- Any bundle or discovery configuration with a `signing` block, with or without `keyid`.\r\n- `opa run`/`opa eval` with `--verification-key`.\r\n\r\n**Not affected:**\r\n\r\n- Configurations that don't verify signatures: no `signing` block, or `--skip-verify`. Nothing was verified to begin\r\n  with.\r\n\r\n**Workaround:** there is no configuration that makes affected versions reject _delta_ bundles. Until upgrading, ensure\r\nthe integrity of the bundle bytes themselves: TLS terminated by OPA or a trusted hop, restricted write access to the\r\nbundle service, artifact store and bundle persistence directory.\r\n\r\nBundle services that must keep serving unsigned _delta_ bundles after upgrading can opt out per bundle with the new\r\n`bundles[_].signing.allow_unsigned_delta_bundles` (or `discovery.signing.allow_unsigned_delta_bundles`) field.\r\n_Snapshot_ bundles must still be signed.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "opa-dev",
+        "purl": "pkg:apk/dhi/opa-dev"
+      },
+      "versions": [
+        "1.18.2-r0",
+        "1.19.0-r0",
+        "1.19.0-r1",
+        "1.19.1-r0",
+        "1.19.1-r1",
+        "1.20.0-r0",
+        "1.20.1-r0",
+        "1.20.1-r1",
+        "1.20.2-r0",
+        "1.20.2-r1",
+        "1.21.0-r0",
+        "1.21.1-r0",
+        "1.21.1-r1",
+        "1.21.1-r2",
+        "1.21.2-r0",
+        "1.21.3-r0",
+        "1.21.3-r1",
+        "1.21.4-r0",
+        "1.21.4-r1",
+        "1.22.0-r0",
+        "1.22.1-r0",
+        "1.22.2-r0",
+        "1.22.2-r1",
+        "1.22.3-r0",
+        "1.22.3-r1",
+        "1.22.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "opa-fips-dev",
+        "purl": "pkg:apk/dhi/opa-fips-dev"
+      },
+      "versions": [
+        "1.18.2-r0",
+        "1.19.0-r0",
+        "1.19.0-r1",
+        "1.19.1-r0",
+        "1.19.1-r1",
+        "1.20.0-r0",
+        "1.20.1-r0",
+        "1.20.1-r1",
+        "1.20.2-r0",
+        "1.20.2-r1",
+        "1.21.0-r0",
+        "1.21.1-r0",
+        "1.21.1-r1",
+        "1.21.1-r2",
+        "1.21.2-r0",
+        "1.21.3-r0",
+        "1.21.3-r1",
+        "1.21.4-r0",
+        "1.21.4-r1",
+        "1.22.0-r0",
+        "1.22.1-r0",
+        "1.22.2-r0",
+        "1.22.2-r1",
+        "1.22.3-r0",
+        "1.22.3-r1",
+        "1.22.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "opa-fips",
+        "purl": "pkg:apk/dhi/opa-fips"
+      },
+      "versions": [
+        "1.18.2-r0",
+        "1.19.0-r0",
+        "1.19.0-r1",
+        "1.19.1-r0",
+        "1.19.1-r1",
+        "1.20.0-r0",
+        "1.20.1-r0",
+        "1.20.1-r1",
+        "1.20.2-r0",
+        "1.20.2-r1",
+        "1.21.0-r0",
+        "1.21.1-r0",
+        "1.21.1-r1",
+        "1.21.1-r2",
+        "1.21.2-r0",
+        "1.21.3-r0",
+        "1.21.3-r1",
+        "1.21.4-r0",
+        "1.21.4-r1",
+        "1.22.0-r0",
+        "1.22.1-r0",
+        "1.22.2-r0",
+        "1.22.2-r1",
+        "1.22.3-r0",
+        "1.22.3-r1",
+        "1.22.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "opa",
+        "purl": "pkg:apk/dhi/opa"
+      },
+      "versions": [
+        "1.18.2-r0",
+        "1.19.0-r0",
+        "1.19.0-r1",
+        "1.19.1-r0",
+        "1.19.1-r1",
+        "1.20.0-r0",
+        "1.20.1-r0",
+        "1.20.1-r1",
+        "1.20.2-r0",
+        "1.20.2-r1",
+        "1.21.0-r0",
+        "1.21.1-r0",
+        "1.21.1-r1",
+        "1.21.1-r2",
+        "1.21.2-r0",
+        "1.21.3-r0",
+        "1.21.3-r1",
+        "1.21.4-r0",
+        "1.21.4-r1",
+        "1.22.0-r0",
+        "1.22.1-r0",
+        "1.22.2-r0",
+        "1.22.2-r1",
+        "1.22.3-r0",
+        "1.22.3-r1",
+        "1.22.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-vev5-4m7k-2b4r-qn4a"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/open-policy-agent/opa/security/advisories/GHSA-g2pf-6v5v-qcc8"
+    }
+  ]
+}
