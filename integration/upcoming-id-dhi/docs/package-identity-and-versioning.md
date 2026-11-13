@@ -215,12 +215,32 @@ covering versions from the earliest known covered version within its lineage and
 }
 ```
 
-For under-investigation packages, select the earliest known covered version
-using native APK/dpkg ordering, including epochs and revisions. This is a
-coverage boundary derived from the current snapshot, not proof of when the
-vulnerability was introduced or that earlier releases are safe. Earlier
-unlisted versions do not match this entry. A backfilled earlier covered version
-moves the lower bound on regeneration; future versions remain covered without
-waiting for enumeration. Comparator-equivalent spellings use a deterministic
-lexical tie-break. Versions rejected by the native parser fail publication rather than silently
+### Why this under-investigation boundary is safe for the DHI universe
+
+The producer's working package set is complete for the DHI package universe
+within the same package identity, lineage and base release. An
+under-investigation owner covers that complete product-version set. Selecting
+its earliest version with native APK/dpkg ordering, including epochs and
+revisions, therefore excludes no existing earlier DHI version in that scope.
+This relies on the producer's completeness invariant; the renderer does not
+independently verify it. It says nothing about upstream versions or other
+package identities and releases.
+
+The boundary represents DHI coverage, not the actual introduction of the
+vulnerability. Broad unresolved coverage above it is intentional: a new release
+at or above the boundary matches before explicit enumeration catches up. A new
+or backfilled DHI version below the current boundary requires regeneration.
+Earlier unlisted versions do not match this entry; that is not a general claim
+that older upstream versions are safe. If the producer can no longer guarantee
+complete inventory, this lower-bound policy must be revisited.
+
+Refine coverage only with positive vulnerability-specific evidence: an explicit
+assessment or a verified mapping from advisory evidence to DHI package
+versions. Definition metadata can identify parallel version lines, but does not
+establish each line's affected cutoff. Version gaps and missing matches alone
+must not narrow coverage or manufacture a fix. Where evidence is absent, broad
+coverage is preferred to a scanning blind spot.
+
+Comparator-equivalent spellings use a deterministic lexical tie-break.
+Versions rejected by the native parser fail publication rather than silently
 falling back to `0` or inventing a boundary.

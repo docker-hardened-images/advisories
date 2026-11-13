@@ -107,6 +107,11 @@ unlisted releases too, including newly published versions. This conservative
 coverage stays scoped to the same DHI package, lineage, and base release. The
 paired VEX record conveys the unresolved status for its exact known products.
 
+The lower bound relies on the complete DHI working package set for that package,
+lineage and base release; it is not inferred from a partial inventory. Broad
+coverage above it is intentional until vulnerability-specific evidence supports
+refinement. See [the boundary decision and completeness assumption](docs/package-identity-and-versioning.md#why-this-under-investigation-boundary-is-safe-for-the-dhi-universe).
+
 A DHI package PURL is scanner-observed package identity, not proof of DHI
 product membership by itself.
 
