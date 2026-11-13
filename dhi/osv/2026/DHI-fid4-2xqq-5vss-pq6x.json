@@ -1,0 +1,234 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-fid4-2xqq-5vss-pq6x",
+  "modified": "2026-11-13T20:19:18Z",
+  "published": "2026-11-13T20:19:18Z",
+  "upstream": [
+    "GHSA-fx3j-rwgx-fr94"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n`Repo._clone()`'s handling of `separate_git_dir` never disables `Git.polish_url()`'s environment-variable expansion, unlike every other caller of that helper that handles attacker-influenced data. Since `separate_git_dir` can be derived from an attacker-controlled `.gitmodules` submodule name, a completely ordinary `clone` + `submodule_update(init=True, recursive=True)` on a malicious repository expands an environment variable of the attacker's choosing and exposes its value both as a persistent on-disk directory name and, whenever DEBUG-level logging is enabled (a common CI/verbose-logging configuration), in a `Popen(...)` log line that is not redacted the way credential-bearing arguments are.\n\n### Root cause / Details\n`git/repo/base.py`'s `_clone()` has:\n\n```python\nsep_dir = kwargs.get(\"separate_git_dir\")\nif sep_dir:\n    kwargs[\"separate_git_dir\"] = Git.polish_url(sep_dir)\n```\n\nThis is the only remaining `Git.polish_url()` call site handling attacker-influenced data that does not pass `expand_vars=False` (there is one other unguarded call site, `clone_path` at line 1537, but its input is the caller's own local destination path, not attacker-controlled). The sibling fixes for `GHSA-94p4-4cq8-9g67`/`GHSA-rwj8-pgh3-r573` added `expand_vars=False` to `clone_url` (5 lines below this one, in the same function), `git/repo/base.py:1599`, `remote.py:814`, and `submodule/base.py:686` — this one did not receive it. (`submodule/root.py` also currently sets `expand_vars=False` at a related call site, but that was added incidentally by a later, unrelated commit, not as part of these security fixes.) `Git.polish_url()`'s docstring itself says: \"Disable this for values obtained from an untrusted source, such as remote URLs.\" Its non-Cygwin branch does plain `os.path.expandvars()` on the entire string, including embedded variables anywhere in an absolute path.\n\n`separate_git_dir` reaches `_clone()` from `Submodule._clone_repo()` (`git/objects/submodule/base.py`) as `module_abspath = osp.join(parent_repo.git_dir, \"modules\", name)`, where `name` is the raw `.gitmodules` submodule section name — fully attacker-controlled content of a cloned repository. `_validated_name()` (added by the fix for `GHSA-hmq2-w58f-27jc`) only rejects names that are absolute, contain a drive letter, or contain `..` path components; it does not reject `$`. `_need_gitfile_submodules()` is true for git ≥ 1.7.5, i.e. the default path for virtually every real-world installation.\n\n### Reproduction (live, against real, unmodified GitPython code, no monkeypatching)\nBuilt a hostile repository with a plain, ordinary git command: `git submodule add --name '$GPY_SECRET_MARKER' ../evil_submodule sub`. Set an environment variable in the \"victim\" process (standing in for a real CI secret such as `AWS_SECRET_ACCESS_KEY`): `GPY_SECRET_MARKER=AKIA_TOTALLY_FAKE_BUT_SECRET_LOOKING_VALUE_12345`. Then ran the exact ordinary workflow the `GHSA-hmq2-w58f-27jc` advisory's own PoC also uses:\n\n```python\nrepo = Repo.clone_from(evil_parent_url, victim_clone_dir)\nrepo.submodule_update(init=True, recursive=True)\n```\n\nObserved result (`ls .git/modules/`):\n\n```\n.git/modules/AKIA_TOTALLY_FAKE_BUT_SECRET_LOOKING_VALUE_12345/   (a full git repo: HEAD, config, objects/, refs/, hooks/)\n```\n\nThe literal `$GPY_SECRET_MARKER`-named directory was never created — only the expanded one exists, proving expansion happened before the value reached the `git clone --separate-git-dir=...` subprocess argument. The persistent, expanded-name directory under `.git/modules/` is itself the primary disclosure channel — it survives on disk for as long as the clone does. A second, independent channel: with the `git.cmd`/`git.repo.base` loggers at DEBUG level (a common CI/verbose-logging setting, not requiring any special flag), GitPython's own `Popen(...)` debug log line prints the fully expanded `--separate-git-dir=<value>` subprocess argument verbatim — `remove_password_if_present()` only redacts URL passwords/Authorization headers, not path-style arguments like this one, so the expanded value is not scrubbed. (The call also fails downstream with an `OSError`/`FileNotFoundError` referencing the original, unexpanded name, since `_write_git_file_and_module_config()` looks for a directory using the pre-expansion name — but that error message itself does not contain the expanded/secret value.)\n\n**Control**: the same call with an ordinary (no `$`) submodule name succeeds normally and creates `.git/modules/<name>` as expected — isolating the gap to submodule names containing environment-variable syntax specifically.\n\n### Already-known check\nChecked all 35 published `gitpython-developers/GitPython` security advisories in full text. `GHSA-hmq2-w58f-27jc` covers the same `name` → `.git/modules/<name>` path but for path-traversal (`../../..`), not variable expansion. `GHSA-59cr-6r3x-644w` covers the sibling `path` field reaching unguarded `os.makedirs()`. `GHSA-94p4-4cq8-9g67`/`GHSA-rwj8-pgh3-r573` cover `expand_vars`, but only on URL arguments. `git log -p -S \"separate_git_dir\" -- git/repo/base.py` shows neither fix commit touches this line; it is unchanged since its 2016 introduction (commit `57d05379`).\n\nThe closest topical match is `GHSA-8mcc-hrx5-hvxc` (\"`clone_from()`/`clone()` omit `--separate-git-dir` from `unsafe_git_clone_options`\") — already fixed, and its own text discusses this same `_clone()` handling of `separate_git_dir`. That fix only added `--separate-git-dir` to the `unsafe_git_clone_options` denylist, which gates the direct-kwarg vector; `Submodule._clone_repo()` explicitly sets `allow_unsafe_options=True` for the gitfile-submodules path, unconditionally bypassing that exact denylist (confirmed: the reproduction above succeeds against current `main`, which already has that fix). The bug this report describes is independent of that denylist — the *value* itself is expanded via `os.path.expandvars()` regardless of the denylist outcome — so the two are distinct, but flagging the relationship explicitly since a reviewer would otherwise reasonably ask about it.\n\nNo advisory describes environment-variable expansion via the internal `separate_git_dir` path.\n\n### Suggested fix\nAdd `expand_vars=False` to the `Git.polish_url(sep_dir)` call in `_clone()`, matching the four other call sites already fixed for the same class of issue.\n\n### Verification level\nReproduced in a real environment: plain Linux, unmodified GitPython from current `main`, real git ≥ 1.7.5 behavior, an ordinary `git submodule add` + `clone` + `submodule_update(init=True, recursive=True)` workflow with no non-default configuration or monkeypatching required. Causation isolated via a control group (identical workflow, ordinary submodule name, no expansion).\n\n### AI Use Disclosure\nAI (Claude) was used as a tool under my direction for code review, code summarization, and script development. A human reviewed and verified the AI-generated results before submission.\n\nCredit: please use \"baeseungwon1010\" (github.com/baeseungwon1010).",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "git-mcp",
+        "purl": "pkg:apk/dhi/git-mcp"
+      },
+      "versions": [
+        "2026.7.10-r0",
+        "2026.7.10-r2",
+        "2026.7.10-r3",
+        "2026.8.18-r0",
+        "2026.8.31-r0",
+        "2026.8.31-r1",
+        "2026.8.31-r10",
+        "2026.8.31-r2",
+        "2026.8.31-r3",
+        "2026.8.31-r4",
+        "2026.8.31-r5",
+        "2026.8.31-r6",
+        "2026.8.31-r7",
+        "2026.8.31-r8",
+        "2026.8.31-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "datahub-ingestion",
+        "purl": "pkg:deb/dhi/datahub-ingestion"
+      },
+      "versions": [
+        "1.5.0.7-0",
+        "1.6.0.1-0",
+        "1.6.0.1-1",
+        "1.6.0.1-2",
+        "1.6.0.1-3",
+        "1.6.0.2-0",
+        "1.6.0.2-1",
+        "1.7.0.10-0",
+        "1.7.0.12-0",
+        "1.7.0.13-0",
+        "1.7.0.14-0",
+        "1.7.0.14-1",
+        "1.7.0.14-2",
+        "1.7.0.16-0",
+        "1.7.0.16-1",
+        "1.7.0.17-0",
+        "1.7.0.17-1",
+        "1.7.0.17-2",
+        "1.7.0.17-3",
+        "1.7.0.18-0",
+        "1.7.0.19-0",
+        "1.7.0.19-1",
+        "1.7.0.19-2",
+        "1.7.0.19-3",
+        "1.7.0.19-4",
+        "1.7.0.19-5",
+        "1.7.0.19-6",
+        "1.7.0.20-6",
+        "1.7.0.20-7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "datascience-notebook",
+        "purl": "pkg:deb/dhi/datascience-notebook"
+      },
+      "versions": [
+        "2026.07.28-0",
+        "2026.07.28-1",
+        "2026.07.28-10",
+        "2026.07.28-11",
+        "2026.07.28-12",
+        "2026.07.28-13",
+        "2026.07.28-14",
+        "2026.07.28-15",
+        "2026.07.28-16",
+        "2026.07.28-17",
+        "2026.07.28-18",
+        "2026.07.28-19",
+        "2026.07.28-2",
+        "2026.07.28-20",
+        "2026.07.28-3",
+        "2026.07.28-4",
+        "2026.07.28-5",
+        "2026.07.28-6",
+        "2026.07.28-7",
+        "2026.07.28-8",
+        "2026.07.28-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "git-mcp",
+        "purl": "pkg:deb/dhi/git-mcp"
+      },
+      "versions": [
+        "2026.7.10-0",
+        "2026.7.10-1",
+        "2026.7.10-2",
+        "2026.7.10-3",
+        "2026.7.10-4",
+        "2026.7.10-5",
+        "2026.8.18-0",
+        "2026.8.18-1",
+        "2026.8.18-2",
+        "2026.8.31-0",
+        "2026.8.31-1",
+        "2026.8.31-10",
+        "2026.8.31-11",
+        "2026.8.31-12",
+        "2026.8.31-13",
+        "2026.8.31-14",
+        "2026.8.31-15",
+        "2026.8.31-16",
+        "2026.8.31-17",
+        "2026.8.31-18",
+        "2026.8.31-19",
+        "2026.8.31-2",
+        "2026.8.31-20",
+        "2026.8.31-21",
+        "2026.8.31-22",
+        "2026.8.31-23",
+        "2026.8.31-24",
+        "2026.8.31-25",
+        "2026.8.31-26",
+        "2026.8.31-3",
+        "2026.8.31-4",
+        "2026.8.31-5",
+        "2026.8.31-6",
+        "2026.8.31-7",
+        "2026.8.31-8",
+        "2026.8.31-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "mlflow",
+        "purl": "pkg:deb/dhi/mlflow"
+      },
+      "versions": [
+        "3.15.1-0",
+        "3.15.2-0",
+        "3.15.2-1",
+        "3.15.2-2",
+        "3.16.0-0",
+        "3.16.1-0",
+        "3.16.1-1",
+        "3.16.1-2",
+        "3.16.1-3",
+        "3.16.1-4",
+        "3.16.1-5",
+        "3.16.1-6",
+        "3.17.0-0",
+        "3.17.0-1",
+        "3.17.1-0",
+        "3.17.2-0",
+        "3.17.2-1",
+        "3.17.2-2",
+        "3.17.2-3",
+        "3.17.2-4",
+        "3.17.2-5",
+        "3.17.2-6",
+        "3.18.0-0",
+        "3.18.0-1",
+        "3.18.0-2",
+        "3.18.0-3",
+        "3.18.0-4",
+        "3.18.0-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-fid4-2xqq-5vss-pq6x"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-fx3j-rwgx-fr94"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/gitpython-developers/GitPython/security/advisories/GHSA-fx3j-rwgx-fr94"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/pull/2255"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/commit/9349ff58ee00c9fb14d515c8e693f33b2144b238"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/gitpython-developers/GitPython/releases/tag/3.2.0"
+    }
+  ]
+}
