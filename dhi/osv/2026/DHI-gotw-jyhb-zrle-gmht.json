@@ -1,0 +1,124 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-gotw-jyhb-zrle-gmht",
+  "modified": "2026-11-13T20:18:06Z",
+  "published": "2026-11-13T20:18:06Z",
+  "upstream": [
+    "GHSA-jm78-9fvv-mhgr"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\nGitPython's config-name validator only neutralizes CR/LF/NUL for the `\"option\"` label; it does not reject `=`, `#`, `;`, `[`, `]`, or whitespace in an **option name**. `write_section` writes the option name verbatim into the config file, so an option name such as `sshCommand = touch <cmd> #` is written as `\\tsshCommand = touch <cmd> # = <value>`, which git parses as `core.sshCommand = touch <cmd>` (the trailing `#` comments out the intended value). This forges arbitrary config directives (`core.sshCommand`, `core.hooksPath`, `alias.*`) → RCE on the next git operation. This is a distinct field (option name, not section name) and distinct character class (`=`/`#`/space, not newline/bracket) from GHSA-3rp5-jjmw-4wv2 (section-name bracket injection) and GHSA-mv93-w799-cj2w / GHSA-v87r-6q3f-2j67 (newline injection).\n\n## Root Cause\n`_assure_config_name_safe(name, label)` (`git/config.py:897`) applies the bracket/quote state machine ONLY when `label == \"section\"`; for the `\"option\"` label it falls through with just the `UNSAFE_CONFIG_CHARS_RE = [\\r\\n\\x00]` regex. `write_section` then writes the option name verbatim into `\"\\t%s = %s\\n\"` (config.py:702).\n\n## Impact\nArbitrary git-config directive injection → remote code execution via `core.sshCommand` (fires on any ssh git operation, no staged file needed) or `core.hooksPath` (with a staged hook). Requires the embedding application to forward a caller-influenced OPTION NAME into the config writer (name-control model, the same name-control model accepted by the related published advisories GHSA-3rp5-jjmw-4wv2 and GHSA-mv93-w799-cj2w). Default configuration.\n\n## Proof of Concept\n```python\nwith repo.config_writer() as cw:\n    cw.set_value(\"core\", \"sshCommand = touch /tmp/RCE #\", \"x\")\n# git config --get core.sshCommand  ->  touch /tmp/RCE\n```\n\n## Attack Chain\n1. Entry: app calls config writer with attacker-controlled OPTION name: `set_value(\"core\", \"sshCommand = touch /tmp/RCE #\", \"x\")`.\n2. Check: `_assure_config_name_safe(option, \"option\")` @ config.py. Guard: regex matches only `[\\r\\n\\x00]`; bracket/quote state machine is gated on `label==\"section\"`. Bypass proof: `=`,`#`,space pass → no `ValueError`.\n3. Sink: `write_section` writes `\"\\tsshCommand = touch /tmp/RCE # = x\\n\"` (config.py:702).\n4. Impact: git parses `core.sshCommand=touch /tmp/RCE` → arbitrary code execution on next git op.\n\n## Bypass Evidence\nIndependently reproduced (gate harness): `set_value('core','sshCommand = touch <RCE> #','x')` → no `ValueError`; file line `sshCommand = touch <RCE> # = x`; `git config --get core.sshCommand` → `touch <RCE>` (rc=0). Also verified `core.hooksPath` via both `GitConfigParser` and `repo.config_writer()`. Fix-commit read: bracket/quote checks are inside `if label == \"section\"`; the `\"option\"` label is not covered.\n\n## Affected Versions\n`GitPython <= 3.1.57` (validator present verbatim on the latest release tag).\n\n## Suggested Fix\nApply the section-name safety checks (reject `=`, `#`, `;`, `[`, `]`, whitespace) to the `\"option\"` label as well, or validate the fully-rendered config line after substitution.\n\n---\nReported by **zx (Jace)** — GitHub: @manus-use",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "git-mcp",
+        "purl": "pkg:apk/dhi/git-mcp"
+      },
+      "versions": [
+        "2026.7.10-r0",
+        "2026.7.10-r2",
+        "2026.7.10-r3",
+        "2026.8.18-r0",
+        "2026.8.31-r0",
+        "2026.8.31-r1",
+        "2026.8.31-r10",
+        "2026.8.31-r2",
+        "2026.8.31-r3",
+        "2026.8.31-r4",
+        "2026.8.31-r5",
+        "2026.8.31-r6",
+        "2026.8.31-r7",
+        "2026.8.31-r8",
+        "2026.8.31-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "git-mcp",
+        "purl": "pkg:deb/dhi/git-mcp"
+      },
+      "versions": [
+        "2026.7.10-0",
+        "2026.7.10-1",
+        "2026.7.10-2",
+        "2026.7.10-3",
+        "2026.7.10-4",
+        "2026.7.10-5",
+        "2026.8.18-0",
+        "2026.8.18-1",
+        "2026.8.18-2",
+        "2026.8.31-0",
+        "2026.8.31-1",
+        "2026.8.31-10",
+        "2026.8.31-11",
+        "2026.8.31-12",
+        "2026.8.31-13",
+        "2026.8.31-14",
+        "2026.8.31-15",
+        "2026.8.31-16",
+        "2026.8.31-17",
+        "2026.8.31-18",
+        "2026.8.31-19",
+        "2026.8.31-2",
+        "2026.8.31-20",
+        "2026.8.31-21",
+        "2026.8.31-22",
+        "2026.8.31-23",
+        "2026.8.31-24",
+        "2026.8.31-25",
+        "2026.8.31-26",
+        "2026.8.31-3",
+        "2026.8.31-4",
+        "2026.8.31-5",
+        "2026.8.31-6",
+        "2026.8.31-7",
+        "2026.8.31-8",
+        "2026.8.31-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-gotw-jyhb-zrle-gmht"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-jm78-9fvv-mhgr"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/gitpython-developers/GitPython/security/advisories/GHSA-jm78-9fvv-mhgr"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/pull/2204"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/commit/a495ccd3b547ccd60b2187215823b72a9c0188bf"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/gitpython-developers/GitPython/releases/tag/3.1.58"
+    }
+  ]
+}

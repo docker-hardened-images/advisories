@@ -1,0 +1,234 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ijih-sqby-uocg-xbgt",
+  "modified": "2026-11-13T20:18:06Z",
+  "published": "2026-11-13T20:18:06Z",
+  "upstream": [
+    "GHSA-m64x-33q8-m5h7"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nThis is a residual of GHSA-g5vv-9gxw-82hx / CVE-2026-87819. The 3.1.60 fix made `Actor._from_string` regex-free, but `parse_actor_and_date` still runs `_re_actor_epoch` on the same author/committer/tagger line one step earlier. That pattern backtracks quadratically when the trailing epoch or timezone is missing or malformed, so the same class of slow parse is still reachable in 3.1.62.\n\n### Details\n\n`git/objects/util.py:322`:\n\n```python\n_re_actor_epoch = re.compile(r\"^.+? (.*) (\\d+) ([+-]\\d+).*$\")\n```\n\n`.+?` and `(.*)` can both absorb the same run of spaces, and the required ` (\\d+) ([+-]\\d+)` tail is only checked after them. On a long line with no valid tail, the search retries every split point.\n\nIt is called from `parse_actor_and_date` (`git/objects/util.py:335`), which runs on the author and committer lines in `Commit._deserialize` (`git/objects/commit.py:917`, `:931`) and on the tagger line in `git/objects/tag.py:129`.\n\nThe published payload (letters plus an unterminated `<`) is fast on 3.1.62. Replacing the letters with spaces is not:\n\n| author line (after `author `) | 2 KB | 8 KB | 32 KB |\n|---|---|---|---|\n| `'a'*n + ' <'` (advisory payload) | 0.0 ms | 0.1 ms | 0.4 ms |\n| `' '*n` | 28 ms | 453 ms | 7,700 ms |\n| valid line, long name (control) | 0.0 ms | 0.0 ms | 0.0 ms |\n\nCost grows about 16x for each 4x increase in length.\n\n### PoC\n\n```python\nimport time\nfrom git.objects.util import parse_actor_and_date\n\nline = \"author \" + \" \" * 32000\nt = time.perf_counter()\nparse_actor_and_date(line)\nprint(f\"{time.perf_counter() - t:.1f} s\")   # ~7 s on 3.1.62\n```\n\nEnd to end, reading `Commit.author` on a commit object whose author line is 32 KB of spaces followed by any malformed tail (no epoch, no timezone, non-numeric epoch, or bad timezone) takes about 7.2 s per access. The same line with a valid `1191999972 -0700` tail takes 1.3 ms.\n\nNote for reproducing: `git hash-object -t commit -w` refuses such an object (`missingEmail`), so the test object was written with `--literally`. A remote can still serve one, because `fetch.fsckObjects` and `transfer.fsckObjects` default to false. This is the same delivery model as CVE-2026-87819 (\"craft a commit object with a malformed author field\").\n\n### Impact\n\nCPU exhaustion (CWE-1333) in any application that uses GitPython to read commits or tags from an untrusted repository: CI tooling, repository scanners, code-hosting integrations. Each access to `Commit.author`, `Commit.committer` or `TagObject.tagger` on a crafted object costs seconds, and a repository can contain many such objects.\n\n### Suggested fix\n\nMatch the leading field name with `.[^ ]*` instead of `.+?`. Both stop at the first space after the first character, but `.[^ ]*` cannot overlap the following `(.*)`, so the backtracking disappears:\n\n```python\n_re_actor_epoch = re.compile(r\"^.[^ ]* (.*) (\\d+) ([+-]\\d+).*$\")\n_re_only_actor = re.compile(r\"^.[^ ]* (.*)$\")\n```\n\nVerification on current main (73a72c9):\n\n- Differential over 368 actor lines (real-world shapes plus edge cases): 0 differences in match groups for either regex.\n- `' '*n` at 64 KB: 32,170 ms before, 0.98 ms after. Valid lines are unchanged (0.01 ms).\n- The existing test suite gives the same pass/fail set with and without the change\n- The new regression test, `test_parse_actor_and_date_malformed_line_is_linear`, fails on the old pattern (8.4 s) and passes with the fix (0.5 s).\n\nThe full patch (fix plus regression test) is attached below.\n\n```diff\ndiff --git a/git/objects/util.py b/git/objects/util.py\nindex a68d701f..d8c0594d 100644\n--- a/git/objects/util.py\n+++ b/git/objects/util.py\n@@ -319,8 +319,11 @@ def parse_date(string_date: Union[str, datetime]) -> Tuple[int, int]:\n \n \n # Precompiled regexes\n-_re_actor_epoch = re.compile(r\"^.+? (.*) (\\d+) ([+-]\\d+).*$\")\n-_re_only_actor = re.compile(r\"^.+? (.*)$\")\n+# The leading field name (\"author\", \"committer\", \"tagger\") is matched with ``.[^ ]*`` rather than\n+# ``.+?``: both stop at the first space after the first character, but ``.[^ ]*`` cannot overlap the\n+# following ``(.*)``, so a line with no valid trailing epoch/offset no longer backtracks quadratically.\n+_re_actor_epoch = re.compile(r\"^.[^ ]* (.*) (\\d+) ([+-]\\d+).*$\")\n+_re_only_actor = re.compile(r\"^.[^ ]* (.*)$\")\n \n \n def parse_actor_and_date(line: str) -> Tuple[Actor, int, int]:\ndiff --git a/test/test_util.py b/test/test_util.py\nindex cf4299d5..e1631420 100644\n--- a/test/test_util.py\n+++ b/test/test_util.py\n@@ -22,6 +22,7 @@ from git.cmd import dashify\n from git.objects.util import (\n     altz_to_utctz_str,\n     from_timestamp,\n+    parse_actor_and_date,\n     parse_date,\n     tzoffset,\n     utctz_to_altz,\n@@ -571,6 +572,30 @@ class TestUtils(TestBase):\n             Actor(\"name last another\", \"some-very-long-email@example.com\"),\n         )\n \n+    def test_parse_actor_and_date_malformed_line_is_linear(self):\n+        # A long author line whose trailing epoch/offset is missing or malformed used to make\n+        # _re_actor_epoch backtrack quadratically: ~7 s per Commit.author access for a 32 KB line.\n+        # The parse result must be unchanged; only the time spent reaching it should move.\n+        for tail in (\"\", \" notanumber -0700\", \" 1191999972\", \" -0700\", \" 1191999972 xx\"):\n+            line = \"author \" + \" \" * 32000 + tail\n+            start = time.perf_counter()\n+            actor, epoch, offset = parse_actor_and_date(line)\n+            self.assertLess(time.perf_counter() - start, 1.0)\n+            self.assertEqual(epoch, 0)\n+            self.assertEqual(offset, 0)\n+\n+        # Well-formed lines, including one with a long name, still parse exactly as before.\n+        actor, epoch, offset = parse_actor_and_date(\n+            \"author Tom Preston-Werner <tom@mojombo.com> 1191999972 -0700\"\n+        )\n+        self.assertEqual(actor, Actor(\"Tom Preston-Werner\", \"tom@mojombo.com\"))\n+        self.assertEqual(epoch, 1191999972)\n+        self.assertEqual(offset, 25200)\n+\n+        actor, epoch, offset = parse_actor_and_date(\"author \" + \"a \" * 16000 + \"<a@b> 1 -0700\")\n+        self.assertEqual(actor.email, \"a@b\")\n+        self.assertEqual(epoch, 1)\n+\n     @ddt.data(\n         (\"name\", \"\"),\n         (\"name\", \"prefix_\"),\n```\n\nFound with AI assistance (Claude) and verified by hand.\n\nBrian Willows",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "git-mcp",
+        "purl": "pkg:apk/dhi/git-mcp"
+      },
+      "versions": [
+        "2026.7.10-r0",
+        "2026.7.10-r2",
+        "2026.7.10-r3",
+        "2026.8.18-r0",
+        "2026.8.31-r0",
+        "2026.8.31-r1",
+        "2026.8.31-r10",
+        "2026.8.31-r2",
+        "2026.8.31-r3",
+        "2026.8.31-r4",
+        "2026.8.31-r5",
+        "2026.8.31-r6",
+        "2026.8.31-r7",
+        "2026.8.31-r8",
+        "2026.8.31-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "datahub-ingestion",
+        "purl": "pkg:deb/dhi/datahub-ingestion"
+      },
+      "versions": [
+        "1.5.0.7-0",
+        "1.6.0.1-0",
+        "1.6.0.1-1",
+        "1.6.0.1-2",
+        "1.6.0.1-3",
+        "1.6.0.2-0",
+        "1.6.0.2-1",
+        "1.7.0.10-0",
+        "1.7.0.12-0",
+        "1.7.0.13-0",
+        "1.7.0.14-0",
+        "1.7.0.14-1",
+        "1.7.0.14-2",
+        "1.7.0.16-0",
+        "1.7.0.16-1",
+        "1.7.0.17-0",
+        "1.7.0.17-1",
+        "1.7.0.17-2",
+        "1.7.0.17-3",
+        "1.7.0.18-0",
+        "1.7.0.19-0",
+        "1.7.0.19-1",
+        "1.7.0.19-2",
+        "1.7.0.19-3",
+        "1.7.0.19-4",
+        "1.7.0.19-5",
+        "1.7.0.19-6",
+        "1.7.0.20-6",
+        "1.7.0.20-7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "datascience-notebook",
+        "purl": "pkg:deb/dhi/datascience-notebook"
+      },
+      "versions": [
+        "2026.07.28-0",
+        "2026.07.28-1",
+        "2026.07.28-10",
+        "2026.07.28-11",
+        "2026.07.28-12",
+        "2026.07.28-13",
+        "2026.07.28-14",
+        "2026.07.28-15",
+        "2026.07.28-16",
+        "2026.07.28-17",
+        "2026.07.28-18",
+        "2026.07.28-19",
+        "2026.07.28-2",
+        "2026.07.28-20",
+        "2026.07.28-3",
+        "2026.07.28-4",
+        "2026.07.28-5",
+        "2026.07.28-6",
+        "2026.07.28-7",
+        "2026.07.28-8",
+        "2026.07.28-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "git-mcp",
+        "purl": "pkg:deb/dhi/git-mcp"
+      },
+      "versions": [
+        "2026.7.10-0",
+        "2026.7.10-1",
+        "2026.7.10-2",
+        "2026.7.10-3",
+        "2026.7.10-4",
+        "2026.7.10-5",
+        "2026.8.18-0",
+        "2026.8.18-1",
+        "2026.8.18-2",
+        "2026.8.31-0",
+        "2026.8.31-1",
+        "2026.8.31-10",
+        "2026.8.31-11",
+        "2026.8.31-12",
+        "2026.8.31-13",
+        "2026.8.31-14",
+        "2026.8.31-15",
+        "2026.8.31-16",
+        "2026.8.31-17",
+        "2026.8.31-18",
+        "2026.8.31-19",
+        "2026.8.31-2",
+        "2026.8.31-20",
+        "2026.8.31-21",
+        "2026.8.31-22",
+        "2026.8.31-23",
+        "2026.8.31-24",
+        "2026.8.31-25",
+        "2026.8.31-26",
+        "2026.8.31-3",
+        "2026.8.31-4",
+        "2026.8.31-5",
+        "2026.8.31-6",
+        "2026.8.31-7",
+        "2026.8.31-8",
+        "2026.8.31-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "mlflow",
+        "purl": "pkg:deb/dhi/mlflow"
+      },
+      "versions": [
+        "3.15.1-0",
+        "3.15.2-0",
+        "3.15.2-1",
+        "3.15.2-2",
+        "3.16.0-0",
+        "3.16.1-0",
+        "3.16.1-1",
+        "3.16.1-2",
+        "3.16.1-3",
+        "3.16.1-4",
+        "3.16.1-5",
+        "3.16.1-6",
+        "3.17.0-0",
+        "3.17.0-1",
+        "3.17.1-0",
+        "3.17.2-0",
+        "3.17.2-1",
+        "3.17.2-2",
+        "3.17.2-3",
+        "3.17.2-4",
+        "3.17.2-5",
+        "3.17.2-6",
+        "3.18.0-0",
+        "3.18.0-1",
+        "3.18.0-2",
+        "3.18.0-3",
+        "3.18.0-4",
+        "3.18.0-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ijih-sqby-uocg-xbgt"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-m64x-33q8-m5h7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/gitpython-developers/GitPython/security/advisories/GHSA-m64x-33q8-m5h7"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/pull/2253"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/commit/8290c98d35465a38090cdcc1b17be69967092a15"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/gitpython-developers/GitPython/releases/tag/3.2.0"
+    }
+  ]
+}

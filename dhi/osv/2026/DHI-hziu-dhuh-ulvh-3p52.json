@@ -1,0 +1,234 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-hziu-dhuh-ulvh-3p52",
+  "modified": "2026-11-13T20:18:06Z",
+  "published": "2026-11-13T20:18:06Z",
+  "upstream": [
+    "GHSA-w8jc-g24h-crhw"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nGitPython has spent 2022-2026 rolling out two reusable guards method-by-method: `Git.check_unsafe_protocols(url)` (raises `UnsafeProtocolError` for `<transport>::` remote-helper URLs - CVE-2022-24439) and `Git.check_unsafe_options(...)` (raises `UnsafeOptionError` for denylisted option spellings - CVE-2023-40267, CVE-2026-42215, CVE-2026-67323). Three wrapper methods that build a `git` argv from caller-controlled values still have **neither**:\n\n1. **`Git.ls_remote`** (git/cmd.py:1128-1143) - checks options (:1139-1141) but forwards the URL positional unchecked; no `allow_unsafe_protocols` parameter exists. The same URL through `clone_from` raises `UnsafeProtocolError`.\n2. **`Repo.merge_base`** (git/repo/base.py:895-936) - forwards `**kwargs`/`*rev` to `self.git.merge_base` with no guard; guarded sibling `iter_commits` sits 12 lines up. Its exception handler additionally swallows every non-128 `GitCommandError` into `[]`, masking the injection.\n3. **`IndexFile.move`** (git/index/base.py:1092-1168) - forwards `**kwargs` to `git mv` twice (:1147, :1167); guarded sibling `remove()` is 23 lines above.\n\nVerified unfixed on `main @ a54d159` (2026-09-21), post-dating latest release 3.1.62 (2026-09-07) - all three sites re-verified today.\n\n### Impact\n\n**Site 1 (`ls_remote`)** - RCE conditional on the victim git transport policy. The common 'probe first, then clone' pattern (`Git(...).ls_remote(attacker_url)`) with an `ext::sh -c ...` URL executes arbitrary commands when the victim git permits the ext transport: dynamically verified with `protocol.ext.allow=always` (marker executed). git >= 2.38.1 stock config refuses the transport (`fatal: transport 'ext' not allowed`, rc 128) - GitPython adds no defense-in-depth and surfaces a bare `GitCommandError`. Environments on git < 2.38.1 are exposed with stock config - the exact population CVE-2022-24439 was scored against.\n\n**Sites 2/3** - latent argument-injection surface: caller kwargs flow 1:1 into the `git` argv before operands and `--` (cmd.py:1850 `opt_args + ext_args`), and `execute_kwargs` (incl. `shell=True`/`env` - the CVE-2023-40267 Windows mechanism) passes through unguarded. Today `git merge-base`/`git mv` expose no exec option, so we claim the missing-guard class (vendor-settled by CVE-2026-67323, which bundled archive/ls_remote/iter_commits/blame in one advisory), not direct RCE.\n\n### Dynamic verification (today; GitPython main @ a54d159, git 2.55.0, Linux)\n\n| # | Call | Result |\n|---|---|---|\n| T1 | `repo.git.ls_remote('ext::/tmp/gp_touch.sh')`, stock config | git refuses (rc 128); **no `UnsafeProtocolError` from GitPython** |\n| T1b | same + victim config `protocol.ext.allow=always` | **marker created - arbitrary command executed** |\n| T2 | `repo.git.ls_remote('.', upload_pack=...)` | blocked by cmd.py:1141 (options-side fixed - protocol-side is the residual gap) |\n| T3 | `repo.merge_base('main','side', upload_pack=...)` | **not blocked**; argv `git merge-base --upload-pack=... main side`; rc 129 silently converted to `[]` |\n| T4 | `repo.index.move(['f1','f2'], output=...)` | **not blocked**; option reaches `git mv` (rc 129) |\n\n### Coverage matrix (main @ a54d159)\n\n`check_unsafe_protocols`: 7 call sites (`_clone`, `archive`, `set_url`, `create`, `fetch`, `pull`, `push`) - none on `ls_remote`.\n`check_unsafe_options`: 24 call sites incl. `ls_remote`, `iter_commits`, `IndexFile.remove` - absent on `merge_base` and `move`.\n\n### Precedents (same repo, same guard family)\n\n- **CVE-2022-24439 / GHSA-hcpj-qp55-gfph** (critical): `check_unsafe_protocols` on the clone path - Site 1 is the same `ext::` primitive on a sibling API.\n- **CVE-2023-40267 / GHSA-pr76-5cm5-w9cj** (critical, 'incomplete fix for CVE-2022-24439'): `check_unsafe_options` - unguarded kwargs to argv treated as RCE (`shell=True` on Windows).\n- **CVE-2026-42215 / GHSA-rpm5-65cw-6hj4** (high, fixed 3.1.47): underscored-spelling bypass - rollout still active in 2026.\n- **CVE-2026-67323 / GHSA-956x-8gvw-wg5v** (high, 8.4, fixed 3.1.51): added `check_unsafe_options` to `archive`/`ls_remote`/`iter_commits`/`blame`; its PoC is literally `repo.git.ls_remote('.', upload_pack=...)`. Establishes that a wrapper missing the check is itself a vulnerability. This report is the residual gap of that rollout: `ls_remote` got options but not protocols; `merge_base`/`move` got neither.\n\n### Recommended fix (existing helpers, 1-3 lines per site)\n\n1. `Git.ls_remote`: `if not allow_unsafe_protocols: self.check_unsafe_protocols(args[0])` + new `allow_unsafe_protocols: bool = False` (the `_clone` pattern, base.py:1536-1538).\n2. `Repo.merge_base`: `check_unsafe_options(Git._option_candidates(list(rev), kwargs), unsafe_options=self.unsafe_git_revision_options)` (the `iter_commits` pattern); stop masking non-128 statuses.\n3. `IndexFile.move`: the `remove()` pattern with `unsafe_git_pathspec_from_file_options`.\n\nOne advisory, three affected methods, severity anchored on Site 1 - mirroring CVE-2026-67323's bundling.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "git-mcp",
+        "purl": "pkg:apk/dhi/git-mcp"
+      },
+      "versions": [
+        "2026.7.10-r0",
+        "2026.7.10-r2",
+        "2026.7.10-r3",
+        "2026.8.18-r0",
+        "2026.8.31-r0",
+        "2026.8.31-r1",
+        "2026.8.31-r10",
+        "2026.8.31-r2",
+        "2026.8.31-r3",
+        "2026.8.31-r4",
+        "2026.8.31-r5",
+        "2026.8.31-r6",
+        "2026.8.31-r7",
+        "2026.8.31-r8",
+        "2026.8.31-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "datahub-ingestion",
+        "purl": "pkg:deb/dhi/datahub-ingestion"
+      },
+      "versions": [
+        "1.5.0.7-0",
+        "1.6.0.1-0",
+        "1.6.0.1-1",
+        "1.6.0.1-2",
+        "1.6.0.1-3",
+        "1.6.0.2-0",
+        "1.6.0.2-1",
+        "1.7.0.10-0",
+        "1.7.0.12-0",
+        "1.7.0.13-0",
+        "1.7.0.14-0",
+        "1.7.0.14-1",
+        "1.7.0.14-2",
+        "1.7.0.16-0",
+        "1.7.0.16-1",
+        "1.7.0.17-0",
+        "1.7.0.17-1",
+        "1.7.0.17-2",
+        "1.7.0.17-3",
+        "1.7.0.18-0",
+        "1.7.0.19-0",
+        "1.7.0.19-1",
+        "1.7.0.19-2",
+        "1.7.0.19-3",
+        "1.7.0.19-4",
+        "1.7.0.19-5",
+        "1.7.0.19-6",
+        "1.7.0.20-6",
+        "1.7.0.20-7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "datascience-notebook",
+        "purl": "pkg:deb/dhi/datascience-notebook"
+      },
+      "versions": [
+        "2026.07.28-0",
+        "2026.07.28-1",
+        "2026.07.28-10",
+        "2026.07.28-11",
+        "2026.07.28-12",
+        "2026.07.28-13",
+        "2026.07.28-14",
+        "2026.07.28-15",
+        "2026.07.28-16",
+        "2026.07.28-17",
+        "2026.07.28-18",
+        "2026.07.28-19",
+        "2026.07.28-2",
+        "2026.07.28-20",
+        "2026.07.28-3",
+        "2026.07.28-4",
+        "2026.07.28-5",
+        "2026.07.28-6",
+        "2026.07.28-7",
+        "2026.07.28-8",
+        "2026.07.28-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "git-mcp",
+        "purl": "pkg:deb/dhi/git-mcp"
+      },
+      "versions": [
+        "2026.7.10-0",
+        "2026.7.10-1",
+        "2026.7.10-2",
+        "2026.7.10-3",
+        "2026.7.10-4",
+        "2026.7.10-5",
+        "2026.8.18-0",
+        "2026.8.18-1",
+        "2026.8.18-2",
+        "2026.8.31-0",
+        "2026.8.31-1",
+        "2026.8.31-10",
+        "2026.8.31-11",
+        "2026.8.31-12",
+        "2026.8.31-13",
+        "2026.8.31-14",
+        "2026.8.31-15",
+        "2026.8.31-16",
+        "2026.8.31-17",
+        "2026.8.31-18",
+        "2026.8.31-19",
+        "2026.8.31-2",
+        "2026.8.31-20",
+        "2026.8.31-21",
+        "2026.8.31-22",
+        "2026.8.31-23",
+        "2026.8.31-24",
+        "2026.8.31-25",
+        "2026.8.31-26",
+        "2026.8.31-3",
+        "2026.8.31-4",
+        "2026.8.31-5",
+        "2026.8.31-6",
+        "2026.8.31-7",
+        "2026.8.31-8",
+        "2026.8.31-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "mlflow",
+        "purl": "pkg:deb/dhi/mlflow"
+      },
+      "versions": [
+        "3.15.1-0",
+        "3.15.2-0",
+        "3.15.2-1",
+        "3.15.2-2",
+        "3.16.0-0",
+        "3.16.1-0",
+        "3.16.1-1",
+        "3.16.1-2",
+        "3.16.1-3",
+        "3.16.1-4",
+        "3.16.1-5",
+        "3.16.1-6",
+        "3.17.0-0",
+        "3.17.0-1",
+        "3.17.1-0",
+        "3.17.2-0",
+        "3.17.2-1",
+        "3.17.2-2",
+        "3.17.2-3",
+        "3.17.2-4",
+        "3.17.2-5",
+        "3.17.2-6",
+        "3.18.0-0",
+        "3.18.0-1",
+        "3.18.0-2",
+        "3.18.0-3",
+        "3.18.0-4",
+        "3.18.0-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-hziu-dhuh-ulvh-3p52"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-w8jc-g24h-crhw"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/gitpython-developers/GitPython/security/advisories/GHSA-w8jc-g24h-crhw"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/pull/2251"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/gitpython-developers/GitPython/commit/9ad28cc4c7176d22cd6181d69805058a719dd03b"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/gitpython-developers/GitPython/releases/tag/3.2.0"
+    }
+  ]
+}
