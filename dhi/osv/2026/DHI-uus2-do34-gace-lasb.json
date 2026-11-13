@@ -1,0 +1,181 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-uus2-do34-gace-lasb",
+  "modified": "2026-11-13T19:15:46Z",
+  "published": "2026-11-13T19:15:46Z",
+  "upstream": [
+    "GHSA-8mxv-9xhp-86h4"
+  ],
+  "summary": "## 1. Summary",
+  "details": "## 1. Summary\n\nThe S3 redirect callback strips `X-Amz-Security-Token` when a redirect changes scheme or host, but it does not strip IBM IAM bearer authorization or customer-provided encryption keys. Two independently validated paths remain:\n\n- a same-host HTTPS-to-HTTP redirect preserves `Authorization: Bearer ...` and exposes a reusable IBM IAM token to the plaintext network path;\n- a cross-origin redirect preserves SSE-C and copy-source SSE-C key headers.\n\nThe High rating is driven by the reusable IBM IAM bearer token. The SSE-C cross-origin disclosure is a secondary confidentiality issue. The meaningful threat is a trusted endpoint, gateway, or accelerator that emits an unsafe redirect, followed by an adjacent/on-path observer; describing the originally configured endpoint itself as the attacker would be weak because that endpoint already receives the request secrets.\n\n## 2. Affected Assets & Attack Surface\n\n- S3 redirect policy: `backend/s3/s3.go:1345-1379`\n- IBM IAM signer: `backend/s3/ibm_signer.go:28-40`\n- SSE-C key preparation: `backend/s3/s3.go:1821-1837`\n- Affected operations: requests carrying IBM IAM authorization, SSE-C keys, or copy-source SSE-C keys\n- Confirmed affected version: `<= v1.74.0-240-ga0c09f138`\n\n## 3. Technical Root Cause Analysis\n\n`s3CheckRedirect` applies a one-header denylist:\n\n```go\nif s3RedirectCrossesHost(req, via) {\n    req.Header.Del(\"X-Amz-Security-Token\")\n}\n```\n\nGo removes `Authorization` on some hostname changes, but preserves it for a same-host redirect and does not treat a scheme downgrade as sufficient reason to remove it. Go also has no generic knowledge that the SSE-C headers contain raw encryption keys. The rclone callback recognizes the STS token but not these additional origin-bound secrets.\n\n## 4. Proof-of-Concept & Evidence\n\nUsing the actual redirect callback:\n\n1. An HTTPS endpoint redirected to HTTP on the same hostname.\n2. The plaintext destination received the planted IBM bearer token and SSE-C headers.\n3. A separate redirect to an unrelated hostname caused Go to remove `Authorization`, but the destination still received both SSE-C key headers.\n4. In both cases, rclone removed the planted STS token, proving that the S3-specific callback executed while omitting the other secret classes.\n\nThe related [GHSA-gx4c-2hqx-cw2r](https://github.com/rclone/rclone/security/advisories/GHSA-gx4c-2hqx-cw2r) covers the STS downgrade path and confirms that rclone treats scheme changes as a credential boundary. It does not cover the IBM bearer or SSE-C variants retained here.\n\n## 5. Impact Assessment\n\nA captured IBM bearer token can authorize reads, writes, and deletes within its IAM scope. A disclosed SSE-C key can expose corresponding ciphertext available to the recipient; copy-source keys can expose protected source objects. The exact impact is limited by token policy and the attacker's access to encrypted objects.\n\n## 6. Remediation Guidance\n\n- Reject every HTTPS-to-HTTP redirect before replay.\n- Do not automatically follow secret-bearing cross-origin redirects.\n- On any scheme, host, or effective-port change, remove all authorization, cookies, session tokens, SSE-C fields, copy-source SSE-C fields, and provider-specific credentials.\n- Where redirects are required, allowlist exact destinations and reconstruct/re-sign a new request.\n- Add redirect tests for every secret header class and for scheme, hostname, subdomain, and port changes.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:A/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "telegraf-dev",
+        "purl": "pkg:apk/dhi/telegraf-dev"
+      },
+      "versions": [
+        "1.39.1-r0",
+        "1.39.2-r0",
+        "1.39.3-r0",
+        "1.39.3-r1",
+        "1.39.3-r2",
+        "1.39.3-r3",
+        "1.39.3-r4",
+        "1.39.3-r5",
+        "1.39.3-r6",
+        "1.40.0-r0",
+        "1.40.0-r1",
+        "1.40.1-r0",
+        "1.40.1-r1",
+        "1.40.1-r2",
+        "1.40.2-r0",
+        "1.40.2-r1",
+        "1.40.2-r2",
+        "1.40.2-r3",
+        "1.40.3-r0",
+        "1.40.3-r1",
+        "1.40.3-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "telegraf-fips-dev",
+        "purl": "pkg:apk/dhi/telegraf-fips-dev"
+      },
+      "versions": [
+        "1.39.1-r0",
+        "1.39.2-r0",
+        "1.39.3-r0",
+        "1.39.3-r1",
+        "1.39.3-r2",
+        "1.39.3-r3",
+        "1.39.3-r4",
+        "1.39.3-r5",
+        "1.39.3-r6",
+        "1.40.0-r0",
+        "1.40.0-r1",
+        "1.40.1-r0",
+        "1.40.1-r1",
+        "1.40.1-r2",
+        "1.40.2-r0",
+        "1.40.2-r1",
+        "1.40.2-r2",
+        "1.40.2-r3",
+        "1.40.3-r0",
+        "1.40.3-r1",
+        "1.40.3-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "telegraf-fips",
+        "purl": "pkg:apk/dhi/telegraf-fips"
+      },
+      "versions": [
+        "1.39.1-r0",
+        "1.39.2-r0",
+        "1.39.3-r0",
+        "1.39.3-r1",
+        "1.39.3-r2",
+        "1.39.3-r3",
+        "1.39.3-r4",
+        "1.39.3-r5",
+        "1.39.3-r6",
+        "1.40.0-r0",
+        "1.40.0-r1",
+        "1.40.1-r0",
+        "1.40.1-r1",
+        "1.40.1-r2",
+        "1.40.2-r0",
+        "1.40.2-r1",
+        "1.40.2-r2",
+        "1.40.2-r3",
+        "1.40.3-r0",
+        "1.40.3-r1",
+        "1.40.3-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "telegraf",
+        "purl": "pkg:apk/dhi/telegraf"
+      },
+      "versions": [
+        "1.39.1-r0",
+        "1.39.2-r0",
+        "1.39.3-r0",
+        "1.39.3-r1",
+        "1.39.3-r2",
+        "1.39.3-r3",
+        "1.39.3-r4",
+        "1.39.3-r5",
+        "1.39.3-r6",
+        "1.40.0-r0",
+        "1.40.0-r1",
+        "1.40.1-r0",
+        "1.40.1-r1",
+        "1.40.1-r2",
+        "1.40.2-r0",
+        "1.40.2-r1",
+        "1.40.2-r2",
+        "1.40.2-r3",
+        "1.40.3-r0",
+        "1.40.3-r1",
+        "1.40.3-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-uus2-do34-gace-lasb"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-8mxv-9xhp-86h4"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/rclone/rclone/security/advisories/GHSA-8mxv-9xhp-86h4"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/rclone/rclone/commit/9328763d1b73db71e97c0332b19e3747abeb9191"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/rclone/rclone/commit/7543a7a87884aca957590b20b0714078d51af87b"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/rclone/rclone/releases/tag/v1.75.0"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-6188"
+    }
+  ]
+}

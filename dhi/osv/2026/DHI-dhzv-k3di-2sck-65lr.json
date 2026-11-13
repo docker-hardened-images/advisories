@@ -1,0 +1,177 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-dhzv-k3di-2sck-65lr",
+  "modified": "2026-11-13T19:15:46Z",
+  "published": "2026-11-13T19:15:46Z",
+  "upstream": [
+    "GHSA-gwfq-86j8-7qhv"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nWhen an RC API call triggers a panic (recovered by the job runner), the full Go stack trace is included in the JSON error response. This leaks internal file paths, Go module versions, goroutine state, and memory addresses to the API caller.\n\n### Details\n\nThe panic recovery in `fs/rc/jobs/job.go:110-115`:\n\n```go\nfunc (j *Job) run(ctx context.Context, fn rc.Func, in rc.Params) {\n    defer func() {\n        if r := recover(); r != nil {\n            j.mu.Lock()\n            j.EndTime = time.Now()\n            j.Error = fmt.Sprintf(\"panic received: %v \\n%s\", r, string(debug.Stack()))\n            // ...\n        }\n    }()\n```\n\nThe full `debug.Stack()` output is placed into `j.Error`, which is then returned in the HTTP response JSON.\n\n### PoC\n\nTrigger a parse error by setting config path to a non-INI file, then calling dump:\n\n```bash\ncurl -s -X POST http://localhost:5572/config/setpath \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"path\":\"/etc/hostname\"}' \n\ncurl -s -X POST http://localhost:5572/config/dump\n```\n\nResponse includes:\n\n```json\n{\n  \"error\": \"panic received: fatal error: Failed to load config file \\\"/etc/hostname\\\": could not parse line: ... \\ngoroutine 9 [running]:\\nruntime/debug.Stack()\\n\\truntime/debug/stack.go:26 +0x64\\ngithub.com/rclone/rclone/fs/rc/jobs.(*Job).run.func1()\\n\\tgithub.com/rclone/rclone/fs/rc/jobs/job.go:112 +0x34\\n...\",\n  \"status\": 500\n}\n```\n\n**Disclosed information includes:**\n- Full filesystem paths (`github.com/rclone/rclone/fs/config/config.go:377`)\n- Go module versions (`github.com/go-chi/chi/v5@v5.2.5`)\n- Go runtime version (from binary)\n- Goroutine IDs and states\n- Memory addresses (ASLR leak)\n- File contents (first unparseable line of the target file)\n\n**Tested and confirmed on rclone v1.74.4.**\n\n### Impact\n\nInformation disclosure that aids exploitation of other vulnerabilities. Stack traces reveal internal architecture, dependency versions (useful for known-CVE targeting), and memory layout. The error message also leaks partial file contents (the first line that fails INI parsing), which can be used alongside the arbitrary file read finding as a complementary file read primitive for non-INI files.\n\n### Affected Versions\n\nAll versions with RC API support through at least v1.74.4.\n\n### Remediation\n\nReturn a generic error message to the API caller. Log the full stack trace server-side only. Strip `debug.Stack()` from HTTP responses.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:L/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "telegraf-dev",
+        "purl": "pkg:apk/dhi/telegraf-dev"
+      },
+      "versions": [
+        "1.39.1-r0",
+        "1.39.2-r0",
+        "1.39.3-r0",
+        "1.39.3-r1",
+        "1.39.3-r2",
+        "1.39.3-r3",
+        "1.39.3-r4",
+        "1.39.3-r5",
+        "1.39.3-r6",
+        "1.40.0-r0",
+        "1.40.0-r1",
+        "1.40.1-r0",
+        "1.40.1-r1",
+        "1.40.1-r2",
+        "1.40.2-r0",
+        "1.40.2-r1",
+        "1.40.2-r2",
+        "1.40.2-r3",
+        "1.40.3-r0",
+        "1.40.3-r1",
+        "1.40.3-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "telegraf-fips-dev",
+        "purl": "pkg:apk/dhi/telegraf-fips-dev"
+      },
+      "versions": [
+        "1.39.1-r0",
+        "1.39.2-r0",
+        "1.39.3-r0",
+        "1.39.3-r1",
+        "1.39.3-r2",
+        "1.39.3-r3",
+        "1.39.3-r4",
+        "1.39.3-r5",
+        "1.39.3-r6",
+        "1.40.0-r0",
+        "1.40.0-r1",
+        "1.40.1-r0",
+        "1.40.1-r1",
+        "1.40.1-r2",
+        "1.40.2-r0",
+        "1.40.2-r1",
+        "1.40.2-r2",
+        "1.40.2-r3",
+        "1.40.3-r0",
+        "1.40.3-r1",
+        "1.40.3-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "telegraf-fips",
+        "purl": "pkg:apk/dhi/telegraf-fips"
+      },
+      "versions": [
+        "1.39.1-r0",
+        "1.39.2-r0",
+        "1.39.3-r0",
+        "1.39.3-r1",
+        "1.39.3-r2",
+        "1.39.3-r3",
+        "1.39.3-r4",
+        "1.39.3-r5",
+        "1.39.3-r6",
+        "1.40.0-r0",
+        "1.40.0-r1",
+        "1.40.1-r0",
+        "1.40.1-r1",
+        "1.40.1-r2",
+        "1.40.2-r0",
+        "1.40.2-r1",
+        "1.40.2-r2",
+        "1.40.2-r3",
+        "1.40.3-r0",
+        "1.40.3-r1",
+        "1.40.3-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "telegraf",
+        "purl": "pkg:apk/dhi/telegraf"
+      },
+      "versions": [
+        "1.39.1-r0",
+        "1.39.2-r0",
+        "1.39.3-r0",
+        "1.39.3-r1",
+        "1.39.3-r2",
+        "1.39.3-r3",
+        "1.39.3-r4",
+        "1.39.3-r5",
+        "1.39.3-r6",
+        "1.40.0-r0",
+        "1.40.0-r1",
+        "1.40.1-r0",
+        "1.40.1-r1",
+        "1.40.1-r2",
+        "1.40.2-r0",
+        "1.40.2-r1",
+        "1.40.2-r2",
+        "1.40.2-r3",
+        "1.40.3-r0",
+        "1.40.3-r1",
+        "1.40.3-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-dhzv-k3di-2sck-65lr"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-gwfq-86j8-7qhv"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/rclone/rclone/security/advisories/GHSA-gwfq-86j8-7qhv"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/rclone/rclone/commit/ff43a1e3ae17627c80e523a0ca7445f96516d199"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/rclone/rclone/releases/tag/v1.75.0"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-6181"
+    }
+  ]
+}
