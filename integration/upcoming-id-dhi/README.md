@@ -101,7 +101,7 @@ Scanners may consume generated DHI VEX records for assessment context, but VEX
 consumption is not required to determine whether a finding exists.
 
 When a DHI package assessment has status `under_investigation`, Docker publishes
-an open-ended `ECOSYSTEM` range with the single event `introduced: "0"`, alongside
+an open-ended `ECOSYSTEM` range starting at the earliest known covered version, alongside
 known versions in `affected[].versions`. An OSV-only scanner therefore reports
 unlisted releases too, including newly published versions. This conservative
 coverage stays scoped to the same DHI package, lineage, and base release. The

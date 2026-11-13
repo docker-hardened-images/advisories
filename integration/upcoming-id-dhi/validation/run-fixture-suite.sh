@@ -926,8 +926,8 @@ for scenario in scenarios:
                         fail(where, "under_investigation OSV coverage must enumerate exact versions")
                     else:
                         ui_versions.update(str(version) for version in versions)
-                    if ranges != [{"type": "ECOSYSTEM", "events": [{"introduced": "0"}]}]:
-                        fail(where, "under_investigation packages require an open-ended range from 0")
+                    if ranges != [{"type": "ECOSYSTEM", "events": [{"introduced": installed_version}]}]:
+                        fail(where, "under_investigation fixture requires an open-ended range from its earliest covered version")
                 if ui_versions != {installed_version}:
                     fail(
                         where,

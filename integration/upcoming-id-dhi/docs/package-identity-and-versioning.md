@@ -157,7 +157,7 @@ versions remain useful alongside `ECOSYSTEM` ranges because consumers without
 the package manager's native comparator can still perform precise equality
 matching. For an `under_investigation` package assessment, generated DHI OSV
 retains known versions and adds an open-ended `ECOSYSTEM` range from
-`introduced: "0"`. Unlisted versions also match within the same package,
+the earliest known covered version. Unlisted versions at or above that boundary also match within the same package,
 lineage, and base release; no fixed boundary is claimed.
 
 APK affected entry:
@@ -201,7 +201,7 @@ Debian affected entry:
 ```
 
 Alpine `under_investigation` entry with known versions and an open-ended range
-covering all versions of this package within its lineage and base release:
+covering versions from the earliest known covered version within its lineage and base release:
 
 ```json
 {
@@ -210,7 +210,17 @@ covering all versions of this package within its lineage and base release:
     "name": "python-3.12",
     "purl": "pkg:apk/dhi/python-3.12"
   },
-  "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "0"}]}],
+  "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "3.12.13-r7"}]}],
   "versions": ["3.12.13-r7"]
 }
 ```
+
+For under-investigation packages, select the earliest known covered version
+using native APK/dpkg ordering, including epochs and revisions. This is a
+coverage boundary derived from the current snapshot, not proof of when the
+vulnerability was introduced or that earlier releases are safe. Earlier
+unlisted versions do not match this entry. A backfilled earlier covered version
+moves the lower bound on regeneration; future versions remain covered without
+waiting for enumeration. Comparator-equivalent spellings use a deterministic
+lexical tie-break. Versions rejected by the native parser fail publication rather than silently
+falling back to `0` or inventing a boundary.

@@ -143,8 +143,8 @@ The affected package PURL is versionless. Coverage can enumerate exact
 
 For an `under_investigation` package assessment, the generated affected entry
 retains known versions in `affected[].versions` and adds an `ECOSYSTEM` range
-with only `introduced: "0"`. It has no upper bound, so unlisted and future
-versions also match. Coverage stays scoped to the exact DHI package identity,
+starting at the earliest known covered version. It has no upper bound, so unlisted versions at or above the lower bound, including future
+releases, also match. Coverage stays scoped to the exact DHI package identity,
 lineage, and base release; it does not apply to other packages or releases.
 A scanner reports the OSV match even without consuming VEX. VEX adds unresolved
 assessment context only for its exact known products.
@@ -179,7 +179,7 @@ if it is listed in `affected[].versions` or falls within any
 `affected[].ranges`. If neither matches, interpret the result as no matching
 vulnerability. Do not fall back to current-production or upstream Alpine or
 Debian matching for that DHI package. Under-investigation package ranges
-cover unlisted versions within the same identity, lineage, and base release.
+cover unlisted versions at or above that boundary within the same identity, lineage, and base release.
 
 Before a production image cuts over, this repository provides local fixtures
 for the expected OSV and VEX shape. After cutover, scanners should use the
