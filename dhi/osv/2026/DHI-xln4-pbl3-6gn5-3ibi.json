@@ -1,0 +1,161 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-xln4-pbl3-6gn5-3ibi",
+  "modified": "2026-11-13T19:12:04Z",
+  "published": "2026-11-13T19:12:04Z",
+  "upstream": [
+    "CVE-2026-55874"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\nThe SeaweedFS S3 API gateway did not reject `..` path segments in the `X-Amz-Copy-Source` header used by `CopyObject` and `UploadPartCopy`. The request URL path was hardened against traversal in 4.30 (CVE-2026-54917), but the copy-source header was only checked for emptiness, so a `..` segment in the copy source survived into the server-side filer path and resolved into a different bucket.\n\n### Impact\nA confused-deputy authorization bypass that breaks bucket isolation. IAM evaluates the caller's policy against the bucket named in the request URL (the destination the caller owns), while the copy reads its source from the traversed target bucket. An identity scoped to a single bucket (`Read` + `Write` on one bucket it controls) can therefore read any object in any bucket on the instance and land the result in its own bucket.\n\nFor example, a caller authorized only for `bucket-a` issues a `CopyObject` into `bucket-a` with copy source `bucket-a/../<victim-bucket>/<key>`; the gateway reads `<victim-bucket>/<key>` and writes it to the attacker-controlled destination, from which the caller reads it normally. `UploadPartCopy` (CopyObjectPartHandler) is affected by the same vector.\n\n### Affected versions\nAll releases prior to 4.34. The 4.30 fix for CVE-2026-54917 hardened the request URL path but not the `X-Amz-Copy-Source` header.\n\n### Patched version\n4.34 and later.\n\n### Remediation\nUpgrade to 4.34 or later. The fix validates the copy-source bucket and object key with the same `IsValidBucketName` / `IsValidObjectKey` guards already applied to the request URL, rejecting traversal segments before the handler runs, and applies the same check to `UploadPartCopy`.\n\n### Workaround\nNo configuration workaround. For deployments that cannot upgrade immediately, front the gateway with a reverse proxy that rejects requests whose `X-Amz-Copy-Source` header contains `..`, `%2e%2e`, or backslash sequences.\n\n### References\n- Fix: https://github.com/seaweedfs/seaweedfs/pull/9929 (commit b44cf51fe931bd75aa4d37ae766bea90d7f85ccd)\n\n### Credit\nReported responsibly by [@47Cid](https://github.com/47Cid).",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "seaweedfs-cosi-driver-dev",
+        "purl": "pkg:apk/dhi/seaweedfs-cosi-driver-dev"
+      },
+      "versions": [
+        "0.3.1-r0",
+        "0.3.1-r1",
+        "0.3.1-r10",
+        "0.3.1-r11",
+        "0.3.1-r2",
+        "0.3.1-r3",
+        "0.3.1-r4",
+        "0.3.1-r5",
+        "0.3.1-r6",
+        "0.3.1-r7",
+        "0.3.1-r8",
+        "0.3.1-r9",
+        "0.4.0-r0",
+        "0.4.0-r1",
+        "0.5.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "seaweedfs-cosi-driver-fips-dev",
+        "purl": "pkg:apk/dhi/seaweedfs-cosi-driver-fips-dev"
+      },
+      "versions": [
+        "0.3.1-r0",
+        "0.3.1-r1",
+        "0.3.1-r10",
+        "0.3.1-r11",
+        "0.3.1-r2",
+        "0.3.1-r3",
+        "0.3.1-r4",
+        "0.3.1-r5",
+        "0.3.1-r6",
+        "0.3.1-r7",
+        "0.3.1-r8",
+        "0.3.1-r9",
+        "0.4.0-r0",
+        "0.4.0-r1",
+        "0.5.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "seaweedfs-cosi-driver-fips",
+        "purl": "pkg:apk/dhi/seaweedfs-cosi-driver-fips"
+      },
+      "versions": [
+        "0.3.1-r0",
+        "0.3.1-r1",
+        "0.3.1-r10",
+        "0.3.1-r11",
+        "0.3.1-r2",
+        "0.3.1-r3",
+        "0.3.1-r4",
+        "0.3.1-r5",
+        "0.3.1-r6",
+        "0.3.1-r7",
+        "0.3.1-r8",
+        "0.3.1-r9",
+        "0.4.0-r0",
+        "0.4.0-r1",
+        "0.5.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "seaweedfs-cosi-driver",
+        "purl": "pkg:apk/dhi/seaweedfs-cosi-driver"
+      },
+      "versions": [
+        "0.3.1-r0",
+        "0.3.1-r1",
+        "0.3.1-r10",
+        "0.3.1-r11",
+        "0.3.1-r2",
+        "0.3.1-r3",
+        "0.3.1-r4",
+        "0.3.1-r5",
+        "0.3.1-r6",
+        "0.3.1-r7",
+        "0.3.1-r8",
+        "0.3.1-r9",
+        "0.4.0-r0",
+        "0.4.0-r1",
+        "0.5.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-xln4-pbl3-6gn5-3ibi"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-56wq-x3wv-3ff4"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-55874"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/seaweedfs/seaweedfs/security/advisories/GHSA-56wq-x3wv-3ff4"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/seaweedfs/seaweedfs/pull/9929"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/seaweedfs/seaweedfs/commit/b44cf51fe931bd75aa4d37ae766bea90d7f85ccd"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/seaweedfs/seaweedfs/releases/tag/4.34"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-6327"
+    }
+  ]
+}
