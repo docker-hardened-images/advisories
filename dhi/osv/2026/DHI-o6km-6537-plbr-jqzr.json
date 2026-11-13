@@ -1,0 +1,122 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-o6km-6537-plbr-jqzr",
+  "modified": "2026-11-13T12:36:17Z",
+  "published": "2026-11-13T12:36:17Z",
+  "upstream": [
+    "GHSA-g5ff-637f-6q2m"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nAn authenticated LiteLLM proxy user could read arbitrary local files from the proxy runtime by sending a crafted `vertex_ai_credentials` value to `/utils/transform_request`. The request-body safety blocklist rejected `vertex_credentials` but missed its alias `vertex_ai_credentials`, which let the value reach the Vertex AI credential loader and trigger a file read that is sent to an attacker-controlled URL.\n\n## Impact\n\nA low-privilege authenticated user (only `internal_user_viewer`, obtainable through SSO login on many deployments) could read any file readable by the LiteLLM process. Reading files such as `/proc/self/environ` can disclose `LITELLM_MASTER_KEY` and provider API keys, so the impact can escalate to full proxy-admin control.\n\n## Remediation\n\nUpgrade to `1.95.0` or later. The fix adds the missing alias to the request-body blocklist, so no configuration change is needed once you upgrade. There is no reliable configuration workaround on affected versions.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database-1.94",
+        "purl": "pkg:apk/dhi/litellm-database-1.94"
+      },
+      "versions": [
+        "1.94.3-r0",
+        "1.94.3-r1",
+        "1.94.3-r3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "litellm-database",
+        "purl": "pkg:apk/dhi/litellm-database"
+      },
+      "versions": [
+        "1.94.0-r0",
+        "1.94.0-r1",
+        "1.94.1-r0",
+        "1.94.2-r0",
+        "1.94.2-r1",
+        "1.94.2-r2",
+        "1.94.3-r0",
+        "1.95.1-r0",
+        "1.96.2-r0",
+        "1.97.0-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database-1.94",
+        "purl": "pkg:deb/dhi/litellm-database-1.94"
+      },
+      "versions": [
+        "1.94.3-0",
+        "1.94.3-1",
+        "1.94.3-2",
+        "1.94.3-3",
+        "1.94.3-4",
+        "1.94.3-5",
+        "1.94.3-6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "litellm-database",
+        "purl": "pkg:deb/dhi/litellm-database"
+      },
+      "versions": [
+        "1.94.0-0",
+        "1.94.0-1",
+        "1.94.1-0",
+        "1.94.2-0",
+        "1.94.2-1",
+        "1.94.3-0",
+        "1.95.1-0",
+        "1.96.2-0",
+        "1.97.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-o6km-6537-plbr-jqzr"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-g5ff-637f-6q2m"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/BerriAI/litellm/security/advisories/GHSA-g5ff-637f-6q2m"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/BerriAI/litellm/pull/34189"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/BerriAI/litellm/commit/065faf6e695be64a1a367601271839914e4a6621"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/BerriAI/litellm/releases/tag/v1.95.0"
+    }
+  ]
+}
