@@ -155,9 +155,10 @@ pkg:apk/dhi/coreutils@9.11-r0?distro=dhi-3.24
 `affected[].versions` and `affected[].ranges` have union semantics. Exact
 versions remain useful alongside `ECOSYSTEM` ranges because consumers without
 the package manager's native comparator can still perform precise equality
-matching. For an `under_investigation` assessment, generated DHI OSV uses
-`affected[].versions` and omits `affected[].ranges` because the assessment does
-not define an affected interval.
+matching. For an `under_investigation` package assessment, generated DHI OSV
+retains known versions and adds an open-ended `ECOSYSTEM` range from
+`introduced: "0"`. Unlisted versions also match within the same package,
+lineage, and base release; no fixed boundary is claimed.
 
 APK affected entry:
 
@@ -199,8 +200,8 @@ Debian affected entry:
 }
 ```
 
-Alpine `under_investigation` entry with enumerated versions and no
-`affected[].ranges`:
+Alpine `under_investigation` entry with known versions and an open-ended range
+covering all versions of this package within its lineage and base release:
 
 ```json
 {
@@ -209,6 +210,7 @@ Alpine `under_investigation` entry with enumerated versions and no
     "name": "python-3.12",
     "purl": "pkg:apk/dhi/python-3.12"
   },
+  "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "0"}]}],
   "versions": ["3.12.13-r7"]
 }
 ```

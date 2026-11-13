@@ -100,11 +100,12 @@ a scanner finding; a fully `not_affected` advisory can therefore be VEX-only.
 Scanners may consume generated DHI VEX records for assessment context, but VEX
 consumption is not required to determine whether a finding exists.
 
-When a DHI assessment has status `under_investigation`, Docker publishes an OSV
-affected entry listing the exact package versions covered by the assessment in
-`affected[].versions`. An OSV-only scanner reports each listed version as
-affected. The paired VEX record conveys the `under_investigation` status and
-any available notes.
+When a DHI package assessment has status `under_investigation`, Docker publishes
+an open-ended `ECOSYSTEM` range with the single event `introduced: "0"`, alongside
+known versions in `affected[].versions`. An OSV-only scanner therefore reports
+unlisted releases too, including newly published versions. This conservative
+coverage stays scoped to the same DHI package, lineage, and base release. The
+paired VEX record conveys the unresolved status for its exact known products.
 
 A DHI package PURL is scanner-observed package identity, not proof of DHI
 product membership by itself.
@@ -114,10 +115,10 @@ package version against the generated DHI OSV entry. A version is affected when
 it is explicitly listed in `affected[].versions` or falls within any
 `affected[].ranges`. If neither matches, the result is no matching
 vulnerability; do not fall back to current-production or upstream distribution
-matching for that DHI package. For an `under_investigation` assessment, the OSV
-affected entry has no `affected[].ranges`, so a package version matches only if
-it appears in `affected[].versions`; other unlisted versions do not match the
-entry.
+matching for that DHI package. Under-investigation package coverage has no
+upper bound and makes no claim that a fix exists. Resolution replaces it with
+assessed affected/fixed ranges or removes positive coverage for `not_affected`.
+Exact image owners continue to use version enumeration without package ranges.
 
 > **Derived images:** Treat a package as covered by generated DHI advisory data
 > when chain-ID/layer attribution places it in the DHI base, or when its exact

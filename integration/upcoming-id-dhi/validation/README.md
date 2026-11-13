@@ -92,12 +92,12 @@ Static validation also checks the public package identity:
   OpenVEX subset rule, with the same release.
 - No fixture PURL may carry `os_*` qualifiers.
 
-The affected/fixed scenarios also declare `range_only_matching_versions`:
+The affected, fixed, and under-investigation scenarios declare `range_only_matching_versions`:
 versions inside the fixture's affected range but absent from its explicit
 `versions` list. The harness requires these to produce findings through the
 same matching function used for the installed version. Together with the
-exact-version-only `under_investigation` case, these probes exercise both
-branches of the union. They are synthetic matching probes, not additional
+explicit installed-version checks, these probes exercise both branches
+of the union, including an unlisted future under-investigation release. They are synthetic matching probes, not additional
 installed packages or claims about published releases.
 
 Embedded language package PURLs, such as `pkg:pypi/...` or `pkg:npm/...`, are
@@ -160,8 +160,8 @@ data is available through the production advisory pipeline.
 - Both `affected` and `under_investigation` assessments produce active
   generated DHI OSV findings. The `under_investigation` fixture matches
   the exact version covered by the current assessment before VEX is applied.
-  Because the entry has no `affected[].ranges`, an unlisted version does not
-  match; VEX supplies the unresolved assessment context.
+  Its open-ended `ECOSYSTEM` range also matches an unlisted future release
+  without VEX; VEX supplies unresolved context for exact known products.
 - `affected` and `fixed` fixtures retain native ranges and also enumerate
   affected versions. Each includes a positive range-matching probe absent
   from the enumerated versions, so a versions-only matcher fails validation.

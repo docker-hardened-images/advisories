@@ -58,8 +58,8 @@ flowchart TD
   F -->|not_affected or fixed| I[Report OSV/VEX state mismatch for generated data]
 ```
 
-For an `under_investigation` assessment, generated DHI OSV lists the exact
-package versions covered by the current assessment. The VEX branch labels an
+For an `under_investigation` assessment, generated DHI OSV publishes an open-ended
+package range alongside known versions, so unlisted releases also match. The VEX branch labels an
 existing OSV finding as unresolved; it does not create the finding.
 
 ## Mixed Production Cutover
