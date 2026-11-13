@@ -1,0 +1,139 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-dhpj-yk4p-dvvv-6eus",
+  "modified": "2026-11-13T17:09:32Z",
+  "published": "2026-11-13T17:09:32Z",
+  "upstream": [
+    "GHSA-jggr-w7fw-pc2j"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\n`fast-copy` traverses values recursively with no bound on depth. Copying a sufficiently deeply-nested value exhausts the JavaScript call stack and throws a native `RangeError: Maximum call stack size exceeded` from inside the library.\n\n## Details\n\nBoth `copy` and `copyStrict` recurse once per level of nesting. The value does not need to be circular (circular references were already handled correctly via an internal cache) and it does not need to be large. A plain object nested a few thousand levels deep is only a few\nkilobytes of equivalent JSON.\n\nMeasured depths at which copying begins to fail (Node.js, V8; the exact ceiling varies with JIT state and the stack available to the environment):\n\n| Call                 | Last depth that copies successfully |\n| -------------------- | ----------------------------------- |\n| `copy(object)`       | 2811                                |\n| `copy(array)`        | 3983                                |\n| `copyStrict(object)` | 1874                                |\n| `copyStrict(array)`  | 1874                                |\n\n`JSON.parse` is iterative and parses deeply-nested input without difficulty, so a payload that deserializes cleanly can fail in a subsequent `copy` call.\n\n## Impact\n\nThe failure is a synchronous, catchable `RangeError` confined to the `copy` call that received the value. There are no memory safety concerns, no data exposure, and no effect on state outside that call. In a typical server the result is a failed request rather than a failed process.\n\nApplications that call `copy` on externally-supplied data, such as request bodies, cached payloads, merged configuration, etc., do not expect a clone helper to throw may surface this as an unhandled error.\n\n## Patches\n\nFixed in 4.1.0, and backported to 3.1.0 and 2.2.0 so that every major line has a patch available without requiring a breaking upgrade.\n\nTraversal is now bounded by a `maxDepth` option, defaulting to `1000`, which sits below the native limit in standard environments. Exceeding it throws `MaxDepthExceededError`, which carries the limit that was exceeded and extends `RangeError` so existing handling continues to match.\n\nThe limit is configurable for consumers with legitimately deep data. On `3.x` and `4.x` it is set when creating a copier:\n\n```js\nimport { createCopier } from 'fast-copy';\n\nexport const copy = createCopier({ maxDepth: 5000 });\n```\n\nOn `2.x` it is passed per call, and the error is a property of the exported function rather than a named export:\n\n```js\nimport copy from 'fast-copy';\n\ncopy(value, { maxDepth: 5000 });\n// detection: error instanceof copy.MaxDepthExceededError\n```\n\nIn legacy environments without `Object.setPrototypeOf`, `instanceof MaxDepthExceededError` cannot be supported; check `error.name === 'MaxDepthExceededError'` or `error instanceof RangeError` instead.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "supabase-storage",
+        "purl": "pkg:apk/dhi/supabase-storage"
+      },
+      "versions": [
+        "1.74.1-r0",
+        "1.74.1-r1",
+        "1.74.1-r2",
+        "1.74.1-r3",
+        "1.84.25-r0",
+        "1.84.28-r0",
+        "1.84.32-r0",
+        "1.84.33-r0",
+        "1.84.36-r0",
+        "1.85.0-r0",
+        "1.89.12-r0",
+        "1.89.12-r1",
+        "1.89.12-r2",
+        "1.89.13-r0",
+        "1.89.13-r1",
+        "1.90.0-r0",
+        "1.90.1-r0",
+        "1.90.2-r0",
+        "1.91.0-r0",
+        "1.92.0-r0",
+        "1.94.0-r0",
+        "1.94.0-r1",
+        "1.94.2-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "supabase-storage",
+        "purl": "pkg:deb/dhi/supabase-storage"
+      },
+      "versions": [
+        "1.74.1-0",
+        "1.79.30-0",
+        "1.79.30-1",
+        "1.79.30-2",
+        "1.84.25-0",
+        "1.84.28-0",
+        "1.84.32-0",
+        "1.84.33-0",
+        "1.84.36-0",
+        "1.84.36-1",
+        "1.85.0-0",
+        "1.89.12-0",
+        "1.89.12-1",
+        "1.89.12-2",
+        "1.89.13-0",
+        "1.89.13-1",
+        "1.90.0-0",
+        "1.90.1-0",
+        "1.90.2-0",
+        "1.91.0-0",
+        "1.92.0-0",
+        "1.94.0-0",
+        "1.94.2-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-dhpj-yk4p-dvvv-6eus"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-jggr-w7fw-pc2j"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/planttheidea/fast-copy/security/advisories/GHSA-jggr-w7fw-pc2j"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/planttheidea/fast-copy/pull/139"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/planttheidea/fast-copy/pull/138"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/planttheidea/fast-copy/pull/137"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/planttheidea/fast-copy/commit/dedf465e5329fbd149f13b53521af962d16ff8df"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/planttheidea/fast-copy/commit/caa7caace65767dfe252f0dc5115d82c99ca16b9"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/planttheidea/fast-copy/commit/359c00884ae8ae31f10925fd0e2fc66661db6cef"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/planttheidea/fast-copy/releases/tag/v4.1.0"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/planttheidea/fast-copy/releases/tag/v3.1.0"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/planttheidea/fast-copy/releases/tag/v2.2.0"
+    }
+  ]
+}
