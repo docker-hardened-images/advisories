@@ -1,0 +1,87 @@
+{
+  "modified": "2026-11-12T10:01:23Z",
+  "published": "2026-11-12T10:01:23Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-cp28-5662-543f",
+  "details": "## Summary\r\n\r\nThere is a vulnerability in Traefik's request path sanitization. The `sanitizePath` entry point option, enabled by default, resolves the `..` and `.` dot-segments and removes the duplicate slashes from the request path before routing, but it leaves a dot-segment carrying a path parameter, such as `/..;x/`, untouched. Traefik matches its routers and applies its middlewares on this unresolved path and forwards it unchanged. When a backend that strips path parameters (Servlet containers, Spring, ...) is shared between an unauthenticated router and a router protected by an authentication or authorization middleware, an unauthenticated attacker can send a single request such as `/public/..;x/admin` to reach the protected resources and bypass the middleware.\r\n\r\nTraefik v2.11.62, v3.7.18 and v3.8.0-rc.2 resolve the `..`, `.` and empty segments carrying path parameters before the dot-segment removal, when `sanitizePath` is enabled (the default). Traefik v3.0 to v3.6 are also affected; these lines are end of life and will not receive a patch, the remedy is to upgrade to a patched release.\r\n\r\n## Patches\r\n\r\n- https://github.com/traefik/traefik/releases/tag/v2.11.62\r\n- https://github.com/traefik/traefik/releases/tag/v3.7.18\r\n- https://github.com/traefik/traefik/releases/tag/v3.8.0-rc.2\r\n\r\n## For more information\r\n\r\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.11.62"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/traefik/traefik/v2"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.7.18"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/traefik/traefik/v3"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.8.0-rc.1"
+            },
+            {
+              "fixed": "3.8.0-rc.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/traefik/traefik/v3"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-cp28-5662-543f"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "modified": "2026-11-12T10:08:35Z",
+  "published": "2026-11-12T10:01:22Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-ccgh-9g52-6vwg",
+  "details": "## Summary\r\n\r\nThere is a high severity vulnerability in Traefik's Kubernetes Ingress NGINX provider when several Ingresses share a host configured for client certificate authentication with the `nginx.ingress.kubernetes.io/auth-tls-secret` annotation. Since v3.7.15 the client authentication applies to the whole host and the TLS handshake uses the settings of the first Ingress declaring it, but the `Ssl-Client-*` headers were still built from the annotations of each Ingress: an Ingress with `auth-tls-verify-client: on` sharing a host with an Ingress using `optional_no_ca` forwarded `Ssl-Client-Verify: SUCCESS`, together with the subject and issuer chosen by the client, for a certificate that was never verified, and an Ingress without its own `auth-tls-secret` or without `auth-tls-pass-certificate-to-upstream` had no middleware handling these headers, so the values sent by the client reached the backend. An unauthenticated remote client can therefore present a forged client identity to a backend that trusts the proxy's verification result. \r\n\r\nThe issue was introduced in v3.7.15; earlier versions are not affected, and Traefik v2 is not affected since it does not include the Kubernetes Ingress NGINX provider.\r\n\r\n## Patches\r\n\r\n- https://github.com/traefik/traefik/releases/tag/v3.7.18\r\n- https://github.com/traefik/traefik/releases/tag/v3.8.0-rc.2\r\n\r\n## For more information\r\n\r\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.7.15"
+            },
+            {
+              "fixed": "3.7.18"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/traefik/traefik/v3"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.8.0-rc.1"
+            },
+            {
+              "fixed": "3.8.0-rc.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/traefik/traefik/v3"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-ccgh-9g52-6vwg"
+    }
+  ]
+}

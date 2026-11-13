@@ -1,0 +1,87 @@
+{
+  "modified": "2026-11-12T10:01:24Z",
+  "published": "2026-11-12T10:01:24Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-p956-6gvv-mxqp",
+  "details": "## Summary\n\nThere is a high severity authentication vulnerability in Traefik's ForwardAuth middleware when the authentication server uses a connection-bound scheme such as NTLM or SPNEGO/Kerberos \"Negotiate\". The fix for GHSA-hrpp-p4fc-wwf8 sends the subrequests of a client that presents such a credential on a dedicated connection to the authentication server, but it only detects the credential in the `Authorization` header. ForwardAuth also forwards the `Proxy-Authorization` header, and a credential sent in that header still goes through the connection pool shared by every client. An unauthenticated client can then reuse an authentication-server connection already authenticated by another user, receive that user's identity through `authResponseHeaders`, and access the backend as that user. The patched versions apply the same isolation to `Proxy-Authorization`.\n\nTraefik v3.0 through v3.6 are end-of-life and are also affected; they will not receive a fix on their own line. As a workaround, set `authRequestHeaders` to a list that does not include `Proxy-Authorization`.\n\n## Patches\n\n- https://github.com/traefik/traefik/releases/tag/v2.11.62\n- https://github.com/traefik/traefik/releases/tag/v3.7.18\n- https://github.com/traefik/traefik/releases/tag/v3.8.0-rc.2\n\n## For more information\n\nIf you have any questions or comments about this advisory, please [open an issue](https://github.com/traefik/traefik/issues).\n\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.11.62"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/traefik/traefik/v2"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.7.18"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/traefik/traefik/v3"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "traefik",
+        "purl": "pkg:dhi/traefik"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.8.0-rc.1"
+            },
+            {
+              "fixed": "3.8.0-rc.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/traefik/traefik/v3"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/traefik/traefik/security/advisories/GHSA-p956-6gvv-mxqp"
+    }
+  ]
+}
