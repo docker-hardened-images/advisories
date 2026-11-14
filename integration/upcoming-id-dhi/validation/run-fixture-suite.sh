@@ -926,8 +926,8 @@ for scenario in scenarios:
                         fail(where, "under_investigation OSV coverage must enumerate exact versions")
                     else:
                         ui_versions.update(str(version) for version in versions)
-                    if isinstance(ranges, list) and ranges:
-                        fail(where, "under_investigation OSV coverage must omit affected ranges")
+                    if ranges != [{"type": "ECOSYSTEM", "events": [{"introduced": installed_version}]}]:
+                        fail(where, "under_investigation fixture requires an open-ended range from its earliest covered version")
                 if ui_versions != {installed_version}:
                     fail(
                         where,
@@ -952,8 +952,8 @@ for scenario in scenarios:
                                 )
 
             range_only_versions = expected_behavior.get("range_only_matching_versions", [])
-            if expected_status in {"affected", "fixed"} and not range_only_versions:
-                fail(where, "affected/fixed fixtures must include range_only_matching_versions")
+            if expected_status in {"affected", "fixed", "under_investigation"} and not range_only_versions:
+                fail(where, "positive fixtures must include range_only_matching_versions")
             if not isinstance(range_only_versions, list) or not all(
                 isinstance(version, str) and version for version in range_only_versions
             ):
@@ -978,12 +978,6 @@ for scenario in scenarios:
                         fail(where, f"range-only test version must produce an OSV finding: {version}")
 
             non_matching_versions = expected_behavior.get("non_matching_versions", [])
-            if expected_status == "under_investigation" and not non_matching_versions:
-                fail(
-                    where,
-                    "under_investigation expected_behavior.non_matching_versions "
-                    "must include at least one unlisted negative test version",
-                )
             if not isinstance(non_matching_versions, list) or not all(
                 isinstance(version, str) and version for version in non_matching_versions
             ):
