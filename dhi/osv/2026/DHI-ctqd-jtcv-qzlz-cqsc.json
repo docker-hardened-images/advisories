@@ -1,0 +1,167 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ctqd-jtcv-qzlz-cqsc",
+  "modified": "2026-11-15T18:42:21Z",
+  "published": "2026-11-15T18:42:21Z",
+  "upstream": [
+    "GHSA-7ww5-4wqc-m92c"
+  ],
+  "summary": "# /sys/devices/virtual/powercap accessible by default to containers",
+  "details": "# /sys/devices/virtual/powercap accessible by default to containers\n\nIntel's RAPL (Running Average Power Limit) feature, introduced by the Sandy Bridge microarchitecture, provides software insights into hardware energy consumption. To facilitate this, Intel introduced the powercap framework in Linux kernel 3.13, which reads values via relevant MSRs (model specific registers) and provides unprivileged userspace access via `sysfs`. As RAPL is an interface to access a hardware feature, it is only available when running on bare metal with the module compiled into the kernel.\n\nBy 2019, it was realized that in some cases unprivileged access to RAPL readings could be exploited as a power-based side-channel against security features including AES-NI (potentially inside a SGX enclave) and KASLR (kernel address space layout randomization). Also known as the [PLATYPUS attack](https://platypusattack.com/), Intel assigned [CVE-2020-8694](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-8694) and [CVE-2020-8695](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-8695), and AMD assigned [CVE-2020-12912](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-12912).\n\nSeveral mitigations were applied; Intel reduced the sampling resolution via a microcode update, and the Linux kernel [prevents access by non-root users](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=949dd0104c496fa7c14991a23c03c62e44637e71) since 5.10. However, this kernel-based mitigation does not apply to many container-based scenarios:\n* Unless using user namespaces, root inside a container has the same level of privilege as root outside the container, but with a slightly more narrow view of the system\n* `sysfs` is mounted inside containers read-only; however only read access is needed to carry out this attack on an unpatched CPU\n\nWhile this is not a direct vulnerability in container runtimes, defense in depth and safe defaults are valuable and preferred, especially as this poses a risk to multi-tenant container environments. This is provided by masking `/sys/devices/virtual/powercap` in the default mount configuration, and adding an additional set of rules to deny it in the default AppArmor profile.\n\nWhile `sysfs` is not the only way to read from the RAPL subsystem, other ways of accessing it require additional capabilities such as `CAP_SYS_RAWIO` which is not available to containers by default, or `perf` paranoia level less than 1, which is a non-default kernel tunable.\n\n## References\n\n* https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-8694\n* https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-8695\n* https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-12912\n* https://platypusattack.com/\n* https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=949dd0104c496fa7c14991a23c03c62e44637e71\n* https://web.eece.maine.edu/~vweaver/projects/rapl/",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "devspace-dev",
+        "purl": "pkg:apk/dhi/devspace-dev"
+      },
+      "versions": [
+        "6.3.21-r0",
+        "6.3.21-r1",
+        "6.3.21-r10",
+        "6.3.21-r11",
+        "6.3.21-r12",
+        "6.3.21-r13",
+        "6.3.21-r15",
+        "6.3.21-r16",
+        "6.3.21-r17",
+        "6.3.21-r18",
+        "6.3.21-r19",
+        "6.3.21-r2",
+        "6.3.21-r20",
+        "6.3.21-r21",
+        "6.3.21-r3",
+        "6.3.21-r5",
+        "6.3.21-r6",
+        "6.3.21-r7",
+        "6.3.21-r8",
+        "6.3.21-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "devspace-fips-dev",
+        "purl": "pkg:apk/dhi/devspace-fips-dev"
+      },
+      "versions": [
+        "6.3.21-r0",
+        "6.3.21-r1",
+        "6.3.21-r10",
+        "6.3.21-r11",
+        "6.3.21-r12",
+        "6.3.21-r13",
+        "6.3.21-r15",
+        "6.3.21-r16",
+        "6.3.21-r17",
+        "6.3.21-r18",
+        "6.3.21-r19",
+        "6.3.21-r2",
+        "6.3.21-r20",
+        "6.3.21-r21",
+        "6.3.21-r3",
+        "6.3.21-r5",
+        "6.3.21-r6",
+        "6.3.21-r7",
+        "6.3.21-r8",
+        "6.3.21-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "devspace-fips",
+        "purl": "pkg:apk/dhi/devspace-fips"
+      },
+      "versions": [
+        "6.3.21-r0",
+        "6.3.21-r1",
+        "6.3.21-r10",
+        "6.3.21-r11",
+        "6.3.21-r12",
+        "6.3.21-r13",
+        "6.3.21-r15",
+        "6.3.21-r16",
+        "6.3.21-r17",
+        "6.3.21-r18",
+        "6.3.21-r19",
+        "6.3.21-r2",
+        "6.3.21-r20",
+        "6.3.21-r21",
+        "6.3.21-r3",
+        "6.3.21-r5",
+        "6.3.21-r6",
+        "6.3.21-r7",
+        "6.3.21-r8",
+        "6.3.21-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "devspace",
+        "purl": "pkg:apk/dhi/devspace"
+      },
+      "versions": [
+        "6.3.21-r0",
+        "6.3.21-r1",
+        "6.3.21-r10",
+        "6.3.21-r11",
+        "6.3.21-r12",
+        "6.3.21-r13",
+        "6.3.21-r15",
+        "6.3.21-r16",
+        "6.3.21-r17",
+        "6.3.21-r18",
+        "6.3.21-r19",
+        "6.3.21-r2",
+        "6.3.21-r20",
+        "6.3.21-r21",
+        "6.3.21-r3",
+        "6.3.21-r5",
+        "6.3.21-r6",
+        "6.3.21-r7",
+        "6.3.21-r8",
+        "6.3.21-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ctqd-jtcv-qzlz-cqsc"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-7ww5-4wqc-m92c"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/containerd/containerd/security/advisories/GHSA-7ww5-4wqc-m92c"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/containerd/containerd/commit/746b910f05855c8bfdb4415a1c0f958b234910e5"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/containerd/containerd/commit/67d356cb3095f3e8f8ad7d36f9a733fea1e7e28c"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2023-2412"
+    }
+  ]
+}
