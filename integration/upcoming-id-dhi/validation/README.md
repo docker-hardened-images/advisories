@@ -81,6 +81,14 @@ versions, provide native OSV `ECOSYSTEM` ranges, or provide both. Static
 validation treats those fields as a union, following the
 [OSV affected-version algorithm](https://ossf.github.io/osv-schema/#affected-fields).
 
+The static harness uses a fixture-scoped tokenizer, not native APK or dpkg
+comparators. Its simple numeric/revision probes demonstrate union matching and
+range boundaries for these synthetic examples only. It does not validate
+prerelease, epoch or Debian `~` ordering and must not be used as a native-version
+conformance test. Native ordering is covered by the companion renderer's tests;
+production scanner integrations must use the package manager's native ordering.
+No additional Debian ordering conformance is claimed by this static suite.
+
 Static validation also checks the public package identity:
 - OSV package PURLs carry no qualifiers. They sit under a
   `Docker Hardened Images:Alpine:<release>` or
@@ -99,6 +107,14 @@ same matching function used for the installed version. Together with the
 explicit installed-version checks, these probes exercise both branches
 of the union, including an unlisted future under-investigation release. They are synthetic matching probes, not additional
 installed packages or claims about published releases.
+
+The current under-investigation fixture intentionally lists only its installed
+version. The harness therefore checks that its `introduced` boundary equals
+that version and that no other version is listed. These are singleton-fixture
+assertions, not the renderer's general rule: production entries may enumerate
+multiple versions, and their lower bound is the minimum under native ordering.
+A multi-version fixture would require corresponding harness changes; a lexical
+minimum would not be a valid substitute for the native comparison.
 
 Embedded language package PURLs, such as `pkg:pypi/...` or `pkg:npm/...`, are
 provenance in fixture metadata and the example SBOM parent-child relationship.

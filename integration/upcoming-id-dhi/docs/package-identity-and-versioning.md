@@ -218,8 +218,8 @@ covering versions from the earliest known covered version within its lineage and
 ### Separate Python version lines already have separate package identities
 
 The published [OSV record for `DHI-3czz-efwu-b2ii-jquo`](https://github.com/docker-hardened-images/advisories/blob/d1572e5f00b10cc8204dd9e67ebd43057940a129/dhi/osv/2026/DHI-3czz-efwu-b2ii-jquo.json)
-(`PSF-2018-8`), pinned to commit `d1572e5f`, contains two separate
-`affected[]` entries in `Docker Hardened Images:Alpine:3.23`:
+(`PSF-2018-8`), pinned to commit `d1572e5f`, contains six Python package
+entries. Two examples in `Docker Hardened Images:Alpine:3.23` are:
 
 | Package PURL | Enumerated versions in this snapshot |
 | --- | ---: |

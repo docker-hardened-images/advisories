@@ -918,6 +918,9 @@ for scenario in scenarios:
 
             expected_status = expected_behavior.get("vex_status")
             if expected_status == "under_investigation":
+                # This synthetic scenario intentionally covers one listed version.
+                # Production can list many versions and uses their native minimum;
+                # these singleton assertions are not a general renderer validator.
                 ui_versions: set[str] = set()
                 for entry in matching_affected_entries:
                     versions = entry.get("versions", [])

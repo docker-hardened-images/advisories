@@ -109,11 +109,25 @@ VEX record, but scanners are not required to consume it to determine whether a
 finding exists. In particular, an `under_investigation` result is discoverable
 from OSV alone; VEX explains why that result is unresolved.
 
-When a scanner does consume VEX, every generated OSV affected package is
-expected to have a matching product in the paired VEX document for the same
-package, release, and exact version. A missing document or product match is a
-feed integrity error, not a normal no-context path. Continue to report the OSV
-finding and surface the integrity error; do not suppress the finding.
+When a scanner does consume VEX, the paired document is expected to exist.
+A missing paired document is a feed-integrity error, including for range-only
+OSV matches. Continue to report the OSV finding and surface the error.
+
+Within an available paired document, distinguish these cases for the matching
+OSV package and release:
+
+- A version explicitly listed in `affected[].versions` is expected to have a
+  matching exact-version VEX product. If that product is missing, report the
+  OSV finding and a feed-integrity error.
+- A version absent from `affected[].versions` but matched by `affected[].ranges`
+  may have no corresponding VEX product yet. This is an expected range-only
+  finding, not a feed-integrity error. Report the OSV finding without exact-product
+  VEX context; do not infer a VEX status from another version's statement.
+
+If an exact-product statement is present, apply its context as described above,
+including reporting contradictory `fixed` or `not_affected` status as an
+OSV/VEX state mismatch. Never suppress an OSV finding because VEX context is
+missing.
 
 Scanners should not need to query upstream Alpine or Debian OSV feeds for a
 DHI-owned base-layer package after generated DHI OSV data exists. When scanning

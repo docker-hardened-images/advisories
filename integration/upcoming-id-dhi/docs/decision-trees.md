@@ -50,8 +50,12 @@ to obtain a candidate digest from provenance and verify the DHI rootfs prefix.
 flowchart TD
   A[Finding matched from DHI OSV] --> B{Consume paired VEX context?}
   B -->|No| C[Report the OSV finding]
-  B -->|Yes| D{Product PURL matches after canonicalization?}
-  D -->|No| E[Report OSV finding and feed-integrity error]
+  B -->|Yes| J{Paired VEX document available?}
+  J -->|No| E[Report OSV finding and feed-integrity error]
+  J -->|Yes| D{Product PURL matches after canonicalization?}
+  D -->|No| K{Version explicitly listed in matching OSV affected entry?}
+  K -->|Yes| E
+  K -->|No - range-only match| L[Report OSV finding without exact-product VEX context]
   D -->|Yes| F{Status}
   F -->|affected| G[Report vulnerable with DHI status notes]
   F -->|under_investigation| H[Report under investigation with DHI status notes]
@@ -60,7 +64,11 @@ flowchart TD
 
 For an `under_investigation` assessment, generated DHI OSV publishes an open-ended
 package range alongside known versions, so unlisted releases also match. The VEX branch labels an
-existing OSV finding as unresolved; it does not create the finding.
+existing OSV finding as unresolved when an exact-product statement is present;
+it does not create the finding. With the paired document present, missing
+exact-product context is expected for a range-only match, but is an integrity
+error for an explicitly listed version. Do not extrapolate VEX status across
+versions.
 
 ## Mixed Production Cutover
 
