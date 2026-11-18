@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-11T15:39:39Z",
+  "published": "2026-10-15T11:51:07Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-84fg-x5h4-w8xv",
+  "details": "### Summary\r\n\r\nZITADEL’s hosted **Login V2** UI let an unauthenticated attacker set the first credential of a user who had none yet, and then sign in as that user. This applies to active users who had not yet set a password, passkey or identity provider link, for example invited users or users created through the API before their first sign-in.\r\n\r\nLogin V2 remembered that a user had just verified their email address or invite code with a `verificationCheck` cookie. Its value was a SHA-256 hash of the user ID and the browser’s fingerprint cookie, so it consisted only of values that the client controls or can learn. No server-side secret was involved. Anyone could compute a valid value for any user. Login V2 accepted this cookie as proof of a recent verification wherever a user without an authentication method sets up a first credential. The same forgeable proof was therefore reachable through password setup, passkey registration, and linking an external identity provider.\r\n\r\n### Impact\r\n\r\nAn attacker who knows the user ID or login name of a user without any authentication method can:\r\n\r\n* **Set the user’s password** without a verification code, and sign in as that user. Login V2 set the password with its own service credential.\r\n* **Register a passkey** for that user, using a session that only identifies the user by login name, and sign in with it.\r\n* **Link the attacker’s own account at an external identity provider** to that user and sign in through it, if an identity provider that allows account linking is configured.\r\n\r\nEach vector results in a takeover of the affected account, including its permissions in ZITADEL and its access to every application that uses ZITADEL for sign-in.\r\n\r\nUsers who already have an authentication method, such as a password, a passkey or an identity provider link, are not affected: Login V2 only accepted the forgeable proof for users without one. Deployments that do not serve the Login V2 UI are not affected.\r\n\r\n**Scope note:** The vulnerability is limited to the Login V2 UI and to users of the instance it serves. The ZITADEL APIs themselves were not affected.\r\n\r\n### Affected Versions\r\n\r\nSystems running one of the following versions are affected:\r\n\r\n* **4.x:** `4.0.0` through `4.19.4` (including RC versions)\r\n\r\n### Patches\r\n\r\nThe vulnerability has been addressed in the latest releases. Login V2 now only accepts a verification proof that it issued itself after the backend accepted the email or invite code. The proof is signed with a server-side secret, bound to the user and the browser, and expires after 5 minutes. Values in the old format are rejected. The proof Login V2 uses when linking an identity provider to a signed-in session is signed the same way.\r\n\r\nThe proofs are signed with `ZITADEL_SESSION_COOKIE_SECRET`. If it is not set, Login V2 derives the key from its configured API credential. Make sure the secret is set to a randomly generated value (at least 32 characters, for example `openssl rand -base64 32`), not a value copied from an example configuration.\r\n\r\n* **4.x**: Upgrade to $\\ge$ [4.19.5](https://github.com/zitadel/zitadel/releases/tag/v4.19.5)\r\n\r\n### Workarounds\r\n\r\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions. As a partial mitigation, create users with an initial credential, so that no active user is left without an authentication method.\r\n\r\n### Questions\r\n\r\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\r\n\r\n### Credits\r\n\r\nThanks to Adam Korczynski from Ada Logics ([@AdamKorcz](https://github.com/AdamKorcz)), Lucas Dodgson from InfoGuard Labs ([@lucasdodgson](https://github.com/lucasdodgson)), Robert Capps ( [@rwcii](https://github.com/rwcii) ) and [CodeAnt AI](https://github.com/CodeAnt-AI-Security) for finding and reporting the vulnerability.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.19.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "ZITADEL/ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-84fg-x5h4-w8xv"
+    }
+  ]
+}

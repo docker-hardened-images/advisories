@@ -1,0 +1,60 @@
+{
+  "modified": "2026-10-15T11:50:23Z",
+  "published": "2026-10-15T11:50:23Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-qj3q-235g-qr6w",
+  "details": "### Summary\r\n\r\nZITADEL’s hosted **Login V2** UI approved an OAuth 2.0 Device Authorization request as soon as a browser opened its signed-in page for that request, using whichever session the browser already had. The user was neither asked for consent nor required to enter the user code shown on the device. An attacker who starts a device authorization for an application and gets a signed-in user to open a single link receives tokens for that user’s account on the attacker’s device.\r\n\r\nApproving a device authorization was not properly authorized. ZITADEL confirmed neither that the user intended to approve this device nor that the user may access the application. The same missing authorization was reachable through the OIDC service API that login UIs use to approve device authorizations (`POST /v2/oidc/device_authorization/{device_authorization_id}`). That endpoint skipped the project access settings that the regular sign-in enforces.\r\n\r\n### Impact\r\n\r\nAn attacker who can start a device authorization for an application with the Device Code grant type can:\r\n\r\n* **Take over a user’s session for that application with one click.** The attacker sends the user a link to the Login V2 signed-in page carrying the attacker’s user code. If the user is signed in to Login V2 in that browser, opening the link approves the attacker’s device, with no further interaction. The attacker’s device then receives the access, ID and (if requested) refresh tokens of that user, with the scopes the attacker requested.\r\n* **Gain API access as that user.** If the attacker requests the ZITADEL project scope, the tokens can be used against the ZITADEL APIs with all permissions of that user. For an administrator, this means administrative control over the organization or instance.\r\n* **Bypass the project access settings.** Approving a device authorization through the API did not check the project settings “Only authorized users can authenticate” and “Authentication is restricted to users from organizations that have been granted access to this project”. Users without the required roles, or from organizations without a project grant, could obtain tokens for the application through the Device Authorization flow.\r\n\r\nThe attacker cannot read the user’s password or second factors, and cannot approve a device without the user opening the link in a browser with an active Login V2 session.\r\n\r\nInstances without any application that has the Device Code grant type are not affected, as no device authorization can be started. Users who sign in only through the hosted **Login V1** UI are not affected by the one-click vector, as they have no Login V2 session that the link could reuse.\r\n\r\n**Scope note:** The first vector affects deployments that run the hosted Login V2 UI. The API vector also affects custom login UIs built on the OIDC service API. Both vectors stay within a single instance.\r\n\r\n### Affected Versions\r\n\r\nSystems running one of the following versions are affected:\r\n\r\n* **4.x:** `4.0.0` through `4.19.4` (including RC versions)\r\n* **3.x:** `3.0.0` through `3.4.15` (including RC versions)\r\n\r\n### Patches\r\n\r\nThe vulnerability has been addressed in the latest releases. A device authorization can now only be approved after the user has entered the user code in the same browser and confirmed it with an explicit **Allow** on a consent screen. The consent screen shows the account, the application and the user code. Opening the signed-in page no longer approves anything. Approving a device authorization through the API now enforces the same project access settings as the regular sign-in.\r\n\r\n* **4.x**: Upgrade to $\\ge$ [4.19.5](https://github.com/zitadel/zitadel/releases/tag/v4.19.5)\r\n\r\nThe **3.x** release line reached end-of-life on 2026-08-31 and will not receive a fix for this vulnerability. Affected 3.x deployments must upgrade to a patched 4.x release.\r\n\r\n### Workarounds\r\n\r\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions. If you do not use the Device Authorization flow, removing the Device Code grant type from all applications prevents both vectors.\r\n\r\n### Questions\r\n\r\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\r\n\r\n### Credits\r\n\r\nThanks to Lucas Dodgson from InfoGuard Labs ([@lucasdodgson](https://github.com/lucasdodgson)) for finding and reporting the vulnerability.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.19.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "ZITADEL/ZITADEL"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "ZITADEL/ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-qj3q-235g-qr6w"
+    }
+  ]
+}

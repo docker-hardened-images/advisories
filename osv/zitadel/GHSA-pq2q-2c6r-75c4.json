@@ -1,0 +1,63 @@
+{
+  "modified": "2026-08-14T08:04:28Z",
+  "published": "2026-08-14T08:04:27Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-pq2q-2c6r-75c4",
+  "details": "### Summary\r\n\r\nZITADEL lets an administrator start passkey or passwordless enrollment for another user by issuing a one-time enrollment link (or code). When that link was requested, ZITADEL did not verify that the caller was authorized in the organization that owns the target user — it only checked the caller's permission in the organization named in the `x-zitadel-orgid` request header. As a result, an administrator of one organization could issue an enrollment code for a user in *any other* organization on the same instance.\r\n\r\n### Impact\r\n\r\nAn attacker who can manage users in one organization (or otherwise holds a user-write permission in any single organization) can:\r\n\r\n- **Request a passkey or passwordless enrollment code for a user in a different organization**, including the variants that return the code directly in the API response.\r\n- **Enroll an attacker-controlled authenticator on the victim's account and take it over**, because the enrollment code lets a new credential be added without any further action or authentication by the victim.\r\n\r\nThis does not expose the victim's existing credentials, and it does not affect the login flow that redeems an enrollment code — that flow is designed to accept the code as a bearer token. The only flaw is the missing authorization check when the code is *created*.\r\n\r\n**Scope note:** The flaw affects the passkey and passwordless enrollment-link capability across the affected APIs. This is a cross-organization authorization flaw within a single instance and does not cross instance boundaries.\r\n\r\n### Affected Versions\r\n\r\n* **4.x:** `4.0.0` through `4.17.0` (including RC versions)\r\n* **3.x:** `3.0.0` through `3.4.14` (including RC versions)\r\n\r\n### Patches\r\n\r\nThe vulnerability has been addressed in the latest releases. Issuing a passkey or passwordless enrollment code now verifies the caller's permission against the organization that owns the target user before the code is created.\r\n\r\n* **4.x**: Upgrade to $\\ge$ [4.17.1](https://github.com/zitadel/zitadel/releases/tag/v4.17.1)\r\n* **3.x**: Upgrade to $\\ge$ [3.4.15](https://github.com/zitadel/zitadel/releases/tag/v3.4.15)\r\n\r\n### Workarounds\r\n\r\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions.\r\n\r\n### Questions\r\n\r\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\r\n\r\n### Credits\r\n\r\nThanks to: \r\n\r\n  - @rud\r\n  - @rz1027\r\n  - @lyhtheori\r\n  - @thaidn\r\n  - @AdamKorcz\r\n\r\nFor reporting the vulnerability.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.17.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "zitadel",
+        "source_package": "ZITADEL"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.4.15"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "zitadel",
+        "source_package": "ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-pq2q-2c6r-75c4"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-13T14:27:36Z",
+  "published": "2026-11-13T14:27:35Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-3985-45jm-558m",
+  "details": "### Summary\n\nZITADEL’s hosted **Login V1** UI allowed an attacker who can sign in to an instance with their own account, and who knows a victim’s login name, to obtain OIDC tokens for the victim without the victim’s credentials.\n\nAuthorization codes issued at the end of a **Login V1** sign-in were not reliably bound to the user who completed that sign-in, so the token endpoint could issue tokens for a user who had not authenticated.\n\n### Impact\n\nAn attacker who can complete a **Login V1** sign-in with their own account and knows a victim’s login name can:\n\n* **Sign in to an OIDC application as the victim** — the application receives an ID token, an access token, a refresh token if requested, and userinfo for the victim.\n* **Bypass all of the victim’s authentication** — none of the victim’s factors (**password, passkeys, TOTP, OTP-SMS, OTP-Email, U2F**) or external identity provider sign-ins are checked.\n* **Act with the victim’s roles and grants** in that application.\n* **Use the victim’s ZITADEL permissions** when the application requests access to the ZITADEL APIs — for example the ZITADEL Console when it signs in through **Login V1**. If the victim is an administrator, this includes administrative access to the organization or instance.\n\nThis affects applications that authenticate users through ZITADEL’s hosted **Login V1** UI using the OIDC authorization code flow.\n\nThe attacker needs a working account of their own that can sign in through the same login. No interaction from the victim is required, and the victim is not notified. The attack does **not** reveal the victim’s password or other credentials; its impact is the issued tokens and everything they grant. SAML applications, the OIDC implicit flow, and applications that sign in through **Login V2** are **not** affected by this issue.\n\n**Scope note:** This affects the **Login V1** UI and the OIDC authorization code flow only. Within an instance, it reaches any user the login can find by login name, including users of other organizations unless the login is restricted to one organization. It does not reach across instances.\n\n### Affected Versions\n\nSystems running one of the following versions are affected:\n\n* **4.x:** `4.0.0` through `4.20.2` (including RC versions)\n\n### Patches\n\nThe vulnerability has been addressed in the latest releases.\n\nAn authorization code issued through **Login V1** is now bound to the user who completed the sign-in, and tokens are only issued for that user while their sign-in is still valid. Codes that were issued but not yet redeemed before the upgrade are rejected; the affected users sign in again.\n\n* **4.x**: Upgrade to $\\ge$ [4.20.3](https://github.com/zitadel/zitadel/releases/tag/v4.20.3)\n\n### Workarounds\n\nThe recommended solution is to upgrade to a patched version.\n\n### Questions\n\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\n\n### Credits\n\nThanks to Lucas Dodgson from InfoGuard Labs ([@lucasdodgson](https://github.com/lucasdodgson)) for finding and reporting the vulnerability.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.20.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "ZITADEL/ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-3985-45jm-558m"
+    }
+  ]
+}

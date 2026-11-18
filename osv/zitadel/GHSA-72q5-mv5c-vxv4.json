@@ -1,0 +1,63 @@
+{
+  "modified": "2026-08-14T08:04:23Z",
+  "published": "2026-08-14T08:04:23Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-72q5-mv5c-vxv4",
+  "details": "### Summary\r\n\r\nZITADEL’s hosted **Login V1** UI allowed an unauthenticated attacker who knows only a victim’s login name to enroll attacker-controlled second factors on the victim’s account and to overwrite the victim’s verified phone number, before any password or other primary factor was verified. The multi-factor **enrollment/initialization** handlers acted on an identify-only login session—after the username was submitted, but before the first factor was checked.\r\n\r\n### Impact\r\n\r\nAn attacker who can reach a Login V1 authentication flow and knows a valid login name (no password required) can:\r\n\r\n- Enroll an attacker-controlled **TOTP, OTP-SMS, OTP-Email, or U2F** second factor on the victim’s account\r\n- **Overwrite the victim’s verified phone number**, including sending an SMS verification code to an attacker-chosen number\r\n- **Enumerate users**: the enrollment handlers returned discrepant errors for existing versus non-existing accounts, bypassing the *Ignore unknown usernames* protection\r\n\r\nThis affects applications that authenticate users through ZITADEL’s hosted **Login V1** UI (OIDC/SAML).\r\n\r\nThis issue does **not**, on its own, result in account takeover: the attacker never learns the victim’s password, and Login V1 password reset is email-only. The impact is to the integrity of the victim’s account (an attacker-controlled second factor and/or phone number is planted) and the confidentiality of user existence (enumeration).\r\n\r\n**Scope note:** This issue affects **Login V1** only. It is instance-wide / cross-organization, but not cross-instance. **Login V2** is not affected by this path. This is the second-factor counterpart to GHSA-45f2-5q3r-xgg6, which closed the passwordless (passkey) enrollment gap but left these 2FA init/enrollment handlers ungated.\r\n\r\n### Affected Versions\r\n\r\nSystems running one of the following versions are affected:\r\n\r\n* **4.x:** `4.0.0` through `4.17.0` (including RC versions)\r\n* **3.x:** `3.0.0` through `3.4.14` (including RC versions)\r\n\r\n### Patches\r\n\r\nThe vulnerability has been addressed in the latest releases. Login V1 now requires the auth request to have reached the MFA prompt step—which is only produced after the primary factor has been verified—before any second-factor enrollment, phone-number change, phone verification, or MFA initialization is performed. Because the enrollment command is never reached for an identify-only request, the user-enumeration discrepancy is closed as well.\r\n\r\n* **4.x**: Upgrade to $\\ge$ [4.17.1](https://github.com/zitadel/zitadel/releases/tag/v4.17.1)\r\n* **3.x**: Upgrade to $\\ge$ [3.4.15](https://github.com/zitadel/zitadel/releases/tag/v3.4.15)\r\n\r\n### Workarounds\r\n\r\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions.\r\n\r\n### Questions\r\n\r\nIf you have any questions or comments about this advisory, please email us at [security@zitadel.com](mailto:security@zitadel.com)\r\n\r\n### Credits\r\n\r\nThanks to Adam Korczynski (Ada Logics) and Lucas Dodgson (InfoGuard Labs) for reporting the vulnerability.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.17.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "zitadel",
+        "source_package": "ZITADEL"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.4.15"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "zitadel",
+        "source_package": "ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-72q5-mv5c-vxv4"
+    }
+  ]
+}

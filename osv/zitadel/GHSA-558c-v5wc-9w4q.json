@@ -1,0 +1,39 @@
+{
+  "modified": "2026-08-14T08:04:11Z",
+  "published": "2026-08-14T08:04:11Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-558c-v5wc-9w4q",
+  "details": "### Summary\r\n\r\nIn ZITADEL, deactivating an organization is meant to stop its users from logging in. With Login V2 enabled, that was not always enforced. Users in a deactivated organization could still sign in, create sessions, and obtain or refresh tokens.\r\n\r\n### Impact\r\n\r\nWhen an administrator deactivates an organization, ZITADEL’s documentation and Console both state that users of that organization will no longer be able to log in.\r\n\r\nIn affected versions, the organization’s inactive state was not checked during Login V2 authentication. Only the individual user’s status was checked. As a result, users in a deactivated organization could continue to authenticate if they still had valid credentials, or an existing session or refresh token.\r\n\r\n**Scope note:** This affects applications that use **Login V2** for end-user authentication. The older **Login V1** flow already blocks users in deactivated organizations. In affected versions, sessions and tokens created before deactivation may still work until they expire.\r\n\r\n### Affected Versions\r\n\r\nSystems running one of the following versions are affected:\r\n\r\n* **4.x:** `4.0.0` through `4.17.0` (including RC versions)\r\n\r\n### Patches\r\n\r\nThis issue has been fixed in a newer release. After upgrading, organization deactivation is enforced on Login V2 authentication, claim serving, and ZITADEL API access. Existing V1/V2 sessions and tokens for that organization are invalidated, including refresh tokens and V2 access tokens. Those tokens stay invalid after the organization is reactivated.\r\n\r\n* **4.x**: Upgrade to $\\ge$ [v4.17.1](https://github.com/zitadel/zitadel/releases/tag/v4.17.1)\r\n\r\n### Workarounds\r\n\r\nThe recommended solution is to upgrade to a patched version.\r\n\r\nIf an immediate upgrade is not possible, deactivate affected users individually. User deactivation is enforced and will prevent login.\r\n\r\nYou should also review active sessions for users in the organization and revoke or wait out any outstanding refresh tokens.\r\n\r\n### Questions\r\n\r\nIf you have any questions or comments about this advisory, please email us at [security@zitadel.com](mailto:security@zitadel.com)\r\n\r\n### Credits\r\n\r\nThanks to Vladislav Kleva (Group-IB) for finding and reporting the vulnerability.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.17.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "zitadel",
+        "source_package": "ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-558c-v5wc-9w4q"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-13T14:28:05Z",
+  "published": "2026-11-13T14:28:05Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-pm3x-9hh8-g745",
+  "details": "### Summary\r\n\r\nZITADEL’s hosted **Login V2** UI allowed an unauthenticated attacker to craft a link on the instance’s own domain whose “Back to Login” button leads to an attacker-controlled website. Two error pages that Login V2 shows after a sign-in with an external identity provider took the destination of that button from the link itself, without checking that it points back into the login UI.\r\n\r\n### Impact\r\n\r\nAn attacker who can send a link to a victim can:\r\n\r\n* **Craft a phishing link on the trusted ZITADEL domain** that shows a genuine, branded “account not found” or “registration failed” page and whose “Back to Login” button navigates to a site of the attacker’s choice.\r\n* **Show an organization’s branding on the page**, so it looks like the victim’s usual login.\r\n\r\nThis affects applications that authenticate users through ZITADEL’s hosted **Login V2** UI (OIDC/SAML).\r\n\r\nThe issue does **not** leak any session, token, code or other secret: the navigation to the attacker’s site is a plain click on a link and carries nothing from the ZITADEL origin. It does not redirect automatically; the victim must open the crafted link and then click the button. It does not allow script execution on the ZITADEL origin. Deployments that serve only **Login V1** are not affected, as the vulnerable pages exist only in Login V2. No identity provider needs to be configured for the pages to render.\r\n\r\n**Scope note:** This affects the **Login V2** UI only. The crafted link works on any instance that serves Login V2, across organizations, but not across instances. It is unrelated to [GHSA-6rx5-m2rc-hmf7](https://github.com/zitadel/zitadel/security/advisories/GHSA-6rx5-m2rc-hmf7) and [GHSA-5wcj-9wj4-j65h](https://github.com/zitadel/zitadel/security/advisories/GHSA-5wcj-9wj4-j65h), which concern the administrator-configured default redirect URI, a different setting.\r\n\r\n### Affected Versions\r\n\r\nSystems running one of the following versions are affected:\r\n\r\n* **4.x:** `4.5.0` through `4.20.2` (including RC versions)\r\n\r\n### Patches\r\n\r\nThe vulnerability has been addressed in the latest releases.\r\n\r\nThe patched version only shows the “Back to Login” button when its destination is a page of the login UI itself. For any other destination, including other websites, the page is shown without the button.\r\n\r\n* **4.x**: Upgrade to $\\ge$ [4.20.3](https://github.com/zitadel/zitadel/releases/tag/v4.20.3)\r\n\r\n### Workarounds\r\n\r\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions.\r\n\r\n### Questions\r\n\r\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\r\n\r\n### Credits\r\n\r\nThis vulnerability was found by [zentrust partners GmbH](https://zentrust.partners/) during a scheduled penetration test. Thank you to the analysts Martin Tschirsich and Joud Zakharia.\r\n\r\nThe full report will be made public after the complete review.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.5.0"
+            },
+            {
+              "fixed": "4.20.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "ZITADEL/ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-pm3x-9hh8-g745"
+    }
+  ]
+}

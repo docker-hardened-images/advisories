@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-13T14:27:54Z",
+  "published": "2026-11-13T14:27:53Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-9vfg-mj6p-vwjc",
+  "details": "### Summary\n\nZITADEL’s hosted **Login V2** UI let an attacker add a second factor to the account of a signed‑in user by getting them to open a link. A user with an authenticated Login V2 session who opened the setup page for one of these factors — for example through a link or redirect from another site — had **OTP‑Email** or **OTP‑SMS** added to their account, without any confirmation.\n\nThe page added the factor while it was being loaded, instead of in response to an explicit action of the user, so it could not tell a deliberate enrolment from one triggered by another site.\n\n### Impact\n\nAn attacker who can get a signed‑in user to open a link can:\n\n* **Add OTP‑Email** as a second factor to the user’s account, if the user has a verified email address.\n* **Add OTP‑SMS** as a second factor to the user’s account, if the user has a verified phone number.\n\nThis affects deployments that serve ZITADEL’s hosted **Login V2** UI.\n\nThe issue does **not** give the attacker access to the account, to any credential, or to the one‑time codes: the added factor sends its codes to the user’s own verified email address or phone number. The user also sees the page confirming the new factor. The real impact is on the integrity of the user’s authentication setup: an account that previously offered only stronger factors, such as passkeys, additionally accepts a code sent by email or SMS, which an attacker who later obtains the password can try to phish. The page only acted on sessions that are already authenticated; a session that merely identifies a user by login name is rejected. Users without a verified email address or phone number cannot have the corresponding factor added, and a factor that is already set up is not changed. Setting up **TOTP** through the same page is **not** affected, because it only takes effect after the user enters a code from their authenticator app. ZITADEL’s **Login V1** UI is **not** affected, because it only adds these factors as a step of the user’s own ongoing sign‑in.\n\n**Scope note:** The affected surface is second‑factor setup in **Login V2**. The exposure is limited to users who are signed in to Login V2 in the browser that opens the link; it is not cross‑instance. The ZITADEL APIs themselves are not affected.\n\n### Affected Versions\n\nSystems running one of the following versions are affected:\n\n* **4.x:** `4.0.0` through `4.20.2` (including RC versions)\n\n### Patches\n\nThe vulnerability has been addressed in the latest releases.\n\nThe patched **Login V2** no longer adds a second factor when the setup page is opened. It asks the user to confirm, and only adds **OTP‑Email** or **OTP‑SMS** after the user explicitly does so. If the factor cannot be added, the page now shows an error instead of reporting success.\n\n* **4.x**: Upgrade to $\\ge$ [4.20.3](https://github.com/zitadel/zitadel/releases/tag/v4.20.3)\n\n### Workarounds\n\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions. Removing **OTP‑Email** and **OTP‑SMS** from the second factors allowed in the login settings only limits which factors users are offered; it does not prevent the page from adding them.\n\n### Questions\n\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\n\n### Credits\n\nThanks to the security researcher who found and reported the vulnerability; they asked not to be named.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.20.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "ZITADEL/ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-9vfg-mj6p-vwjc"
+    }
+  ]
+}
