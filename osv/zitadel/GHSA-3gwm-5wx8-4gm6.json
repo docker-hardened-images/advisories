@@ -1,0 +1,39 @@
+{
+  "modified": "2026-08-14T08:04:42Z",
+  "published": "2026-08-14T08:04:42Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-3gwm-5wx8-4gm6",
+  "details": "### Summary\r\n\r\nZITADEL’s hosted **Login V2** UI allowed an unauthenticated attacker who knows only a victim’s login name to obtain a fully MFA-authenticated session for that victim — without any password, passkey, or IdP login — provided the victim already had both **OTP-Email** and **OTP-SMS** second factors enrolled. After the login name is submitted (an *identify-only* session, before any primary factor is verified), Login V2’s server action forwarded attacker-controlled challenge requests to the backend using the `returnCode` delivery type, which returns the generated OTP codes directly in the HTTP response instead of sending them to the victim’s mailbox or phone. Submitting both codes produced a session that ZITADEL treated as MFA-authenticated, because two second factors were counted as satisfying MFA.\r\n\r\n### Impact\r\n\r\nAn attacker who knows a valid login name — where the target already has OTP-Email and OTP-SMS enrolled and ready — can take over that account without knowing the password, using an existing authenticator, or interacting with the victim; both OTP codes are read directly from the server-action response. The resulting session token is accepted by ZITADEL’s APIs. If the victim is an instance administrator (e.g. `IAM_OWNER`), this results in full instance takeover; for a non-privileged victim it is a takeover of that user’s account.\r\n\r\n**Scope note:** This requires the victim to already have **both** OTP-Email and OTP-SMS enrolled and ready, on an instance whose login policy allows both factors and has an SMS provider configured. It affects applications that authenticate users through ZITADEL’s hosted **Login V2** UI (OIDC/SAML). It is a **separate issue** from [GHSA-45f2-5q3r-xgg6](https://github.com/zitadel/zitadel/security/advisories/GHSA-45f2-5q3r-xgg6): that advisory’s enrollment guard does not cover this path, because no new factor is enrolled — the attack reuses the victim’s existing OTP factors.\r\n\r\n### Affected Versions\r\n\r\nSystems running one of the following versions are affected:\r\n\r\n* **4.x:** `4.0.0` through `4.17.0` (including RC versions)\r\n\r\n### Patches\r\n\r\nThe vulnerability has been addressed in the latest release. The fix applies defense in depth: Login V2 no longer exposes the `returnCode` delivery type through its browser-facing server actions (OTP challenges are always sent out-of-band); the backend refuses a `returnCode` OTP challenge unless the session has already completed a primary authentication; and MFA is now evaluated as requiring a primary factor **plus** a second factor, so two second factors alone no longer satisfy MFA.\r\n\r\n* **4.x**: Upgrade to $\\ge$ [4.17.1](https://github.com/zitadel/zitadel/releases/tag/v4.17.1)\r\n\r\n### Workarounds\r\n\r\nThe recommended solution is to upgrade to a patched version; there is no configuration that fully closes this gap on unpatched versions. To reduce exposure in the meantime, avoid having both OTP-Email and OTP-SMS enrolled on the same account — especially for privileged (e.g. `IAM_OWNER`) users — and prefer TOTP, U2F/security keys, or passkeys as second factors. The attack is only possible against accounts that hold **both** OTP-Email and OTP-SMS.\r\n\r\n### Questions\r\n\r\nIf you have any questions or comments about this advisory, please email us at [security@zitadel.com](mailto:security@zitadel.com)\r\n\r\n### Credits\r\n\r\nThanks to Lucas Dodgson from InfoGuard Labs ([@lucasdodgson](https://github.com/lucasdodgson)) for finding and reporting the vulnerability.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.17.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "zitadel",
+        "source_package": "ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-3gwm-5wx8-4gm6"
+    }
+  ]
+}

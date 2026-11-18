@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-13T14:28:15Z",
+  "published": "2026-11-13T14:28:15Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-fphg-99ff-7qrp",
+  "details": "### Summary\r\n\r\nZITADEL’s hosted **Login V2** UI did not bind an external identity‑provider (IdP) sign‑in to the browser that started it. An attacker could get a victim’s browser to finish an external IdP sign‑in that the attacker had started with their own account, so that the victim ended up signed in to the **attacker’s** ZITADEL account. This is commonly called login CSRF, session swapping, or account pre‑hijacking.\r\n\r\nThe sign‑in was completed without verifying that the browser finishing it was the same browser that started it.\r\n\r\n### Impact\r\n\r\nAn attacker who can sign in to the instance with their own external IdP identity can:\r\n\r\n* **Place a victim into the attacker’s account** when the victim opens a link from the attacker, with no further interaction.\r\n* **Collect what the victim then does under that identity**: data the victim enters, documents they upload, and integrations or authentication methods they configure all land in the attacker‑controlled account and can be retrieved by the attacker later.\r\n\r\nThis affects applications that authenticate users through ZITADEL’s hosted **Login V2** UI (OIDC/SAML) with at least one external identity provider configured.\r\n\r\nOn its own the issue does **not** expose the victim’s existing account, data, or credentials, because the victim is signed in to the attacker’s account rather than the reverse. It requires the victim to open an attacker‑supplied link inside a time window (the external provider’s authorization‑code window, or otherwise the intent lifetime, `1h` by default). Deployments that enforce multi‑factor authentication interrupt the automatic sign‑in at the factor step. ZITADEL’s **Login V1** UI is **not** affected, because it binds the external login to the browser that started it. Instances that do **not** use external identity providers are **not** affected, because no IdP intent is ever issued.\r\n\r\n**Scope note:** The affected surface is external‑IdP sign‑in through **Login V2**. The exposure is instance‑wide and spans organizations wherever Login V2 and an external IdP are in use; it is not cross‑instance. This concerns the same external‑login intent flow as [GHSA-jh3m-cr2x-qp88](https://github.com/zitadel/zitadel/security/advisories/GHSA-jh3m-cr2x-qp88), but a different missing check: that advisory addressed forgeable intent tokens, while this one concerns binding the completed callback to the browser that began the flow.\r\n\r\n### Affected Versions\r\n\r\nSystems running one of the following versions are affected:\r\n\r\n* **4.x:** `4.0.0` through `4.20.2` (including RC versions)\r\n\r\n### Patches\r\n\r\nThe vulnerability has been addressed in the latest releases.\r\n\r\nThe patched **Login V2** now verifies that the browser completing an external IdP sign‑in is the same browser that started the flow, and rejects a callback presented by any other browser. A legitimate same‑browser sign‑in is unaffected.\r\n\r\n* **4.x**: Upgrade to $\\ge$ [4.20.3](https://github.com/zitadel/zitadel/releases/tag/v4.20.3)\r\n\r\n### Workarounds\r\n\r\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions. Enforcing multi‑factor authentication is a partial mitigation only: it interrupts the automatic sign‑in at the factor step, but does not restore the missing browser binding.\r\n\r\n### Questions\r\n\r\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\r\n\r\n### Credits\r\n\r\nThis vulnerability was found by [zentrust partners GmbH](https://zentrust.partners/) during a scheduled penetration test. Thank you to the analysts Martin Tschirsich and Joud Zakharia.\r\n\r\nThe full report will be made public after the complete review.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.20.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "ZITADEL/ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-fphg-99ff-7qrp"
+    }
+  ]
+}

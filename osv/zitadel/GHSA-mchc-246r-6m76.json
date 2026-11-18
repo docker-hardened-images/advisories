@@ -1,0 +1,39 @@
+{
+  "modified": "2026-10-15T11:50:48Z",
+  "published": "2026-10-15T11:50:47Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-mchc-246r-6m76",
+  "details": "### Summary\r\n\r\nZITADEL’s hosted **Login V2** UI allowed an unauthenticated attacker who knows only a victim’s login name to redirect that victim’s genuine password-reset, invite, and email-verification links to an attacker-controlled host, while the links still carried the real single-use codes. Harvesting such a code lets the attacker set a new password — or complete verification — and sign in as the victim, including an instance administrator.\r\n\r\nThe login UI built these email links from client-supplied proxy request headers (`x-zitadel-public-host`, `x-zitadel-forward-host`, and `x-forwarded-host`) without confirming the host belonged to the instance, and the API’s trusted-domain control — which is meant to reject an untrusted public host — was silently skipped when the submitted host was malformed in a way that resolved to an empty host (for example a value with a non-numeric port such as `evil.com:443/`). Any of these headers can be used; the issue is not specific to one of them. The shared missing invariant is that a public host taken from a request header is never validated against the instance’s trusted domains before it is used to build a security-sensitive link.\r\n\r\n### Impact\r\n\r\nAn attacker who can reach the unauthenticated Login V2 reset or verification flow and knows a victim’s login name can:\r\n\r\n* **Capture a victim’s single-use password-reset code** by poisoning the host of the genuine reset email, then **set a new password and take over the account**.\r\n* **Capture invite and email-verification codes** through the same primitive, taking over accounts during onboarding or email-change flows.\r\n* **Take over an instance administrator** (for example `IAM_OWNER`), resulting in full control of the instance.\r\n* **Retain access across a later password rotation**, because once signed in as the victim the attacker can enrol their own credential or second factor.\r\n\r\nThis affects applications that authenticate users through ZITADEL’s hosted **Login V2** UI (OIDC/SAML); the `x-zitadel-public-host` and `x-zitadel-forward-host` headers in particular are not normalized by a standard fronting proxy, so the host can be set by a client even in a typical deployment. The email itself is genuine — correct sender, correct branding, a real code — so only the link host differs; the poisoned link must be fetched once, by the victim opening the link or by automated inbound-mail link scanning.\r\n\r\nThe attacker does not need the victim’s password, mailbox access, an existing session or any secret, nor any API credentials, localhost access, or instance misconfiguration — the default forced-Login V2 deployment is affected. Existing passwords, passkeys, or second factors do not prevent the reset, since completing it sets a new password and yields a live session. Deployments that do **not** run Login V2 (for example Login V1 only) are not affected, as Login V1 does not build these links from the public-host headers.\r\n\r\n**Scope note:** This affects the **Login V2** UI only. Exposure is instance-wide — any user on the instance can be targeted, across organizations, but not across instances. It is the login-side host-poisoning counterpart to [GHSA-mwmh-7px9-4c23](https://github.com/zitadel/zitadel/security/advisories/GHSA-mwmh-7px9-4c23), which addressed the same class of password-reset link poisoning through the `Forwarded` and `X-Forwarded-Host` headers; this issue reaches the same outcome through the public-host headers that Login V2 trusts, which were not covered by that fix.\r\n\r\n### Affected Versions\r\n\r\nSystems running one of the following versions are affected:\r\n\r\n* **4.x:** `4.0.0` through `4.19.4` (including RC versions)\r\n\r\n### Patches\r\n\r\nThe vulnerability has been addressed in the latest releases.\r\n\r\nThe patched version validates the public host taken from request headers against the instance’s trusted domains before it is used, and rejects a request whose public-host header is present but does not resolve to a trusted domain instead of silently falling back to an empty host. As a result, the host embedded in password-reset, invite, and email-verification links can no longer be set to an untrusted domain by a request header.\r\n\r\n* **4.x**: Upgrade to $\\ge$ [`4.19.5`](https://github.com/zitadel/zitadel/releases/tag/v4.19.5)\r\n\r\n### Workarounds\r\n\r\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions.\r\n\r\nAs a partial mitigation, a ZITADEL fronting proxy can be configured to strip or overwrite the `x-zitadel-public-host` header (along with `x-zitadel-forward-host` and `x-forwarded-host`) on all inbound requests, so that the public host cannot be set by a client.\r\n\r\n### Questions\r\n\r\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\r\n\r\n### Credits\r\n\r\nThanks to Lucas Dodgson from InfoGuard Labs ([@lucasdodgson](https://github.com/lucasdodgson)) for finding and reporting the vulnerability.\r\n\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.19.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "ZITADEL/ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-mchc-246r-6m76"
+    }
+  ]
+}

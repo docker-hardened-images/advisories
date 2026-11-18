@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-13T14:28:46Z",
+  "published": "2026-11-13T14:28:45Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-3gwf-ph53-v73c",
+  "details": "### Summary\n\nZITADEL issued tokens or a SAML response for an OIDC or SAML authorization request without ensuring that the session used to complete the request had been authenticated to the request’s requirements by an authorized login client. Completing a request is meant to be performed only by a login client holding the `session.link` permission, which is responsible for verifying the session first. That guarantee was not enforced, and the gap was reachable through ZITADEL’s hosted **Login V2** and directly through the completion endpoints.\n\nThrough the hosted **Login V2**, a request could be completed with a session on which no authentication factor had been verified: an unauthenticated attacker who knows a victim’s login name could obtain tokens or a SAML response for that user when the user has two or more linked identity providers, or when the organization disables local authentication and offers two or more identity providers — both possible under the default login policy.\n\nThe same missing guarantee was reachable directly through the **OIDC Service** (`CreateCallback`) and **SAML Service** (`CreateResponse`) completion endpoints, which trusted the `x-zitadel-login-client` header to identify the login client. ZITADEL records this header from the *unauthenticated* authorization request without validating it, so any authenticated user of the instance could name themselves as the login client and complete a request for a session whose ID and token they hold — again without holding the `session.link` permission that completion requires.\n\nIn both cases the root cause is the same: request completion did not require an authorized login client — one holding `session.link` — to have verified that the session satisfied the request’s authentication requirements. Only deployments that authenticate users through ZITADEL (OIDC/SAML) are affected.\n\n### Impact\n\nAn attacker who can complete a request as described can:\n\n- **Obtain tokens or a SAML response for a victim** and sign in as that user at any OIDC or SAML application of the instance that trusts it, including when the login policy (for example enforced **MFA**) was not satisfied or no factor was verified at all. The attacker chooses the `client_id`, so any such application in the instance can be targeted, and the registered redirect URI does not limit the attack because the authorization code is returned to the attacker directly.\n- **Take over accounts** at relying parties that use public clients (SPA, native or mobile apps using PKCE) and at clients registered for the implicit or hybrid flow, and at SAML service providers.\n- **Read the victim’s profile claims** from the userinfo endpoint.\n\nReaching the gap through the hosted **Login V2** requires only knowledge of the victim’s login name. Reaching it directly through the completion endpoints additionally requires an account on the instance and a session the attacker already holds for the victim — the issue does **not** allow creating sessions for other users, which still requires the `session.write` permission.\n\nDevice authorization and failing a SAML request were **not** affected, as both always required `session.link`. Confidential clients that use only the authorization code flow are protected by client authentication when the code is redeemed, and ZITADEL’s own management APIs and Console reject tokens issued for a session with no verified factor.\n\n**Scope note:** Impact is limited to a single instance (no cross‑instance impact). The two attack surfaces are the same missing check on request completion, closed together in the patched release.\n\n### Affected Versions\n\nSystems running one of the following versions are affected:\n\n* **4.x:** `4.0.0` through `4.20.2` (including RC versions)\n\n### Patches\n\nThe vulnerability has been addressed in the latest releases.\n\nThe patched release enforces the missing guarantee at both layers it was reachable through: completing or failing an OIDC authorization request, and completing a SAML request, now always require the caller to hold the `session.link` permission, and the `x-zitadel-login-client` header no longer grants any permission on its own. ZITADEL’s hosted **Login V2** now also fails closed when a session is not valid, so it never completes a request with a session that has no verified factor. The `session.link` permission is provided by the **Instance Login Client** role (`IAM_LOGIN_CLIENT`), which ZITADEL’s hosted login and documented custom login clients already use.\n\n* **4.x**: Upgrade to $\\ge$ [4.20.3](https://github.com/zitadel/zitadel/releases/tag/v4.20.3)\n\nA custom login client that sends the `x-zitadel-login-client` header while running as a user without `session.link` (for example an **Instance Owner**, `IAM_OWNER`, which grants `session.write` but not `session.link`) will receive “permission denied” after the upgrade; grant it the `IAM_LOGIN_CLIENT` role as documented.\n\n### Workarounds\n\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions. As a partial mitigation for the completion‑endpoint surface, deployments whose login UI does not rely on the `x-zitadel-login-client` header — including ZITADEL’s hosted **Login V2** — can strip this header from all incoming requests at their reverse proxy.\n\n### Questions\n\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\n\n### Credits\n\nThanks to Lucas Dodgson from InfoGuard Labs ([@lucasdodgson](https://github.com/lucasdodgson)) for finding and reporting the vulnerability.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.20.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "ZITADEL/ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-3gwf-ph53-v73c"
+    }
+  ]
+}

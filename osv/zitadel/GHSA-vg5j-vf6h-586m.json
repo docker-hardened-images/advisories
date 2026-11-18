@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-13T14:28:55Z",
+  "published": "2026-11-13T14:28:54Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-vg5j-vf6h-586m",
+  "details": "### Summary\n\nZITADEL’s **Login V2** UI made several internal server-side functions callable from the outside without authentication. These functions were only meant to be used by the Login UI itself, and they ran with the Login V2 service account, which has instance-wide permissions.\n\nThe functions accepted the user they act on, the link they send by email, or the session lifetime directly from the request. Login V2 did not check that the caller was signed in as that user or allowed to choose those values.\n\n### Impact\n\nAn unauthenticated attacker who knows a user’s ID can:\n\n* **Take over accounts that have not set up an authentication method yet**, such as invited users who have not accepted their invite. ZITADEL sends the user a genuine verification or invite email, but with a link to a host the attacker controls. When the link is opened — by the user or by an automated link scanner — the attacker receives the code and can set the account’s first credential.\n* **Mark the user as having skipped the MFA setup prompt.** In **Login V1**, this hides the optional prompt to set up a second factor for the skip period configured in the login policy. It does **not** bypass MFA that is enforced by the login policy or already set up, and **Login V2** does not act on the flag.\n* **View the user’s session details** (login name, display name and verified factors) on the account selection page, if they also know the ID of one of the user’s sessions.\n\nA user who is signed in through **Login V2** can also **choose the lifetime of their own session**, overriding the check lifetimes configured in the login policy.\n\nThis affects deployments that serve the hosted **Login V2** UI. Deployments that do not run Login V2 are not affected.\n\nThe ZITADEL APIs themselves enforced their permissions correctly; the requests were authorized as the Login V2 service account. Accounts that already have an authentication method are **not** taken over this way: the email code then only verifies the email address. A session viewed on the account selection page can **not** be used or changed, because every action on it still requires its session token. Revoking a session and deactivating a user still take effect regardless of the chosen lifetime.\n\n**Scope note:** This affects only the **Login V2** UI. Each attack stays within the instance the Login V2 deployment serves, but reaches users of every organization in that instance. Viewing another user’s session details is a further way around the protection added in GHSA-jh92-5mrj-p2w2.\n\n### Affected Versions\n\nSystems running one of the following versions are affected:\n\n* **4.x:** `4.0.0` through `4.20.2` (including RC versions)\n\n### Patches\n\nThe vulnerability has been addressed in the latest releases.\n\n**Login V2** now only makes the functions its pages need callable, and checks this when it is built. Each of them takes the user and session from the caller’s own signed session cookie, email links are built by the server, and session lifetimes always come from the login policy.\n\n* **4.x**: Upgrade to $\\ge$ [4.20.3](https://github.com/zitadel/zitadel/releases/tag/v4.20.3)\n\n### Workarounds\n\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions.\n\n### Questions\n\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\n\n### Credits\n\nThanks to Lucas Dodgson from InfoGuard Labs ([@lucasdodgson](https://github.com/lucasdodgson)) for finding and reporting the vulnerability.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.20.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "ZITADEL/ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-vg5j-vf6h-586m"
+    }
+  ]
+}

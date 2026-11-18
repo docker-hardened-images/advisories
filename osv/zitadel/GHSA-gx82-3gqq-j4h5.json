@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-13T14:28:35Z",
+  "published": "2026-11-13T14:28:34Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-gx82-3gqq-j4h5",
+  "details": "### Summary\n\nZITADEL allowed anyone who knows the password of a user to sign in with it through **Login V2** and the **Session API**, even when the user’s organization has disabled local authentication (username and password) and requires sign-in through an external identity provider.\n\nLogin V2 checked this setting at the login name step. Its password step, however, did not reliably check it against the user’s own organization. The Session API (`CreateSession` and `SetSession`, v2 and v2beta) accepted password checks without reading the login policy. In both vectors, a password sign-in was never checked against the login policy of the user’s own organization.\n\n### Impact\n\nAn attacker who knows the password of a user in an organization with local authentication disabled can:\n\n* **Sign in with username and password** through Login V2 and get a valid session for every application that uses ZITADEL for sign-in.\n* **Bypass the controls of the external identity provider** that the organization relies on, such as its multi-factor authentication, conditional access or device checks.\n* **Keep signing in after being offboarded at the identity provider**, as long as the user is still active in ZITADEL and has a password.\n* **Sign in through custom login UIs** built on the **Session API** that do not check this setting themselves.\n\nThis affects organizations that disable local authentication while some of their users still have a password in ZITADEL, for example a password set before the organization moved to an external identity provider.\n\nThe issue does **not** bypass the password itself: the password is still verified, and failed attempts still count toward the lockout policy. The impact is that a known or leaked password defeats the identity provider controls the organization requires. Users without a password are not affected, as no local credential is involved. **Login V1** is not affected, as it checks the login policy of the user’s own organization.\n\n**Scope note:** The vulnerability is limited to password sign-in through Login V2 and the Session API, for users of the affected instance. It is an incomplete fix of [GHSA-25rw-g6ff-fmg8](https://github.com/zitadel/zitadel/security/advisories/GHSA-25rw-g6ff-fmg8) (CVE-2026-29193), which enforced this setting on the Login V2 server but did not cover every password sign-in path.\n\n### Affected Versions\n\nSystems running one of the following versions are affected:\n\n* **4.x:** `4.0.0` through `4.20.2` (including RC versions)\n\n### Patches\n\nThe vulnerability has been addressed in the latest releases.\n\nZITADEL now checks the login policy of the user’s own organization for every password check through the Session API, and Login V2 checks the same setting at its password step. If the user’s organization or its login policy cannot be determined, the password check is refused.\n\nPassword checks for users in organizations with local authentication disabled now fail with `FAILED_PRECONDITION` (`Errors.Org.LoginPolicy.UsernamePasswordNotAllowed`). This also applies when such a user signs in through an application of another organization that allows local authentication, the same as in Login V1. These users can also no longer change their password with their current password in Login V2. Custom login UIs built on the Session API should send these users to their external identity provider.\n\n* **4.x**: Upgrade to $\\ge$ [4.20.3](https://github.com/zitadel/zitadel/releases/tag/v4.20.3)\n\n### Workarounds\n\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions.\n\n### Questions\n\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\n\n### Credits\n\nThanks to Robert Capps from Stratovera LLC ([@rwcii](https://github.com/rwcii)) for finding and reporting the vulnerability.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "zitadel",
+        "purl": "pkg:dhi/zitadel"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.20.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "ZITADEL/ZITADEL"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-gx82-3gqq-j4h5"
+    }
+  ]
+}
