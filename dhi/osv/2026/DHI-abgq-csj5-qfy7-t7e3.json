@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-abgq-csj5-qfy7-t7e3",
+  "modified": "2026-11-18T15:01:39Z",
+  "published": "2026-11-18T15:01:39Z",
+  "upstream": [
+    "CVE-2026-67228"
+  ],
+  "summary": "## Origin",
+  "details": "## Origin\n\nThis vulnerability was identified by Team RabbitMQ and/or other teams at Broadcom, not via a responsible disclosure from an external researcher.\n\n## Impact\n\n`lookup_component/1` calls `rabbit_data_coercion:to_atom(Component)` on the `:component` segment of the request URL, converting an attacker-supplied string into a new atom. Because the Erlang atom table is bounded and atoms are never garbage collected, an authorized policymaker issuing roughly one million requests with distinct component values can exhaust the atom table and crash the node, resulting in a denial of service.\n\n## Description\n\nThe runtime-parameters lookup path coerces the URL `:component` segment to an atom with `rabbit_data_coercion:to_atom/1` in `lookup_component/1` (`deps/rabbit/src/rabbit_runtime_parameters.erl`), creating a new atom for any previously unseen value. A safe helper, `rabbit_registry:binary_to_type/1`, which uses `binary_to_existing_atom` with a catch, already exists but is not used at this call site.\n\n## Preconditions\n\nExploitation requires policymaker privileges and roughly one million requests.\n\n## CVSS\nCVSS v4.0: `CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N` (6.9, Moderate). Fixed in `4.2.7`, `4.3.1`.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:N/A:H"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "rabbitmq-4.4-fips",
+        "purl": "pkg:deb/dhi/rabbitmq-4.4-fips"
+      },
+      "versions": [
+        "4.4.1-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "rabbitmq-4.4",
+        "purl": "pkg:deb/dhi/rabbitmq-4.4"
+      },
+      "versions": [
+        "4.4.0-0",
+        "4.4.1-0",
+        "4.4.1-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-abgq-csj5-qfy7-t7e3"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-73qp-fwh4-2q5g"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-67228"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.1"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.2.7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-67228"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-67228"
+    },
+    {
+      "type": "WEB",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-67228"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-67228"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-67228"
+    }
+  ]
+}
