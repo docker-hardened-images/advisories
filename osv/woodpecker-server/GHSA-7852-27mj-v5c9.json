@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-08T22:30:01Z",
+  "published": "2026-11-08T21:22:19Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-7852-27mj-v5c9",
+  "details": "### Summary\r\n\r\nThe login page shows OAuth errors from the query string. The `error_uri` parameter was rendered as a link with no check of the URL scheme, so a crafted login URL could show a `javascript:` link inside the Woodpecker error box. When a victim clicks it, the script can run in the context of the Woodpecker web UI, with the victim's session.\r\n\r\nNo login is needed to open the page; the attack needs one click by the victim.\r\n\r\n### Details\r\n\r\n`web/src/views/Login.vue` took the parameter straight from the route:\r\n\r\n    const errorUri = ref\u003cstring\u003e(route.query.error_uri as string);\r\n\r\nand bound it to a link inside the error box, which is shown when `error` is set:\r\n\r\n    \u003ca v-if=\"errorUri\" :href=\"errorUri\" target=\"_blank\" ...\u003e\r\n      \u003cspan\u003e{{ errorUri }}\u003c/span\u003e\r\n    \u003c/a\u003e\r\n\r\nVue does not filter `javascript:` URLs in `:href`, and Woodpecker sends no Content-Security-Policy header, so nothing blocked the scheme.\r\n\r\nThe link was added in v2.7.0 (#3807). Fixed in v3.20.0 by #7318 (57721450): `errorUri` is now computed and only set when the value starts with `http`.\r\n\r\n### Proof of concept\r\n\r\n   Note: the link opens with target=\"_blank\". In our tests, current browsers did not run the javascript: URL from this link, so exploitation depends on the browser and its settings. The unsafe link is fixed in v3.20.0 either way.\r\n\r\n### Impact\r\n\r\nReflected cross-site scripting in the Woodpecker web UI.\r\n\r\nWho is impacted: users of instances \u003c 3.20.0 who open a crafted login link and click the link in the error box. If the script runs in the Woodpecker origin, it can act as the victim through the web UI and API: read pipeline logs, repo settings and the names of secrets, change repo settings, or start pipelines. The script cannot read secret values, because the API does not return them.\r\n\r\nThe attacker needs no account. The victim must open the link and click once, so the impact depends on how convincing the error message looks.\r\n\r\nWorkaround, if you cannot update: add a Content-Security-Policy header at the reverse proxy that blocks inline script (no `unsafe-inline`), for example `script-src 'self'`.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "woodpecker-server",
+        "purl": "pkg:dhi/woodpecker-server"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.20.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "go.woodpecker-ci.org/woodpecker/v3"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/woodpecker-ci/woodpecker/security/advisories/GHSA-7852-27mj-v5c9"
+    }
+  ]
+}

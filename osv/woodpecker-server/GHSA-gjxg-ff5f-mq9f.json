@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-08T21:12:23Z",
+  "published": "2026-11-08T21:12:23Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-gjxg-ff5f-mq9f",
+  "details": "### Summary\n\nFor GitLab tag events, Woodpecker could overwrite the pipeline author with the author name of the git commit. That name is set by whoever made the commit and is not checked by GitLab.\r\n\r\nRepositories can list users whose pipelines do not need approval. Because the author was matched against this list, a user with push access could set their git author name to a listed user, push an annotated tag, and the tag pipeline ran without approval.\r\n\r\nCVE-2026-58370 fixed the same problem for the webhook data, but not for this tag path.\n\n### Details\n\n`convertTagHook` (`server/forge/gitlab/convert.go`) sets the author from the authenticated webhook user, which is safe:\r\n\r\n    pipeline.Author = hook.UserUsername\r\n\r\nFor an annotated tag the webhook has no commit message, so `Hook()` (`server/forge/gitlab/gitlab.go`) loads the commit with `loadCommitFromSHA`. That function then overwrote the author with the git commit metadata:\r\n\r\n    pipeline.Author = cm.AuthorName\r\n\r\n`needsApproval` (`server/pipeline/gated.go`) skips approval when the author is in the repo allow list:\r\n\r\n    if slices.Contains(repo.ApprovalAllowedUsers, pipeline.Author) {\r\n\r\nThe commit fallback was added in v3.14.0 (#6196). The fix for CVE-2026-58370 (#6653, v3.15.0) changed the webhook conversion, but not `loadCommitFromSHA`.\r\n\r\nFixed in v3.20.0 by #7397 (bb1f8a14): `loadCommitFromSHA` no longer sets the author, so the author from the authenticated webhook stays. The regression test `TestTagAuthorNotSpoofedFromCommit` covers this.\r\n\r\nOnly the GitLab forge is affected.\n\n### Proof of concept\n\nSetup: Woodpecker \u003e= 3.14.0 and \u003c 3.20.0 with the GitLab forge. A repository that requires approval for tag events (or all events), with `alice` in the list of users that do not need approval. The attacker `mallory` has Developer (push) access to the GitLab project.\r\n\r\n1. As mallory, make a commit with alice as the git author name:\r\n\r\n    git -c user.name=alice -c user.email=mallory@example.com commit --allow-empty -m \"test\"\r\n\r\n2. Create and push an annotated tag on that commit:\r\n\r\n    git tag -a v0.0.1-test -m \"test\"\r\n    git push origin HEAD v0.0.1-test\r\n\r\n3. In Woodpecker, the tag pipeline shows `alice` as author and starts without waiting for approval.\r\n\r\nOn v3.20.0 and later, the tag pipeline shows `mallory` as author and waits for approval.\r\n\r\nThe upstream regression test `TestTagAuthorNotSpoofedFromCommit` in `server/forge/gitlab/gitlab_test.go` reproduces this without a GitLab instance: before the fix, the author becomes the commit author name; after the fix, it stays the webhook user.\n\n### Impact\n\nWho is impacted: instances using the GitLab forge, on repositories that require approval and use the list of users whose pipelines do not need approval.\r\n\r\nA user with push access can skip the approval step for tag pipelines. The pipeline then runs code from that user with the secrets and agents available to tag events of the repository.\r\n\r\nWorkaround, if you cannot update: remove all users from the approval allow list of GitLab repositories, so every pipeline needs approval.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "woodpecker-server",
+        "purl": "pkg:dhi/woodpecker-server"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.14.0"
+            },
+            {
+              "fixed": "3.20.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "go.woodpecker-ci.org/woodpecker/v3"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/woodpecker-ci/woodpecker/security/advisories/GHSA-gjxg-ff5f-mq9f"
+    }
+  ]
+}

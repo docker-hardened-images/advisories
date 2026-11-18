@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-08T21:11:45Z",
+  "published": "2026-11-08T21:11:45Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-v6jr-fc8m-whr3",
+  "details": "### Summary\n\nThe Kubernetes backend passed the pipeline option `backend_options.kubernetes.runtimeClassName` straight into the pod spec, with no admin setting to allow or block it. Any user with push access to a connected repository could run pipeline pods under any RuntimeClass of the cluster. On clusters that use a sandbox runtime (for example gVisor or Kata Containers) as the isolation boundary for CI jobs, a user can select a weaker runtime and leave that sandbox.\r\n\r\nThis is the same problem as CVE-2026-61549 (GHSA-qf34-295c-26v8, `serviceAccountName`), in a field that the fix for that advisory did not cover.\n\n### Details\n\nIn `pipeline/backend/kubernetes/pod.go`, `podSpec()` set the field directly from the step options:\r\n\r\n    spec := kube_core_v1.PodSpec{\r\n        RestartPolicy:    kube_core_v1.RestartPolicyNever,\r\n        RuntimeClassName: options.RuntimeClassName,\r\n        ...\r\n\r\nOther fields that a step can set (`serviceAccountName`, `nodeSelector`, `tolerations`, `affinity`) are only applied when the agent admin enables a matching `*_ALLOW_FROM_STEP` option. `runtimeClassName` had no such option, so the value from the pipeline YAML always reached the pod.\r\n\r\nThe option was added in v2.5.0 (#3474). It is fixed in v3.18.0 by #7046 (edf5335), which adds the agent option `WOODPECKER_BACKEND_K8S_RUNTIME_CLASS_ALLOW_FROM_STEP` (default `false`). The value from the step is only used when an admin enables this option.\n\n### Proof of concept\n\nRequirements: a Woodpecker agent with the Kubernetes backend, version \u003e= 2.5.0 and \u003c 3.18.0, on a cluster that has more than one RuntimeClass. Example: the default runtime is a sandbox (gVisor `runsc` or Kata), and there is also a RuntimeClass `runc` (or any other less isolated handler).\r\n\r\n1. As a user with push access to a repository connected to Woodpecker, commit this `.woodpecker.yaml`:\r\n\r\n    steps:\r\n      - name: escape\r\n        image: alpine\r\n        commands:\r\n          - id\r\n          - cat /proc/1/status\r\n          - uname -a\r\n        backend_options:\r\n          kubernetes:\r\n            runtimeClassName: runc\r\n\r\n2. Push the commit and let the pipeline run.\r\n3. Check the pod: `kubectl get pod \u003cstep pod\u003e -n \u003cpipeline namespace\u003e -o jsonpath='{.spec.runtimeClassName}'` shows `runc`. The step output shows the host kernel instead of the sandbox kernel.\r\n\r\nOn v3.18.0 and later, with the default agent configuration, the pod has no `runtimeClassName` from the step and runs with the cluster default.\n\n### Impact\n\nWho is impacted: operators who run the Kubernetes backend on a cluster with more than one RuntimeClass, especially when a sandbox runtime (gVisor, Kata Containers or similar) is the isolation boundary between CI jobs and the node.\r\n\r\nAny user with push access to a connected repository can choose the RuntimeClass of their pipeline pods. With a weaker runtime available, they can break out of the intended sandbox and reach the node, other pods on the node, and the credentials available there.\r\n\r\nClusters with only one runtime are not affected in practice.\r\n\r\nWorkarounds, if you cannot update:\r\n- Remove RuntimeClasses that weaken isolation from the cluster, or\r\n- enforce the allowed `runtimeClassName` for the pipeline namespace with an admission policy (for example Kyverno or Gatekeeper), or\r\n- restrict push access on connected repositories to trusted users.\r\n\r\nAfter updating to v3.18.0, steps can no longer set `runtimeClassName` unless the agent admin sets `WOODPECKER_BACKEND_K8S_RUNTIME_CLASS_ALLOW_FROM_STEP=true`.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "woodpecker-server",
+        "purl": "pkg:dhi/woodpecker-server"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.18.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "go.woodpecker-ci.org/woodpecker/v3"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/woodpecker-ci/woodpecker/security/advisories/GHSA-v6jr-fc8m-whr3"
+    }
+  ]
+}
