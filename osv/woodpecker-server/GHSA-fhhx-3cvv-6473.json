@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-08T21:18:26Z",
+  "published": "2026-11-08T21:18:26Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-fhhx-3cvv-6473",
+  "details": "### Summary\n\nAn agent that sends a `Next` request without a label filter makes the Woodpecker server panic. The gRPC server has no panic recovery, so the whole server process exits. This stops the web UI, the API, webhooks and all running pipelines until the server restarts.\r\n\r\nAny valid agent credential is enough. Since org and user agents exist (v3.0.0), org admins and users can create such agents and get their own agent token, so this does not need server admin rights.\n\n### Details\n\n`WoodpeckerServer.Next` (`server/rpc/server.go`) builds the agent filter from the request:\r\n\r\n    Labels: req.GetFilter().GetLabels(),\r\n\r\nWhen the request has no filter, or a filter without labels, this is a nil Go map. `RPC.Next` (`server/rpc/rpc.go`) then writes the server-enforced labels into it, and these always include `org-id`:\r\n\r\n    maps.Copy(agentFilter.Labels, agentServerLabels)\r\n\r\nWriting into a nil map panics with `assignment to entry in nil map`. The gRPC server has no recovery interceptor, so the panic ends the `woodpecker-server` process.\r\n\r\nThe stock agent always sends labels, so this needs a modified agent or a hand-made gRPC request.\r\n\r\nThe server label enforcement was added in v3.0.0 (#3539). Fixed in v3.20.0 by #7336 (60981de), which creates an empty map before adding the server labels. The regression test is `TestRPCNext` in `server/rpc/rpc_test.go`.\n\n### Proof of concept\n\nSetup: Woodpecker server \u003e= 3.0.0 and \u003c 3.20.0, and a valid agent token (for example an org agent created by an org admin in the org settings).\r\n\r\n1. Connect to the server gRPC port and authenticate with the agent token, as the stock agent does.\r\n2. Call `Next` with an empty `NextRequest` (no filter, or a filter with no labels).\r\n3. The server logs `panic: assignment to entry in nil map` from `RPC.Next` and the process exits.\r\n\r\nWithout a running setup, the upstream test `TestRPCNext` in `server/rpc/rpc_test.go` (added by #7336) calls `Next` with a filter without labels. Before the fix it panics; after the fix it passes.\n\n### Impact\n\nDenial of service of the whole Woodpecker server.\r\n\r\nWho is impacted: all v3 instances before 3.20.0 where untrusted people can hold an agent token. With org and user agents, this includes every org admin and user who can register an agent. The attacker also needs network access to the gRPC port.\r\n\r\nEach request crashes the server again, so an attacker can keep the instance down.\r\n\r\nWorkaround, if you cannot update: restrict network access to the gRPC port to known agent hosts, and remove agents that you do not trust.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "woodpecker-server",
+        "purl": "pkg:dhi/woodpecker-server"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.20.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "go.woodpecker-ci.org/woodpecker/v3"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/woodpecker-ci/woodpecker/security/advisories/GHSA-fhhx-3cvv-6473"
+    }
+  ]
+}

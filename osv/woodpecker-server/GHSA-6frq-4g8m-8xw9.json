@@ -1,0 +1,39 @@
+{
+  "modified": "2026-11-09T01:59:54Z",
+  "published": "2026-11-09T01:59:54Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-6frq-4g8m-8xw9",
+  "details": "### Summary\n\nBefore 3.19.0, Woodpecker did not treat the default clone step as a plugin step when it got clone credentials. This happens for private repositories, and for all repositories when `WOODPECKER_AUTHENTICATE_PUBLIC_REPOS` is on. So the plugin protections did not apply to the one step that holds the forge token of the repository owner. A user who can change the pipeline config could use `workspace.base` to make the clone plugin write its `.netrc` into the shared workspace. Matrix values and manual pipeline variables also still reached the clone step after the 3.18.0 fix for plugin steps (GHSA-xwpq-2mq8-p55x).\n\n### Details\n\nWoodpecker gives plugin steps extra protection. The compiler treats a step as a plugin only if `IsPlugin()` is true: no `commands`, no `entrypoint` and no `environment`. For plugin steps:\r\n\r\n- the workspace is always mounted at `/woodpecker`, so `workspace.base` cannot move it (fix for CVE-2024-41121, since 2.7.0)\r\n- matrix values and manual pipeline variables are not added to the environment (#7036 and #7040, since 3.18.0)\r\n\r\nWoodpecker uses the default clone step when a workflow has no `clone:` section and does not set `skip_clone`. The compiler wrote the clone credentials (`CI_NETRC_USERNAME`, `CI_NETRC_PASSWORD`, `CI_NETRC_MACHINE`) into `container.Environment` of this step before it called `createProcess`. `IsPlugin()` then saw a non-empty environment and returned false. So both protections were skipped, but only when credentials were present:\r\n\r\n- `workspace.base` from the pipeline config also moved the workspace of the clone step. If it points to the home directory of the clone plugin, the `.netrc` the plugin writes there lands in the shared workspace volume, and later steps can read it.\r\n- Matrix values and manual pipeline variables were added to the environment of the clone step. Pipeline config could change how the clone plugin and git run while the credentials were in that environment.\r\n\r\nThe credentials are the forge token of the repository owner, the user who activated the repository in Woodpecker.\r\n\r\nCustom clone steps were not affected. There the credentials are added after `createProcess`, and only for trusted clone plugins or trusted repositories.\r\n\r\nThe fix in #7157 (409e2b9fc6ce7d24a857ece34f9266b55a24112c, released in 3.19.0) adds the clone credentials to the step after `createProcess`. The default clone step is a plugin again, and both protections apply.\r\n\r\nRelated:\r\n\r\n- GHSA-xwpq-2mq8-p55x: https://github.com/woodpecker-ci/woodpecker/security/advisories/GHSA-xwpq-2mq8-p55x\r\n- CVE-2024-41121: https://github.com/woodpecker-ci/woodpecker/security/advisories/GHSA-xw35-rrcp-g7xm\r\n- CVE-2024-41122: https://github.com/woodpecker-ci/woodpecker/security/advisories/GHSA-3wf2-2pq4-4rvc\n\n### Proof of concept\n\nWe do not publish a step-by-step exploit. The fix adds the regression test `TestCompilerCompileDefaultCloneStep` in `pipeline/frontend/yaml/compiler/compiler_test.go`. It compiles a default clone step with a custom workspace base and clone credentials: https://github.com/woodpecker-ci/woodpecker/pull/7157\n\n### Impact\n\nAnyone who can change the pipeline config of a repository that clones with credentials can get the forge token of the repository owner. That includes users with push access, and pull requests that run without approval or get approved. With the token they can act as the owner on the forge: read and write every repository the owner can reach, and more if the owner is a forge admin. Woodpecker does not mask the token in logs.\r\n\r\nUpgrade to 3.19.0 or later.\r\n\r\n### Workarounds\r\n\r\nSet \"Approval requirements\" to \"All events from forge\" and review config changes before you approve a pipeline. Cron and manual pipelines and users on the allowed users list skip approval.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "woodpecker-server",
+        "purl": "pkg:dhi/woodpecker-server"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.19.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "go.woodpecker-ci.org/woodpecker/v3"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/woodpecker-ci/woodpecker/security/advisories/GHSA-6frq-4g8m-8xw9"
+    }
+  ]
+}
