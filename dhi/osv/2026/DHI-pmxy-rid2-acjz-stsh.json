@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-pmxy-rid2-acjz-stsh",
+  "modified": "2026-11-18T14:54:18Z",
+  "published": "2026-11-18T14:54:18Z",
+  "upstream": [
+    "CVE-2026-66071"
+  ],
+  "summary": "## Origin",
+  "details": "## Origin\n\nThis vulnerability was identified by Team RabbitMQ and/or other teams at Broadcom, not via a responsible disclosure from an external researcher.\n\n## Source references\n\n`deps/rabbitmq_auth_backend_oauth2/src/rabbit_auth_backend_oauth2.erl:479` · Atom Table Exhaustion\n\n## Impact\n\nIn deployments where users can influence the scopes included in their IdP-issued JWT (e.g. self-service OAuth2 client registration, or scope-passthrough IdPs), each unique rabbitmq.tag:<value> scope creates a permanent atom on the broker. Accumulated over many tokens this exhausts the atom table.\n\n## Description\n\nextract_scopes/1 parses scopes of the form <prefix>.tag:<tag> and calls rabbit_data_coercion:to_atom(<tag>) to convert to a tag atom. The token signature is verified first, so the attacker cannot forge scopes — but in IdP configurations where scope content is user-influenced, each login with a novel tag value leaks one atom.\n\n## Exploit scenario\n\nIdP allows clients to request arbitrary scopes. Attacker scripts token requests with scope=rabbitmq.tag:x000001, ...x000002, etc., logging in to the broker with each. After ~1M distinct tags the VM aborts.\n\n## Preconditions\n\n- rabbitmq_auth_backend_oauth2 enabled\n- IdP permits attacker-influenced scope values in signed tokens (deployment-dependent)\n\n## CVSS\nCVSS v4.0: `CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N` (6.0, Moderate). Fixed in `3.13.15`, `4.0.22`, `4.1.11`, `4.2.6`, `4.3.1`.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "rabbitmq-4.4-fips",
+        "purl": "pkg:deb/dhi/rabbitmq-4.4-fips"
+      },
+      "versions": [
+        "4.4.1-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "rabbitmq-4.4",
+        "purl": "pkg:deb/dhi/rabbitmq-4.4"
+      },
+      "versions": [
+        "4.4.0-0",
+        "4.4.1-0",
+        "4.4.1-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-pmxy-rid2-acjz-stsh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-89p2-f5cv-x5cg"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-66071"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/commit/c5690583a53789a3bf00cca508b43e8246db0d11"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/commit/9a44124d9c932d6fc7d2a3b945e5a143e547bcb6"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.1"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.2.6"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-66071"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-66071"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-66071"
+    }
+  ]
+}
