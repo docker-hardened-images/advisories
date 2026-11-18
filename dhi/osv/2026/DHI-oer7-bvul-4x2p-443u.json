@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-oer7-bvul-4x2p-443u",
+  "modified": "2026-11-18T14:50:03Z",
+  "published": "2026-11-18T14:50:03Z",
+  "upstream": [
+    "CVE-2026-66069"
+  ],
+  "summary": "## Origin",
+  "details": "## Origin\n\nThis vulnerability was identified by Team RabbitMQ and/or other teams at Broadcom, not via a responsible disclosure from an external researcher.\n\n## Source references\n\n`deps/rabbitmq_management/src/rabbit_mgmt_wm_auth_attempts.erl:35` · Broken Access Control\n\n## Impact\n\nA monitoring-tagged user can reset the per-node authentication-attempt counters via DELETE /api/auth/attempts/:node, erasing evidence of brute-force activity. The sibling endpoint wm_reset requires administrator.\n\n## Description\n\nis_authorized/2 uses is_authorized_monitor for all methods. DELETE resets rabbit_core_metrics:reset_auth_attempt_metrics(). Impact is cosmetic (counters only, no log erasure), but inconsistent with rabbit_mgmt_wm_reset.erl which requires admin for the analogous operation.\n\n## Exploit scenario\n\nAfter a credential-stuffing attempt, attacker (with stolen monitoring creds) issues DELETE /api/auth/attempts/rabbit@node1 to zero the failure counters before the security team's dashboard polls.\n\n## Preconditions\n\n- Management plugin enabled\n- monitoring tag\n\n## CVSS\nCVSS v4.0: `CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N` (2.3, Low). Fixed in `4.1.13`, `4.2.7`, `4.3.0`.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "rabbitmq-4.4-fips",
+        "purl": "pkg:deb/dhi/rabbitmq-4.4-fips"
+      },
+      "versions": [
+        "4.4.1-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "rabbitmq-4.4",
+        "purl": "pkg:deb/dhi/rabbitmq-4.4"
+      },
+      "versions": [
+        "4.4.0-0",
+        "4.4.1-0",
+        "4.4.1-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-oer7-bvul-4x2p-443u"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-fhwq-9rvh-prj2"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-66069"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.0"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.2.7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-66069"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-66069"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-66069"
+    }
+  ]
+}
