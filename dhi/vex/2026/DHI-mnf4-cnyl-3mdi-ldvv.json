@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T21:04:45Z",
-  "last_updated": "2026-11-18T19:33:15Z",
-  "version": 3,
+  "last_updated": "2026-11-19T21:58:29Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -131,9 +131,14 @@
         },
         {
           "@id": "pkg:deb/dhi/uv@0.13.8-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/uv@0.13.9-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "CVE-2026-104843 (GHSA-2cv4-cqwr-gwf7): from uv 0.12.7 to before 0.12.18, wheel extraction on Windows can rebuild an archive member name such as C:module.py into a Windows path prefix and write a file outside the installation prefix. The advisory states that the vulnerability only affects Windows hosts and that no other platform is affected (https://github.com/astral-sh/uv/security/advisories/GHSA-2cv4-cqwr-gwf7). The fix, https://github.com/astral-sh/uv/commit/67169645278ce082638d619beefa6d062540843b (https://github.com/astral-sh/uv/pull/21923), rejects a sanitized archive path whose first component is a Windows prefix or a root directory; its regression test runs only on Windows. On Linux, Rust's standard library never parses a path component as a Windows prefix (https://doc.rust-lang.org/std/path/enum.Component.html#variant.Prefix: \"Does not occur on Unix\"), so the condition the fix guards against cannot arise. This owner is the uv package for Debian 13, built only for Linux on amd64 and arm64. Read the crate list that cargo-auditable embeds in /usr/bin/uv and /usr/bin/uvx of every published uv package in the DHI Debian repository, 0.11.22-0 to the current 0.13.9-0, for both architectures: 0.12.7-0 to 0.12.17-0 carry the uv 0.12.7 to 0.12.17 crate, and every build from 0.12.18-0 on carries 0.12.18 or later."
     }
   ]
 }
