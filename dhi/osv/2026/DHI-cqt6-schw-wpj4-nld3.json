@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-cqt6-schw-wpj4-nld3",
+  "modified": "2026-11-19T15:33:01Z",
+  "published": "2026-11-19T15:33:01Z",
+  "upstream": [
+    "CVE-2026-124709"
+  ],
+  "summary": "Issue summary: A QUIC server that rejects a stream opened by the peer may",
+  "details": "Issue summary: A QUIC server that rejects a stream opened by the peer may\nretain that stream's state for the lifetime of the connection if the peer\nresets the stream before the rejection is signalled, even though the peer's\nstream credit is returned.\n\nImpact summary: A remote client that completes a QUIC handshake can repeatedly\nopen and reset streams, causing server memory to grow without bound until the\nprocess runs out of memory and every connection on it is lost. This is a\nDenial of Service.\n\nCWE: CWE-401: Missing Release of Memory after Effective Lifetime\n\nDescription: QUIC servers track each stream the peer opens. When the incoming\nstream policy rejects a stream, OpenSSL schedules a STOP_SENDING frame, marks\nthe stream deleted and returns the peer's stream credit. A deleted stream is\ncollected only once its receive part is fully drained, which for a rejected\nstream means the STOP_SENDING has been acknowledged. If the peer sends\nRESET_STREAM first, the reset cancels the pending STOP_SENDING, so it is never\nsent or acknowledged and the stream is never collected.\n\nThe default configuration reaches this path. Once a connection has a default\nstream, meaning the application has read from or written to the connection as\nthe tutorial server does, the effective incoming stream policy rejects streams\nthe application does not accept. Applications that set the REJECT policy\nexplicitly are affected too.\n\nEach retained stream costs about 300 bytes, and the peer's stream credit\nwindow paces how quickly they accumulate. A client that keeps the connection\nopen and keeps opening and resetting streams grows server memory without\nbound. The severity is Low because growth is slow, needs a long-lived\nconnection, and causes no memory corruption or disclosure.\n\nFIPS impact: no\nThe affected code is outside the FIPS module boundary.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "openssl",
+        "purl": "pkg:deb/dhi/openssl"
+      },
+      "versions": [
+        "3.5.5-1~deb13u2dhi0",
+        "3.5.6-1~deb13u1+dhi0",
+        "3.5.6-1~deb13u1+dhi1",
+        "3.5.6-1~deb13u1+dhi2",
+        "3.5.6-1~deb13u1+fips+dhi0",
+        "3.5.6-1~deb13u1+fips+dhi1",
+        "3.5.6-1~deb13u1+fips+dhi2",
+        "3.5.6-1~deb13u1dhi0",
+        "3.5.6-1~deb13u2+dhi0",
+        "3.5.6-1~deb13u2+dhi1",
+        "3.5.6-1~deb13u2+dhi2",
+        "3.5.6-1~deb13u2+dhi3",
+        "3.5.6-1~deb13u2+fips+dhi0",
+        "3.5.6-1~deb13u2+fips+dhi1",
+        "3.5.7-1~deb13u2+dhi0",
+        "3.5.7-1~deb13u2+dhi1",
+        "3.5.7-1~deb13u2+fips+dhi0",
+        "3.5.7-1~deb13u3+dhi0",
+        "3.5.7-1~deb13u3+dhi1",
+        "3.5.7-1~deb13u3+fips+dhi0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-cqt6-schw-wpj4-nld3"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-124709"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-124709"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-124709"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-124709"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/f3acb0a3328046741479482c51cec815839e1b05"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/ead311df1037e7994a6d86c7e862d71ad59c52c7"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/22291a6af12f158fbb13bfbd572a33dbdbf290d2"
+    }
+  ]
+}

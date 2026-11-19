@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-d6el-7zhd-n7bg-lon5",
+  "modified": "2026-11-19T15:33:01Z",
+  "published": "2026-11-19T15:33:01Z",
+  "upstream": [
+    "CVE-2026-35190"
+  ],
+  "summary": "Issue summary: A server configured with the Suite B certificate flag through",
+  "details": "Issue summary: A server configured with the Suite B certificate flag through\nSSL_CTX_set_cert_flags() and with TLS 1.3 enabled may read past the end of a\nfixed group list when it processes a ClientHello whose supported_groups and\nkey_share contain no Suite B group.\n\nImpact summary: A remote client can send a ClientHello that makes the server\nread past the end of a static array. The values read are never returned to the\nclient, so no memory is disclosed; on builds with sanitizers or hardened\nallocators the read may crash the process, causing Denial of Service.\n\nCWE: CWE-125: Out-of-bounds Read\n\nDescription: When the Suite B certificate flag is set, OpenSSL restricts the\naccepted groups to P-256 and P-384 by substituting a fixed two-element list\nfor the configured group list. The tuple machinery used for key-share\nselection was not updated for this substitution: tls1_get_group_tuples() still\nreturns the configured tuples, which by default describe eight groups. The\nserver-side walk in tls_parse_ctos_key_share() then advances through the\ntwo-element list using those tuple counts without checking the cumulative\noffset against the number of groups present.\n\nOnly applications that call SSL_CTX_set_cert_flags() with\nSSL_CERT_FLAG_SUITEB_128_LOS and leave TLS 1.3 enabled are affected. The\nopenssl s_server -suiteB_128 option sets an X.509 verification parameter\ninstead, so the stock command line server is not vulnerable. Default\nconfigurations do not reach this code.\n\nA client that offers only groups outside the Suite B set, such as X25519,\nforces every tuple to be walked and the read to run past the array. The bytes\nread are compared against client group IDs and never sent back, so no memory\nis disclosed. On builds with address sanitizers or hardened allocators the\nread can abort the process; in ordinary release builds it reads a few bytes of\nadjacent constant data.\n\nFIPS impact: no\nThe affected code is outside the FIPS module boundary.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "openssl",
+        "purl": "pkg:deb/dhi/openssl"
+      },
+      "versions": [
+        "3.5.5-1~deb13u2dhi0",
+        "3.5.6-1~deb13u1+dhi0",
+        "3.5.6-1~deb13u1+dhi1",
+        "3.5.6-1~deb13u1+dhi2",
+        "3.5.6-1~deb13u1+fips+dhi0",
+        "3.5.6-1~deb13u1+fips+dhi1",
+        "3.5.6-1~deb13u1+fips+dhi2",
+        "3.5.6-1~deb13u1dhi0",
+        "3.5.6-1~deb13u2+dhi0",
+        "3.5.6-1~deb13u2+dhi1",
+        "3.5.6-1~deb13u2+dhi2",
+        "3.5.6-1~deb13u2+dhi3",
+        "3.5.6-1~deb13u2+fips+dhi0",
+        "3.5.6-1~deb13u2+fips+dhi1",
+        "3.5.7-1~deb13u2+dhi0",
+        "3.5.7-1~deb13u2+dhi1",
+        "3.5.7-1~deb13u2+fips+dhi0",
+        "3.5.7-1~deb13u3+dhi0",
+        "3.5.7-1~deb13u3+dhi1",
+        "3.5.7-1~deb13u3+fips+dhi0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-d6el-7zhd-n7bg-lon5"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-35190"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-35190"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-35190"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-35190"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/ade64619df04056b3e5fd1c1befe9425a7c80eb6"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/9a812981b927c5714b7c2e5d138618105cea2152"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/9491b0d9cc7950af1f3dc89499bd5433b9cd4f43"
+    }
+  ]
+}
