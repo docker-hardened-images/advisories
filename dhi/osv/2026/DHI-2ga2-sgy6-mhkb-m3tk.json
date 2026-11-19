@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-2ga2-sgy6-mhkb-m3tk",
+  "modified": "2026-11-19T00:24:54Z",
+  "published": "2026-11-19T00:24:54Z",
+  "upstream": [
+    "GHSA-w4gv-rcwj-w6r5"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\r\n\r\nZITADEL’s OIDC token exchange allowed a user holding only the end-user impersonation permission to impersonate administrators, including an instance owner (`IAM_OWNER`).\r\n\r\nZITADEL distinguishes two impersonation permissions: `impersonation`, granted by the `IAM_END_USER_IMPERSONATOR` and `ORG_END_USER_IMPERSONATOR` roles, is documented to allow impersonating end users only, while impersonating administrators additionally requires `admin.impersonation`, granted by the `IAM_ADMIN_IMPERSONATOR` and `ORG_ADMIN_IMPERSONATOR` roles. The token exchange only ever checked `impersonation` and never whether the impersonated user is an administrator, so `admin.impersonation` was not enforced.\r\n\r\n### Impact\r\n\r\nAn actor holding one of the `*_END_USER_IMPERSONATOR` roles can:\r\n\r\n- **Impersonate any administrator** within the scope of their role (instance-wide for `IAM_END_USER_IMPERSONATOR`, the users of their organization for `ORG_END_USER_IMPERSONATOR`), including `IAM_OWNER` and `ORG_OWNER`\r\n- **Sign in to applications as that administrator**, with the administrator’s roles and claims\r\n\r\nImpersonated tokens are marked as such and are rejected by ZITADEL’s own APIs, so the issue does **not** grant access to the ZITADEL Console or the management APIs. Its impact is limited to what the impersonated administrator can do in applications that rely on the instance for authentication.\r\n\r\nThis affects instances where impersonation is enabled (the instance security setting *Allow Impersonation*, which is disabled by default, and the token exchange grant on at least one application) and where at least one user holds an `*_END_USER_IMPERSONATOR` role. Exploitation requires that role, so it is only reachable by users an administrator has already trusted to impersonate end users.\r\n\r\n**Scope note:** A user counts as an administrator as soon as they hold any membership (instance, organization, project or project grant). The issue does not cross organizations for `ORG_END_USER_IMPERSONATOR` and does not cross instances.\r\n\r\n### Affected Versions\r\n\r\nSystems running one of the following versions are affected:\r\n\r\n* **4.x:** `4.0.0` through `4.19.1` (including RC versions)\r\n* **3.x:** `3.0.0` through `3.4.15` (including RC versions)\r\n\r\n### Patches\r\n\r\nThe vulnerability has been addressed in the latest releases. Impersonating a user who holds any membership now requires the `admin.impersonation` permission, which only the `IAM_ADMIN_IMPERSONATOR` and `ORG_ADMIN_IMPERSONATOR` roles grant; the `*_END_USER_IMPERSONATOR` roles can only impersonate users without memberships.\r\n\r\n* **4.x**: Upgrade to $\\ge$ [4.19.2](https://github.com/zitadel/zitadel/releases/tag/v4.19.2)\r\n\r\nThe **3.x** release line reached end-of-life on 2026-08-31 and will not receive a fix for this vulnerability. Affected 3.x deployments must upgrade to a patched 4.x release.\r\n\r\n### Workarounds\r\n\r\nThe recommended solution is to upgrade to a patched version. On unpatched versions, the issue can be avoided by not granting the `IAM_END_USER_IMPERSONATOR` and `ORG_END_USER_IMPERSONATOR` roles, or by disabling impersonation in the instance security settings.\r\n\r\n### Questions\r\n\r\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\r\n\r\n### Credits\r\n\r\nThanks to Wojciech Piekutowski from Nedap for finding and reporting the vulnerability.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-dev",
+        "purl": "pkg:apk/dhi/zitadel-4-dev"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips-dev",
+        "purl": "pkg:apk/dhi/zitadel-4-fips-dev"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips-license",
+        "purl": "pkg:apk/dhi/zitadel-4-fips-license"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips",
+        "purl": "pkg:apk/dhi/zitadel-4-fips"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-license",
+        "purl": "pkg:apk/dhi/zitadel-4-license"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4",
+        "purl": "pkg:apk/dhi/zitadel-4"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-2ga2-sgy6-mhkb-m3tk"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-w4gv-rcwj-w6r5"
+    }
+  ]
+}

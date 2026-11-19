@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-la53-dz2n-qnoj-2ku7",
+  "modified": "2026-11-19T00:24:54Z",
+  "published": "2026-11-19T00:24:54Z",
+  "upstream": [
+    "GHSA-g8gj-gq47-xgf4"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nZITADEL established links between user accounts and external identity providers without verifying that the requester was entitled to create the link. The hosted **Login V2** UI accepted explicit IdP linking on an identify-only session — created by merely submitting a login name, with no factor verified — allowing an unauthenticated attacker who knows only a victim’s login name to bind their own external identity to the victim’s account and then sign in through that identity provider as the victim. The same missing verification was reachable directly through the User Service V2 **`AddIDPLink`** endpoint (`POST /v2/users/{user_id}/links`), which skipped the permission check whenever a caller targeted their own account, letting any authenticated user bind an unverified external identity. On both paths, the link was created before any check that a primary factor had been verified or that the caller held the required permission.\n\n### Impact\n\nAn attacker who knows a victim’s login name, in an organization that permits external IdP account linking, can:\n\n- **Bind their own external identity to the victim’s account**, by driving Login V2’s explicit-linking flow against an identify-only session (login name submitted, no factor verified)\n- **Sign in as the victim** through that identity provider afterward, obtaining a fully authenticated session\n\nThrough the API surface of the same flaw, any authenticated user — without knowing anyone’s login name — can **pre-claim an arbitrary external identity on their own account** via `AddIDPLink`. Because external IdP links are globally unique (first claim wins), this diverts or blocks the victim’s future federated logins, though this vector alone does not authenticate the attacker as the victim.\n\nThis affects applications that authenticate users through ZITADEL’s hosted **Login V2** UI (OIDC/SAML); the API vector additionally affects any deployment exposing the User Service V2 API, independent of which login UI is used.\n\nThe attack does not require the attacker to know or guess the victim’s password, existing authenticators, or MFA — the identify-only session alone is sufficient. **Login V1 is not affected**: it executes linking only after the target account has completed primary-factor and MFA verification.\n\n**Scope note:** The flaw is instance-wide/cross-organization but not cross-instance. Both attack vectors stem from the same missing verification when establishing an external-identity link and are fixed together in one release.\n\n### Affected Versions\n\nSystems running one of the following versions are affected:\n\n* **4.x:** `4.0.0` through `4.17.2` (including RC versions)\n* **3.x:** `3.0.0` through `3.4.15` (including RC versions)\n\n### Patches\n\nThe vulnerability has been addressed in the latest releases. Patched versions enforce the same rule on every path that establishes an external-identity link: Login V2 authorizes explicit IdP linking through the same guard used for authenticator enrollment (a verified, non-expired primary factor on the session, or — for a user with no authentication methods yet — a passed user-verification check bound to the browser’s fingerprint), and `AddIDPLink` enforces its permission check unconditionally, including when the caller targets their own account.\n\n* **4.x**: Upgrade to $\\ge$ [4.17.3](https://github.com/zitadel/zitadel/releases/tag/v4.17.3)\n\nThe **3.x** release line reached end-of-life on 2026-08-31 and will not receive a fix for this vulnerability. Affected 3.x deployments must upgrade to a patched 4.x release.\n\n### Workarounds\n\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions. As a partial mitigation, disabling external IdP account linking in an affected organization’s login policy closes the Login V2 vector; it does not close the API vector, which is independent of login-policy configuration.\n\n### Questions\n\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\n\n### Credits\n\nThanks to Lucas Dodgson from InfoGuard Labs ([@lucasdodgson](https://github.com/lucasdodgson)) and Adam Korczynski from Ada Logics ([@AdamKorcz](https://github.com/AdamKorcz)) for finding and reporting the vulnerability.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-dev",
+        "purl": "pkg:apk/dhi/zitadel-4-dev"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips-dev",
+        "purl": "pkg:apk/dhi/zitadel-4-fips-dev"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips-license",
+        "purl": "pkg:apk/dhi/zitadel-4-fips-license"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips",
+        "purl": "pkg:apk/dhi/zitadel-4-fips"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-license",
+        "purl": "pkg:apk/dhi/zitadel-4-license"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4",
+        "purl": "pkg:apk/dhi/zitadel-4"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-la53-dz2n-qnoj-2ku7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-g8gj-gq47-xgf4"
+    }
+  ]
+}

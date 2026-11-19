@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-xcbl-quin-ehbr-7qui",
+  "modified": "2026-11-19T00:24:54Z",
+  "published": "2026-11-19T00:24:54Z",
+  "upstream": [
+    "GHSA-jh92-5mrj-p2w2"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\r\n\r\nZITADEL’s hosted **Login V2** UI allowed an unauthenticated attacker to obtain a fresh session token for another user’s authenticated session — including every factor that user had completed, such as MFA — without a password, a second factor, an existing session token, or any interaction with the victim, provided the attacker could guess the victim’s session ID. Session IDs are time-ordered identifiers, so an attacker who creates sessions shortly before and after the victim signs in can narrow the candidates to a small set and test them.\r\n\r\nLogin V2 kept its session references in a browser cookie that was neither signed nor otherwise validated. When updating a session, the login UI forwarded the session ID from that cookie to the session API using its own service-user credentials, which hold the `session.write` permission; the session API accepts such updates without the session’s current token and returns a newly issued one. As a result, a forged cookie entry containing a guessed session ID and an empty token was sufficient to make the login UI rotate — and hand out — the token of a session it had not created.\r\n\r\n### Impact\r\n\r\nAn attacker who can reach the Login V2 UI and can estimate when a victim signs in can:\r\n\r\n* **Obtain a valid session token for the victim’s authenticated session**, retaining every factor the victim completed, including MFA.\r\n* **Act as the victim** — complete OIDC and SAML flows and call ZITADEL’s APIs with that token. If the victim is an instance administrator (e.g. `IAM_OWNER`), this results in full instance takeover; for a non-privileged victim it is a takeover of that user’s account.\r\n* **Read the details of any session by its ID** (login name, authentication factors) and **sign that session out**, through the same unsigned cookie.\r\n\r\nThis affects applications that authenticate users through ZITADEL’s hosted **Login V2** UI (OIDC/SAML).\r\n\r\nThe attack is timing-sensitive: the attacker must guess the session ID from a window around the victim’s sign-in. The time-based structure of session IDs narrows that search, while load balancing, concurrent traffic and any rate limiting in front of the login UI widen it. It does **not** require the victim to do anything beyond signing in normally, and it does **not** depend on how the victim authenticates — password, passkey and external identity provider logins all produce the same kind of session. Deployments that do **not** run Login V2 (for example Login V1 only) are not affected: the session API itself only accepts token-less updates from callers holding `session.write` (`IAM_OWNER` and `IAM_LOGIN_CLIENT`), which are not exposed to end users.\r\n\r\n**Scope note:** This affects the **Login V2** UI only; the session API’s behaviour is unchanged and by design. Exposure is instance-wide — any session on the instance can be targeted, across organizations, but not across instances. It is the login-side counterpart of [GHSA-6c5p-6www-pcmr](https://github.com/zitadel/zitadel/security/advisories/GHSA-6c5p-6www-pcmr), which restricted token-less session updates to callers with `session.write`: that permission is legitimately held by the login UI, and this issue is the login UI applying it to a session ID chosen by the client. Operators of a custom login built on the session API with a `session.write` service user should verify that it only acts on session IDs it issued itself. It is independent of [GHSA-3gwm-5wx8-4gm6](https://github.com/zitadel/zitadel/security/advisories/GHSA-3gwm-5wx8-4gm6), which concerns OTP challenge handling.\r\n\r\n### Affected Versions\r\n\r\nSystems running one of the following versions are affected:\r\n\r\n* **4.x:** `4.0.0` through `4.19.1` (including RC versions)\r\n* **3.x:** `3.0.0` through `3.4.15` (including RC versions)\r\n\r\n### Patches\r\n\r\nThe vulnerability has been addressed in the latest releases.\r\n\r\nLogin V2 now signs every entry of its session cookie and ignores entries whose signature is missing or invalid, so the login UI only acts on sessions it created itself in that browser. The signing key is derived from the new `ZITADEL_SESSION_COOKIE_SECRET` setting, which is the recommended configuration (at least 32 characters; a comma-separated list allows rotation without signing users out). If it is not set, the key is derived from the login’s configured API credential so that the patch can be applied without new configuration; this fallback is deprecated, is announced by a warning at startup, and means that rotating that credential signs all users out of the login UI. Because existing cookies carry no signature, users have to sign in to the login UI once more after upgrading — during a rolling deployment possibly more than once, until all replicas run the patched version. Application sessions and issued tokens are not affected. The session API contract is unchanged.\r\n\r\n* **4.x**: Upgrade to $\\ge$ [4.19.2](https://github.com/zitadel/zitadel/releases/tag/v4.19.2)\r\n\r\nThe **3.x** release line reached end-of-life on 2026-08-31 and will not receive a fix for this vulnerability. Affected 3.x deployments must upgrade to a patched 4.x release.\r\n\r\n### Workarounds\r\n\r\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions. As a partial mitigation, rate limiting requests to the login UI (for example at a reverse proxy) reduces the feasibility of the session-ID search but does not close the gap.\r\n\r\n### Questions\r\n\r\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\r\n\r\n### Credits\r\n\r\nThanks to Lucas Dodgson from InfoGuard Labs ([@lucasdodgson](https://github.com/lucasdodgson)) for finding and reporting the vulnerability.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-dev",
+        "purl": "pkg:apk/dhi/zitadel-4-dev"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips-dev",
+        "purl": "pkg:apk/dhi/zitadel-4-fips-dev"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips-license",
+        "purl": "pkg:apk/dhi/zitadel-4-fips-license"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips",
+        "purl": "pkg:apk/dhi/zitadel-4-fips"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-license",
+        "purl": "pkg:apk/dhi/zitadel-4-license"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4",
+        "purl": "pkg:apk/dhi/zitadel-4"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-xcbl-quin-ehbr-7qui"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-jh92-5mrj-p2w2"
+    }
+  ]
+}

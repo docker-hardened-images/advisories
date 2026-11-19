@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ubfx-jcgv-xye7-a7ay",
+  "modified": "2026-11-19T00:24:54Z",
+  "published": "2026-11-19T00:24:54Z",
+  "upstream": [
+    "GHSA-j344-gqv4-84ff"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\r\n\r\nZITADEL’s **User Service** API allowed an authenticated organization member who holds `user.read` in one organization to learn which authentication methods are configured for a user in **any other organization** on the same instance. The check on `GET /v2/users/{userId}/authentication_methods` (and the equivalent v2beta path) verified `user.read` against the caller’s organization context rather than against the organization that owns the target user.\r\n\r\n### Impact\r\n\r\nAn attacker who is an organization member with `user.read` in a single organization (for example via `ORG_OWNER` or the read-only `ORG_OWNER_VIEWER` role) can:\r\n\r\n- **Learn which authentication method types** another organization’s user has registered — including **password**, **passkey**, **TOTP**, **U2F**, **OTP-SMS**, **OTP-Email**, **IDP**, and **recovery codes**\r\n- **Map attack surface across organizations** on the same instance (for example, whether a target account has a local password)\r\n\r\nThis affects instances that expose the User Service v2 / v2beta `ListAuthenticationMethodTypes` endpoints and that have more than one organization with principals who hold org-scoped `user.read`.\r\n\r\nThis issue does **not** return secrets, credential material, or enrollment codes, and it does **not** allow changing another user’s authentication methods. Same-organization reads by callers who legitimately hold `user.read` on that organization remain intended behavior. Instance-wide roles that are meant to manage users across organizations (for example `IAM_USER_MANAGER`) are also outside the cross-organization gap described here. Single-organization deployments have no cross-organization boundary to cross.\r\n\r\n**Scope note:** This is a cross-organization authorization flaw within a single instance and does not cross instance boundaries. It is limited to authentication-method **type** enumeration on the listed User Service endpoints. It is related in shape to GHSA-pq2q-2c6r-75c4 (cross-organization enrollment-code issuance), which concerned a write path rather than this read path.\r\n\r\n### Affected Versions\r\n\r\nSystems running one of the following versions are affected:\r\n\r\n* **4.x:** `4.0.0` through `4.17.2` (including RC versions)\r\n* **3.x:** `3.0.0` through `3.4.15` (including RC versions)\r\n\r\n### Patches\r\n\r\nThe vulnerability has been addressed in the latest releases. Listing authentication method types for another user now verifies the caller’s `user.read` permission against the organization that owns the target user before any method types are returned.\r\n\r\n* **4.x**: Upgrade to $\\ge$ [4.17.3](https://github.com/zitadel/zitadel/releases/tag/v4.17.3)\r\n\r\nNo patch will be issued for the **3.x** release line, which is end-of-life. Affected 3.x deployments must upgrade to a patched **4.x** release.\r\n\r\n### Workarounds\r\n\r\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions. As a partial mitigation, limit which principals hold org-scoped `user.read` (including `ORG_OWNER_VIEWER` and similar custom roles) to trusted operators, and treat unexpected knowledge of other organizations’ user IDs as sensitive.\r\n\r\n### Questions\r\n\r\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\r\n\r\n### Credits\r\n\r\nThis vulnerability was found by [zentrust partners GmbH](https://zentrust.partners/) during a scheduled penetration test. Thank you to the analysts Martin Tschirsich and Joud Zakharia.\r\n\r\nWe also thank Juan Carlos Isaza ([@isazajuancarlos](https://github.com/isazajuancarlos)) and Dmitry Maranik from [Sectum AI](https://github.com/sectum-ai/sectum-ai) ([@dmitrymaranik](https://github.com/dmitrymaranik)).\r\n\r\nThe full report will be made public after the complete review.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-dev",
+        "purl": "pkg:apk/dhi/zitadel-4-dev"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips-dev",
+        "purl": "pkg:apk/dhi/zitadel-4-fips-dev"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips-license",
+        "purl": "pkg:apk/dhi/zitadel-4-fips-license"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips",
+        "purl": "pkg:apk/dhi/zitadel-4-fips"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-license",
+        "purl": "pkg:apk/dhi/zitadel-4-license"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4",
+        "purl": "pkg:apk/dhi/zitadel-4"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ubfx-jcgv-xye7-a7ay"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-j344-gqv4-84ff"
+    }
+  ]
+}

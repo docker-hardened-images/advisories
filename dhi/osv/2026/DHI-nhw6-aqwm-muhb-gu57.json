@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-nhw6-aqwm-muhb-gu57",
+  "modified": "2026-11-19T00:24:54Z",
+  "published": "2026-11-19T00:24:54Z",
+  "upstream": [
+    "GHSA-jh3m-cr2x-qp88"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\r\n\r\nZITADEL issues an **IdP intent** token to the login UI after a user completes a login with an external identity provider (IdP). The login UI presents this token, together with the intent’s identifier, to retrieve the result of the external login and to authenticate the user’s session. These tokens were protected with an unauthenticated, malleable encryption mode, so their integrity was not cryptographically verified when they were redeemed.\r\n\r\nAn authenticated attacker with a valid account on the same instance who also knew a target intent’s identifier could take a token they legitimately obtained for their own intent and modify it into a token that the backend accepted for a *different* intent. Because the token was validated only by decrypting it and comparing the result to the supplied intent identifier — with no authentication tag or signature — a tampered token whose decrypted value matched was treated as genuine.\r\n\r\n### Impact\r\n\r\nAn attacker who holds a valid account on the instance, and who can predict a victim’s in-flight external-login intent identifier and win a short timing race against that login, can:\r\n\r\n- **Read another user’s external-login result**, including the **IdP access, ID, and refresh tokens** returned for that login, by calling the intent-information endpoint (`POST /v2/idp_intents/{id}`) with a forged intent token. Depending on the external provider and requested scopes, those tokens may grant further access to the victim’s third-party resources.\r\n- **Hijack the victim’s pending session**, by consuming the succeeded intent before the victim does (via `POST /v2/sessions`) and obtaining a session that ZITADEL treats as authenticated **as the victim**.\r\n\r\nThis affects applications that authenticate users through ZITADEL’s external IdP login using a custom login UI or the session API (including **Login V2**).\r\n\r\nThe attack is probabilistic and time-bounded, which materially narrows real-world exposure. The intent identifier is a Sonyflake value that the attacker must predict to within roughly a 10-millisecond window; the attacker must then win a race against the victim’s own redemption inside the login window and brute-force the trailing ciphertext bytes. The reporter estimated on the order of a 1.25% success probability within a 15-second window, and ZITADEL Cloud’s per-IP rate limiting and bot detection reduce feasibility further. Instances that do **not** use external identity providers are **not** affected, because no IdP intent tokens are ever issued; the flaw only concerns the external-login intent flow and does not by itself expose stored credentials or data for users who are not actively performing an external IdP login.\r\n\r\n**Scope note:** The flaw affects the external **IdP intent** flow only. It is an instance-wide issue — any authenticated user on an instance could target another user’s in-flight external login on that same instance — and does not cross instance boundaries.\r\n\r\n### Affected Versions\r\n\r\nSystems running one of the following versions are affected:\r\n\r\n* **4.x:** `4.0.0` through `4.17.2` (including RC versions)\r\n* **3.x:** `3.0.0` through `3.4.15` (including RC versions)\r\n\r\n### Patches\r\n\r\nThe vulnerability has been addressed in the latest releases. IdP intent tokens are now protected with authenticated encryption (`A256GCM`): any modification to a token is detected and the token is rejected, so a valid token can no longer be forged by tampering with a token obtained for a different intent.\r\n\r\n* **4.x**: Upgrade to $\\ge$ [`4.17.3`](https://github.com/zitadel/zitadel/releases/tag/v4.17.3)\r\n\r\nThe **3.x** release line reached end-of-life on 2026-08-31 and will not receive a fix for this vulnerability. Affected 3.x deployments must upgrade to a patched 4.x release.\r\n\r\n### Workarounds\r\n\r\nThe recommended solution is to upgrade to a patched version. There is no configuration that fully closes this gap on unpatched versions. As a partial mitigation, self-hosted deployments should enforce strict rate limits and bot protection in front of the API (per ZITADEL’s production checklist), which reduces the already-low probability of a successful attack but does not eliminate it.\r\n\r\n### Questions\r\n\r\nIf you have any questions or comments about this advisory, please email us at security@zitadel.com\r\n\r\n### Credits\r\n\r\nThis vulnerability was found by [zentrust partners GmbH](https://zentrust.partners/) during a scheduled penetration test. Thank you to the analysts Martin Tschirsich and Joud Zakharia.\r\n\r\nThe full report will be made public after the complete review.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-dev",
+        "purl": "pkg:apk/dhi/zitadel-4-dev"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips-dev",
+        "purl": "pkg:apk/dhi/zitadel-4-fips-dev"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips-license",
+        "purl": "pkg:apk/dhi/zitadel-4-fips-license"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-fips",
+        "purl": "pkg:apk/dhi/zitadel-4-fips"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4-license",
+        "purl": "pkg:apk/dhi/zitadel-4-license"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "zitadel-4",
+        "purl": "pkg:apk/dhi/zitadel-4"
+      },
+      "versions": [
+        "4.20.3-r0",
+        "4.20.4-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-nhw6-aqwm-muhb-gu57"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/zitadel/zitadel/security/advisories/GHSA-jh3m-cr2x-qp88"
+    }
+  ]
+}
