@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-dcx2-izu7-q5yy-cf4p",
+  "modified": "2026-11-19T21:04:50Z",
+  "published": "2026-11-19T21:04:50Z",
+  "upstream": [
+    "CVE-2026-19548"
+  ],
+  "summary": "Multiple Use-After-Free vulnerabilities were found in the add_archive_element function in ld/ldmain.c of the GNU linker…",
+  "details": "Multiple Use-After-Free vulnerabilities were found in the add_archive_element function in ld/ldmain.c of the GNU linker (ld), a component of binutils. The root cause is that plugin_maybe_claim() in ld/plugin.c frees the original BFD object via bfd_close/_bfd_delete_bfd when entry->the_bfd->my_archive == NULL, but the caller retains both the original abfd parameter and a shallow copy (orig_input.the_bfd) as dangling pointers. These dangling pointers are subsequently dereferenced at three distinct locations in add_archive_element:\n\n1. Line ~1442: accessing abfd->my_archive via bfd_usrdata(abfd->my_archive)\n2. Line ~1493: multiple accesses to abfd and abfd->my_archive in a conditional check and bfd_get_filename call\n3. Line ~1525: dereferencing the shallow copy orig_input.the_bfd->my_archive in trace/verbose logging\n\nThe vulnerability is triggered when LTO plugins are active (link_info.lto_plugin_active is true) and the input object has abfd->my_archive == NULL, which is a valid state for standalone object files. Red Hat builds binutils with --enable-plugins and --enable-lto, confirming the vulnerable code path is compiled in and reachable.\n\nAn attacker who can supply a crafted object or archive file to a build process using LTO-enabled linking could exploit this flaw to cause a denial of service (linker crash via segmentation fault). Arbitrary code execution is theoretically possible through heap manipulation but is substantially mitigated by hardening measures including stack protector, FORTIFY_SOURCE, ASLR, and PIE.\n\nThe attack surface is limited to build-time environments — the linker is a development tool not exposed in production runtime. The most realistic exploitation scenario is a supply chain attack introducing a crafted object file as a build dependency in CI/CD pipelines or development environments.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "binutils",
+        "purl": "pkg:deb/dhi/binutils"
+      },
+      "versions": [
+        "2.44-3+deb13u0+dhi10",
+        "2.44-3+deb13u0+dhi9",
+        "2.44-3+dhi5",
+        "2.44-3+dhi6",
+        "2.44-3+dhi7",
+        "2.44-3+dhi8",
+        "2.44-3+dhi9",
+        "2.44-3dhi1",
+        "2.44-3dhi2",
+        "2.44-3dhi3",
+        "2.44-3dhi4",
+        "2.44-3dhi5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-dcx2-izu7-q5yy-cf4p"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-19548"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-19548"
+    },
+    {
+      "type": "WEB",
+      "url": "https://bugzilla.redhat.com/show_bug.cgi?id=2507832"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-19548"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-19548"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-19548"
+    }
+  ],
+  "database_specific": {
+    "coverage": "partial",
+    "coverage_exclusions": [
+      "legacy_package_image_owner"
+    ]
+  }
+}
