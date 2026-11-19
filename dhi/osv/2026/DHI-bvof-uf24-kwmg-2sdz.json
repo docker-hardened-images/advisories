@@ -1,0 +1,305 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-bvof-uf24-kwmg-2sdz",
+  "modified": "2026-11-19T21:02:33Z",
+  "published": "2026-11-19T21:02:33Z",
+  "upstream": [
+    "GHSA-v53p-9fqp-m79j"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nWhen `addressparser` finds no address by its strict reading, it falls back to pulling one out of the free text with `/\\s*\\b[^@\\s]+@[^\\s]+\\b\\s*/`. That pattern backtracks quadratically: `[^@\\s]+` is retried from every offset and rescans the run to the next `@` each time. A single header value holding a long whitespace-free run with no usable `@` blocks the Node.js event loop for tens of seconds.\n\nIt is cheaper to exploit than GHSA-prgh-xp8r-p3m5: 273KB is enough for ~43s, where the comment-joined shape needed ~1.5MB for ~10s.\n\n### Details\n\nThe fallback in `src/addressparser/index.ts` ran the pattern as a search. `[^@\\s]+` crosses neither whitespace nor `@`, so from each start offset it scans forward to the next `@` or to the end of the run and then fails, and the engine simply advances one character and repeats. Three shapes make every offset fail:\n\n- the run holds no `@` at all\n- the only `@` has nothing after it\n- the only `@` has nothing before it\n\nA fourth reaches it with a valid address present but placed past a long run, so the long run is walked before the match is found.\n\n### PoC\n\n```js\nconst addressparser = require('nodemailer/lib/addressparser');\nconst s = Date.now();\naddressparser(' >' + '>[x][x]'.repeat(40000)); // 273KB\nconsole.log(Date.now() - s, 'ms'); // ~43000 ms, blocking\n```\n\nMeasured on 10.0.5:\n\n| Value | Parse time |\n| --- | --- |\n| `'[x]'.repeat(40000)` (117KB) | 9.0 s |\n| `'[x]'.repeat(40000) + '@'` (117KB) | 8.9 s |\n| `'@' + '[x]'.repeat(40000)` (117KB) | 8.8 s |\n| `' >' + '>[x][x]'.repeat(40000)` (273KB) | 42.9 s |\n\n### Impact\n\nAlgorithmic-complexity denial of service. Node is single threaded, so the block stalls the whole process. Reachable without authentication anywhere inbound header values are handed to this parser, mailparser being the notable case, and reachable from application input wherever a user-supplied string is used as a message address, since `mime-node` parses `to`, `from` and `cc` when composing.\n\n### Patch\n\nThe search is replaced by a single linear pass that finds the one offset the pattern can match at, which is then applied there with a sticky regex. Match results are unchanged, verified against the previous implementation over 3.4 million random strings comparing both the match offset and the matched text, plus 800k full-parse comparisons.\n\nFound while validating the report in GHSA-prgh-xp8r-p3m5, not reported externally.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-2",
+        "purl": "pkg:deb/dhi/langfuse-2"
+      },
+      "versions": [
+        "2.95.12-0",
+        "2.95.12-1",
+        "2.95.12-10",
+        "2.95.12-11",
+        "2.95.12-12",
+        "2.95.12-13",
+        "2.95.12-2",
+        "2.95.12-3",
+        "2.95.12-4",
+        "2.95.12-5",
+        "2.95.12-6",
+        "2.95.12-7",
+        "2.95.12-8",
+        "2.95.12-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-3",
+        "purl": "pkg:deb/dhi/langfuse-3"
+      },
+      "versions": [
+        "3.225.0-0",
+        "3.225.0-1",
+        "3.225.1-0",
+        "3.225.1-1",
+        "3.225.10-0",
+        "3.225.11-0",
+        "3.225.12-0",
+        "3.225.12-1",
+        "3.225.12-2",
+        "3.225.14-0",
+        "3.225.15-0",
+        "3.225.15-1",
+        "3.225.15-2",
+        "3.225.2-0",
+        "3.225.3-0",
+        "3.225.4-0",
+        "3.225.5-0",
+        "3.225.5-1",
+        "3.225.7-0",
+        "3.225.7-1",
+        "3.225.8-0",
+        "3.225.8-1",
+        "3.225.9-0",
+        "3.227.0-0",
+        "3.227.0-1",
+        "3.227.1-0",
+        "3.227.1-1",
+        "3.227.1-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-4",
+        "purl": "pkg:deb/dhi/langfuse-4"
+      },
+      "versions": [
+        "4.10.0-0",
+        "4.11.0-0",
+        "4.12.0-0",
+        "4.13.0-0",
+        "4.14.0-0",
+        "4.15.0-0",
+        "4.26.0-0",
+        "4.3.1-0",
+        "4.36.1-0",
+        "4.38.0-0",
+        "4.4.0-0",
+        "4.41.0-0",
+        "4.43.0-0",
+        "4.44.0-0",
+        "4.46.0-0",
+        "4.47.0-0",
+        "4.48.0-0",
+        "4.5.0-0",
+        "4.5.0-1",
+        "4.50.0-0",
+        "4.53.0-0",
+        "4.6.0-0",
+        "4.63.0-0",
+        "4.67.0-0",
+        "4.69.0-0",
+        "4.70.0-0",
+        "4.70.1-0",
+        "4.71.0-0",
+        "4.71.0-1",
+        "4.72.0-1",
+        "4.74.0-0",
+        "4.75.0-0",
+        "4.76.0-0",
+        "4.76.0-1",
+        "4.77.0-0",
+        "4.78.0-0",
+        "4.79.0-0",
+        "4.79.0-1",
+        "4.80.0-0",
+        "4.80.0-1",
+        "4.81.0-0",
+        "4.82.0-0",
+        "4.9.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-worker-3",
+        "purl": "pkg:deb/dhi/langfuse-worker-3"
+      },
+      "versions": [
+        "3.174.1-1",
+        "3.186.0-0",
+        "3.187.0-0",
+        "3.187.0-1",
+        "3.188.0-0",
+        "3.191.0-0",
+        "3.191.0-1",
+        "3.193.0-0",
+        "3.194.0-0",
+        "3.194.1-0",
+        "3.194.1-1",
+        "3.195.0-0",
+        "3.197.1-0",
+        "3.198.0-0",
+        "3.200.0-0",
+        "3.201.1-0",
+        "3.202.1-0",
+        "3.203.1-0",
+        "3.203.3-0",
+        "3.204.0-0",
+        "3.205.0-0",
+        "3.205.1-0",
+        "3.206.0-0",
+        "3.208.0-0",
+        "3.210.0-0",
+        "3.212.0-0",
+        "3.213.0-0",
+        "3.214.0-0",
+        "3.216.0-0",
+        "3.216.0-1",
+        "3.218.0-0",
+        "3.219.0-0",
+        "3.221.1-0",
+        "3.222.0-0",
+        "3.222.0-1",
+        "3.223.0-0",
+        "3.224.0-0",
+        "3.224.1-0",
+        "3.224.1-1",
+        "3.224.2-0",
+        "3.224.2-1",
+        "3.224.3-0",
+        "3.224.3-1",
+        "3.225.0-0",
+        "3.225.0-1",
+        "3.225.0-2",
+        "3.225.0-3",
+        "3.225.1-0",
+        "3.225.1-1",
+        "3.225.1-2",
+        "3.225.10-0",
+        "3.225.11-0",
+        "3.225.12-0",
+        "3.225.12-1",
+        "3.225.14-0",
+        "3.225.15-0",
+        "3.225.15-2",
+        "3.225.3-0",
+        "3.225.3-1",
+        "3.225.4-0",
+        "3.225.5-0",
+        "3.225.7-0",
+        "3.225.8-0",
+        "3.225.9-0",
+        "3.227.0-0",
+        "3.227.0-1",
+        "3.227.0-2",
+        "3.227.1-0",
+        "3.227.1-1",
+        "3.227.1-2",
+        "3.227.1-3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-1",
+        "purl": "pkg:deb/dhi/uptime-kuma-1"
+      },
+      "versions": [
+        "1.23.17-0",
+        "1.23.17-1",
+        "1.23.17-11",
+        "1.23.17-2",
+        "1.23.17-3",
+        "1.23.17-4",
+        "1.23.17-5",
+        "1.23.17-6",
+        "1.23.17-7",
+        "1.23.17-8",
+        "1.23.17-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-2",
+        "purl": "pkg:deb/dhi/uptime-kuma-2"
+      },
+      "versions": [
+        "2.5.0-0",
+        "2.5.0-1",
+        "2.5.0-2",
+        "2.5.10-0",
+        "2.5.11-0",
+        "2.5.11-1",
+        "2.5.11-2",
+        "2.5.11-3",
+        "2.5.12-0",
+        "2.5.3-0",
+        "2.5.3-1",
+        "2.5.4-0",
+        "2.5.5-0",
+        "2.5.5-1",
+        "2.5.6-0",
+        "2.5.7-0",
+        "2.5.7-1",
+        "2.5.9-0",
+        "2.5.9-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-bvof-uf24-kwmg-2sdz"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-v53p-9fqp-m79j"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-v53p-9fqp-m79j"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/nodemailer/nodemailer/commit/437d7fc47403df176bc39271641541b7a9bce102"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/nodemailer/nodemailer/releases/tag/v10.0.6"
+    }
+  ],
+  "database_specific": {
+    "coverage": "partial",
+    "coverage_exclusions": [
+      "legacy_package_image_owner"
+    ]
+  }
+}

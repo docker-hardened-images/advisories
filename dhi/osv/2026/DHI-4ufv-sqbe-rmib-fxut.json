@@ -1,0 +1,455 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-4ufv-sqbe-rmib-fxut",
+  "modified": "2026-11-19T21:02:33Z",
+  "published": "2026-11-19T21:02:33Z",
+  "upstream": [
+    "GHSA-g73g-hqqh-jr95"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nNodemailer's address parser has three published, patched fixes for RFC 5322 comment `( ... )` handling inside an addr-spec: GHSA-cc9r-2j5m-2m83 (comment glued two domain atoms into one), GHSA-g57g-f23g-4646 (the same glue for a quoted local part), and the related ReDoS fixes GHSA-prgh-xp8r-p3m5 / GHSA-v53p-9fqp-m79j. All three fixes live in `_handleAddress()`'s `joins` / `_recoverAddrSpec()` logic in `src/addressparser/index.ts`, and that logic is exercised whenever the local text-accumulation path in the tokenizer runs.\n\nThat logic is **never reached at all** for the single most common way a recipient is written: a display name followed by an angle-bracket address, `Name <local@domain>`. When the input inside the angle brackets itself contains an RFC 5322 comment, e.g.\n\n```\nLegit User <user@good-corp.com(x)evil.com>\n```\n\nthe comment is not recognized as an operator, is not stripped, and the parenthesis characters survive **verbatim** inside the parsed address. That value is used as-is for `envelope.to` and is written raw onto the wire in the `RCPT TO` SMTP command. I confirmed this end to end:\n\n* against nodemailer's own `jsonTransport`/`streamTransport` (`envelope.to` and the emitted `To:` header both carry the malformed value), and\n* against a real SMTP server (`aiosmtpd`), where the malformed value is fatal to the transaction (`501 Syntax: RCPT TO: <address> [SP <mail-parameters>]`, all recipients rejected).\n\nThis reproduces unmodified on every version I tested from `6.9.16` through the current `10.0.12` HEAD, i.e. it predates and survives all three of the address-parser advisories above unchanged, because it is a different root cause in a code path those fixes never touch.\n\n## Root cause\n\n### 1. The tokenizer has a single-slot operator stack\n\n`src/addressparser/index.ts`, `Tokenizer.checkChar()`:\n\n```ts\n} else if (!this.operatorExpecting && !this.inDomainLiteral && chr in this.operators) {\n    this.node = { type: 'operator', value: chr };\n    this.list.push(this.node);\n    this.node = null;\n    this.operatorExpecting = this.operators[chr];\n    this.escaped = false;\n    return;\n}\n```\n(currently around line 670)\n\n`operatorExpecting` is a single string, not a stack. Once `<` opens the address scope, `operatorExpecting` is set to `'>'`. The branch above that recognizes a *new* operator character (such as `(`) is gated on `!this.operatorExpecting`, which is now false. So while inside `<...>`, a `(` is never tokenized as an operator at all — it is just an ordinary character appended to the running text token, together with everything up to the next `>`. The RFC 5322 comment is not recognized, not entered, and not stripped: it rides straight through as literal text.\n\n### 2. The `_handleAddress` state machine loses the `address` state on any operator boundary\n\n`src/addressparser/index.ts`, inside `_handleAddress()` (currently around line 365-388):\n\n```ts\nswitch (token.value) {\n    case '<':\n        state = 'address';\n        insideQuotes = false;\n        break;\n    case '(':\n        state = 'comment';\n        insideQuotes = false;\n        break;\n    ...\n    default:\n        state = 'text';\n        insideQuotes = false;\n        break;\n}\n```\n\nEven where a comment *is* recognized (outside angle brackets), closing it with `)` falls through to `default` and resets `state` to `'text'`, not back to whatever state was active before the comment opened. This is why the fixed cases (bare address, quoted local part) only work at all: the leaked comment tail lands in the free-`text` bucket, where `_recoverAddrSpec()`/the ADDR_SPEC extraction logic can find and strip it. Inside `<...>`, none of that applies in the first place (point 1), so there is no text-bucket safety net to fall back on — the whole point 1/point 2 interaction is what makes the angle-bracket case categorically different from, and unprotected by, the three existing fixes.\n\n### 3. The one existing safety net requires whitespace, and this value has none\n\n`_recoverAddrSpec()` (currently around line 283) is the function all three prior fixes rely on to peel a clean addr-spec back out of a polluted value. Its very first line is:\n\n```ts\nfunction _recoverAddrSpec(data: { address: string; text: string }): void {\n    if (!HAS_WHITESPACE.test(data.address)) {\n        return;\n    }\n    ...\n```\n\n`user@good-corp.com(x)evil.com` contains no whitespace at all — the comment content `x` had none, and nothing in the angle-bracket path inserts any — so `_recoverAddrSpec` bails out immediately and never even looks at the value. There is no cleanup path for this shape.\n\n## Proof of Concept\n\nEnvironment: Node.js, current `master` (commit `30e4cfd5902fd5da4d1bc76dc8e4bc92d288adef`, package.json version `10.0.12`), no special transport configuration required.\n\n### Parser-level confirmation\n\n```js\nconst addressparser = require('nodemailer/lib/addressparser');\nconsole.log(addressparser('Legit User <user@good-corp.com(x)evil.com>'));\n// [ { address: 'user@good-corp.com(x)evil.com', name: 'Legit User' } ]\n```\n\nCompare with the already-fixed, unbracketed form of the exact same bytes:\n\n```js\nconsole.log(addressparser('user@good-corp.com(x)evil.com'));\n// [ { address: 'user@good-corp.com', name: 'evil.com' } ]   <- correctly stripped\n```\n\n### `sendMail` / envelope confirmation (jsonTransport, no network)\n\n```js\nconst nodemailer = require('nodemailer');\n\n(async () => {\n    const t = nodemailer.createTransport({ jsonTransport: true });\n    const info = await t.sendMail({\n        from: 'app@good-corp.com',\n        to: 'Legit User <user@good-corp.com(x)evil.com>',\n        subject: 'hi',\n        text: 'x'\n    });\n    console.log('envelope.to:', info.envelope.to);\n})();\n```\n\nObserved output:\n\n```\nenvelope.to: [ 'user@good-corp.com(x)evil.com' ]\n```\n\nThe raw `streamTransport` message shows the same value in the emitted header:\n\n```\nFrom: app@good-corp.com\nTo: Legit User <user@good-corp.com(x)evil.com>\nSubject: hi\n```\n\n### Wire-level confirmation against a real SMTP server\n\n```js\nconst net = require('net');\nconst nodemailer = require('nodemailer');\n\nconst server = net.createServer(sock => {\n    let buf = '';\n    sock.write('220 sink ESMTP\\r\\n');\n    sock.on('data', d => {\n        buf += d;\n        let i;\n        while ((i = buf.indexOf('\\r\\n')) >= 0) {\n            const line = buf.slice(0, i);\n            buf = buf.slice(i + 2);\n            const u = line.toUpperCase();\n            if (u.startsWith('EHLO')) sock.write('250-sink\\r\\n250 8BITMIME\\r\\n');\n            else if (u.startsWith('MAIL')) sock.write('250 ok\\r\\n');\n            else if (u.startsWith('RCPT')) { console.log('wire RCPT TO :', line); sock.write('250 ok\\r\\n'); }\n            else if (u.startsWith('DATA')) sock.write('354 go\\r\\n');\n            else if (line === '.') sock.write('250 ok\\r\\n');\n            else if (u.startsWith('QUIT')) { sock.write('221 bye\\r\\n'); sock.end(); }\n            else sock.write('250 ok\\r\\n');\n        }\n    });\n});\n\nserver.listen(0, '127.0.0.1', async () => {\n    const t = nodemailer.createTransport({ host: '127.0.0.1', port: server.address().port, secure: false });\n    const info = await t.sendMail({ from: 'app@good-corp.com', to: 'Legit User <user@good-corp.com(x)evil.com>', subject: 'hi', text: 'x' });\n    console.log('envelope.to:', info.envelope.to);\n    t.close(); server.close();\n});\n```\n\nObserved:\n\n```\nwire RCPT TO : RCPT TO:<user@good-corp.com(x)evil.com>\nenvelope.to: [ 'user@good-corp.com(x)evil.com' ]\n```\n\nThe same recipient string sent at a real, conformant SMTP server (`aiosmtpd`, a widely used reference-grade Python SMTP implementation) instead of the sink above:\n\n```\nError: Can't send mail - all recipients were rejected: 501 Syntax: RCPT TO: <address> [SP <mail-parameters>]\ncode: 'EENVELOPE', responseCode: 501, command: 'RCPT TO',\nrejected: [ 'user@good-corp.com(x)evil.com' ]\n```\n\nSo against a strict receiver the immediate, concretely demonstrated outcome is that the message is bounced: an ordinary-looking recipient address that a sender/application believes is valid (and, see below, that some app-side validators *do* read as valid, at `good-corp.com`) silently fails to send.\n\n### Interpretation-conflict confirmation (same class as GHSA-cc9r-2j5m-2m83)\n\nThe same string, read by two other parsers an application might use to gate on the recipient's domain, produces two more, mutually different readings:\n\n```python\n>>> import email.utils\n>>> email.utils.parseaddr('Legit User <user@good-corp.com(x)evil.com>')\n('Legit User (x)', 'user@good-corp.comevil.com')\n```\n\n```python\n>>> import email.policy, email.parser\n>>> msg = email.parser.Parser(policy=email.policy.default).parsestr(\n...     'To: Legit User <user@good-corp.com(x)evil.com>\\n\\n')\n>>> addr = msg['To'].addresses[0]\n>>> addr.username, addr.domain\n('user', 'good-corp.com')\n```\n\nSo for the exact same bytes:\n\n| Parser | Domain read | \n|---|---|\n| Python `email.utils.parseaddr` | `good-corp.comevil.com` (attacker-registrable) |\n| Python `email.policy.default` (defects not inspected) | `good-corp.com` (clean, would pass an allow-list check) |\n| Nodemailer `addressparser` (this report) | `good-corp.com(x)evil.com` (illegal characters, rejected by a strict MTA) |\n\nThis is the exact \"which parser sees what\" comparison table from GHSA-cc9r-2j5m-2m83, reproduced through a different, unpatched code path: an application validating with `email.policy.default` without checking `.defects` (a documented pattern in that advisory) approves `good-corp.com` and hands the string to Nodemailer, which then emits a different, malformed value on the wire.\n\n### Version range\n\nThe built `addressparser`/`sendMail` output was tested for this exact input across published releases:\n\n| Version | `envelope.to` |\n|---|---|\n| `6.9.16` | `user@good-corp.com(x)evil.com` |\n| `9.0.6` | `user@good-corp.com(x)evil.com` |\n| `9.1.0` (fixed GHSA-cc9r-2j5m-2m83) | `user@good-corp.com(x)evil.com` |\n| `10.0.1` | `user@good-corp.com(x)evil.com` |\n| `10.0.12` / current HEAD (fixed GHSA-g57g-f23g-4646) | `user@good-corp.com(x)evil.com` |\n\nUnchanged across every one of the three address-parser advisory fixes, because none of them touch the tokenizer's single-slot `operatorExpecting` state or the `_handleAddress` state-machine reset on `)`.\n\n## Impact\n\n* **Confirmed, demonstrated impact:** a recipient address that contains a perfectly legal RFC 5322 comment inside angle brackets — the single most common way a `To`/`Cc`/`Bcc`/`From`/`Reply-To` value is written (`Display Name <user@domain>`) — is parsed into a value containing SMTP-illegal characters (`(`, `)`) that a conformant receiving SMTP server rejects outright, silently failing message delivery to what the sender/application believed was a valid, already-validated recipient (CWE-20, availability/reliability impact on outbound mail).\n* **Demonstrated interpretation conflict (CWE-436):** the malformed value that reaches `envelope.to` and the wire `RCPT TO` command disagrees with how other parsers, including ones explicitly called out as an at-risk validation pattern in GHSA-cc9r-2j5m-2m83 (Python's `email.policy.default` without defect inspection), read the exact same bytes. An application gating outbound mail on \"is the recipient's domain in my allow-list\" using such a validator can approve a value that Nodemailer then sends corrupted, and depending on the receiving MTA's own comment handling, a different domain than either the sender or the validator believed was being used.\n* **Reachability:** every code path that ends up calling `MimeNode._parseAddresses()` — `to`, `cc`, `bcc`, `from`, `replyTo`, and the explicit `envelope` option — is affected identically, since they all funnel through the same `addressparser()`/`_handleAddress()` logic.\n\n## Suggested fix\n\nThe underlying issue is architectural: `Tokenizer.operatorExpecting` is a single value, so it cannot represent \"currently inside an angle-address, and also currently inside a comment nested within it.\" A minimal fix is to make the tokenizer maintain a stack of expected closing characters (pushing `')'` when entering a comment while another operator scope, e.g. `'>'`, is already open, and popping back to the outer expectation on `)`), so a comment can be recognized and stripped no matter what scope it is nested inside. `_handleAddress`'s state machine would then need to restore the previous `state` on a comment close instead of unconditionally resetting to `'text'`, so recognized-but-stripped comment content inside `<...>` continues to accumulate as `address` rather than leaking into `text`.\n\nAs defense in depth, `_recoverAddrSpec()` (or an equivalent check run specifically on `data.address` for the angle-bracket case) should also reject/clean any parsed address value that still contains RFC 5322 special characters such as `(`/`)` regardless of whether whitespace is present, since `envelope.to` is used directly to build an SMTP command and any character outside `Mailbox` (RFC 5321 §4.1.2) reaching that string is already the wrong outcome, independent of how it got there.\n\n## Regression test suggestion\n\n`Name <user@example.com(x)evil.com>` and the bcc/cc/from/replyTo/envelope equivalents should all parse to `{ address: 'user@example.com', name: 'Name evil.com' }` or be rejected outright by `sendMail`, never silently carry `(`/`)` into `envelope.to`.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "directus-12",
+        "purl": "pkg:apk/dhi/directus-12"
+      },
+      "versions": [
+        "12.4.1-r0",
+        "12.4.1-r1",
+        "12.4.1-r2",
+        "12.4.1-r3",
+        "12.5.0-r0",
+        "12.5.1-r0",
+        "12.5.1-r1",
+        "12.6.0-r0",
+        "12.6.0-r1",
+        "12.6.0-r2",
+        "12.6.0-r3",
+        "12.6.0-r4",
+        "12.6.0-r5",
+        "12.6.1-r0",
+        "12.6.1-r1",
+        "12.6.1-r2",
+        "12.6.1-r3",
+        "12.6.1-r4",
+        "12.6.1-r5",
+        "12.6.1-r6"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "directus-12",
+        "purl": "pkg:deb/dhi/directus-12"
+      },
+      "versions": [
+        "12.4.1-0",
+        "12.4.1-1",
+        "12.4.1-2",
+        "12.5.0-0",
+        "12.5.0-1",
+        "12.5.0-2",
+        "12.5.1-0",
+        "12.5.1-1",
+        "12.5.1-2",
+        "12.5.1-3",
+        "12.6.0-0",
+        "12.6.0-1",
+        "12.6.0-2",
+        "12.6.0-3",
+        "12.6.0-4",
+        "12.6.0-5",
+        "12.6.0-6",
+        "12.6.1-0",
+        "12.6.1-1",
+        "12.6.1-2",
+        "12.6.1-3",
+        "12.6.1-4",
+        "12.6.1-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "kibana-9.4",
+        "purl": "pkg:deb/dhi/kibana-9.4"
+      },
+      "versions": [
+        "9.4.5-1",
+        "9.4.7-0",
+        "9.4.8-0",
+        "9.4.8-1",
+        "9.4.8-11",
+        "9.4.8-12",
+        "9.4.8-13",
+        "9.4.8-14",
+        "9.4.8-2",
+        "9.4.8-3",
+        "9.4.8-4",
+        "9.4.8-5",
+        "9.4.8-6",
+        "9.4.8-7",
+        "9.4.8-8",
+        "9.4.8-9",
+        "9.4.9-0",
+        "9.4.9-1",
+        "9.4.9-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "kibana-9.5",
+        "purl": "pkg:deb/dhi/kibana-9.5"
+      },
+      "versions": [
+        "9.5.5-0",
+        "9.5.5-1",
+        "9.5.5-10",
+        "9.5.5-11",
+        "9.5.5-12",
+        "9.5.5-2",
+        "9.5.5-3",
+        "9.5.5-4",
+        "9.5.5-5",
+        "9.5.5-6",
+        "9.5.5-7",
+        "9.5.5-9",
+        "9.5.6-0",
+        "9.5.6-1",
+        "9.5.6-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-2",
+        "purl": "pkg:deb/dhi/langfuse-2"
+      },
+      "versions": [
+        "2.95.12-0",
+        "2.95.12-1",
+        "2.95.12-10",
+        "2.95.12-11",
+        "2.95.12-12",
+        "2.95.12-13",
+        "2.95.12-2",
+        "2.95.12-3",
+        "2.95.12-4",
+        "2.95.12-5",
+        "2.95.12-6",
+        "2.95.12-7",
+        "2.95.12-8",
+        "2.95.12-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-3",
+        "purl": "pkg:deb/dhi/langfuse-3"
+      },
+      "versions": [
+        "3.225.0-0",
+        "3.225.0-1",
+        "3.225.1-0",
+        "3.225.1-1",
+        "3.225.10-0",
+        "3.225.11-0",
+        "3.225.12-0",
+        "3.225.12-1",
+        "3.225.12-2",
+        "3.225.14-0",
+        "3.225.15-0",
+        "3.225.15-1",
+        "3.225.15-2",
+        "3.225.2-0",
+        "3.225.3-0",
+        "3.225.4-0",
+        "3.225.5-0",
+        "3.225.5-1",
+        "3.225.7-0",
+        "3.225.7-1",
+        "3.225.8-0",
+        "3.225.8-1",
+        "3.225.9-0",
+        "3.227.0-0",
+        "3.227.0-1",
+        "3.227.1-0",
+        "3.227.1-1",
+        "3.227.1-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-4",
+        "purl": "pkg:deb/dhi/langfuse-4"
+      },
+      "versions": [
+        "4.10.0-0",
+        "4.11.0-0",
+        "4.12.0-0",
+        "4.13.0-0",
+        "4.14.0-0",
+        "4.15.0-0",
+        "4.26.0-0",
+        "4.3.1-0",
+        "4.36.1-0",
+        "4.38.0-0",
+        "4.4.0-0",
+        "4.41.0-0",
+        "4.43.0-0",
+        "4.44.0-0",
+        "4.46.0-0",
+        "4.47.0-0",
+        "4.48.0-0",
+        "4.5.0-0",
+        "4.5.0-1",
+        "4.50.0-0",
+        "4.53.0-0",
+        "4.6.0-0",
+        "4.63.0-0",
+        "4.67.0-0",
+        "4.69.0-0",
+        "4.70.0-0",
+        "4.70.1-0",
+        "4.71.0-0",
+        "4.71.0-1",
+        "4.72.0-1",
+        "4.74.0-0",
+        "4.75.0-0",
+        "4.76.0-0",
+        "4.76.0-1",
+        "4.77.0-0",
+        "4.78.0-0",
+        "4.79.0-0",
+        "4.79.0-1",
+        "4.80.0-0",
+        "4.80.0-1",
+        "4.81.0-0",
+        "4.82.0-0",
+        "4.9.0-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "langfuse-worker-3",
+        "purl": "pkg:deb/dhi/langfuse-worker-3"
+      },
+      "versions": [
+        "3.174.1-1",
+        "3.186.0-0",
+        "3.187.0-0",
+        "3.187.0-1",
+        "3.188.0-0",
+        "3.191.0-0",
+        "3.191.0-1",
+        "3.193.0-0",
+        "3.194.0-0",
+        "3.194.1-0",
+        "3.194.1-1",
+        "3.195.0-0",
+        "3.197.1-0",
+        "3.198.0-0",
+        "3.200.0-0",
+        "3.201.1-0",
+        "3.202.1-0",
+        "3.203.1-0",
+        "3.203.3-0",
+        "3.204.0-0",
+        "3.205.0-0",
+        "3.205.1-0",
+        "3.206.0-0",
+        "3.208.0-0",
+        "3.210.0-0",
+        "3.212.0-0",
+        "3.213.0-0",
+        "3.214.0-0",
+        "3.216.0-0",
+        "3.216.0-1",
+        "3.218.0-0",
+        "3.219.0-0",
+        "3.221.1-0",
+        "3.222.0-0",
+        "3.222.0-1",
+        "3.223.0-0",
+        "3.224.0-0",
+        "3.224.1-0",
+        "3.224.1-1",
+        "3.224.2-0",
+        "3.224.2-1",
+        "3.224.3-0",
+        "3.224.3-1",
+        "3.225.0-0",
+        "3.225.0-1",
+        "3.225.0-2",
+        "3.225.0-3",
+        "3.225.1-0",
+        "3.225.1-1",
+        "3.225.1-2",
+        "3.225.10-0",
+        "3.225.11-0",
+        "3.225.12-0",
+        "3.225.12-1",
+        "3.225.14-0",
+        "3.225.15-0",
+        "3.225.15-2",
+        "3.225.3-0",
+        "3.225.3-1",
+        "3.225.4-0",
+        "3.225.5-0",
+        "3.225.7-0",
+        "3.225.8-0",
+        "3.225.9-0",
+        "3.227.0-0",
+        "3.227.0-1",
+        "3.227.0-2",
+        "3.227.1-0",
+        "3.227.1-1",
+        "3.227.1-2",
+        "3.227.1-3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "unleash-8",
+        "purl": "pkg:deb/dhi/unleash-8"
+      },
+      "versions": [
+        "8.1.0-0",
+        "8.1.0-1",
+        "8.1.0-2",
+        "8.2.0-0",
+        "8.2.0-1",
+        "8.2.0-2",
+        "8.2.0-3",
+        "8.2.0-4",
+        "8.2.1-0",
+        "8.3.0-0",
+        "8.3.1-0",
+        "8.3.1-1",
+        "8.3.1-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-1",
+        "purl": "pkg:deb/dhi/uptime-kuma-1"
+      },
+      "versions": [
+        "1.23.17-0",
+        "1.23.17-1",
+        "1.23.17-11",
+        "1.23.17-2",
+        "1.23.17-3",
+        "1.23.17-4",
+        "1.23.17-5",
+        "1.23.17-6",
+        "1.23.17-7",
+        "1.23.17-8",
+        "1.23.17-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "uptime-kuma-2",
+        "purl": "pkg:deb/dhi/uptime-kuma-2"
+      },
+      "versions": [
+        "2.5.0-0",
+        "2.5.0-1",
+        "2.5.0-2",
+        "2.5.10-0",
+        "2.5.11-0",
+        "2.5.11-1",
+        "2.5.11-2",
+        "2.5.11-3",
+        "2.5.12-0",
+        "2.5.3-0",
+        "2.5.3-1",
+        "2.5.4-0",
+        "2.5.5-0",
+        "2.5.5-1",
+        "2.5.6-0",
+        "2.5.7-0",
+        "2.5.7-1",
+        "2.5.9-0",
+        "2.5.9-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-4ufv-sqbe-rmib-fxut"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-g73g-hqqh-jr95"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-g73g-hqqh-jr95"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/nodemailer/nodemailer/commit/a502247555fd81773eac337486781f3b6008e16a"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/nodemailer/nodemailer/releases/tag/v10.0.13"
+    }
+  ],
+  "database_specific": {
+    "coverage": "partial",
+    "coverage_exclusions": [
+      "legacy_package_image_owner"
+    ]
+  }
+}
