@@ -1,0 +1,179 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-j65i-hfj6-jzd3-ygps",
+  "modified": "2026-11-19T02:33:49Z",
+  "published": "2026-11-19T02:33:49Z",
+  "upstream": [
+    "GHSA-pf4h-74fx-87r6"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\r\n\r\n**Incorrect number comparison in OPA can cause wrong policy decisions, including wrongful authorization.**\r\n\r\nAffected numbers have a decimal point followed only by zeros, and an integer part that ends in zero (`100.0`, `1000.00`). OPA strips these trailing zeros before comparing, including the zeros in the integer part, so `100.0` is treated as equal to `1`, `1000.00` to `1`, and `20.0` to `2`. The comparison goes wrong when the stripped value exactly matches the other operand. Numbers such as `105.0`, `100.5` and `100` are not affected.\r\n\r\n### Details\r\n\r\n#### Which numbers are affected\r\n\r\nA number is affected if it has a decimal point followed only by zeros, and an integer part that ends in zero (`100.0`, `1000.00`). Stripping `100.0`, `1000.00`, `20.0` and `30400.0` yields `1`, `1`, `2` and `304`. Numbers whose integer part does not end in zero (`105.0`), whose decimal part contains a non-zero digit (`100.5`, `10.50`), or that have no decimal point (`100`) are not affected.\r\n\r\nThe comparison is wrong only if the stripped value exactly matches the other operand: `100.0` is mistaken for `1`, but not for `10` or `2`. The comparison is symmetric, so the affected number may be on either side. It does not have to come from the attacker: a policy constant or `data` value such as `100.0` can be matched by an attacker-supplied `input` value of `1`.\r\n\r\nAll comparison operators are affected, as is equality of arrays, objects and sets, and [`max`/`min` built-in functions](https://www.openpolicyagent.org/docs/policy-reference/builtins/aggregates). [Rule indexing](https://www.openpolicyagent.org/docs/policy-performance#use-indexed-statements) hides the problem in some rules that compare against a literal (see below), but this must not be relied upon.\r\n\r\nIn v1.20.0 only numbers longer than 19 characters are affected, e.g. `100000000000000000000.0 == 1`.\r\n\r\n#### Examples\r\n\r\nVersions v1.10.0 - v1.19.x.\r\n\r\n**Operators.** Literals only, evaluated as queries. The affected operators:\r\n\r\n| Expression | Expected | Actual | Correct | Note |\r\n|---|---|---|---|---|\r\n| `100.0 == 1` | `false` | `true` | ❌ | `100.0` is trimmed to `1`. The values are treated as equal |\r\n| `100.0 != 1` | `true` | `false` | ❌ | `100.0` is trimmed to `1`. The values are treated as equal |\r\n| `100.0 > 1` | `true` | `false` | ❌ | `100.0` is trimmed to `1`. The values are treated as equal, so neither is greater |\r\n| `100.0 <= 1` | `false` | `true` | ❌ | `100.0` is trimmed to `1`. The values are treated as equal, so `<=` holds |\r\n| `100.0 >= 1` | `true` | `true` | ✅ | Correct, but only because the values are treated as equal and `>=` accepts equality. `100.0` is still trimmed to `1` |\r\n| `100.0 < 1` | `false` | `false` | ✅ | Correct, but only because the values are treated as equal. `100.0` is still trimmed to `1` |\r\n| `[100.0] == [1]`, `{100.0} == {1}`, `{\"a\": 100.0} == {\"a\": 1}` | `false` | `true` | ❌ | `100.0` is trimmed to `1`. Elements are compared with the same logic |\r\n| `max([100.0, 1])` | `100.0` | `1` | ❌ | `100.0` is trimmed to `1`. The values are treated as equal, so `max` keeps the later element |\r\n| `min([1, 100.0])` | `1` | `100.0` | ❌ | `100.0` is trimmed to `1`. The values are treated as equal, so `min` keeps the later element |\r\n| `max([1, 100.0])` | `100.0` | `100.0` | ✅ | Correct only because the larger value comes last. `100.0` is still trimmed to `1` |\r\n| `max([1, 100.0]) == 1` | `false` | `true` | ❌ | `max` returns the correct `100.0`; the following `==` is what fails |\r\n| `100.0 == 10` | `false` | `false` | ✅ | The stripped value `1` does not match `10` |\r\n| `100.1 == 1` | `false` | `false` | ✅ | `100.1` ends in a non-zero digit, so nothing is trimmed |\r\n| `123.0 == 1` | `false` | `false` | ✅ | The integer part of `123.0` ends in a non-zero digit, so only the `.0` is trimmed |\r\n\r\n**Where the number comes from.** The affected number may originate from `input` (typically attacker-controlled), the policy, or `data`, and may be either operand of the comparison, or both:\r\n\r\n| Trailing zeros in | Policy expression | Input / data | Expected | Actual | Correct | Note |\r\n|---|---|---|---|---|---|---|\r\n| input | `input.x == data.limit` | `data.limit = 1`, `input.x = 100.0` | `false` | `true` | ❌ | `100.0` is trimmed to `1`, which equals `data.limit` |\r\n| input | `max([input.x, 1])` | `input.x = 100.0` | `100.0` | `1` | ❌ | The values are treated as equal, so `max` keeps the later element |\r\n| policy | `input.x >= 100.0` | `input.x = 1` | `false` | `true` | ❌ | `100.0` is trimmed to `1`, which equals `input.x`, so `>=` holds |\r\n| policy | `input.x >= 100.0` | `input.x = 2` | `false` | `false` | ✅ | The stripped value `1` does not match `2`, so the numeric comparison is used |\r\n| data | `input.x == data.limit` | `data.limit = 100.0`, `input.x = 1` | `false` | `true` | ❌ | `100.0` is trimmed to `1` |\r\n| input and data | `input.x == data.limit` | `data.limit = 1000.0`, `input.x = 10.0` | `false` | `true` | ❌ | `1000.0` and `10.0` are both trimmed to `1` |\r\n\r\n#### Effect of rule indexing\r\n\r\nOPA indexes rules that compare a base document reference with a literal, such as `input.x == 1`. When a rule is resolved by the index, the rule body is skipped for non-matching input and the faulty comparison is never evaluated. This reduces the exposed surface, but it is an optimization and not a mitigation: whether it applies depends on the shape of the rule, and small changes to a policy can turn it off.\r\n\r\n| Policy | Input / data | Expected | Actual | Correct | Note |\r\n|---|---|---|---|---|---|\r\n| Query: `input.x == 1` | `input.x = 100.0` | `false` | `true` | ❌ | Queries are not indexed |\r\n| Rule: `allow if input.x == 1` | `input.x = 100.0` | `false` | `false` | ✅ | Resolved by the index; the body is not evaluated |\r\n| Rule: `allow if { input.x > 0; input.x == 1 }` | `input.x = 100.0` | `false` | `false` | ✅ | The equality is the last expression on `input.x`, so it is indexed |\r\n| Rule: `allow if { input.x == 1; input.x > 0 }` | `input.x = 100.0` | `false` | `true` | ❌ | A later expression that passes `input.x` to a function or operator, or assigns it, makes the index accept _any value_ for `input.x`; and the equality is then also evaluated |\r\n| Rule: `allow if input.x == data.limit` | `input.x = 100.0`, `data.limit = 1` | `false` | `true` | ❌ | Only comparisons with literals are indexed |\r\n\r\nComparisons that are not `==` against a literal (ordering operators, `!=`, `data` or computed values, collections, `max`/`min`) are not indexed and are affected as described above.\r\n\r\n#### Workarounds\r\n\r\nIf upgrading is not possible:\r\n\r\n- Reject or rewrite numbers in `input` whose decimal part consists only of zeros (`100.0`, `1000.00`) before they reach OPA. Numbers with a non-zero decimal digit (`100.5`) need no handling.\r\n- Avoid writing integral values with a zero-only decimal part in `data` and policy (`100`, not `100.0`). This does not protect against `input` values written that way.\r\n\r\n### Proof of concept\r\n\r\nRun with the released `opa` v1.10.0 binary. Each command prints the wrong result on v1.10.0 – v1.19.x and the correct result on v1.20.1 and later.\r\n\r\n**1. Literals only**\r\n\r\n```\r\n$ opa eval -fpretty '100.0 == 1'\r\ntrue            # expected: false\r\n\r\n$ opa eval -fpretty '100.0 <= 1'\r\ntrue            # expected: false\r\n\r\n$ opa eval -fpretty 'max([100.0, 1])'\r\n1               # expected: 100.0\r\n```\r\n\r\n**2. Equality against `data`: wrongful authorization**\r\n\r\n`policy.rego`:\r\n\r\n```rego\r\npackage authz\r\n\r\ndefault allow := false\r\n\r\nallow if input.role_id == data.admin_role_id\r\n```\r\n\r\n`data.json`: `{\"admin_role_id\": 1}`\r\n\r\n```\r\n$ echo '{\"role_id\": 10.0}' | opa eval -fpretty -d policy.rego -d data.json -I data.authz.allow\r\ntrue            # expected: false\r\n\r\n$ echo '{\"role_id\": 10}' | opa eval -fpretty -d policy.rego -d data.json -I data.authz.allow\r\nfalse           # correct: an integer is not affected\r\n```\r\n\r\nThe attacker supplies `10.0`, which is stripped to `1` and matches `admin_role_id`.\r\n\r\n### Impact\r\n\r\n**Who is impacted:** anyone running an affected version of OPA (as a server, library or through the Go SDK, including embedded use such as Envoy, Kubernetes admission control or custom authorization services) whose policies compare a number that an attacker can influence with another number. The attacker does not need to control the trailing zeros on both sides: a policy constant or `data` value such as `100.0` can be matched by a plain integer `1` in the input, and an input value such as `100.0` can match a policy constant `1`. Policies that only compare integers written without a decimal point, or that never compare caller-influenced numbers, are not affected.\r\n\r\n**Consequences:** OPA returns an incorrect evaluation result (integrity of the decision). Depending on the policy this is an authorization bypass, a wrongful denial, or other wrongful policy result. There is no direct effect on OPA's own confidentiality, integrity or availability; the impact falls on the relying application, whose protected data and operations are exposed by a wrong allow.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "opa-dev",
+        "purl": "pkg:apk/dhi/opa-dev"
+      },
+      "versions": [
+        "1.18.2-r0",
+        "1.19.0-r0",
+        "1.19.0-r1",
+        "1.19.1-r0",
+        "1.19.1-r1",
+        "1.20.0-r0",
+        "1.20.1-r0",
+        "1.20.1-r1",
+        "1.20.2-r0",
+        "1.20.2-r1",
+        "1.21.0-r0",
+        "1.21.1-r0",
+        "1.21.1-r1",
+        "1.21.1-r2",
+        "1.21.2-r0",
+        "1.21.3-r0",
+        "1.21.3-r1",
+        "1.21.4-r0",
+        "1.21.4-r1",
+        "1.22.0-r0",
+        "1.22.1-r0",
+        "1.22.2-r0",
+        "1.22.2-r1",
+        "1.22.3-r0",
+        "1.22.3-r1",
+        "1.22.4-r0",
+        "1.22.4-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "opa-fips-dev",
+        "purl": "pkg:apk/dhi/opa-fips-dev"
+      },
+      "versions": [
+        "1.18.2-r0",
+        "1.19.0-r0",
+        "1.19.0-r1",
+        "1.19.1-r0",
+        "1.19.1-r1",
+        "1.20.0-r0",
+        "1.20.1-r0",
+        "1.20.1-r1",
+        "1.20.2-r0",
+        "1.20.2-r1",
+        "1.21.0-r0",
+        "1.21.1-r0",
+        "1.21.1-r1",
+        "1.21.1-r2",
+        "1.21.2-r0",
+        "1.21.3-r0",
+        "1.21.3-r1",
+        "1.21.4-r0",
+        "1.21.4-r1",
+        "1.22.0-r0",
+        "1.22.1-r0",
+        "1.22.2-r0",
+        "1.22.2-r1",
+        "1.22.3-r0",
+        "1.22.3-r1",
+        "1.22.4-r0",
+        "1.22.4-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "opa-fips",
+        "purl": "pkg:apk/dhi/opa-fips"
+      },
+      "versions": [
+        "1.18.2-r0",
+        "1.19.0-r0",
+        "1.19.0-r1",
+        "1.19.1-r0",
+        "1.19.1-r1",
+        "1.20.0-r0",
+        "1.20.1-r0",
+        "1.20.1-r1",
+        "1.20.2-r0",
+        "1.20.2-r1",
+        "1.21.0-r0",
+        "1.21.1-r0",
+        "1.21.1-r1",
+        "1.21.1-r2",
+        "1.21.2-r0",
+        "1.21.3-r0",
+        "1.21.3-r1",
+        "1.21.4-r0",
+        "1.21.4-r1",
+        "1.22.0-r0",
+        "1.22.1-r0",
+        "1.22.2-r0",
+        "1.22.2-r1",
+        "1.22.3-r0",
+        "1.22.3-r1",
+        "1.22.4-r0",
+        "1.22.4-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "opa",
+        "purl": "pkg:apk/dhi/opa"
+      },
+      "versions": [
+        "1.18.2-r0",
+        "1.19.0-r0",
+        "1.19.0-r1",
+        "1.19.1-r0",
+        "1.19.1-r1",
+        "1.20.0-r0",
+        "1.20.1-r0",
+        "1.20.1-r1",
+        "1.20.2-r0",
+        "1.20.2-r1",
+        "1.21.0-r0",
+        "1.21.1-r0",
+        "1.21.1-r1",
+        "1.21.1-r2",
+        "1.21.2-r0",
+        "1.21.3-r0",
+        "1.21.3-r1",
+        "1.21.4-r0",
+        "1.21.4-r1",
+        "1.22.0-r0",
+        "1.22.1-r0",
+        "1.22.2-r0",
+        "1.22.2-r1",
+        "1.22.3-r0",
+        "1.22.3-r1",
+        "1.22.4-r0",
+        "1.22.4-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-j65i-hfj6-jzd3-ygps"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/open-policy-agent/opa/security/advisories/GHSA-pf4h-74fx-87r6"
+    }
+  ]
+}
