@@ -1,0 +1,109 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-slw5-22j4-ux42-trwh",
+  "modified": "2026-11-19T01:46:41Z",
+  "published": "2026-11-19T01:46:41Z",
+  "upstream": [
+    "GHSA-54pm-2wm5-hpmg"
+  ],
+  "summary": "Affected versions of `actix-http` apply the request header timeout only to the",
+  "details": "Affected versions of `actix-http` apply the request header timeout only to the\nfirst request on an HTTP/1 connection. When data arrives for a later request,\nthe dispatcher clears the idle keep-alive timer without starting a request\nheader timer.\n\nA remote client without authentication can complete one request, send one byte\nof a second request, and leave the connection open indefinitely without sending\nmore data. The same problem occurs when a complete pipelined request is followed\nby a partial request in the same read. Repeating this can exhaust connection or\nfile-descriptor limits and prevent new connections from being accepted. The\neffect depends on the server's resource limits and upstream connection controls.\n\nUpgrade to `actix-http` 3.21.2 or later. The fix applies the configured request\nheader timeout to later partial requests, including those left in the buffer\nafter a complete pipelined request. Additional bytes do not renew the deadline.\nThe timeout covers request headers, not upload bodies.\n\nIf an upgrade is not possible, disable HTTP keep-alive, for example with\n`HttpServer::keep_alive(KeepAlive::Disabled)` in `actix-web`. Connection limits\ncan reduce resource use but do not make stalled connections expire.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "meilisearch",
+        "purl": "pkg:deb/dhi/meilisearch"
+      },
+      "versions": [
+        "1.53.1-0",
+        "1.53.2-0",
+        "1.54.0-0",
+        "1.54.1-0",
+        "1.54.2-0",
+        "1.54.3-0",
+        "1.55.0-0",
+        "1.56.0-0",
+        "1.56.1-0",
+        "1.56.2-0",
+        "1.57.0-0",
+        "1.57.0-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "qdrant",
+        "purl": "pkg:deb/dhi/qdrant"
+      },
+      "versions": [
+        "1.18.3-0",
+        "1.18.3-1",
+        "1.18.3-2",
+        "1.19.0-0",
+        "1.19.0-1",
+        "1.19.0-2",
+        "1.19.0-3",
+        "1.19.0-4",
+        "1.19.0-5",
+        "1.19.0-6",
+        "1.19.1-1",
+        "1.19.1-2",
+        "1.19.1-3",
+        "1.19.1-4",
+        "1.19.1-5",
+        "1.19.1-6",
+        "1.19.1-7",
+        "1.19.2-0",
+        "1.19.2-1",
+        "1.19.2-2",
+        "1.20.0-0",
+        "1.20.0-1",
+        "1.20.0-2",
+        "1.20.0-3",
+        "1.20.0-4",
+        "1.20.0-6",
+        "1.20.0-7",
+        "1.20.0-8",
+        "1.20.1-0",
+        "1.20.2-0",
+        "1.20.2-1",
+        "1.20.2-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-slw5-22j4-ux42-trwh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0554"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0554.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/actix/actix-web/security/advisories/GHSA-54pm-2wm5-hpmg"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/actix/actix-web/releases/tag/actix-http-v3.21.2"
+    }
+  ]
+}
