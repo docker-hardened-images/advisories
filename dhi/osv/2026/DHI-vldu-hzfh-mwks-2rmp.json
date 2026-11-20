@@ -1,0 +1,285 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-vldu-hzfh-mwks-2rmp",
+  "modified": "2026-11-20T16:52:32Z",
+  "published": "2026-11-20T16:52:32Z",
+  "upstream": [
+    "CVE-2026-42768"
+  ],
+  "summary": "Issue summary: The CMS_decrypt and PKCS7_decrypt functions are vulnerable to",
+  "details": "Issue summary: The CMS_decrypt and PKCS7_decrypt functions are vulnerable to\nBleichenbacher-style attack when an attacker is able to provide the CMS or\nS/MIME messages and observe the error code and/or decryption output.\n\nImpact summary: The Bleichenbacher-style attack allows an attacker to use the\nvictim's vulnerable application as a way to decrypt or sign messages with the\nvictim's private RSA key.\n\nThe attack is possible in 2 variants.\n\n1. The decryption API (CMS_decrypt(), PKCS7_decrypt()) is used without\nproviding the recipient certificate. In this case OpenSSL iterates over every\nKeyTransRecipientInfo (KTRI) without stopping at the first success.\n\nAn attacker who authors a message with two KTRI entries — the first one\nwrapping a real CEK under the victim's public key, the second with an\narbitrary probe ciphertext — obtains opportunity to iterate the 2nd KTRI to\nget a valid PKCS#1 v1.5 padding if the error code of the application is\navailable.\n\nThat is a Bleichenbacher oracle (Bleichenbacher, CRYPTO '98): an\nadaptive-chosen-ciphertext side channel from which the attacker decrypts any\nRSA ciphertext to the victim's key or forges any PKCS#1 v1.5 signature under\nit.\n\n2. When the decryption API (CMS_decrypt(), PKCS7_decrypt()) is provided with\nthe recipient certificate, and the recipient is not found, a random\nkey is substituted.\n\nAn attacker who authors a message and is able to compare both error code and\nthe result of the decryption, can mount a Bleichenbacher oracle.\n\nWe are not aware of any applications that provide a remote attacker\nan opportunity to mount an attack described in these scenarios. We consider\nthe existence of such application very unlikely, and for this reason this\nCVE has been evaluated as Low severity.\n\nTo avoid these attacks, when RSA PKCS#1 v1.5 Key Transport is in use, the\ninvoked EVP_PKEY_decrypt() will use the implicit rejection mechanism described\nin draft-irtf-cfrg-rsa-guidance. In previous OpenSSL releases the implicit\nrejection was explicitly disabled.\n\nThe implicit rejection mechanism always returns a plaintext value,\nthe symmetric key. This result is deterministic for the ciphertext and the\nprivate key.  The length of the decryption result can happen to match the\nlength of the key of the symmetric cipher that was used for the content\nencryption. When a certificate is not provided, the last RecipientInfo\nproducing a key that looks valid will be used. It may cause getting garbage\ncontent on decryption. As a proper way to deal with this a recipient\ncertificate has to be provided to identify the particular RecipientInfo for\ndecryption.\n\nThe FIPS modules in 4.0, 3.6, 3.5, and 3.4 are not affected by this issue, as\nCMS and S/MIME processing happens outside the OpenSSL FIPS module boundary.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "openssl-provider-fips",
+        "purl": "pkg:apk/dhi/openssl-provider-fips"
+      },
+      "versions": [
+        "3.1.2-r0",
+        "3.1.2-r1",
+        "3.1.2-r2",
+        "3.1.2-r3",
+        "3.1.2-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "openssl-provider-fips",
+        "purl": "pkg:apk/dhi/openssl-provider-fips"
+      },
+      "versions": [
+        "3.1.2-r3",
+        "3.1.2-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "openssl",
+        "purl": "pkg:apk/dhi/openssl"
+      },
+      "versions": [
+        "3.5.4-r0",
+        "3.5.5-r0",
+        "3.5.5_git20260330-r1",
+        "3.5.6-r0",
+        "3.5.6-r1",
+        "3.5.7-r0",
+        "3.5.7-r1",
+        "3.5.8-r0",
+        "3.5.8-r1",
+        "3.5.9-r0",
+        "3.5.9-r1",
+        "3.5.9-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "openssl",
+        "purl": "pkg:apk/dhi/openssl"
+      },
+      "versions": [
+        "3.5.6-r1",
+        "3.5.7-r0",
+        "3.5.7-r1",
+        "3.5.8-r1",
+        "3.5.9-r0",
+        "3.5.9-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "openssl",
+        "purl": "pkg:deb/dhi/openssl"
+      },
+      "versions": [
+        "3.5.5-1~deb13u2dhi0",
+        "3.5.6-1~deb13u1+dhi0",
+        "3.5.6-1~deb13u1+dhi1",
+        "3.5.6-1~deb13u1+dhi2",
+        "3.5.6-1~deb13u1+fips+dhi0",
+        "3.5.6-1~deb13u1+fips+dhi1",
+        "3.5.6-1~deb13u1+fips+dhi2",
+        "3.5.6-1~deb13u1dhi0",
+        "3.5.6-1~deb13u2+dhi0",
+        "3.5.6-1~deb13u2+dhi1",
+        "3.5.6-1~deb13u2+dhi2",
+        "3.5.6-1~deb13u2+dhi3",
+        "3.5.6-1~deb13u2+fips+dhi0",
+        "3.5.6-1~deb13u2+fips+dhi1",
+        "3.5.7-1~deb13u2+dhi0",
+        "3.5.7-1~deb13u2+dhi1",
+        "3.5.7-1~deb13u2+fips+dhi0",
+        "3.5.7-1~deb13u3+dhi0",
+        "3.5.7-1~deb13u3+dhi1",
+        "3.5.7-1~deb13u3+dhi2",
+        "3.5.7-1~deb13u3+fips+dhi0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-vldu-hzfh-mwks-2rmp"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-42768"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://openssl-library.org/news/secadv/20260609.txt"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/f04b377be3d821741c86d1f4bf84dee09f3d5c3e"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/dd68364107a58841c0a2546812518b65d3a23abd"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/bbb151a83041705d9d001ed2f9c12f5523e1b54d"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/a2ca7b2d73e0ffc1eae183fe6e1741dac767cb4f"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.almalinux.org/9/ALSA-2026-25239.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/errata/RHSA-2026:25239"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-42768"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-1853.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-9076"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-7383"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-45447"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-45446"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-45445"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42770"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42769"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42768"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42767"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42766"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42764"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-34183"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-34182"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-34181"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-34180"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-42768"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-25237.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-25237.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-25239.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-25239.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-50379.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-50379.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-42768"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:25237"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:25239"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-42768"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-42768"
+    }
+  ],
+  "database_specific": {
+    "coverage": "partial",
+    "coverage_exclusions": [
+      "legacy_package_image_owner"
+    ]
+  }
+}

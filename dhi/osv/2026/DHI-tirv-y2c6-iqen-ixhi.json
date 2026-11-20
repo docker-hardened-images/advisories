@@ -1,0 +1,292 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-tirv-y2c6-iqen-ixhi",
+  "modified": "2026-11-20T16:52:32Z",
+  "published": "2026-11-20T16:52:32Z",
+  "upstream": [
+    "CVE-2026-84782"
+  ],
+  "summary": "Issue summary: The DTLS retransmission logic does not correctly handle",
+  "details": "Issue summary: The DTLS retransmission logic does not correctly handle\na handshake message write that is suspended part-way through.\nThe retransmitted message can be read past the message buffer and\nthe retransmission overwrites the internal state the suspended write\nneeds to resume correctly.\n\nImpact summary: The retransmitted message can disclose a heap memory\nto the peer as plaintext handshake data or cause a crash and a Denial\nof Service when the read reaches an unmapped memory region.\n\nCWE: CWE-125: Out-of-bounds Read\n\nDescription: DTLS handshake messages can be written out in multiple\nfragments, and a write can suspend mid-message (returning WANT_WRITE)\nif the underlying transport temporarily cannot accept more data. While\nsuch a write is suspended, the DTLS retransmission timer may\nindependently fire and ask the retransmission logic to resend an\nearlier, already-acknowledged-as-sent message from its retransmit\nqueue.\n\nThe retransmission logic reused the same internal buffer and position\ntracking as the message that was still being written, without\nresetting the position back to the start of the message being\nretransmitted. As a result the retransmission was read starting from\nwherever the suspended write had left off, producing a mislabelled\nmessage whose body was leftover bytes from the other, larger message\nstill in flight - content that was never meant to be sent at that\npoint, and which could run past the end of the allocated buffer.\n\nSeparately, even when the retransmission is positioned correctly,\nallowing it to run to completion while another write is suspended\noverwrites the same shared bookkeeping that the suspended write\ndepends on to resume. When the application later resumes the\nsuspended write (via a subsequent SSL_read(), SSL_write(),\nSSL_accept(), or SSL_connect() call), it finds that bookkeeping in a\nstate inconsistent with the message and aborts the process in\na debugging build.\n\nThe fix resets the retransmission's read position to the start of the\nmessage before resending, and skips retransmission entirely whenever a\nhandshake write is still suspended, deferring to the next call that\nresumes it instead.\n\nFIPS impact: no\nThe affected code is outside the FIPS module boundary.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "openssl",
+        "purl": "pkg:deb/dhi/openssl"
+      },
+      "versions": [
+        "3.5.5-1~deb13u2dhi0",
+        "3.5.6-1~deb13u1+dhi0",
+        "3.5.6-1~deb13u1+dhi1",
+        "3.5.6-1~deb13u1+dhi2",
+        "3.5.6-1~deb13u1+fips+dhi0",
+        "3.5.6-1~deb13u1+fips+dhi1",
+        "3.5.6-1~deb13u1+fips+dhi2",
+        "3.5.6-1~deb13u1dhi0",
+        "3.5.6-1~deb13u2+dhi0",
+        "3.5.6-1~deb13u2+dhi1",
+        "3.5.6-1~deb13u2+dhi2",
+        "3.5.6-1~deb13u2+dhi3",
+        "3.5.6-1~deb13u2+fips+dhi0",
+        "3.5.6-1~deb13u2+fips+dhi1",
+        "3.5.7-1~deb13u2+dhi0",
+        "3.5.7-1~deb13u2+dhi1",
+        "3.5.7-1~deb13u2+fips+dhi0",
+        "3.5.7-1~deb13u3+dhi0",
+        "3.5.7-1~deb13u3+dhi1",
+        "3.5.7-1~deb13u3+dhi2",
+        "3.5.7-1~deb13u3+fips+dhi0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-tirv-y2c6-iqen-ixhi"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-84782"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://openssl-library.org/news/secadv/20260929.txt"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/d951e02ede8f6a6ff8150546db44b34f0518192c"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/a383dafdd754eb5b22bf45e37e1bff9d07277a58"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/9f6b34422af7eb5dac61322e33dac1ae989fa628"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/906cf0ef1c85ca40ce69163e9086d6d3fe292943"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.almalinux.org/9/ALSA-2026-77396.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/errata/RHSA-2026:77396"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.almalinux.org/8/ALSA-2026-80510.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/errata/RHSA-2026:80510"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.almalinux.org/9/ALSA-2026-80514.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/errata/RHSA-2026:80514"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.almalinux.org/8/ALSA-2026-85968.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/errata/RHSA-2026:85968"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-84782"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2/ALAS-2026-3991.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-84782"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-75806"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-54872"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-35189"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2/ALAS-2026-3992.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2/ALAS-2026-4007.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-3204.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-84784"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-75805"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-75804"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-72897"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-54873"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42772"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-35191"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-3227.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-84782"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-500440.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-500440.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-500441.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-500441.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-500448.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-500448.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-500498.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-500498.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-76918.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-76918.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-77396.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-77396.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-80510.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-80510.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-80514.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-80514.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-85968.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-85968.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-84782"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:76918"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:77396"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:80510"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:80514"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-84782"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-84782"
+    }
+  ],
+  "database_specific": {
+    "coverage": "partial",
+    "coverage_exclusions": [
+      "legacy_package_image_owner"
+    ]
+  }
+}

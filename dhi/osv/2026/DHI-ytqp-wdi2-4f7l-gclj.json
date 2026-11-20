@@ -1,0 +1,289 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ytqp-wdi2-4f7l-gclj",
+  "modified": "2026-11-20T16:52:32Z",
+  "published": "2026-11-20T16:52:32Z",
+  "upstream": [
+    "CVE-2026-45445"
+  ],
+  "summary": "Issue summary: When an application drives an AES-OCB context through the",
+  "details": "Issue summary: When an application drives an AES-OCB context through the\npublic EVP_Cipher() one-shot interface, the application-supplied\ninitialisation vector (IV) is silently discarded.\n\nImpact summary: Every message encrypted under the same key uses the\nsame effective nonce regardless of the IV supplied by the caller,\nresulting in (key, nonce) reuse and loss of confidentiality.  If the\nsame code path is used to compute the authentication tag, the tag\ndepends only on the (key, IV) pair and not on the plaintext or\nciphertext, allowing universal forgery of arbitrary ciphertext from a\nsingle captured message.\n\nOpenSSL provides two ways to drive a cipher: the documented streaming\ninterface (EVP_CipherUpdate / EVP_CipherFinal_ex) and a lower-level\none-shot, EVP_Cipher(), whose documentation explicitly recommends\nagainst use by applications in favour of EVP_CipherUpdate() and\nEVP_CipherFinal_ex().  The OCB provider's streaming handler flushes\nthe application-supplied IV into the OCB context before processing\ndata; the one-shot handler did not.  Every call to EVP_Cipher() on an\nAES-OCB context therefore ran with the all-zero key-derived offset\nstate left by cipher initialisation, regardless of the caller's IV.\n\nIf EVP_EncryptFinal_ex() is subsequently used to obtain the\nauthentication tag, the deferred IV setup runs at that point and\nclears the running checksum that should have been accumulated over the\nplaintext.  The resulting tag is a function of (key, IV) only and\nverifies against any ciphertext produced under the same (key, IV)\npair.\n\nThe OpenSSL SSL/TLS implementation is not affected: AES-OCB is not a\nTLS cipher suite, and libssl does not call EVP_Cipher() in any case.\nApplications that drive AES-OCB through the documented streaming AEAD\nAPI (EVP_CipherUpdate / EVP_CipherFinal_ex) are not affected.  Only\napplications that combine the AES-OCB cipher with the EVP_Cipher()\none-shot API are vulnerable.\n\nThe FIPS modules in 4.0, 3.6, 3.5, 3.4 and 3.0 are not affected by\nthis issue, as AES-OCB is outside the OpenSSL FIPS module boundary.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "openssl-provider-fips",
+        "purl": "pkg:apk/dhi/openssl-provider-fips"
+      },
+      "versions": [
+        "3.1.2-r0",
+        "3.1.2-r1",
+        "3.1.2-r2",
+        "3.1.2-r3",
+        "3.1.2-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "openssl-provider-fips",
+        "purl": "pkg:apk/dhi/openssl-provider-fips"
+      },
+      "versions": [
+        "3.1.2-r3",
+        "3.1.2-r4"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "openssl",
+        "purl": "pkg:apk/dhi/openssl"
+      },
+      "versions": [
+        "3.5.4-r0",
+        "3.5.5-r0",
+        "3.5.5_git20260330-r1",
+        "3.5.6-r0",
+        "3.5.6-r1",
+        "3.5.7-r0",
+        "3.5.7-r1",
+        "3.5.8-r0",
+        "3.5.8-r1",
+        "3.5.9-r0",
+        "3.5.9-r1",
+        "3.5.9-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "openssl",
+        "purl": "pkg:apk/dhi/openssl"
+      },
+      "versions": [
+        "3.5.6-r1",
+        "3.5.7-r0",
+        "3.5.7-r1",
+        "3.5.8-r1",
+        "3.5.9-r0",
+        "3.5.9-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "openssl",
+        "purl": "pkg:deb/dhi/openssl"
+      },
+      "versions": [
+        "3.5.5-1~deb13u2dhi0",
+        "3.5.6-1~deb13u1+dhi0",
+        "3.5.6-1~deb13u1+dhi1",
+        "3.5.6-1~deb13u1+dhi2",
+        "3.5.6-1~deb13u1+fips+dhi0",
+        "3.5.6-1~deb13u1+fips+dhi1",
+        "3.5.6-1~deb13u1+fips+dhi2",
+        "3.5.6-1~deb13u1dhi0",
+        "3.5.6-1~deb13u2+dhi0",
+        "3.5.6-1~deb13u2+dhi1",
+        "3.5.6-1~deb13u2+dhi2",
+        "3.5.6-1~deb13u2+dhi3",
+        "3.5.6-1~deb13u2+fips+dhi0",
+        "3.5.6-1~deb13u2+fips+dhi1",
+        "3.5.7-1~deb13u2+dhi0",
+        "3.5.7-1~deb13u2+dhi1",
+        "3.5.7-1~deb13u2+fips+dhi0",
+        "3.5.7-1~deb13u3+dhi0",
+        "3.5.7-1~deb13u3+dhi1",
+        "3.5.7-1~deb13u3+dhi2",
+        "3.5.7-1~deb13u3+fips+dhi0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ytqp-wdi2-4f7l-gclj"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-45445"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://openssl-library.org/news/secadv/20260609.txt"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/983d54b5cce8d16147548ed1a37892d1720bbab6"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/843c9b94ca9c2ed248bb30127bb4f3d7af0d607c"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/7ac4715234ee72d9f3c93426a2c08554b5b771af"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/787a6dfba81b7b09c1e05ab31396c0cd7c36b3f7"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/openssl/openssl/commit/323f0b6e7d530a4cb4336d50c88cb70f3ac2a451"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.almalinux.org/9/ALSA-2026-25239.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/errata/RHSA-2026:25239"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-45445"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-1853.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-9076"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-7383"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-45447"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-45446"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-45445"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42770"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42769"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42768"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42767"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42766"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-42764"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-34183"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-34182"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-34181"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-34180"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-45445"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-25237.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-25237.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-25239.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-25239.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/cve/ELSA-2026-50379.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://linux.oracle.com/errata/ELSA-2026-50379.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-45445"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:25237"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://errata.rockylinux.org/RLSA-2026:25239"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-45445"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-45445"
+    }
+  ],
+  "database_specific": {
+    "coverage": "partial",
+    "coverage_exclusions": [
+      "legacy_package_image_owner"
+    ]
+  }
+}
