@@ -1,0 +1,301 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-3gb6-lsxh-qdui-rlyf",
+  "modified": "2026-11-20T04:19:37Z",
+  "published": "2026-11-20T04:19:37Z",
+  "upstream": [
+    "CVE-2026-18401"
+  ],
+  "summary": "The non-blocking (asynchronous) JSON parser in jackson-core does not enforce the maxNumberLength constraint defined in…",
+  "details": "The non-blocking (asynchronous) JSON parser in jackson-core does not enforce the maxNumberLength constraint defined in StreamReadConstraints (default: 1000 characters). An attacker able to submit JSON to an application that uses the async parser API can supply a number token of arbitrary length, leading to excessive memory allocation and potential CPU exhaustion, resulting in a denial of service.\n\n\n\nThe synchronous parser enforces this limit correctly, so the constraint is applied inconsistently depending on which parsing API the application uses.\n\n\n\nRoot cause: the async parsing path in NonBlockingUtf8JsonParserBase and related classes never invokes the number length validation methods. Number parsing methods such as _finishNumberIntegralPart() accumulate digits into the TextBuffer without any length check, then call _valueComplete() to finalize the token. _valueComplete() does not call resetInt() or resetFloat(), which are the methods in ParserBase where validateIntegerLength() and validateFPLength() are performed. Because that validation step is skipped, maxNumberLength is never enforced on the async code path.\n\n\n\nImpact: an attacker sending a JSON document containing an arbitrarily long number to an application using the async parser (for example a Spring WebFlux or other reactive application) can cause unbounded allocation in the TextBuffer and an OutOfMemoryError. If the application subsequently calls getBigIntegerValue() or getDecimalValue(), the JVM may additionally be tied up in O(n^2) BigInteger parsing, causing CPU-based denial of service.\n\n\n\nNo privileges or user interaction beyond the ability to submit data for parsing are required.\n\n\n\nThis issue affects com.fasterxml.jackson.core:jackson-core from version 2.15.0 through 2.18.5 and from 2.19.0 through 2.21.0, and tools.jackson.core:jackson-core from 3.0.0 through 3.0.x.\n\n\n\nVersions prior to 2.15.0 are not affected, because StreamReadConstraints -- which defines the maxNumberLength setting -- was first introduced in jackson-core 2.15.0, so no such constraint exists to be bypassed in earlier releases. Note that GHSA-72hv-8253-57qq records the lower bound of the affected 2.x range as 2.0.0.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "janusgraph-1.0",
+        "purl": "pkg:apk/dhi/janusgraph-1.0"
+      },
+      "versions": [
+        "1.0.1-r0",
+        "1.0.1-r1",
+        "1.0.1-r10",
+        "1.0.1-r11",
+        "1.0.1-r2",
+        "1.0.1-r3",
+        "1.0.1-r4",
+        "1.0.1-r5",
+        "1.0.1-r6",
+        "1.0.1-r7",
+        "1.0.1-r8",
+        "1.0.1-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "janusgraph-1.1",
+        "purl": "pkg:apk/dhi/janusgraph-1.1"
+      },
+      "versions": [
+        "1.1.0-r0",
+        "1.1.0-r1",
+        "1.1.0-r10",
+        "1.1.0-r11",
+        "1.1.0-r12",
+        "1.1.0-r13",
+        "1.1.0-r17",
+        "1.1.0-r2",
+        "1.1.0-r3",
+        "1.1.0-r4",
+        "1.1.0-r5",
+        "1.1.0-r6",
+        "1.1.0-r7",
+        "1.1.0-r8",
+        "1.1.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "janusgraph-1.2",
+        "purl": "pkg:apk/dhi/janusgraph-1.2"
+      },
+      "versions": [
+        "1.2.0-r0",
+        "1.2.0-r1",
+        "1.2.0-r10",
+        "1.2.0-r2",
+        "1.2.0-r3",
+        "1.2.0-r4",
+        "1.2.0-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "druid-38-fips",
+        "purl": "pkg:deb/dhi/druid-38-fips"
+      },
+      "versions": [
+        "38.0.0-0",
+        "38.0.0-1",
+        "38.0.0-10",
+        "38.0.0-11",
+        "38.0.0-12",
+        "38.0.0-13",
+        "38.0.0-14",
+        "38.0.0-15",
+        "38.0.0-16",
+        "38.0.0-2",
+        "38.0.0-3",
+        "38.0.0-4",
+        "38.0.0-5",
+        "38.0.0-6",
+        "38.0.0-7",
+        "38.0.0-8",
+        "38.0.0-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "druid-38",
+        "purl": "pkg:deb/dhi/druid-38"
+      },
+      "versions": [
+        "38.0.0-0",
+        "38.0.0-1",
+        "38.0.0-10",
+        "38.0.0-11",
+        "38.0.0-12",
+        "38.0.0-13",
+        "38.0.0-14",
+        "38.0.0-15",
+        "38.0.0-16",
+        "38.0.0-2",
+        "38.0.0-3",
+        "38.0.0-4",
+        "38.0.0-5",
+        "38.0.0-6",
+        "38.0.0-7",
+        "38.0.0-8",
+        "38.0.0-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "flyway-11",
+        "purl": "pkg:deb/dhi/flyway-11"
+      },
+      "versions": [
+        "11.20.3-0",
+        "11.20.3-1",
+        "11.20.3-2",
+        "11.20.3-3",
+        "11.20.3-4",
+        "11.20.3-5",
+        "11.20.3-6",
+        "11.20.3-7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "janusgraph-1.0",
+        "purl": "pkg:deb/dhi/janusgraph-1.0"
+      },
+      "versions": [
+        "1.0.1-0",
+        "1.0.1-1",
+        "1.0.1-10",
+        "1.0.1-11",
+        "1.0.1-12",
+        "1.0.1-13",
+        "1.0.1-2",
+        "1.0.1-3",
+        "1.0.1-4",
+        "1.0.1-5",
+        "1.0.1-6",
+        "1.0.1-7",
+        "1.0.1-8",
+        "1.0.1-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "janusgraph-1.1",
+        "purl": "pkg:deb/dhi/janusgraph-1.1"
+      },
+      "versions": [
+        "1.1.0-0",
+        "1.1.0-1",
+        "1.1.0-10",
+        "1.1.0-11",
+        "1.1.0-12",
+        "1.1.0-13",
+        "1.1.0-14",
+        "1.1.0-15",
+        "1.1.0-16",
+        "1.1.0-17",
+        "1.1.0-2",
+        "1.1.0-3",
+        "1.1.0-4",
+        "1.1.0-5",
+        "1.1.0-6",
+        "1.1.0-7",
+        "1.1.0-8",
+        "1.1.0-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "janusgraph-1.2",
+        "purl": "pkg:deb/dhi/janusgraph-1.2"
+      },
+      "versions": [
+        "1.2.0-0",
+        "1.2.0-1",
+        "1.2.0-2",
+        "1.2.0-3",
+        "1.2.0-4",
+        "1.2.0-5",
+        "1.2.0-6",
+        "1.2.0-7",
+        "1.2.0-8",
+        "1.2.0-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-3gb6-lsxh-qdui-rlyf"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-18401"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://alas.aws.amazon.com/AL2023/ALAS-2026-2067.html"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-68494"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-18401"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-18401"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-72hv-8253-57qq"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/FasterXML/jackson-core/security/advisories/GHSA-72hv-8253-57qq"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/FasterXML/jackson-core/pull/1555"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/FasterXML/jackson-core/commit/b0c428e6f993e1b5ece5c1c3cb2523e887cd52cf"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-18401"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-18401"
+    }
+  ],
+  "database_specific": {
+    "coverage": "partial",
+    "coverage_exclusions": [
+      "legacy_package_image_owner"
+    ]
+  }
+}
