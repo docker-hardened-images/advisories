@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:53:03Z",
-  "last_updated": "2026-11-14T10:34:42Z",
-  "version": 3,
+  "last_updated": "2026-11-20T15:00:15Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -77,7 +77,9 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "PostgreSQL states that major version 17 is not affected by CVE-2026-14673 (amcheck does not clear an untrusted search path before running index expressions): https://www.postgresql.org/support/security/CVE-2026-14673/ lists only versions 18, 16, 15 and 14 as affected and says PostgreSQL 17 is unaffected. The fix commit on the 17 branch, https://github.com/postgres/postgres/commit/e41c72aff0399dd46f3c4f2f7ee242e99ecf0e32, explains why: v17 was already safe, because commit 2af07e2f749a9208ca1ed84fa1d8fe0e75833288 (\"Fix search_path to a safe value during maintenance operations\", released in PostgreSQL 17.0) already makes amcheck run with a safe search_path, so on the 17 branch the change adds only a regression test and a comment. Every published DHI postgresql17 build for Alpine 3.23 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0) is PostgreSQL 17, as its postgres server binary reports on both x86_64 and aarch64, so none of them contains the vulnerable code path. In the upstream source of each 17.x release these builds use, REL_17_7 through REL_17_12, bt_index_check_internal() in contrib/amcheck/verify_nbtree.c sets the safe search_path through RestrictSearchPath() before index expressions run, and none of those releases contains commit d70b17636ddf1ea2c71d1c7bc477372b36ccb66b, the PostgreSQL 18 change that dropped that call. Alpine lists this CVE under its postgresql17 17.11-r0 secfixes and the 17.11 release notes mention it, but on the 17 branch the 17.11 change for it is only that test and comment, so no 17.x build needed a code fix."
     },
     {
       "vulnerability": {
@@ -97,7 +99,9 @@
           "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "PostgreSQL states that major version 17 is not affected by CVE-2026-14673 (amcheck does not clear an untrusted search path before running index expressions): https://www.postgresql.org/support/security/CVE-2026-14673/ lists only versions 18, 16, 15 and 14 as affected and says PostgreSQL 17 is unaffected. The fix commit on the 17 branch, https://github.com/postgres/postgres/commit/e41c72aff0399dd46f3c4f2f7ee242e99ecf0e32, explains why: v17 was already safe, because commit 2af07e2f749a9208ca1ed84fa1d8fe0e75833288 (\"Fix search_path to a safe value during maintenance operations\", released in PostgreSQL 17.0) already makes amcheck run with a safe search_path, so on the 17 branch the change adds only a regression test and a comment. Every published DHI postgresql17 build for Alpine 3.24 (17.10-r0, 17.11-r0 and 17.12-r0) is PostgreSQL 17, as its postgres server binary reports on both x86_64 and aarch64, so none of them contains the vulnerable code path. In the upstream source of each 17.x release these builds use, REL_17_10 through REL_17_12, bt_index_check_internal() in contrib/amcheck/verify_nbtree.c sets the safe search_path through RestrictSearchPath() before index expressions run, and none of those releases contains commit d70b17636ddf1ea2c71d1c7bc477372b36ccb66b, the PostgreSQL 18 change that dropped that call. Alpine lists this CVE under its postgresql17 17.11-r0 secfixes and the 17.11 release notes mention it, but on the 17 branch the 17.11 change for it is only that test and comment, so no 17.x build needed a code fix."
     },
     {
       "vulnerability": {
