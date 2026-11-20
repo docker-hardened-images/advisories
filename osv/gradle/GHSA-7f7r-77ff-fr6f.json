@@ -1,0 +1,159 @@
+{
+  "modified": "2026-11-19T21:03:02Z",
+  "published": "2026-11-19T21:03:02Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-7f7r-77ff-fr6f",
+  "details": "### Impact\r\n\r\nGradle's [dependency verification](https://docs.gradle.org/current/userguide/securing_dependencies.html) checks every dependency and plugin a build downloads against checksums and trusted signing keys recorded in `gradle/verification-metadata.xml`. Once that file is written and reviewed, a build fails if a dependency is replaced by different content, for instance after a repository compromise. Changing modules, such as `-SNAPSHOT` versions, are [excluded](https://docs.gradle.org/current/userguide/securing_dependencies.html#sec:verification-scope) because their content changes by design. This advisory is about a vulnerability in dependency verification.\r\n\r\nThe exclusion also applies to changing modules that a build does not declare itself, but reaches through the metadata of another dependency. When a release the build depends on declares a dependency on a `-SNAPSHOT` version, Gradle verifies the release but neither verifies the snapshot nor records anything for it when generating `verification-metadata.xml`. Reviewing the changes to that file does not reveal the snapshot.\r\n\r\nAn attacker who publishes such a release, or who controls the coordinates of the snapshot it depends on, can serve harmless content while the release is reviewed and adopted, then replace the snapshot at any later time. Every later build resolves the new content without a verification failure. When the snapshot is on the classpath of a plugin or of build logic, or its code is run by a task such as tests, the attacker's code runs with the privileges of the user running the build. This exposes the secrets available to the build, including repository and publishing credentials.\r\n\r\nOnly builds that use dependency verification are affected: a build without it does not verify any dependency, snapshot or not. Among those, builds that declare a repository serving snapshots, such as a snapshot repository, JitPack or an internal repository manager proxying one, are at risk. Maven Central does not serve snapshots, and Gradle does not use repositories declared in POM files, so a build resolving only from Maven Central is not exposed. The Gradle Plugin Portal does not support snapshots either: the content of a version published there cannot change, even when the version is named `-SNAPSHOT`, so plugins and dependencies resolved from it cannot be replaced this way.\r\n\r\n### Patches\r\n\r\nWith dependency verification enabled, Gradle now verifies changing modules like any other module, whether the build declares them itself or reaches them through another dependency. Their metadata and artifacts are checked against `verification-metadata.xml`, and `--write-verification-metadata` records them.\r\n\r\nThis changes the behavior of builds that use dependency verification and resolve changing modules, including snapshots they declare themselves. Such a build fails with `Dependency verification failed` until its changing modules are covered by `verification-metadata.xml`. The checksum of a snapshot changes each time it is published, so prefer [verifying signatures](https://docs.gradle.org/current/userguide/securing_dependencies.html#sec:signature-verification) and trusting the keys that sign them. Snapshots you accept without verification must be [trusted explicitly](https://docs.gradle.org/current/userguide/securing_dependencies.html#sec:trusting-artifacts), which makes the exemption visible to reviewers of that file:\r\n\r\n```xml\r\n\u003ctrusted-artifacts\u003e\r\n   \u003ctrust group=\"com.example\" version=\".*-SNAPSHOT\" regex=\"true\"/\u003e\r\n\u003c/trusted-artifacts\u003e\r\n```\r\n\r\n| Fix version | Availability |\r\n| ---------- | ----------- |\r\n| 9.9.2 | OSS |\r\n| 9.8.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.7.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.6.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.5.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.4.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.3.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.2.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 8.14.8 | OSS |\r\n| 7.6.9 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n\r\n### Workarounds\r\n\r\nUpgrading Gradle is our recommended fix.\r\n\r\nIf you cannot upgrade immediately:\r\n\r\n* **Fail the build on changing versions.** [`failOnChangingVersions()`](https://docs.gradle.org/current/userguide/resolution_rules.html#sec:conflict-resolution-strategy) rejects changing modules anywhere in the dependency graph, including those brought in by other dependencies. Apply it to the build script classpath as well, for example in an init script:\r\n\r\n  ```kotlin\r\n  allprojects {\r\n      configurations.configureEach {\r\n          resolutionStrategy.failOnChangingVersions()\r\n      }\r\n      buildscript.configurations.configureEach {\r\n          resolutionStrategy.failOnChangingVersions()\r\n      }\r\n  }\r\n  ```\r\n\r\n  It cannot be combined with dependency locking on the same configuration.\r\n\r\n* **Restrict what snapshot repositories can serve.** Use [repository content filtering](https://docs.gradle.org/current/userguide/filtering_repository_content.html) to limit each repository that serves snapshots to the groups you expect from it, and declare the other repositories with `mavenContent { releasesOnly() }`.\r\n\r\n### Forensics\r\n\r\nSnapshots in the dependency graph are listed with a `-SNAPSHOT` version in the output of `gradle dependencies` and in build scans. `gradle dependencyInsight --dependency MODULE` shows which dependency brought a given snapshot in.\r\n\r\nThe Gradle dependency cache keeps each downloaded file under `\u003cGradle user home\u003e/caches/modules-2/files-2.1/\u003cgroup\u003e/\u003cmodule\u003e/\u003cversion\u003e/\u003csha1\u003e/`. Several `\u003csha1\u003e` directories under a snapshot version show that its content changed over time.\r\n\r\n\u003e [!IMPORTANT]\r\n\u003e The lack of such traces cannot be used to conclude no such attack was performed. Their presence is not a confirmation that an attack happened, but an indication that more investigations are needed.\r\n\r\n### References\r\n\r\n* [Verifying dependencies](https://docs.gradle.org/current/userguide/securing_dependencies.html)\r\n* [Filtering repository content](https://docs.gradle.org/current/userguide/filtering_repository_content.html)\r\n\r\nMore about this type of vulnerabilities:\r\n\r\n* https://cwe.mitre.org/data/definitions/494.html\r\n* https://cwe.mitre.org/data/definitions/829.html",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/gradle/gradle/security/advisories/GHSA-7f7r-77ff-fr6f"
+    }
+  ]
+}

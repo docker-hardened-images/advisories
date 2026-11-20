@@ -1,0 +1,159 @@
+{
+  "modified": "2026-11-19T21:02:49Z",
+  "published": "2026-11-19T21:02:49Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-35pj-rg5r-8rpv",
+  "details": "### Impact\r\n\r\nA **Gradle client** (the `gradle`/`gradlew` CLI or an IDE using the Tooling API) finds running **Gradle daemons** through a registry file, `daemon/\u003cGradle version\u003e/registry.bin` in the Gradle user home. For each daemon, the registry records its loopback address and the secret token that authenticates clients to it. Anyone holding a token can connect to that daemon and have it run a build as the user who started it. The registry is meant to be readable by its owner only. This advisory is about a vulnerability in how the registry file is created.\r\n\r\nWhen the first daemon of a given Gradle version starts, Gradle creates the version directory and the registry file with the default permissions of the process, which on most Linux and macOS systems let other users read them. Gradle restricts both to the owner right afterwards, then writes the registry content. Another local user who opens the registry file within that window keeps a handle to it that remains readable after the permissions change, and reads the daemon tokens written afterwards. Since the file is rewritten in place, the same handle also reads every later update, so the attacker obtains the token of every daemon of that Gradle version for as long as the file exists.\r\n\r\nWith a token, the attacker can submit a build to the victim's daemon, which runs code with the privileges of the user running the build and exposes in-memory and on-disk secrets available to it.\r\n\r\nBuilds running on **shared / multi-user build hosts** are the most at risk. The attacker must be able to traverse every directory down to the registry file. Gradle does not restrict the permissions of the Gradle user home when it creates it, so whether other users can reach it depends on the user's home directory and umask. A Gradle user home, or home directory, that other users cannot enter prevents the attack. The window only exists when the first daemon of a Gradle version starts in a given Gradle user home.\r\n\r\nThis vulnerability is not exploitable from a remote network connection.\r\n\r\n### Patches\r\n\r\nGradle now creates the daemon registry and its directory with owner-only permissions in the call that creates them. There is no longer a window during which other users can open the registry.\r\n\r\nEach update of the daemon registry now atomically replaces the file with a new one instead of rewriting it in place. A handle opened on an earlier registry file does not read the tokens written afterwards.\r\n\r\n| Fix version | Availability |\r\n| ---------- | ----------- |\r\n| 9.9.2 | OSS |\r\n| 9.8.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.7.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.6.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.5.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.4.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.3.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.2.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 8.14.8 | OSS |\r\n| 7.6.9 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n\r\n### Workarounds\r\n\r\nUpgrading Gradle is our recommended fix.\r\n\r\nIf you cannot upgrade immediately:\r\n\r\n* **Make the Gradle user home accessible to its owner only.** Run `chmod 700 ~/.gradle`, or the same on the directory set by `GRADLE_USER_HOME`. Other users can then no longer reach the files Gradle creates inside it.\r\n* **Do not run builds on shared, multi-user machines.** Ensure only trusted users have local (same-host) access to a machine where Gradle builds run. On CI, prefer single-tenant, ephemeral runners rather than shared hosts.\r\n\r\nAfter upgrading or applying a workaround, stop the daemons with `gradle --stop` and delete the `registry.bin` files in `\u003cGradle user home\u003e/daemon/`. A handle opened before the change keeps reading the file until it is replaced.\r\n\r\n### Forensics\r\n\r\nA process of another user holding a registry file open indicates an attempt. On Linux and macOS, `lsof` lists the processes that have the files open:\r\n\r\n    lsof \u003cGradle user home\u003e/daemon/*/registry.bin\r\n\r\nNothing in Gradle's output tells a build submitted with a stolen token apart from a legitimate one. The daemon log, `\u003cGradle user home\u003e/daemon/\u003cGradle version\u003e/daemon-\u003cpid\u003e.out.log`, records every build request the daemon receives, with the directory it was started from:\r\n\r\n`Received command: Build{id=\u003cid\u003e, currentDir=\u003cdirectory\u003e}.`\r\n\r\nAn entry whose directory or time matches no build you ran indicates that someone else used the daemon. Gradle deletes daemon log files after 14 days by default. Documentation about daemon logs can be found [here](https://docs.gradle.org/current/userguide/gradle_daemon.html#sec:daemon_logs).\r\n\r\n\u003e [!IMPORTANT]\r\n\u003e The lack of a log entry cannot be used to conclude no such attack was performed. The presence of a log entry is not a confirmation that an attack happened, but an indication that more investigations are needed.\r\n\r\n### References\r\n\r\n* [Securing the Build Tool: Protect the Gradle User Home](https://docs.gradle.org/nightly/userguide/securing_build_tool.html#sec:user_home)\r\n* [Information disclosure through temporary directory permissions](https://github.com/gradle/gradle/security/advisories/GHSA-fp8h-qmr5-j4c8)\r\n* [Gradle client trusts the content of the daemon registry](https://github.com/gradle/gradle/security/advisories/GHSA-gqrr-4j89-5267)\r\n* [Daemon client trusts stale registry entries (port squatting)](https://github.com/gradle/gradle/security/advisories/GHSA-pcp8-98xm-c6pr)\r\n\r\nMore about this type of vulnerabilities:\r\n\r\n* https://cwe.mitre.org/data/definitions/276.html\r\n* https://cwe.mitre.org/data/definitions/362.html",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/gradle/gradle/security/advisories/GHSA-35pj-rg5r-8rpv"
+    }
+  ]
+}
