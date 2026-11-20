@@ -1,0 +1,163 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-w7o5-k2fi-2det-s26h",
+  "modified": "2026-11-20T13:17:39Z",
+  "published": "2026-11-20T13:17:39Z",
+  "upstream": [
+    "GHSA-35pj-rg5r-8rpv"
+  ],
+  "summary": "### Impact",
+  "details": "### Impact\r\n\r\nA **Gradle client** (the `gradle`/`gradlew` CLI or an IDE using the Tooling API) finds running **Gradle daemons** through a registry file, `daemon/<Gradle version>/registry.bin` in the Gradle user home. For each daemon, the registry records its loopback address and the secret token that authenticates clients to it. Anyone holding a token can connect to that daemon and have it run a build as the user who started it. The registry is meant to be readable by its owner only. This advisory is about a vulnerability in how the registry file is created.\r\n\r\nWhen the first daemon of a given Gradle version starts, Gradle creates the version directory and the registry file with the default permissions of the process, which on most Linux and macOS systems let other users read them. Gradle restricts both to the owner right afterwards, then writes the registry content. Another local user who opens the registry file within that window keeps a handle to it that remains readable after the permissions change, and reads the daemon tokens written afterwards. Since the file is rewritten in place, the same handle also reads every later update, so the attacker obtains the token of every daemon of that Gradle version for as long as the file exists.\r\n\r\nWith a token, the attacker can submit a build to the victim's daemon, which runs code with the privileges of the user running the build and exposes in-memory and on-disk secrets available to it.\r\n\r\nBuilds running on **shared / multi-user build hosts** are the most at risk. The attacker must be able to traverse every directory down to the registry file. Gradle does not restrict the permissions of the Gradle user home when it creates it, so whether other users can reach it depends on the user's home directory and umask. A Gradle user home, or home directory, that other users cannot enter prevents the attack. The window only exists when the first daemon of a Gradle version starts in a given Gradle user home.\r\n\r\nThis vulnerability is not exploitable from a remote network connection.\r\n\r\n### Patches\r\n\r\nGradle now creates the daemon registry and its directory with owner-only permissions in the call that creates them. There is no longer a window during which other users can open the registry.\r\n\r\nEach update of the daemon registry now atomically replaces the file with a new one instead of rewriting it in place. A handle opened on an earlier registry file does not read the tokens written afterwards.\r\n\r\n| Fix version | Availability |\r\n| ---------- | ----------- |\r\n| 9.9.2 | OSS |\r\n| 9.8.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.7.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.6.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.5.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.4.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.3.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.2.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 8.14.8 | OSS |\r\n| 7.6.9 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n\r\n### Workarounds\r\n\r\nUpgrading Gradle is our recommended fix.\r\n\r\nIf you cannot upgrade immediately:\r\n\r\n* **Make the Gradle user home accessible to its owner only.** Run `chmod 700 ~/.gradle`, or the same on the directory set by `GRADLE_USER_HOME`. Other users can then no longer reach the files Gradle creates inside it.\r\n* **Do not run builds on shared, multi-user machines.** Ensure only trusted users have local (same-host) access to a machine where Gradle builds run. On CI, prefer single-tenant, ephemeral runners rather than shared hosts.\r\n\r\nAfter upgrading or applying a workaround, stop the daemons with `gradle --stop` and delete the `registry.bin` files in `<Gradle user home>/daemon/`. A handle opened before the change keeps reading the file until it is replaced.\r\n\r\n### Forensics\r\n\r\nA process of another user holding a registry file open indicates an attempt. On Linux and macOS, `lsof` lists the processes that have the files open:\r\n\r\n    lsof <Gradle user home>/daemon/*/registry.bin\r\n\r\nNothing in Gradle's output tells a build submitted with a stolen token apart from a legitimate one. The daemon log, `<Gradle user home>/daemon/<Gradle version>/daemon-<pid>.out.log`, records every build request the daemon receives, with the directory it was started from:\r\n\r\n`Received command: Build{id=<id>, currentDir=<directory>}.`\r\n\r\nAn entry whose directory or time matches no build you ran indicates that someone else used the daemon. Gradle deletes daemon log files after 14 days by default. Documentation about daemon logs can be found [here](https://docs.gradle.org/current/userguide/gradle_daemon.html#sec:daemon_logs).\r\n\r\n> [!IMPORTANT]\r\n> The lack of a log entry cannot be used to conclude no such attack was performed. The presence of a log entry is not a confirmation that an attack happened, but an indication that more investigations are needed.\r\n\r\n### References\r\n\r\n* [Securing the Build Tool: Protect the Gradle User Home](https://docs.gradle.org/nightly/userguide/securing_build_tool.html#sec:user_home)\r\n* [Information disclosure through temporary directory permissions](https://github.com/gradle/gradle/security/advisories/GHSA-fp8h-qmr5-j4c8)\r\n* [Gradle client trusts the content of the daemon registry](https://github.com/gradle/gradle/security/advisories/GHSA-gqrr-4j89-5267)\r\n* [Daemon client trusts stale registry entries (port squatting)](https://github.com/gradle/gradle/security/advisories/GHSA-pcp8-98xm-c6pr)\r\n\r\nMore about this type of vulnerabilities:\r\n\r\n* https://cwe.mitre.org/data/definitions/276.html\r\n* https://cwe.mitre.org/data/definitions/362.html",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "gradle-8",
+        "purl": "pkg:apk/dhi/gradle-8"
+      },
+      "versions": [
+        "8.14.4-r0",
+        "8.14.4-r1",
+        "8.14.4-r2",
+        "8.14.4-r3",
+        "8.14.5-r3",
+        "8.14.5-r4",
+        "8.14.5-r5",
+        "8.14.5-r6",
+        "8.14.5-r7",
+        "8.14.5-r8",
+        "8.14.5-r9",
+        "8.14.6-r0",
+        "8.14.6-r1",
+        "8.14.6-r2",
+        "8.14.7-r0",
+        "8.14.8-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "wiremock-gui",
+        "purl": "pkg:deb/dhi/wiremock-gui"
+      },
+      "versions": [
+        "3.13.191-0",
+        "3.13.192-0",
+        "3.13.193-0",
+        "3.13.193-1",
+        "3.13.193-2",
+        "3.13.194-0",
+        "3.13.195-0",
+        "3.13.195-1",
+        "3.13.195-2",
+        "3.13.195-3",
+        "3.13.195-4",
+        "3.13.195-5",
+        "3.13.195-6",
+        "3.13.195-7",
+        "3.13.197-0",
+        "3.13.197-1",
+        "3.13.197-2",
+        "3.13.197-3",
+        "3.13.198-0",
+        "3.13.198-1",
+        "3.13.198-2",
+        "3.13.198-3",
+        "3.13.198-4",
+        "3.13.199-1",
+        "3.13.199-2",
+        "3.13.199-3",
+        "3.13.199-4",
+        "3.13.199-5",
+        "3.13.199-6",
+        "3.13.199-7",
+        "3.13.199-8",
+        "3.13.208-0",
+        "3.13.211-0",
+        "3.13.212-0",
+        "3.13.213-0",
+        "3.13.214-0",
+        "3.13.215-0",
+        "3.13.216-0",
+        "3.13.217-0",
+        "3.13.217-1",
+        "3.13.217-2",
+        "3.13.217-3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "wiremock",
+        "purl": "pkg:deb/dhi/wiremock"
+      },
+      "versions": [
+        "3.13.2-0",
+        "3.13.2-1",
+        "3.13.2-10",
+        "3.13.2-11",
+        "3.13.2-12",
+        "3.13.2-13",
+        "3.13.2-14",
+        "3.13.2-15",
+        "3.13.2-16",
+        "3.13.2-17",
+        "3.13.2-18",
+        "3.13.2-19",
+        "3.13.2-2",
+        "3.13.2-20",
+        "3.13.2-21",
+        "3.13.2-22",
+        "3.13.2-23",
+        "3.13.2-24",
+        "3.13.2-25",
+        "3.13.2-26",
+        "3.13.2-27",
+        "3.13.2-28",
+        "3.13.2-29",
+        "3.13.2-3",
+        "3.13.2-30",
+        "3.13.2-31",
+        "3.13.2-32",
+        "3.13.2-33",
+        "3.13.2-34",
+        "3.13.2-35",
+        "3.13.2-36",
+        "3.13.2-37",
+        "3.13.2-38",
+        "3.13.2-39",
+        "3.13.2-4",
+        "3.13.2-5",
+        "3.13.2-6",
+        "3.13.2-7",
+        "3.13.2-8",
+        "3.13.2-9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-w7o5-k2fi-2det-s26h"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/gradle/gradle/security/advisories/GHSA-35pj-rg5r-8rpv"
+    }
+  ],
+  "database_specific": {
+    "coverage": "partial",
+    "coverage_exclusions": [
+      "legacy_package_image_owner"
+    ]
+  }
+}
