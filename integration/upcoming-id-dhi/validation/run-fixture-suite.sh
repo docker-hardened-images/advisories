@@ -918,25 +918,24 @@ for scenario in scenarios:
 
             expected_status = expected_behavior.get("vex_status")
             if expected_status == "under_investigation":
-                # This synthetic scenario intentionally covers one listed version.
-                # Production can list many versions and uses their native minimum;
-                # these singleton assertions are not a general renderer validator.
+                # Fixture metadata supplies the expected public encoding. This
+                # matcher does not derive native safe suffixes or prove inventory.
+                start = expected_behavior.get("investigation_range_start", installed_version)
+                wanted_versions = set(expected_behavior.get("covered_versions", [installed_version]))
+                wanted_ranges = [] if start is None else [{"type": "ECOSYSTEM", "events": [{"introduced": start}]}]
                 ui_versions: set[str] = set()
                 for entry in matching_affected_entries:
                     versions = entry.get("versions", [])
-                    ranges = entry.get("ranges", [])
                     if not isinstance(versions, list) or not versions:
                         fail(where, "under_investigation OSV coverage must enumerate exact versions")
                     else:
                         ui_versions.update(str(version) for version in versions)
-                    if ranges != [{"type": "ECOSYSTEM", "events": [{"introduced": installed_version}]}]:
-                        fail(where, "under_investigation fixture requires an open-ended range from its earliest covered version")
-                if ui_versions != {installed_version}:
-                    fail(
-                        where,
-                        "under_investigation OSV versions must equal the exact version "
-                        f"covered by the fixture assessment ({installed_version})",
-                    )
+                    if entry.get("ranges", []) != wanted_ranges:
+                        fail(where, "under_investigation fixture differs from its expected safe suffix")
+                if ui_versions != wanted_versions:
+                    fail(where, "under_investigation exact versions differ from fixture coverage")
+                if start is not None and start not in ui_versions:
+                    fail(where, "safe suffix must start at a listed covered version")
             elif expected_status in {"affected", "fixed"}:
                 for entry in matching_affected_entries:
                     versions = entry.get("versions", [])
@@ -955,8 +954,9 @@ for scenario in scenarios:
                                 )
 
             range_only_versions = expected_behavior.get("range_only_matching_versions", [])
-            if expected_status in {"affected", "fixed", "under_investigation"} and not range_only_versions:
-                fail(where, "positive fixtures must include range_only_matching_versions")
+            has_published_range = any(entry.get("ranges") for entry in matching_affected_entries)
+            if expected_status in {"affected", "fixed", "under_investigation"} and has_published_range and not range_only_versions:
+                fail(where, "positive ranged fixtures must include range_only_matching_versions")
             if not isinstance(range_only_versions, list) or not all(
                 isinstance(version, str) and version for version in range_only_versions
             ):

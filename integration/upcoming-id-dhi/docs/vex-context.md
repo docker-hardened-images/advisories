@@ -25,13 +25,14 @@ semantics, a package version is affected if it is listed in
 | Assessment state | Generated DHI OSV role | Generated DHI VEX role | Scanner result |
 | --- | --- | --- | --- |
 | `affected` | Creates a finding through native ranges and enumerated affected versions. | Confirms DHI assessment and adds status/action context. | Report finding with DHI context. |
-| `under_investigation` | Creates a finding through an open-ended package range (from the earliest known covered version) and known versions. | Marks the matching DHI product assessment as unresolved and adds status context. | Report listed and unlisted package versions even without VEX; when VEX is consumed, show the under-investigation context. |
+| `under_investigation` | Creates a finding through known versions and an eligible open-ended safe suffix. | Marks the matching DHI product assessment as unresolved and adds status context. | Report listed versions and versions matching published ranges even without VEX; when VEX is consumed, show the under-investigation context. |
 | `not_affected` | Prevents a finding by omitting positive OSV coverage for the DHI package/version. | Explains the assessment for exact product matches and remains the published advisory artifact when the advisory is VEX-only. | No finding. |
 | `fixed` | Prevents a finding by ending the affected range before the fixed version. | Marks exact DHI product versions as fixed. | No finding for fixed versions. |
 
-For vulnerability discovery, scanners treat versions at or above the earliest known covered version of an
-`under_investigation` DHI package as conservatively affected within its lineage
-and base release. The range has no upper bound, so a
+For vulnerability discovery, scanners match an `under_investigation` package's
+published versions and ranges as a union within its lineage and base release.
+A safe suffix can start after earlier explicitly listed versions. An entry
+without a range is valid and matches only its listed versions. An eligible range has no upper bound, so a
 new version matches even before the feed enumerates it. Resolution replaces
 this coverage with assessed affected/fixed ranges or removes it for
 `not_affected`. VEX remains exact-product context: an unlisted version may

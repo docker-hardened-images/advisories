@@ -108,13 +108,14 @@ explicit installed-version checks, these probes exercise both branches
 of the union, including an unlisted future under-investigation release. They are synthetic matching probes, not additional
 installed packages or claims about published releases.
 
-The current under-investigation fixture intentionally lists only its installed
-version. The harness therefore checks that its `introduced` boundary equals
-that version and that no other version is listed. These are singleton-fixture
-assertions, not the renderer's general rule: production entries may enumerate
-multiple versions, and their lower bound is the minimum under native ordering.
-A multi-version fixture would require corresponding harness changes; a lexical
-minimum would not be a valid substitute for the native comparison.
+The original unresolved fixture uses its installed version as the minimum.
+Two additional static variants exercise a safe suffix above an earlier listed
+version, and valid enumeration-only coverage when the latest release is excluded.
+The manifest supplies `covered_versions` and `investigation_range_start` (null
+means no range); the harness verifies that encoding and its matching behavior.
+Excluded `r8` must not match; explicit `r7` still does, and the safe-suffix variant
+matches unlisted `r10`. This is not a native-comparator or producer-eligibility
+validator; those properties are covered by Inbox's APK/Debian regressions.
 
 Embedded language package PURLs, such as `pkg:pypi/...` or `pkg:npm/...`, are
 provenance in fixture metadata and the example SBOM parent-child relationship.

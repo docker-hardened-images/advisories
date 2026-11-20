@@ -100,15 +100,18 @@ a scanner finding; a fully `not_affected` advisory can therefore be VEX-only.
 Scanners may consume generated DHI VEX records for assessment context, but VEX
 consumption is not required to determine whether a finding exists.
 
-When a DHI package assessment has status `under_investigation`, Docker publishes
-an open-ended `ECOSYSTEM` range starting at the earliest known covered version, alongside
-known versions in `affected[].versions`. An OSV-only scanner therefore reports
-unlisted releases too, including newly published versions. This conservative
+When a DHI package assessment has status `under_investigation`, Docker retains
+known versions in `affected[].versions` and may add an open-ended `ECOSYSTEM`
+range from an eligible safe suffix. When a range is present, an OSV-only scanner also reports matching unlisted
+releases, including newly published versions. This conservative
 coverage stays scoped to the same DHI package, lineage, and base release. The
 paired VEX record conveys the unresolved status for its exact known products.
 
-The lower bound relies on the complete DHI working package set for that package,
-lineage and base release; it is not inferred from a partial inventory. Broad
+With no exclusions, the lower bound is the native earliest covered version in
+the complete DHI package universe. With known advisory-specific exclusions, it
+moves to an actual included release after the last exclusion. If no safe start
+exists or comparison evidence is unavailable, coverage remains enumerated.
+Listed versions below a range still match through OSV union semantics. Broad
 coverage above it is intentional until vulnerability-specific evidence supports
 refinement. See [the boundary decision and completeness assumption](docs/package-identity-and-versioning.md#why-this-under-investigation-boundary-is-safe-for-the-dhi-universe).
 

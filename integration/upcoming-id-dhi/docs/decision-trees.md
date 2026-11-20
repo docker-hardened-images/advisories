@@ -62,8 +62,10 @@ flowchart TD
   F -->|not_affected or fixed| I[Report OSV/VEX state mismatch for generated data]
 ```
 
-For an `under_investigation` assessment, generated DHI OSV publishes an open-ended
-package range alongside known versions, so unlisted releases also match. The VEX branch labels an
+For an `under_investigation` assessment, generated DHI OSV retains known
+versions and may publish an open-ended safe suffix. Unlisted versions match
+only an actual published range; a version-only entry is valid. Listed versions
+below a suffix still match. The VEX branch labels an
 existing OSV finding as unresolved when an exact-product statement is present;
 it does not create the finding. With the paired document present, missing
 exact-product context is expected for a range-only match, but is an integrity

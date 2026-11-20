@@ -142,8 +142,8 @@ The affected package PURL is versionless. Coverage can enumerate exact
 ```
 
 For an `under_investigation` package assessment, the generated affected entry
-retains known versions in `affected[].versions` and adds an `ECOSYSTEM` range
-starting at the earliest known covered version. It has no upper bound, so unlisted versions at or above the lower bound, including future
+retains known versions in `affected[].versions` and, when eligible, adds an
+`ECOSYSTEM` range starting at the safe suffix boundary. When present, it has no upper bound, so unlisted versions at or above the lower bound, including future
 releases, also match. Coverage stays scoped to the exact DHI package identity,
 lineage, and base release; it does not apply to other packages or releases.
 A scanner reports the OSV match even without consuming VEX. VEX adds unresolved

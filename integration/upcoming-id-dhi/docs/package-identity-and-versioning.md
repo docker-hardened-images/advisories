@@ -156,8 +156,8 @@ pkg:apk/dhi/coreutils@9.11-r0?distro=dhi-3.24
 versions remain useful alongside `ECOSYSTEM` ranges because consumers without
 the package manager's native comparator can still perform precise equality
 matching. For an `under_investigation` package assessment, generated DHI OSV
-retains known versions and adds an open-ended `ECOSYSTEM` range from
-the earliest known covered version. Unlisted versions at or above that boundary also match within the same package,
+retains known versions and may add an open-ended `ECOSYSTEM` range from a safe
+suffix. Without known exclusions this is the native earliest covered version. Unlisted versions at or above that boundary also match within the same package,
 lineage, and base release; no fixed boundary is claimed.
 
 APK affected entry:
@@ -231,7 +231,9 @@ has separate `under_investigation` statements for those packages, each naming
 its own 23 exact products. The published OSV snapshot enumerates versions and
 contains no ranges for these entries. This change preserves those existing
 identities and adds an independent open-ended range to each package, starting
-at that package's native earliest covered version. A range on `python-3.11`
+at that package's eligible native safe suffix. With no exclusions this is its
+earliest covered version; a historical unmarked record remains enumerated until
+rematerialized. A range on `python-3.11`
 does not match `python-3.12`, even in the same ecosystem.
 
 No version-line inference or new package identity is needed for this Python
@@ -242,13 +244,22 @@ unless vulnerability-specific evidence supports refinement.
 ### Why this under-investigation boundary is safe for the DHI universe
 
 The producer's working package set is complete for the DHI package universe
-within the same package identity, lineage and base release. An
-under-investigation owner covers that complete product-version set. Selecting
-its earliest version with native APK/dpkg ordering, including epochs and
-revisions, therefore excludes no existing earlier DHI version in that scope.
-This relies on the producer's completeness invariant; the renderer does not
-independently verify it. It says nothing about upstream versions or other
-package identities and releases.
+within the same package identity, lineage and base release. An advisory-aware
+resolver can select a subset using positive applicability evidence. The
+materializer compares complete and retained versions, then chooses the native
+earliest retained release strictly after every known exclusion. No exclusions
+means the native minimum. Retained `r0,r2` with excluded `r1` publishes explicit
+`r0,r2` plus an open range from `r2`. Retained `r0,r1` with excluded `r2` has no
+safe suffix and stays enumerated. An exclusion below the proposed start does
+not move it. Native APK/dpkg ordering includes epochs and revisions; versions
+are not ordered lexically.
+
+Missing or inconsistent comparison evidence leaves exact enumeration. Historical
+records without pinned eligibility also remain enumerated until rematerialized.
+Consumers match the published ranges and versions as a union; they must not
+invent a range from the smallest listed version. Older explicit releases below
+a published suffix still match. This uses existing DHI inventory evidence and
+makes no assertion about upstream versions or other package scopes.
 
 The boundary represents DHI coverage, not the actual introduction of the
 vulnerability. Broad unresolved coverage above it is intentional: a new release
