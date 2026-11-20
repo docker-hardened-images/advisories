@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T08:37:38Z",
-  "last_updated": "2026-11-12T21:12:35Z",
-  "version": 2,
+  "last_updated": "2026-11-20T04:01:36Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -22,7 +22,8 @@
           "@id": "pkg:deb/dhi/jbigkit@2.1-6.1%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2017-9937 is a denial of service in the JBIG decoder of jbigkit: a crafted image header, first reported through LibTIFF's JBIG codec, makes jbg_dec_in() attempt an unbounded memory allocation and abort (http://bugzilla.maptools.org/show_bug.cgi?id=2707, https://bugs.debian.org/869708, https://security-tracker.debian.org/tracker/CVE-2017-9937). Upstream added a limit on the decoded image size, jbg_dec_state.maxmem with a default of 2 GB, which jbg_dec_in() checks before allocating the image and otherwise returns JBG_ENOMEM, in https://repo.or.cz/jbigkit.git/commit/bc3293299bc4981e83b7f37f3615a6b9b27b6837, whose message names this CVE; Ubuntu ships the same change as its fix (https://ubuntu.com/security/CVE-2017-9937). Debian lists 2.1-6.1 as vulnerable with no fix. This package applies that change to Debian jbigkit 2.1-6.1: in the current libjbig0 and libjbig-dev packages for amd64 and arm64 in the DHI Debian repository, jbig.h declares the maxmem field and libjbig.so.0 and libjbig.a set the 2,000,000,000-byte default in jbg_dec_init(), while the earlier published build of 2.1-6.1 has neither. Pending: the evidence for this decision also lists an older build that is no longer published and could not be inspected, and whose version sorts above the first build that carries the fix, so a fixed range would report it as fixed. The decision waits for the request to be reissued with current evidence before a fixed range is published."
     }
   ]
 }
