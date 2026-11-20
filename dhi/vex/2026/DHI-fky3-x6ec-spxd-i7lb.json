@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-17T15:38:48Z",
-  "version": 1,
+  "last_updated": "2026-11-20T04:09:38Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:deb/dhi/dbus@1.16.2-2%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-128885: in D-Bus builds that emulate poll() with select(), _dbus_poll() in dbus/dbus-sysdeps-unix.c passes file descriptors of FD_SETSIZE or more to FD_SET() without a bound check, so a local client that opens enough connections can make the daemon write past a stack fd_set and crash (https://bugzilla.redhat.com/show_bug.cgi?id=2462795). The report limits it to builds that take the select() fallback, which dbus compiles only when poll() is unavailable or BROKEN_POLL is defined (the '#if defined(HAVE_POLL) && !defined(BROKEN_POLL)' branch of _dbus_poll() in dbus 1.16.2, https://gitlab.freedesktop.org/dbus/dbus/-/blob/dbus-1.16.2/dbus/dbus-sysdeps-unix.c), and Debian notes that it does not affect Linux unless dbus is deliberately compiled with BROKEN_POLL (https://security-tracker.debian.org/tracker/CVE-2026-128885). The vulnerable select() fallback is not in this package. Unpacked all 26 binary packages published from the dbus source in the DHI Debian repository, the one published build of Debian's dbus 1.16.2-2 for amd64 and arm64, including the debug-symbol packages. The only copies of _dbus_poll() are in libdbus-1.so.3.38.3 and in the dbus-sysdeps-unix.c.o member of the static libdbus-1.a in libdbus-1-dev; both call poll() and neither calls select(). dbus-daemon uses epoll and imports neither select() nor poll(), and neither do the other programs or dbus-daemon-launch-helper, except dbus-launch, which imports select() for its own X11 session-watch loop; its debug symbols show it has no _dbus_poll(). The programs and libdbus-1.so.3.38.3 are ELF files dynamically linked against the system libc.so.6, and the debug-symbol packages hold detached debug information."
     }
   ]
 }
