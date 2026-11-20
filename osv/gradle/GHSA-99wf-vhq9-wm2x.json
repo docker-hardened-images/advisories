@@ -1,0 +1,159 @@
+{
+  "modified": "2026-11-19T21:03:10Z",
+  "published": "2026-11-19T21:03:10Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-99wf-vhq9-wm2x",
+  "details": "### Impact\r\n\r\n[TestKit](https://docs.gradle.org/current/userguide/test_kit.html) runs Gradle builds from tests and from build logic, mostly to test Gradle plugins. Its `GradleRunner` uses a dedicated directory, the TestKit directory, as the Gradle user home of the builds it runs. It holds their `gradle.properties`, init scripts, dependency caches and daemon registry. This advisory is about a vulnerability in TestKit.\r\n\r\nWhen the TestKit directory is not configured, and `GradleRunner` does not run in Gradle's `Test` task, TestKit uses `.gradle-test-kit` in the temporary directory of the JVM, given by the `java.io.tmpdir` system property. On Linux this is `/tmp` by default, so the directory is `/tmp/.gradle-test-kit`. The path is the same for every user, and TestKit uses an existing directory at that path as long as it can write to it, whoever owns it. A local attacker who creates that directory before the victim does controls the Gradle user home of the victim's TestKit builds. Gradle loads the `gradle.properties` and init scripts it finds in that directory. Files the attacker places there therefore run code with the privileges of the user running the build, and expose the secrets available to it.\r\n\r\n[GHSA-89qm-pxvm-p336](https://github.com/gradle/gradle/security/advisories/GHSA-89qm-pxvm-p336) (CVE-2021-29428) reported this vulnerability for Gradle versions before 7.0, where TestKit always used `.gradle-test-kit-\u003cuser name\u003e` in the system temporary directory. Its fix was incomplete. Since Gradle 7.0, tests run by Gradle's `Test` task use a TestKit directory in the build directory, and are not affected. The system temporary directory remains in use when:\r\n\r\n* build logic or a plugin calls `GradleRunner` from a task or a worker action, so in the Gradle daemon or a worker process;\r\n* tests run in an IDE's own test runner rather than through Gradle.\r\n\r\nBuilds running on **shared, multi-user Linux hosts** are the most at risk, such as CI agents running jobs as different users. The attacker can create the directory before the victim's first TestKit build on the host, or whenever it is removed afterwards, for instance by `systemd-tmpfiles` or at reboot when `/tmp` is a `tmpfs`. Windows and macOS use a temporary directory per user and are not affected. Neither are Linux setups giving each user or job a private `/tmp`.\r\n\r\nThis vulnerability is not exploitable from a remote network connection.\r\n\r\n### Patches\r\n\r\nWhen the TestKit directory is not configured and `GradleRunner` does not run in Gradle's `Test` task, TestKit now uses `.gradle-test-kit-\u003cuser name\u003e` in the system temporary directory, and creates it accessible to its owner only.\r\n\r\nIf that path already exists, TestKit uses it only when it is a real directory, rather than a symbolic link, that belongs to the current user and that no other user can write to. Otherwise, TestKit leaves it untouched, does not run the build, and fails with `Unable to use \u003cpath\u003e as the TestKit directory: \u003creason\u003e.`\r\n\r\nA TestKit directory set with `GradleRunner.withTestKitDir()` or the `org.gradle.testkit.dir` system property, and the one used under Gradle's `Test` task, are unchanged. The previous `.gradle-test-kit` directory in the system temporary directory is no longer used and can be deleted.\r\n\r\n| Fix version | Availability |\r\n| ---------- | ----------- |\r\n| 9.9.2 | OSS |\r\n| 9.8.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.7.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.6.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.5.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.4.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.3.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.2.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 8.14.8 | OSS |\r\n| 7.6.9 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n\r\n### Workarounds\r\n\r\nUpgrading Gradle is our recommended fix.\r\n\r\nIf you cannot upgrade immediately:\r\n\r\n* **Set the TestKit directory explicitly.** Call [`GradleRunner.withTestKitDir()`](https://docs.gradle.org/current/javadoc/org/gradle/testkit/runner/GradleRunner.html#withTestKitDir(java.io.File)) with a directory only you can write to, for example in the build directory, or set the `org.gradle.testkit.dir` system property in the JVM that runs `GradleRunner`. For an IDE test runner, add `-Dorg.gradle.testkit.dir=PATH` to the JVM options of the run configuration.\r\n* **Run tests through Gradle's `Test` task**, which places the TestKit directory in the build directory since Gradle 7.0.\r\n* **Do not run builds on shared, multi-user machines**, or give each user or job a private temporary directory.\r\n\r\n### Forensics\r\n\r\nTestKit never creates `gradle.properties` or an `init.d` directory in the TestKit directory. On Linux, check the owner and permissions of the directory and look for these files. Before Gradle 7.0, the directory is `/tmp/.gradle-test-kit-\u003cuser name\u003e`. Adjust the path if `java.io.tmpdir` is set to another directory.\r\n\r\n    ls -la /tmp/.gradle-test-kit /tmp/.gradle-test-kit/init.d\r\n    cat /tmp/.gradle-test-kit/gradle.properties\r\n\r\nA directory owned by another user, writable by other users, or containing files you did not create indicates an attempt.\r\n\r\nA TestKit build failing with `Unable to write to test kit directory: /tmp/.gradle-test-kit` means that another user created the directory first, maliciously or not.\r\n\r\nA fixed version reports a directory it refuses instead of using it: `Unable to use /tmp/.gradle-test-kit-\u003cuser name\u003e as the TestKit directory: it is owned by another user.` The other reasons are `it is a symbolic link`, `it is not a directory` and `it is writable by other users`.\r\n\r\n\u003e [!IMPORTANT]\r\n\u003e The lack of such traces cannot be used to conclude no such attack was performed. Their presence is not a confirmation that an attack happened, but an indication that more investigations are needed.\r\n\r\n### References\r\n\r\n* [Testing Build Logic with TestKit](https://docs.gradle.org/current/userguide/test_kit.html)\r\n* Prior Gradle vulnerabilities: [GHSA-89qm-pxvm-p336](https://github.com/gradle/gradle/security/advisories/GHSA-89qm-pxvm-p336), [GHSA-465q-w4mf-4f4r](https://github.com/gradle/gradle/security/advisories/GHSA-465q-w4mf-4f4r)\r\n\r\nMore about this type of vulnerabilities:\r\n\r\n* https://cwe.mitre.org/data/definitions/379.html\r\n* https://cwe.mitre.org/data/definitions/283.html",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/gradle/gradle/security/advisories/GHSA-99wf-vhq9-wm2x"
+    }
+  ]
+}

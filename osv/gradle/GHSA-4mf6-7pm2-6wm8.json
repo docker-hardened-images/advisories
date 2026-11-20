@@ -1,0 +1,159 @@
+{
+  "modified": "2026-11-19T21:02:56Z",
+  "published": "2026-11-19T21:02:56Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-4mf6-7pm2-6wm8",
+  "details": "### Impact\r\n\r\nGradle can resolve dependencies from, and publish to, Maven and Ivy repositories accessed over **SFTP** (`sftp://` URLs), authenticating with a username and password. SSH authenticates the server to the client with the server's host key, which the client checks against the keys it already knows, usually in `~/.ssh/known_hosts`. This advisory is about a vulnerability in how Gradle connects to SFTP repositories.\r\n\r\nGradle accepts any host key presented by the server. It does not read `known_hosts`, and no setting enables verification. An attacker who can make the build connect to them instead of the real server, through an on-path network position, DNS or ARP spoofing, or by taking over the address of a decommissioned server, can impersonate the repository without any warning to the user. The attacker can then:\r\n\r\n* obtain the repository password, which Gradle sends as its only authentication method. Credentials of a publishing repository give write access to that repository, and to everything that consumes it;\r\n* serve arbitrary module metadata, plugins and jars, which run in the build with the privileges of the user running it;\r\n* alter or swallow artifacts being published.\r\n\r\nChecksum files fetched from the repository offer no protection, since the attacker serves them too. Builds using [dependency verification](https://docs.gradle.org/current/userguide/securing_dependencies.html) detect substituted artifacts that are already listed in their verification metadata, but not the theft of the repository password, nor tampering with publications.\r\n\r\nOnly builds that declare an `sftp://` repository are affected. A demonstration against Gradle's test SFTP server shows a build succeeding, and sending the password, after the server's host key was replaced.\r\n\r\n### Patches\r\n\r\nGradle now verifies the host key of SFTP repository servers against the OpenSSH known hosts files: `~/.ssh/known_hosts` and `/etc/ssh/ssh_known_hosts`, or `%ProgramData%\\ssh\\ssh_known_hosts` on Windows. A connection to a server whose host is not listed, or whose key does not match the one listed, fails before the repository credentials are sent. The error names the server, the type and SHA-256 fingerprint of the key it presented, and how to add it.\r\n\r\nThis changes the behavior of builds that use SFTP repositories. Gradle does not record the key of a server it connects to for the first time, so the host key of every SFTP repository server must be listed before the build runs. Check the fingerprint with the server's administrator, then add the key, for example with `ssh-keyscan -p \u003cport\u003e \u003chost\u003e \u003e\u003e ~/.ssh/known_hosts`. Host certificates (`@cert-authority` entries) and wildcard host patterns are not supported.\r\n\r\nTo keep connecting to a server without verifying its host key, set [`allowInsecureProtocol = true`](https://docs.gradle.org/current/dsl/org.gradle.api.artifacts.repositories.UrlArtifactRepository.html#org.gradle.api.artifacts.repositories.UrlArtifactRepository:allowInsecureProtocol) on the repository. That repository then remains exposed to this vulnerability.\r\n\r\n| Fix version | Availability |\r\n| ---------- | ----------- |\r\n| 9.9.2 | OSS |\r\n| 9.8.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.7.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.6.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.5.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.4.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.3.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 9.2.4 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n| 8.14.8 | OSS |\r\n| 7.6.9 | [Gradle Security Subscription](https://gradle.org/security-subscription/) |\r\n\r\n### Workarounds\r\n\r\nUpgrading Gradle is our recommended fix.\r\n\r\nIf you cannot upgrade immediately:\r\n\r\n* **Move to an HTTPS repository.** Gradle validates the server certificate of HTTPS repositories against the JVM trust store.\r\n* **Enable dependency verification, ideally with signature verification.** It detects substituted artifacts for dependencies whose checksums or signing keys were recorded before the attack. It does not protect repository credentials or publications.\r\n* **Use separate, least-privilege credentials** for resolving and for publishing, and only provide publishing credentials to the builds that publish.\r\n\r\n### Forensics\r\n\r\nGradle does not log the host key of SFTP servers above debug level. With `--debug`, the SSH library logs the host and the key type it accepted, but not the key fingerprint, and only when the first SFTP connection of the Gradle daemon was made at debug level.\r\n\r\nTo check whether resolved artifacts were substituted, compare the files in the Gradle dependency cache with the repository over a trusted channel. The cache stores each file under `\u003cGradle user home\u003e/caches/modules-2/files-2.1/\u003cgroup\u003e/\u003cmodule\u003e/\u003cversion\u003e/\u003csha1\u003e/`, where `\u003csha1\u003e` is the SHA-1 checksum of the file as it was downloaded.\r\n\r\nTo check publications, compare the artifacts on the repository server with the build outputs, and check the server's authentication logs for the publishing account: a publication that reported success but left no login on the server reached another host.\r\n\r\nA fixed version reports a server it cannot authenticate instead of connecting to it. `Could not verify the identity of SFTP server at sftp://\u003chost\u003e:\u003cport\u003e: its key does not match the one listed for this host in the SSH known hosts files.` means that the key of a known server changed, through a legitimate key rotation or an impersonation attempt. The message includes the fingerprint of the presented key, to compare with the one of the real server.\r\n\r\nIf an SFTP repository was used over a network you do not fully trust, rotate its credentials.\r\n\r\n\u003e [!IMPORTANT]\r\n\u003e The lack of such traces cannot be used to conclude no such attack was performed. Their presence is not a confirmation that an attack happened, but an indication that more investigations are needed.\r\n\r\n### References\r\n\r\n* [Supported repository protocols](https://docs.gradle.org/current/userguide/supported_repository_protocols.html)\r\n* [Verifying dependencies](https://docs.gradle.org/current/userguide/securing_dependencies.html)\r\n\r\nMore about this type of vulnerabilities:\r\n\r\n* https://cwe.mitre.org/data/definitions/322.html\r\n* https://cwe.mitre.org/data/definitions/494.html",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "gradle",
+        "purl": "pkg:dhi/gradle"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-8",
+        "purl": "pkg:apk/alpine/gradle-8?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.14.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "apk",
+        "name": "alpine/gradle-9",
+        "purl": "pkg:apk/alpine/gradle-9?os_name=alpine\u0026os_version=3.23"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.9.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "maven",
+        "source_package": "org.gradle:gradle-core"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/gradle/gradle/security/advisories/GHSA-4mf6-7pm2-6wm8"
+    }
+  ]
+}
