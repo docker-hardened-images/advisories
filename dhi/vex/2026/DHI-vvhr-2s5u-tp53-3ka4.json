@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-09T20:59:56Z",
-  "version": 1,
+  "last_updated": "2026-11-20T20:04:25Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -42,7 +43,9 @@
           "@id": "pkg:apk/dhi/curl@8.23.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-14017: during multi-threaded LDAPS transfers, libcurl's legacy LDAP code (lib/ldap.c) set TLS options globally instead of per connection, so disabling certificate verification for one transfer could disable it for others. curl 8.18.0 fixed it in lib/ldap.c only: https://curl.se/docs/CVE-2025-14017.html, https://github.com/curl/curl/commit/39d1976b7f709a516e3243338ebc0443bdd8d56d. No published build of this owner has LDAP support: Alpine's curl APKBUILD configures --disable-ldap (https://github.com/alpinelinux/aports/blob/856d76205ed1b7f875d32fd7b72eb93912f32acd/main/curl/APKBUILD). Unpacked every published curl package for Alpine 3.23 in the DHI Alpine repository: 8.17.0-r1, 8.18.0-r0, 8.19.0-r0, 8.20.0-r0, 8.20.0-r1, 8.21.0-r0, 8.22.0-r0, 8.23.0-r0 and 8.23.0-r1, each for x86_64 and aarch64, as curl, libcurl, curl-dev, curl-static, curl-dbg, curl-doc, curl-fish-completion and curl-zsh-completion. Their programs and shared libraries are the curl program and the libcurl.so.4 shared library, both dynamically linked against musl. libcurl links OpenSSL, zlib, c-ares, nghttp2, libidn2, libpsl, zstd and brotli; 8.17.0-r1 and 8.18.0-r0 also link nghttp3; no ELF file links an SSH library (libssh2, libssh or wolfSSH), an LDAP library or GnuTLS. curl-static ships the static libcurl.a, whose members are all libcurl's own object files; curl-dbg holds only detached debug information for curl and libcurl. No package contains a PE or Mach-O file. In every libcurl.a, the ldap and openldap objects define no LDAP code (8.19.0-r0's ldap object carries only the ldap and ldaps scheme descriptors and calls no LDAP library function). The legacy LDAP code the advisory describes is not in any build."
     },
     {
       "vulnerability": {
@@ -92,7 +95,9 @@
           "@id": "pkg:deb/dhi/curl@8.14.1-2%2Bdeb13u7%2Bdhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-14017: during multi-threaded LDAPS transfers, libcurl's legacy LDAP code (lib/ldap.c) set TLS options globally instead of per connection, so disabling certificate verification for one transfer could disable it for others. curl 8.18.0 fixed it in lib/ldap.c only: https://curl.se/docs/CVE-2025-14017.html, https://github.com/curl/curl/commit/39d1976b7f709a516e3243338ebc0443bdd8d56d. Debian builds curl against OpenLDAP, which uses curl's lib/openldap.c rather than the legacy lib/ldap.c: https://security-tracker.debian.org/tracker/CVE-2025-14017 ('Built with OpenLDAP (only affects the legacy LDAP support)'). Unpacked all 51 binary packages published from the curl source in the DHI Debian repository: curl 8.14.1 in its three published Debian revisions, built from Debian's 8.14.1-2+deb13u5 and 8.14.1-2+deb13u7 sources, for amd64 and arm64, namely curl, libcurl4t64, libcurl3t64-gnutls, libcurl4-openssl-dev, libcurl4-gnutls-dev and libcurl4-doc, and the debug-symbol packages curl-dbgsym, libcurl4t64-dbgsym and libcurl3t64-gnutls-dbgsym. Their ELF files are the curl program and the libcurl.so.4.8.0 (OpenSSL) and libcurl-gnutls.so.4.8.0 (GnuTLS) shared libraries, each dynamically linked against the system libc.so.6, plus detached debug-information files in the debug-symbol packages. The development packages also ship the static archives libcurl.a and libcurl-gnutls.a, each with 179 members that are all libcurl's own object files. No package contains a PE or Mach-O file. Both libcurl shared libraries link libldap.so.2 and liblber.so.2 from OpenLDAP. In each static archive the ldap object, compiled from lib/ldap.c, is empty (608 bytes on amd64, 808 bytes on arm64) and defines no symbols, while the LDAP handlers are in the openldap object. The legacy LDAP code the advisory describes is not compiled into any build."
     }
   ]
 }
