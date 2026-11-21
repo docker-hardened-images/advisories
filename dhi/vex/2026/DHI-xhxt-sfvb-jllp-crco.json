@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-09T23:12:55Z",
-  "version": 1,
+  "last_updated": "2026-11-21T00:31:54Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:deb/dhi/openldap@2.6.10%2Bdfsg-1%2Bdhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
+      "impact_statement": "CVE-2020-15719 reports that libldap in certain third-party OpenLDAP packages that assert RFC 6125 support considers the certificate's common name (CN) even when it has a non-matching subjectAltName; Red Hat changed this in its own package (https://bugzilla.redhat.com/show_bug.cgi?id=1740070). OpenLDAP closed the report as VERIFIED INVALID: libldap's host-name check conforms to RFC 4513, the LDAP specification, and RFC 6125 states that it does not apply to LDAP, so consulting the CN is the specified behaviour for LDAP rather than a flaw (https://bugs.openldap.org/show_bug.cgi?id=9266). The Debian tracker rates it unimportant and cites that ruling: https://security-tracker.debian.org/tracker/CVE-2020-15719. Unpacked every package of both builds published for this source in the DHI Debian repository for trixie (Debian version 2.6.10+dfsg-1), on amd64 and arm64: ldap-utils, libldap2, libldap-dev, libldap-common, libldap2-dev and the ldap-utils and libldap2 debug-symbol packages. DHI builds Debian's openldap source with Debian's pkg.openldap.noslapd build profile, which adds --disable-slapd to the configuration (https://sources.debian.org/src/openldap/2.6.10+dfsg-1/debian/rules/). The packages hold the ldap* command-line clients, the libldap and liblber shared libraries, their static archives libldap.a and liblber.a (client library objects only), headers, pkg-config files, the ldap.conf client configuration file, documentation, and debug symbols. libldap here is built from the unmodified upstream TLS code against OpenSSL (libldap.so.2 links libssl.so.3), and Debian's patch series for this version does not touch certificate host-name checking. In that code (tlso_session_chkhost in libraries/libldap/tls_o.c), a subjectAltName that does not match the server name rejects the certificate when TLS_REQSAN is set to try, demand or hard, and the CN is consulted only when TLS_REQSAN is never or the default, allow (https://github.com/openldap/openldap/blob/OPENLDAP_REL_ENG_2_6_10/libraries/libldap/tls_o.c). Passing that check also requires a certificate issued by a certificate authority the client already trusts that names the server in its CN, which only a party inside the client's trust boundary can produce."
     }
   ]
 }
