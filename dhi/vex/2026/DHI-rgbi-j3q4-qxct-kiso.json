@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:00:58Z",
-  "last_updated": "2026-11-21T03:29:33Z",
-  "version": 2,
+  "last_updated": "2026-11-21T21:37:42Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -17,15 +17,6 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.10-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.13-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.14-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.15-r0?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.2-r0?distro=dhi-3.23"
@@ -52,7 +43,30 @@
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update dotnet10-runtime to 10.0.13-r0 or later.",
+      "status_notes": "CVE-2026-70161 is a .NET SDK elevation of privilege issue in workload installation and advertising manifests: an attacker-controlled workload manifest ID can traverse paths under %ProgramData%\\dotnet and import attacker-controlled MSBuild targets during elevated workload operations. Microsoft lists Windows as the only affected platform and the .NET SDK 10.0.1xx feature band as affected from 10.0.100 through 10.0.112 and fixed in 10.0.113, shipped with .NET 10.0.13 (https://github.com/dotnet/announcements/issues/453, https://github.com/dotnet/sdk/issues/56610, https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.13/10.0.13.md). The fix makes the cross-platform workload manifest reader reject manifest, workload and pack IDs that are not a single valid path component, and adds Windows-only checks for the elevated installer (the ManifestId check is in the dotnet/dotnet v10.0.113 source tag and not in v10.0.112: https://github.com/dotnet/dotnet/blob/v10.0.113/src/sdk/src/Resolvers/Microsoft.NET.Sdk.WorkloadManifestReader/ManifestId.cs). DHI dotnet10-runtime for Alpine 3.23 builds .NET 10 for Linux from Microsoft's dotnet/dotnet source release, and each build's version is the .NET release it carries. Scanned all 264 packages of the twelve published builds (10.0.2-r0, 10.0.3-r0, 10.0.4-r0, 10.0.5-r0, 10.0.6-r0, 10.0.7-r0, 10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0) for x86_64 and aarch64, including the debug packages and the files inside the nupkg, zip and tar.gz archives they hold: the .NET SDK held by dotnet10-runtime-bootstrap, with its Microsoft.NET.Sdk.WorkloadManifestReader.dll, is the SDK of each build's .NET release: SDK 10.0.102 to 10.0.110 in 10.0.2-r0 to 10.0.10-r0, then SDK 10.0.113, 10.0.114 and 10.0.115 in 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0; no 10.0.11 or 10.0.12 build was published for Alpine 3.23. In the x86_64 dotnet10-runtime-artifacts package, the Microsoft.NET.Sdk.WorkloadManifestReader assembly in the 10.0.13-r0 nupkg contains the new path-component check (the ParsePathBasedId and IsValidPathComponent methods). The elevated MSI installer that Microsoft names is not used on Linux, but the manifest reader that carries the fix ships in every build and is used by the SDK's workload commands on Linux, so this is recorded as fixed rather than not affected. The range ends at 10.0.13-r0 because it is the first published build whose SDK is 10.0.113 or later."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-rgbi-j3q4-qxct-kiso",
+        "aliases": [
+          "CVE-2026-70161"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.13-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.14-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.15-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-70161 is a .NET SDK elevation of privilege issue in workload installation and advertising manifests: an attacker-controlled workload manifest ID can traverse paths under %ProgramData%\\dotnet and import attacker-controlled MSBuild targets during elevated workload operations. Microsoft lists Windows as the only affected platform and the .NET SDK 10.0.1xx feature band as affected from 10.0.100 through 10.0.112 and fixed in 10.0.113, shipped with .NET 10.0.13 (https://github.com/dotnet/announcements/issues/453, https://github.com/dotnet/sdk/issues/56610, https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.13/10.0.13.md). The fix makes the cross-platform workload manifest reader reject manifest, workload and pack IDs that are not a single valid path component, and adds Windows-only checks for the elevated installer (the ManifestId check is in the dotnet/dotnet v10.0.113 source tag and not in v10.0.112: https://github.com/dotnet/dotnet/blob/v10.0.113/src/sdk/src/Resolvers/Microsoft.NET.Sdk.WorkloadManifestReader/ManifestId.cs). DHI dotnet10-runtime for Alpine 3.23 builds .NET 10 for Linux from Microsoft's dotnet/dotnet source release, and each build's version is the .NET release it carries. Scanned all 264 packages of the twelve published builds (10.0.2-r0, 10.0.3-r0, 10.0.4-r0, 10.0.5-r0, 10.0.6-r0, 10.0.7-r0, 10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0) for x86_64 and aarch64, including the debug packages and the files inside the nupkg, zip and tar.gz archives they hold: the .NET SDK held by dotnet10-runtime-bootstrap, with its Microsoft.NET.Sdk.WorkloadManifestReader.dll, is the SDK of each build's .NET release: SDK 10.0.102 to 10.0.110 in 10.0.2-r0 to 10.0.10-r0, then SDK 10.0.113, 10.0.114 and 10.0.115 in 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0; no 10.0.11 or 10.0.12 build was published for Alpine 3.23. In the x86_64 dotnet10-runtime-artifacts package, the Microsoft.NET.Sdk.WorkloadManifestReader assembly in the 10.0.13-r0 nupkg contains the new path-component check (the ParsePathBasedId and IsValidPathComponent methods). The elevated MSI installer that Microsoft names is not used on Linux, but the manifest reader that carries the fix ships in every build and is used by the SDK's workload commands on Linux, so this is recorded as fixed rather than not affected. The range ends at 10.0.13-r0 because it is the first published build whose SDK is 10.0.113 or later."
     },
     {
       "vulnerability": {
@@ -69,6 +83,25 @@
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.12-r0?distro=dhi-3.24"
         },
         {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.8-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update dotnet10-runtime to 10.0.13-r0 or later.",
+      "status_notes": "CVE-2026-70161 is a .NET SDK elevation of privilege issue in workload installation and advertising manifests: an attacker-controlled workload manifest ID can traverse paths under %ProgramData%\\dotnet and import attacker-controlled MSBuild targets during elevated workload operations. Microsoft lists Windows as the only affected platform and the .NET SDK 10.0.1xx feature band as affected from 10.0.100 through 10.0.112 and fixed in 10.0.113, shipped with .NET 10.0.13 (https://github.com/dotnet/announcements/issues/453, https://github.com/dotnet/sdk/issues/56610, https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.13/10.0.13.md). The fix makes the cross-platform workload manifest reader reject manifest, workload and pack IDs that are not a single valid path component, and adds Windows-only checks for the elevated installer (the ManifestId check is in the dotnet/dotnet v10.0.113 source tag and not in v10.0.112: https://github.com/dotnet/dotnet/blob/v10.0.113/src/sdk/src/Resolvers/Microsoft.NET.Sdk.WorkloadManifestReader/ManifestId.cs). DHI dotnet10-runtime for Alpine 3.24 builds .NET 10 for Linux from Microsoft's dotnet/dotnet source release, and each build's version is the .NET release it carries. Scanned all 154 packages of the seven published builds (10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.12-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0) for x86_64 and aarch64, including the debug packages and the files inside the nupkg, zip and tar.gz archives they hold: the .NET SDK held by dotnet10-runtime-bootstrap, with its Microsoft.NET.Sdk.WorkloadManifestReader.dll, is the SDK of each build's .NET release: SDK 10.0.108 to 10.0.110 in 10.0.8-r0 to 10.0.10-r0, then SDK 10.0.112 to 10.0.115 in 10.0.12-r0 to 10.0.15-r0. In the x86_64 dotnet10-runtime-artifacts package, the Microsoft.NET.Sdk.WorkloadManifestReader assembly in the 10.0.13-r0 nupkg contains the new path-component check (the ParsePathBasedId and IsValidPathComponent methods), and the 10.0.12-r0 copy contains neither. The elevated MSI installer that Microsoft names is not used on Linux, but the manifest reader that carries the fix ships in every build and is used by the SDK's workload commands on Linux, so this is recorded as fixed rather than not affected. The range ends at 10.0.13-r0 because it is the first published build whose SDK is 10.0.113 or later."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-rgbi-j3q4-qxct-kiso",
+        "aliases": [
+          "CVE-2026-70161"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.13-r0?distro=dhi-3.24"
         },
         {
@@ -76,15 +109,10 @@
         },
         {
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.15-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.8-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-70161 is a .NET SDK elevation of privilege issue in workload installation and advertising manifests: an attacker-controlled workload manifest ID can traverse paths under %ProgramData%\\dotnet and import attacker-controlled MSBuild targets during elevated workload operations. Microsoft lists Windows as the only affected platform and the .NET SDK 10.0.1xx feature band as affected from 10.0.100 through 10.0.112 and fixed in 10.0.113, shipped with .NET 10.0.13 (https://github.com/dotnet/announcements/issues/453, https://github.com/dotnet/sdk/issues/56610, https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.13/10.0.13.md). The fix makes the cross-platform workload manifest reader reject manifest, workload and pack IDs that are not a single valid path component, and adds Windows-only checks for the elevated installer (the ManifestId check is in the dotnet/dotnet v10.0.113 source tag and not in v10.0.112: https://github.com/dotnet/dotnet/blob/v10.0.113/src/sdk/src/Resolvers/Microsoft.NET.Sdk.WorkloadManifestReader/ManifestId.cs). DHI dotnet10-runtime for Alpine 3.24 builds .NET 10 for Linux from Microsoft's dotnet/dotnet source release, and each build's version is the .NET release it carries. Scanned all 154 packages of the seven published builds (10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.12-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0) for x86_64 and aarch64, including the debug packages and the files inside the nupkg, zip and tar.gz archives they hold: the .NET SDK held by dotnet10-runtime-bootstrap, with its Microsoft.NET.Sdk.WorkloadManifestReader.dll, is the SDK of each build's .NET release: SDK 10.0.108 to 10.0.110 in 10.0.8-r0 to 10.0.10-r0, then SDK 10.0.112 to 10.0.115 in 10.0.12-r0 to 10.0.15-r0. In the x86_64 dotnet10-runtime-artifacts package, the Microsoft.NET.Sdk.WorkloadManifestReader assembly in the 10.0.13-r0 nupkg contains the new path-component check (the ParsePathBasedId and IsValidPathComponent methods), and the 10.0.12-r0 copy contains neither. The elevated MSI installer that Microsoft names is not used on Linux, but the manifest reader that carries the fix ships in every build and is used by the SDK's workload commands on Linux, so this is recorded as fixed rather than not affected. The range ends at 10.0.13-r0 because it is the first published build whose SDK is 10.0.113 or later."
     },
     {
       "vulnerability": {
