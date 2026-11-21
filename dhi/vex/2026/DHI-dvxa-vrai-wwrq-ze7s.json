@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-09T23:21:05Z",
-  "version": 1,
+  "last_updated": "2026-11-21T01:46:27Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:deb/dhi/openldap@2.6.10%2Bdfsg-1%2Bdhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-22185 is a one-byte heap buffer underflow in the readline() function of mdb_load, the database load tool of LMDB (the Lightning Memory-Mapped Database bundled with OpenLDAP), in LMDB 0.9.14 before 0.9.34: malformed input with an embedded NUL byte can make mdb_load read before its buffer and crash. It is fixed by https://github.com/openldap/openldap/commit/8e1fda85532a3c74276df38a42d234dcdfa1e40d (https://bugs.openldap.org/show_bug.cgi?id=10421), which changes only libraries/liblmdb/mdb_load.c. The Debian tracker notes that the openldap source bundles LMDB but does not build mdb_load: https://security-tracker.debian.org/tracker/CVE-2026-22185. Unpacked every package of both builds published for this source in the DHI Debian repository for trixie (Debian version 2.6.10+dfsg-1), on amd64 and arm64: ldap-utils, libldap2, libldap-dev, libldap-common, libldap2-dev and the ldap-utils and libldap2 debug-symbol packages. DHI builds Debian's openldap source with Debian's pkg.openldap.noslapd build profile, which adds --disable-slapd to the configuration (https://sources.debian.org/src/openldap/2.6.10+dfsg-1/debian/rules/). The packages hold the ldap* command-line clients, the libldap and liblber shared libraries, their static archives libldap.a and liblber.a (client library objects only), headers, pkg-config files, the ldap.conf client configuration file, documentation, and debug symbols. No package contains mdb_load or any other LMDB program, library or object: no file name contains mdb or lmdb, and neither static archive has an LMDB member. slapd, whose mdb backend is the part of OpenLDAP that uses LMDB, is not built."
     }
   ]
 }
