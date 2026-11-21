@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T15:41:32Z",
-  "version": 1,
+  "last_updated": "2026-11-21T02:54:17Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -42,7 +43,9 @@
           "@id": "pkg:apk/dhi/curl@8.23.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-7009: when curl is asked to require OCSP stapling, a build that uses an OpenSSL-based TLS backend together with Apple SecTrust (the native CA store on macOS, iOS and other Apple systems) accepts a server that sends no OCSP response. curl 8.17.0 to 8.19.0 are affected and 8.20.0 is fixed; curl states that the flaw needs an OpenSSL-linked curl running on an Apple platform using the system's native certificate store (https://curl.se/docs/CVE-2026-7009.html). The fix, https://github.com/curl/curl/commit/51905671e07f087e28e5741063646c379fe17d89, changes only ossl_apple_verify in lib/vtls/openssl.c, which, like its call site and Curl_vtls_apple_verify in lib/vtls/apple.c, is compiled only when libcurl is built with Apple SecTrust support (USE_APPLE_SECTRUST). This owner is built for Linux on musl. Its Alpine 3.23 builds are 8.17.0-r1, 8.18.0-r0, 8.19.0-r0, 8.20.0-r0, 8.20.0-r1, 8.21.0-r0, 8.22.0-r0, 8.23.0-r0 and 8.23.0-r1. For every one of them, on x86_64 and aarch64, we checked the libcurl shared library, its debug information in curl-dbg, the static libcurl.a in curl-static and the curl program: neither ossl_apple_verify nor Curl_vtls_apple_verify appears in the libcurl debug information or in libcurl.a, and no SecTrust name occurs in any of these files, while other OpenSSL backend functions such as ossl_connect_step2 are named in the same debug information and libcurl.a. The curl program links the libcurl shared library and has no TLS code of its own. The vulnerable code is therefore not present in any published build."
     }
   ]
 }
