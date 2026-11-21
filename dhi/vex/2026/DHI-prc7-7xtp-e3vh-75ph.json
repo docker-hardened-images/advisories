@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T08:36:33Z",
-  "version": 1,
+  "last_updated": "2026-11-21T00:58:22Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:deb/dhi/lcms2@2.16-2%2Bdeb13u2%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-29069 reports a heap buffer over-read in UnrollChunkyBytes() in src/cmspack.c of Little CMS 2.16, found with a test program that calls cmsDoTransform(). The Little CMS maintainer reviewed that program and found that it declares a pixel layout of 12 color channels plus 2 extra channels to lcms2 but allocates only 5 bytes for the pixel buffer; lcms2 then reads the 14 bytes per pixel that the caller declared, so the out-of-bounds read is a bug in the calling program, not in lcms2: https://github.com/mm2/Little-CMS/issues/476#issuecomment-2696670843. On that basis the CVE record is tagged disputed by the supplier (https://www.cve.org/CVERecord?id=CVE-2025-29069), and the Debian tracker records it as not an issue in lcms2 (https://security-tracker.debian.org/tracker/CVE-2025-29069). No lcms2 code change was made for it, and none is needed: a program that passes cmsDoTransform() a buffer smaller than the pixel format it declares is defective with any lcms2 version. The DHI lcms2 packages are rebuilt from Debian's lcms2 2.16-2+deb13u2 source; neither Debian's patches nor the upstream CVE-2025-29070 fix that later DHI builds add to src/cmsgamma.c touch src/cmspack.c, so UnrollChunkyBytes() is the upstream 2.16 code the maintainer reviewed."
     }
   ]
 }
