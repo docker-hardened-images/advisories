@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T16:59:50Z",
-  "last_updated": "2026-11-21T06:11:01Z",
-  "version": 4,
+  "last_updated": "2026-11-21T23:01:18Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -173,7 +173,9 @@
           "@id": "pkg:apk/dhi/dotnet9-runtime@9.0.23-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "CVE-2026-45490 is a .NET SDK elevation of privilege issue: the dotnet workload command uses a named pipe with a weak access control list, so one local user can create or truncate files as another local user. Microsoft states that it only affects .NET on Windows operating systems, and lists .NET 9.0 SDK 9.0.100 through 9.0.117 as affected and 9.0.118 as fixed for the 9.0.1xx feature band (https://github.com/dotnet/announcements/issues/403, https://github.com/dotnet/sdk/issues/54652, https://github.com/dotnet/core/blob/main/release-notes/9.0/9.0.17/9.0.17.md). The named pipes belong to the SDK's elevated MSI workload installer server, which is marked as supported only on Windows (https://github.com/dotnet/sdk/blob/v9.0.117/src/Cli/dotnet/commands/dotnet-workload/install/NetSdkMsiInstallerServer.cs), and the SDK selects the MSI installer only for MSI installs and throws an error instead when the operating system is not Windows (https://github.com/dotnet/sdk/blob/v9.0.117/src/Cli/dotnet/commands/dotnet-workload/install/WorkloadInstallerFactory.cs). DHI dotnet9-runtime for Alpine 3.23 builds .NET 9 for Linux from Microsoft's source release, and each build's version is the .NET runtime version it carries. Scanned all 242 packages of the eleven published builds (9.0.12-r0, 9.0.13-r0, 9.0.14-r0, 9.0.15-r0, 9.0.16-r0, 9.0.17-r0, 9.0.18-r0, 9.0.20-r0, 9.0.21-r0, 9.0.22-r0 and 9.0.23-r0) for x86_64 and aarch64, including the debug packages and the files inside the nupkg, zip and tar.gz archives they hold: every build is a Linux SDK and runtime for x86_64 and aarch64, so dotnet workload commands use the file-based installer and the Windows named-pipe code is never reached in any published build. For reference, the .NET SDK held by dotnet9-runtime-bootstrap is SDK 9.0.113 to 9.0.117 in 9.0.12-r0 to 9.0.16-r0 and 9.0.118 or later from 9.0.17-r0 on."
     }
   ]
 }
