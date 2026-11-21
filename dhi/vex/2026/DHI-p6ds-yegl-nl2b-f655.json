@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T20:14:39Z",
-  "last_updated": "2026-11-21T01:16:03Z",
-  "version": 3,
+  "last_updated": "2026-11-21T20:29:30Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -37,7 +37,9 @@
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "CVE-2026-114157 (GHSA-7phj-vgxq-r67h) is an ASP.NET Core security feature bypass in the Kestrel named-pipe transport: a listener configured with CurrentUserOnly can lose protected namespace ownership while it recovers, allowing another local user to claim the pipe path. Microsoft lists Windows as the only affected platform and fixed it in ASP.NET Core 10.0.15 (https://github.com/dotnet/aspnetcore/security/advisories/GHSA-7phj-vgxq-r67h, https://github.com/dotnet/announcements/issues/507, https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.15/10.0.15.md). DHI dotnet10-runtime for Alpine 3.24 builds .NET 10 for Linux from Microsoft's source release, and each build's version is the .NET runtime version it carries. Scanned all 154 packages of the seven published builds (10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.12-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0) for x86_64 and aarch64, including the files inside their nupkg and tar.gz archives: every build ships Microsoft.AspNetCore.Server.Kestrel.Transport.NamedPipes.dll, a managed .NET assembly, in the ASP.NET Core shared framework of aspnetcore10-runtime and in the SDK, runtime-pack nupkg and ASP.NET Core runtime archive held by dotnet10-runtime-bootstrap; the earlier builds carry 10.0.8 through 10.0.14 and 10.0.15-r0 carries 10.0.15 with Microsoft's fix. The transport cannot be started on Linux. UseNamedPipes, the only public way to register it, throws PlatformNotSupportedException when the operating system is not Windows (https://github.com/dotnet/aspnetcore/blob/v10.0.14/src/Servers/Kestrel/Transport.NamedPipes/src/WebHostBuilderNamedPipeExtensions.cs); UseKestrel registers it only when OperatingSystem.IsWindows() is true (https://github.com/dotnet/aspnetcore/blob/v10.0.14/src/Servers/Kestrel/Kestrel/src/WebHostBuilderKestrelExtensions.cs); and the transport factory class is internal. No consumer of this Linux-only owner can open a Kestrel named-pipe listener, so the listener recovery path that the fix changes is never reached in any published build."
     },
     {
       "vulnerability": {
