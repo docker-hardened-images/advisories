@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T15:41:32Z",
-  "version": 1,
+  "last_updated": "2026-11-21T01:15:23Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -15,11 +16,21 @@
       },
       "products": [
         {
-          "@id": "pkg:apk/dhi/curl@8.17.0-r1?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/curl@8.18.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update curl to 8.19.0-r0 or later.",
+      "status_notes": "CVE-2026-11352: curl's QUIC receive helper discards zero-length UDP datagrams before counting them against its per-call packet budget, so a malicious HTTP/3 server can stall the client indefinitely on platforms with recvmmsg(). curl 8.18.0 to 8.20.0 are affected; 8.21.0 is not (also 8.20.1 on the 8.20 branch): https://curl.se/docs/CVE-2026-11352.html. The fix is https://github.com/curl/curl/commit/56eca2afb4806f1032872fa97d1834b3c1385276. The flaw is in curl's QUIC (HTTP/3) code, which is only built when libcurl is configured with an HTTP/3 backend. This owner's Alpine 3.23 builds are 8.17.0-r1, 8.18.0-r0, 8.19.0-r0, 8.20.0-r0, 8.20.0-r1, 8.21.0-r0, 8.22.0-r0, 8.23.0-r0 and 8.23.0-r1. 8.17.0-r1 predates the flaw. In 8.18.0-r0, libcurl is built with HTTP/3 support (it depends on libnghttp3, and both the libcurl shared library and the static libcurl.a in curl-static contain the recvmmsg-based QUIC receive code), so that build is affected. From 8.19.0-r0 on, libcurl is built without HTTP/3: on x86_64 and aarch64 it has no libnghttp3 or libngtcp2 dependency, and neither the libcurl shared library nor, for the 8.19.0 and 8.20.0 builds, the static libcurl.a in curl-static contains any of the QUIC receive code, so the vulnerable function is not present; 8.21.0-r0 and later also carry the upstream fix. The range therefore covers only 8.18.0-r0, with 8.19.0-r0 as the first build that is no longer affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-2oqu-g2wz-i6c5-457b",
+        "aliases": [
+          "CVE-2026-11352"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/curl@8.19.0-r0?distro=dhi-3.23"
         },
@@ -42,7 +53,8 @@
           "@id": "pkg:apk/dhi/curl@8.23.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-11352: curl's QUIC receive helper discards zero-length UDP datagrams before counting them against its per-call packet budget, so a malicious HTTP/3 server can stall the client indefinitely on platforms with recvmmsg(). curl 8.18.0 to 8.20.0 are affected; 8.21.0 is not (also 8.20.1 on the 8.20 branch): https://curl.se/docs/CVE-2026-11352.html. The fix is https://github.com/curl/curl/commit/56eca2afb4806f1032872fa97d1834b3c1385276. The flaw is in curl's QUIC (HTTP/3) code, which is only built when libcurl is configured with an HTTP/3 backend. This owner's Alpine 3.23 builds are 8.17.0-r1, 8.18.0-r0, 8.19.0-r0, 8.20.0-r0, 8.20.0-r1, 8.21.0-r0, 8.22.0-r0, 8.23.0-r0 and 8.23.0-r1. 8.17.0-r1 predates the flaw. In 8.18.0-r0, libcurl is built with HTTP/3 support (it depends on libnghttp3, and both the libcurl shared library and the static libcurl.a in curl-static contain the recvmmsg-based QUIC receive code), so that build is affected. From 8.19.0-r0 on, libcurl is built without HTTP/3: on x86_64 and aarch64 it has no libnghttp3 or libngtcp2 dependency, and neither the libcurl shared library nor, for the 8.19.0 and 8.20.0 builds, the static libcurl.a in curl-static contains any of the QUIC receive code, so the vulnerable function is not present; 8.21.0-r0 and later also carry the upstream fix. The range therefore covers only 8.18.0-r0, with 8.19.0-r0 as the first build that is no longer affected."
     },
     {
       "vulnerability": {
@@ -68,7 +80,9 @@
           "@id": "pkg:apk/dhi/curl@8.23.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-11352: curl's QUIC receive helper discards zero-length UDP datagrams before counting them against its per-call packet budget, so a malicious HTTP/3 server can stall the client indefinitely on platforms with recvmmsg(). curl 8.18.0 to 8.20.0 are affected; 8.21.0 is not (also 8.20.1 on the 8.20 branch): https://curl.se/docs/CVE-2026-11352.html. The fix is https://github.com/curl/curl/commit/56eca2afb4806f1032872fa97d1834b3c1385276. The flaw is in curl's QUIC (HTTP/3) code, which is only built when libcurl is configured with an HTTP/3 backend. This owner's Alpine 3.24 builds are 8.20.0-r1, 8.21.0-r0, 8.22.0-r0, 8.22.0-r1 and 8.23.0-r0, and every one of them, on x86_64 and aarch64, builds libcurl without HTTP/3: none depends on libnghttp3 or libngtcp2, and in 8.20.0-r1, the only build in the affected upstream range, neither the libcurl shared library nor the static libcurl.a in curl-static contains any of the QUIC receive code (no recvmmsg use, no QUIC receive messages), while the same files in the HTTP/3-enabled 8.18.0-r0 build for Alpine 3.23 do contain it. The libcurl shared library of every later 3.24 build also lacks that code. The vulnerable function is therefore not present in any published build; 8.21.0-r0 and later also carry the upstream fix."
     }
   ]
 }

@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T20:14:39Z",
-  "version": 1,
+  "last_updated": "2026-11-21T01:15:48Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -36,7 +37,9 @@
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-114155 (GHSA-q7j6-px74-p2vw) is a .NET SDK elevation of privilege issue in dotnet-watch: a local attacker who can replace or modify the temporary solution file that dotnet-watch generates can alter a subsequent build; the fix stores generated solution files in a private temporary directory and keeps each file open with read-only sharing. Microsoft lists .NET SDK 10.0.300 through 10.0.303 and 10.0.400 through 10.0.403, .NET 11 previews, and the separately restored Microsoft.DotNet.HotReload.Watch.Aspire tool as affected, fixed in SDK 10.0.404 and 11.0.100; it does not list the 10.0.1xx SDK feature band (https://github.com/dotnet/sdk/security/advisories/GHSA-q7j6-px74-p2vw, https://github.com/dotnet/announcements/issues/502). The vulnerable code is the HotReloadDotNetWatcher path that writes a solution file at Path.GetTempFileName() + \".slnx\" (https://github.com/dotnet/dotnet/blob/v10.0.403/src/sdk/src/Dotnet.Watch/Watch/HotReload/HotReloadDotNetWatcher.cs). DHI dotnet10-runtime for Alpine 3.24 builds .NET 10 for Linux from Microsoft's source release, and its only .NET SDK is the 10.0.1xx SDK in dotnet10-runtime-bootstrap, from SDK 10.0.108 in 10.0.8-r0 through SDK 10.0.115 in 10.0.15-r0. Scanned all 154 packages of the seven published builds (10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.12-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0) for x86_64 and aarch64, including the files inside their nupkg and tar.gz archives: dotnet-watch ships only in that bootstrap SDK, and no package contains Microsoft.DotNet.HotReload.Watch.Aspire or an SDK from the 10.0.3xx or 10.0.4xx band. In the 10.0.1xx dotnet-watch source at the dotnet/dotnet v10.0.108 and v10.0.115 tags there is no generated solution file: the only Path.GetTempFileName call in it creates the MSBuild watch list (https://github.com/dotnet/dotnet/blob/v10.0.115/src/sdk/src/BuiltInTools/dotnet-watch/Watch/MsBuildFileSetFactory.cs)."
     }
   ]
 }
