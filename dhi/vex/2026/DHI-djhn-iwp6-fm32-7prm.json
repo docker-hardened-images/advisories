@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T01:50:38Z",
-  "version": 1,
+  "last_updated": "2026-11-21T19:12:14Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -31,12 +32,26 @@
         },
         {
           "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3%2Bdhi2?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update libxml2 to 2.12.7+dfsg+really2.9.14-2.1+deb13u3+dhi3 or later.",
+      "status_notes": "CVE-2026-74860 is a double free in the SAX attributeDecl callback of the libxml2 Python bindings (pythonAttributeDecl in python/libxml.c): after adding each enumerated attribute value to a list with PyList_SetItem, the handler also called Py_DECREF on it, so a document with a crafted DTD crashes a Python application that uses the SAX bindings (https://security-tracker.debian.org/tracker/CVE-2026-74860, https://gitlab.gnome.org/GNOME/libxml2/-/issues/1076). Upstream fixed it in libxml2 2.15.3 by removing that Py_DECREF: https://gitlab.gnome.org/GNOME/libxml2/-/commit/f41e1865781f74d1cadfe2fbdfeefed946026f12. The libxml2 2.9.14 code that Debian 13 ships still has the extra Py_DECREF, and Debian lists trixie as vulnerable. The DHI Debian 13 libxml2 source builds the Python bindings into the python3-libxml2 package and backports the upstream fix. The build of 2.1+deb13u3 that this range marks fixed, the only build of this source now in the DHI Debian repository, carries it on amd64 and arm64: its shipped changelog (/usr/share/doc/python3-libxml2/changelog.Debian.gz) records the backport for CVE-2026-74860, and disassembly of pythonAttributeDecl in the libxml2mod extension module, located with the python3-libxml2-dbgsym symbols, shows no reference-count decrement between the PyList_SetItem call and the next loop iteration. Earlier DHI builds of this source, no longer published, were built without the fix, except one earlier build of 2.1+deb13u3 that first added it; that build sorts below this boundary and reads as affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-djhn-iwp6-fm32-7prm",
+        "aliases": [
+          "CVE-2026-74860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-74860 is a double free in the SAX attributeDecl callback of the libxml2 Python bindings (pythonAttributeDecl in python/libxml.c): after adding each enumerated attribute value to a list with PyList_SetItem, the handler also called Py_DECREF on it, so a document with a crafted DTD crashes a Python application that uses the SAX bindings (https://security-tracker.debian.org/tracker/CVE-2026-74860, https://gitlab.gnome.org/GNOME/libxml2/-/issues/1076). Upstream fixed it in libxml2 2.15.3 by removing that Py_DECREF: https://gitlab.gnome.org/GNOME/libxml2/-/commit/f41e1865781f74d1cadfe2fbdfeefed946026f12. The libxml2 2.9.14 code that Debian 13 ships still has the extra Py_DECREF, and Debian lists trixie as vulnerable. The DHI Debian 13 libxml2 source builds the Python bindings into the python3-libxml2 package and backports the upstream fix. The build of 2.1+deb13u3 that this range marks fixed, the only build of this source now in the DHI Debian repository, carries it on amd64 and arm64: its shipped changelog (/usr/share/doc/python3-libxml2/changelog.Debian.gz) records the backport for CVE-2026-74860, and disassembly of pythonAttributeDecl in the libxml2mod extension module, located with the python3-libxml2-dbgsym symbols, shows no reference-count decrement between the PyList_SetItem call and the next loop iteration. Earlier DHI builds of this source, no longer published, were built without the fix, except one earlier build of 2.1+deb13u3 that first added it; that build sorts below this boundary and reads as affected."
     }
   ]
 }
