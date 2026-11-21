@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:00:40Z",
-  "last_updated": "2026-11-21T02:54:12Z",
-  "version": 2,
+  "last_updated": "2026-11-21T21:26:10Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -17,15 +17,6 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.10-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.13-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.14-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.15-r0?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.2-r0?distro=dhi-3.23"
@@ -52,7 +43,30 @@
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update dotnet10-runtime to 10.0.13-r0 or later.",
+      "status_notes": "CVE-2026-69806 is an elevation of privilege issue in the .NET SDK's dotnet watch: its Aspire server service (AspireServerService) exposes information through certain arguments, which can enable code injection. Microsoft's advisory lists Linux installations of the .NET 10 SDK in the 10.0.1xx feature band (10.0.100 to 10.0.110) and the 10.0.3xx band as affected (https://github.com/dotnet/announcements/issues/442, https://github.com/dotnet/sdk/issues/56167); the CVE record lists the .NET 10.0 runtime before 10.0.12 (https://www.cve.org/CVERecord?id=CVE-2026-69806), and the .NET 10.0.12 release notes, whose 10.0.1xx SDK is 10.0.112, list this CVE (https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.12/10.0.12.md). The change that makes dotnet watch pass the project's launch environment through the hot reload agent instead of the process environment is \"Set project environment variables using Hot Reload agent\" on the dotnet/dotnet release/10.0.1xx branch (https://github.com/dotnet/dotnet/commit/c92c2c9607fd7dc5580bd737ccfddac6ea6b02b2); it is in the v10.0.112 source tag and later, and not in v10.0.111, although the advisory names 10.0.111 as the patched SDK. No DHI build carries SDK 10.0.111, so the boundary does not depend on that difference. DHI dotnet10-runtime for Alpine 3.23 builds .NET 10 for Linux from Microsoft's source release, and each build's version is the .NET runtime version it carries. Its only .NET SDK is the 10.0.1xx SDK in dotnet10-runtime-bootstrap, from SDK 10.0.102 in the first build to SDK 10.0.115 in 10.0.15-r0, and dotnet-watch.dll ships only there, one copy per build and architecture. Scanned all 264 packages of the twelve published builds (10.0.2-r0, 10.0.3-r0, 10.0.4-r0, 10.0.5-r0, 10.0.6-r0, 10.0.7-r0, 10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0) for x86_64 and aarch64, including the debug packages and the files inside the nupkg, zip and tar.gz archives they hold. The builds before 10.0.13-r0 carry SDK 10.0.102 to 10.0.110 (there is no 10.0.11 or 10.0.12 build for Alpine 3.23), all in the affected range. Extracted and inspected dotnet-watch.dll from the dotnet10-runtime-bootstrap package of 10.0.10-r0 (Alpine 3.24, x86_64), 10.0.12-r0 (Alpine 3.24, x86_64 and aarch64) and 10.0.13-r0 (Alpine 3.23, x86_64 and aarch64): the 10.0.110 copy has no SetEnvironmentVariables message type, while the 10.0.112 and 10.0.113 copies carry the SetEnvironmentVariables request and EnvironmentVariablesSet response that the fix adds, and all of them contain AspireServerService and ProjectLauncher. The range ends at 10.0.13-r0, the first published build whose SDK carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-iip3-y7fp-37wl-u7bx",
+        "aliases": [
+          "CVE-2026-69806"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.13-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.14-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.15-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-69806 is an elevation of privilege issue in the .NET SDK's dotnet watch: its Aspire server service (AspireServerService) exposes information through certain arguments, which can enable code injection. Microsoft's advisory lists Linux installations of the .NET 10 SDK in the 10.0.1xx feature band (10.0.100 to 10.0.110) and the 10.0.3xx band as affected (https://github.com/dotnet/announcements/issues/442, https://github.com/dotnet/sdk/issues/56167); the CVE record lists the .NET 10.0 runtime before 10.0.12 (https://www.cve.org/CVERecord?id=CVE-2026-69806), and the .NET 10.0.12 release notes, whose 10.0.1xx SDK is 10.0.112, list this CVE (https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.12/10.0.12.md). The change that makes dotnet watch pass the project's launch environment through the hot reload agent instead of the process environment is \"Set project environment variables using Hot Reload agent\" on the dotnet/dotnet release/10.0.1xx branch (https://github.com/dotnet/dotnet/commit/c92c2c9607fd7dc5580bd737ccfddac6ea6b02b2); it is in the v10.0.112 source tag and later, and not in v10.0.111, although the advisory names 10.0.111 as the patched SDK. No DHI build carries SDK 10.0.111, so the boundary does not depend on that difference. DHI dotnet10-runtime for Alpine 3.23 builds .NET 10 for Linux from Microsoft's source release, and each build's version is the .NET runtime version it carries. Its only .NET SDK is the 10.0.1xx SDK in dotnet10-runtime-bootstrap, from SDK 10.0.102 in the first build to SDK 10.0.115 in 10.0.15-r0, and dotnet-watch.dll ships only there, one copy per build and architecture. Scanned all 264 packages of the twelve published builds (10.0.2-r0, 10.0.3-r0, 10.0.4-r0, 10.0.5-r0, 10.0.6-r0, 10.0.7-r0, 10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0) for x86_64 and aarch64, including the debug packages and the files inside the nupkg, zip and tar.gz archives they hold. The builds before 10.0.13-r0 carry SDK 10.0.102 to 10.0.110 (there is no 10.0.11 or 10.0.12 build for Alpine 3.23), all in the affected range. Extracted and inspected dotnet-watch.dll from the dotnet10-runtime-bootstrap package of 10.0.10-r0 (Alpine 3.24, x86_64), 10.0.12-r0 (Alpine 3.24, x86_64 and aarch64) and 10.0.13-r0 (Alpine 3.23, x86_64 and aarch64): the 10.0.110 copy has no SetEnvironmentVariables message type, while the 10.0.112 and 10.0.113 copies carry the SetEnvironmentVariables request and EnvironmentVariablesSet response that the fix adds, and all of them contain AspireServerService and ProjectLauncher. The range ends at 10.0.13-r0, the first published build whose SDK carries the fix."
     },
     {
       "vulnerability": {
@@ -66,6 +80,25 @@
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.10-r0?distro=dhi-3.24"
         },
         {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.8-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update dotnet10-runtime to 10.0.12-r0 or later.",
+      "status_notes": "CVE-2026-69806 is an elevation of privilege issue in the .NET SDK's dotnet watch: its Aspire server service (AspireServerService) exposes information through certain arguments, which can enable code injection. Microsoft's advisory lists Linux installations of the .NET 10 SDK in the 10.0.1xx feature band (10.0.100 to 10.0.110) and the 10.0.3xx band as affected (https://github.com/dotnet/announcements/issues/442, https://github.com/dotnet/sdk/issues/56167); the CVE record lists the .NET 10.0 runtime before 10.0.12 (https://www.cve.org/CVERecord?id=CVE-2026-69806), and the .NET 10.0.12 release notes, whose 10.0.1xx SDK is 10.0.112, list this CVE (https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.12/10.0.12.md). The change that makes dotnet watch pass the project's launch environment through the hot reload agent instead of the process environment is \"Set project environment variables using Hot Reload agent\" on the dotnet/dotnet release/10.0.1xx branch (https://github.com/dotnet/dotnet/commit/c92c2c9607fd7dc5580bd737ccfddac6ea6b02b2); it is in the v10.0.112 source tag and later, and not in v10.0.111, although the advisory names 10.0.111 as the patched SDK. No DHI build carries SDK 10.0.111, so the boundary does not depend on that difference. DHI dotnet10-runtime for Alpine 3.24 builds .NET 10 for Linux from Microsoft's source release, and each build's version is the .NET runtime version it carries. Its only .NET SDK is the 10.0.1xx SDK in dotnet10-runtime-bootstrap, from SDK 10.0.108 in the first build to SDK 10.0.115 in 10.0.15-r0, and dotnet-watch.dll ships only there, one copy per build and architecture. Scanned all 154 packages of the seven published builds (10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.12-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0) for x86_64 and aarch64, including the debug packages and the files inside the nupkg, zip and tar.gz archives they hold. The builds before 10.0.12-r0 carry SDK 10.0.108 to 10.0.110 (there is no 10.0.11 build for Alpine 3.24), all in the affected range. Extracted and inspected dotnet-watch.dll from the dotnet10-runtime-bootstrap package of 10.0.10-r0 (Alpine 3.24, x86_64), 10.0.12-r0 (Alpine 3.24, x86_64 and aarch64) and 10.0.13-r0 (Alpine 3.23, x86_64 and aarch64): the 10.0.110 copy has no SetEnvironmentVariables message type, while the 10.0.112 and 10.0.113 copies carry the SetEnvironmentVariables request and EnvironmentVariablesSet response that the fix adds, and all of them contain AspireServerService and ProjectLauncher. The range ends at 10.0.12-r0, the first published build whose SDK carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-iip3-y7fp-37wl-u7bx",
+        "aliases": [
+          "CVE-2026-69806"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.12-r0?distro=dhi-3.24"
         },
         {
@@ -76,15 +109,10 @@
         },
         {
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.15-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.8-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-69806 is an elevation of privilege issue in the .NET SDK's dotnet watch: its Aspire server service (AspireServerService) exposes information through certain arguments, which can enable code injection. Microsoft's advisory lists Linux installations of the .NET 10 SDK in the 10.0.1xx feature band (10.0.100 to 10.0.110) and the 10.0.3xx band as affected (https://github.com/dotnet/announcements/issues/442, https://github.com/dotnet/sdk/issues/56167); the CVE record lists the .NET 10.0 runtime before 10.0.12 (https://www.cve.org/CVERecord?id=CVE-2026-69806), and the .NET 10.0.12 release notes, whose 10.0.1xx SDK is 10.0.112, list this CVE (https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.12/10.0.12.md). The change that makes dotnet watch pass the project's launch environment through the hot reload agent instead of the process environment is \"Set project environment variables using Hot Reload agent\" on the dotnet/dotnet release/10.0.1xx branch (https://github.com/dotnet/dotnet/commit/c92c2c9607fd7dc5580bd737ccfddac6ea6b02b2); it is in the v10.0.112 source tag and later, and not in v10.0.111, although the advisory names 10.0.111 as the patched SDK. No DHI build carries SDK 10.0.111, so the boundary does not depend on that difference. DHI dotnet10-runtime for Alpine 3.24 builds .NET 10 for Linux from Microsoft's source release, and each build's version is the .NET runtime version it carries. Its only .NET SDK is the 10.0.1xx SDK in dotnet10-runtime-bootstrap, from SDK 10.0.108 in the first build to SDK 10.0.115 in 10.0.15-r0, and dotnet-watch.dll ships only there, one copy per build and architecture. Scanned all 154 packages of the seven published builds (10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.12-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0) for x86_64 and aarch64, including the debug packages and the files inside the nupkg, zip and tar.gz archives they hold. The builds before 10.0.12-r0 carry SDK 10.0.108 to 10.0.110 (there is no 10.0.11 build for Alpine 3.24), all in the affected range. Extracted and inspected dotnet-watch.dll from the dotnet10-runtime-bootstrap package of 10.0.10-r0 (Alpine 3.24, x86_64), 10.0.12-r0 (Alpine 3.24, x86_64 and aarch64) and 10.0.13-r0 (Alpine 3.23, x86_64 and aarch64): the 10.0.110 copy has no SetEnvironmentVariables message type, while the 10.0.112 and 10.0.113 copies carry the SetEnvironmentVariables request and EnvironmentVariablesSet response that the fix adds, and all of them contain AspireServerService and ProjectLauncher. The range ends at 10.0.12-r0, the first published build whose SDK carries the fix."
     },
     {
       "vulnerability": {
