@@ -1,0 +1,876 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-b6e3-lwih-kvab-ju6z",
+  "modified": "2026-11-21T07:52:27Z",
+  "published": "2026-11-21T07:52:27Z",
+  "upstream": [
+    "CVE-2026-56743"
+  ],
+  "summary": "### Impact",
+  "details": "### Impact\r\n\r\nStandard Kubernetes `NetworkPolicy` specifications using CIDR-based `ipBlock` rules without pod or namespace selectors erroneously generate a wildcard namespace allow rule under specific cluster configurations.\r\n\r\nWhen Cilium deployment is configured with a specific custom `clusterName` (rather than the default `\"any\"` value), the parser incorrectly instantiates a pod selector on selectorless peer definitions. This leads to Cilium appending an unintended wildcard namespace label selector to the policy's allowed Layer 3 rules, which allows traffic from other workloads in the same namespace as the subject of the policy.\r\n\r\nExample policy affected by this issue:\r\n```\r\napiVersion: networking.k8s.io/v1\r\nkind: NetworkPolicy\r\nmetadata:\r\n  name: test-server\r\n  namespace: default\r\nspec:\r\n  podSelector:\r\n    matchLabels:\r\n      app: test-server\r\n  policyTypes:\r\n  - Ingress\r\n  ingress:\r\n  - from:\r\n    - ipBlock:\r\n        cidr: 192.0.2.3\r\n```\r\n\r\nIn affected versions, this policy erroneously allows the `test-server` Pod in the `default` namespace to receive any traffic from other workloads running in the `default` namespace.\r\n\r\n### Patches\r\n\r\nThis issue has been patched in:\r\n\r\n- Cilium v1.19.5\r\n\r\nReleases below v1.19.0 are not affected.\r\n\r\n### This issue affects:\r\n\r\n- Cilium v1.19 between v1.19.0 and v1.19.4 inclusive\r\n\r\n### Workarounds\r\n\r\nYou can create the equivalent policy using CiliumNetworkPolicy [fromCIDR expressions](https://docs.cilium.io/en/stable/security/policy/layer3/#ip-cidr-based). CiliumNetworkPolicy and CiliumClusterwideNetworkPolicy are not affected by this issue.\r\n\r\n### References\r\n\r\nhttps://github.com/cilium/cilium/pull/46305\r\n\r\n### Acknowledgements\r\n\r\nSpecial thanks to @TheBeeZee for reporting this issue and preparing the fix, and to @fristonio and @odinuge for their assistance in reviewing the solution.\r\n\r\n### For more information\r\n\r\nIf you think you have found a vulnerability affecting Cilium, we strongly encourage you to report it to our security mailing list at [security@cilium.io](mailto:security@cilium.io). This is a private mailing list for the Cilium security team, and your report will be treated as top priority.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:A/AC:L/PR:L/UI:N/S:C/C:L/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-1.19-dev",
+        "purl": "pkg:apk/dhi/cilium-1.19-dev"
+      },
+      "versions": [
+        "1.19.4-r3",
+        "1.19.4-r4",
+        "1.19.5-r0",
+        "1.19.5-r1",
+        "1.19.5-r2",
+        "1.19.6-r0",
+        "1.19.6-r1",
+        "1.19.6-r2",
+        "1.19.6-r3",
+        "1.19.7-r0",
+        "1.19.7-r1",
+        "1.19.7-r2",
+        "1.19.7-r3",
+        "1.19.7-r4",
+        "1.19.7-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-1.19-fips-dev",
+        "purl": "pkg:apk/dhi/cilium-1.19-fips-dev"
+      },
+      "versions": [
+        "1.19.4-r3",
+        "1.19.4-r4",
+        "1.19.5-r0",
+        "1.19.5-r1",
+        "1.19.5-r2",
+        "1.19.6-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-1.19-fips",
+        "purl": "pkg:apk/dhi/cilium-1.19-fips"
+      },
+      "versions": [
+        "1.19.4-r3",
+        "1.19.4-r4",
+        "1.19.5-r0",
+        "1.19.5-r1",
+        "1.19.5-r2",
+        "1.19.6-r0",
+        "1.19.6-r1",
+        "1.19.6-r2",
+        "1.19.6-r3",
+        "1.19.7-r0",
+        "1.19.7-r1",
+        "1.19.7-r2",
+        "1.19.7-r3",
+        "1.19.7-r4",
+        "1.19.7-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-1.19",
+        "purl": "pkg:apk/dhi/cilium-1.19"
+      },
+      "versions": [
+        "1.19.4-r3",
+        "1.19.4-r4",
+        "1.19.5-r0",
+        "1.19.5-r1",
+        "1.19.5-r2",
+        "1.19.6-r0",
+        "1.19.6-r1",
+        "1.19.6-r2",
+        "1.19.6-r3",
+        "1.19.7-r0",
+        "1.19.7-r1",
+        "1.19.7-r2",
+        "1.19.7-r3",
+        "1.19.7-r4",
+        "1.19.7-r5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-clustermesh-apiserver-dev",
+        "purl": "pkg:apk/dhi/cilium-clustermesh-apiserver-dev"
+      },
+      "versions": [
+        "1.17.16-r3",
+        "1.17.16-r4",
+        "1.17.17-r0",
+        "1.17.17-r1",
+        "1.18.10-r3",
+        "1.18.10-r4",
+        "1.18.11-r0",
+        "1.18.11-r1",
+        "1.19.4-r3",
+        "1.19.4-r4",
+        "1.19.5-r0",
+        "1.19.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-clustermesh-apiserver",
+        "purl": "pkg:apk/dhi/cilium-clustermesh-apiserver"
+      },
+      "versions": [
+        "1.17.16-r3",
+        "1.17.16-r4",
+        "1.17.17-r0",
+        "1.17.17-r1",
+        "1.18.10-r3",
+        "1.18.10-r4",
+        "1.18.11-r0",
+        "1.18.11-r1",
+        "1.19.4-r3",
+        "1.19.4-r4",
+        "1.19.5-r0",
+        "1.19.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-operator-aws-dev",
+        "purl": "pkg:apk/dhi/cilium-operator-aws-dev"
+      },
+      "versions": [
+        "1.17.16-r3",
+        "1.17.16-r4",
+        "1.17.17-r0",
+        "1.17.17-r1",
+        "1.18.10-r3",
+        "1.18.10-r4",
+        "1.18.11-r0",
+        "1.18.11-r1",
+        "1.19.4-r3",
+        "1.19.4-r4",
+        "1.19.5-r0",
+        "1.19.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-operator-aws",
+        "purl": "pkg:apk/dhi/cilium-operator-aws"
+      },
+      "versions": [
+        "1.17.16-r3",
+        "1.17.16-r4",
+        "1.17.17-r0",
+        "1.17.17-r1",
+        "1.18.10-r3",
+        "1.18.10-r4",
+        "1.18.11-r0",
+        "1.18.11-r1",
+        "1.19.4-r3",
+        "1.19.4-r4",
+        "1.19.5-r0",
+        "1.19.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-operator-azure-dev",
+        "purl": "pkg:apk/dhi/cilium-operator-azure-dev"
+      },
+      "versions": [
+        "1.17.16-r3",
+        "1.17.16-r4",
+        "1.17.17-r0",
+        "1.17.17-r1",
+        "1.18.10-r3",
+        "1.18.10-r4",
+        "1.18.11-r0",
+        "1.18.11-r1",
+        "1.19.4-r3",
+        "1.19.4-r4",
+        "1.19.5-r0",
+        "1.19.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-operator-azure",
+        "purl": "pkg:apk/dhi/cilium-operator-azure"
+      },
+      "versions": [
+        "1.17.16-r3",
+        "1.17.16-r4",
+        "1.17.17-r0",
+        "1.17.17-r1",
+        "1.18.10-r3",
+        "1.18.10-r4",
+        "1.18.11-r0",
+        "1.18.11-r1",
+        "1.19.4-r3",
+        "1.19.4-r4",
+        "1.19.5-r0",
+        "1.19.5-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-operator-dev",
+        "purl": "pkg:apk/dhi/cilium-operator-dev"
+      },
+      "versions": [
+        "1.19.1-r0",
+        "1.19.1-r1",
+        "1.19.1-r2",
+        "1.19.1-r3",
+        "1.19.1-r4",
+        "1.19.1-r5",
+        "1.19.1-r6",
+        "1.19.1-r7",
+        "1.19.1-r8",
+        "1.19.1-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-operator-fips-dev",
+        "purl": "pkg:apk/dhi/cilium-operator-fips-dev"
+      },
+      "versions": [
+        "1.19.1-r0",
+        "1.19.1-r1",
+        "1.19.1-r2",
+        "1.19.1-r3",
+        "1.19.1-r4",
+        "1.19.1-r5",
+        "1.19.1-r6",
+        "1.19.1-r7",
+        "1.19.1-r8",
+        "1.19.1-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-operator-fips",
+        "purl": "pkg:apk/dhi/cilium-operator-fips"
+      },
+      "versions": [
+        "1.19.1-r0",
+        "1.19.1-r1",
+        "1.19.1-r2",
+        "1.19.1-r3",
+        "1.19.1-r4",
+        "1.19.1-r5",
+        "1.19.1-r6",
+        "1.19.1-r7",
+        "1.19.1-r8",
+        "1.19.1-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "cilium-operator",
+        "purl": "pkg:apk/dhi/cilium-operator"
+      },
+      "versions": [
+        "1.19.1-r0",
+        "1.19.1-r1",
+        "1.19.1-r2",
+        "1.19.1-r3",
+        "1.19.1-r4",
+        "1.19.1-r5",
+        "1.19.1-r6",
+        "1.19.1-r7",
+        "1.19.1-r8",
+        "1.19.1-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "hubble-ui-backend-dev",
+        "purl": "pkg:apk/dhi/hubble-ui-backend-dev"
+      },
+      "versions": [
+        "0.13.4-r0",
+        "0.13.4-r1",
+        "0.13.4-r2",
+        "0.13.4-r3",
+        "0.13.4-r4",
+        "0.13.5-r0",
+        "0.13.5-r1",
+        "0.13.5-r10",
+        "0.13.5-r11",
+        "0.13.5-r12",
+        "0.13.5-r13",
+        "0.13.5-r14",
+        "0.13.5-r15",
+        "0.13.5-r2",
+        "0.13.5-r3",
+        "0.13.5-r4",
+        "0.13.5-r5",
+        "0.13.5-r6",
+        "0.13.5-r7",
+        "0.13.5-r8",
+        "0.13.5-r9",
+        "0.13.6-r1",
+        "0.13.6-r2",
+        "0.13.6-r3",
+        "0.13.6-r4",
+        "0.13.6-r5",
+        "0.13.6-r6",
+        "0.13.6-r7",
+        "0.13.6-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "hubble-ui-backend-fips-dev",
+        "purl": "pkg:apk/dhi/hubble-ui-backend-fips-dev"
+      },
+      "versions": [
+        "0.13.4-r0",
+        "0.13.4-r1",
+        "0.13.4-r2",
+        "0.13.4-r3",
+        "0.13.4-r4",
+        "0.13.5-r0",
+        "0.13.5-r1",
+        "0.13.5-r10",
+        "0.13.5-r11",
+        "0.13.5-r12",
+        "0.13.5-r13",
+        "0.13.5-r14",
+        "0.13.5-r15",
+        "0.13.5-r2",
+        "0.13.5-r3",
+        "0.13.5-r4",
+        "0.13.5-r5",
+        "0.13.5-r6",
+        "0.13.5-r7",
+        "0.13.5-r8",
+        "0.13.5-r9",
+        "0.13.6-r1",
+        "0.13.6-r2",
+        "0.13.6-r3",
+        "0.13.6-r4",
+        "0.13.6-r5",
+        "0.13.6-r6",
+        "0.13.6-r7",
+        "0.13.6-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "hubble-ui-backend-fips",
+        "purl": "pkg:apk/dhi/hubble-ui-backend-fips"
+      },
+      "versions": [
+        "0.13.4-r0",
+        "0.13.4-r1",
+        "0.13.4-r2",
+        "0.13.4-r3",
+        "0.13.4-r4",
+        "0.13.5-r0",
+        "0.13.5-r1",
+        "0.13.5-r10",
+        "0.13.5-r11",
+        "0.13.5-r12",
+        "0.13.5-r13",
+        "0.13.5-r14",
+        "0.13.5-r15",
+        "0.13.5-r2",
+        "0.13.5-r3",
+        "0.13.5-r4",
+        "0.13.5-r5",
+        "0.13.5-r6",
+        "0.13.5-r7",
+        "0.13.5-r8",
+        "0.13.5-r9",
+        "0.13.6-r1",
+        "0.13.6-r2",
+        "0.13.6-r3",
+        "0.13.6-r4",
+        "0.13.6-r5",
+        "0.13.6-r6",
+        "0.13.6-r7",
+        "0.13.6-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "hubble-ui-backend",
+        "purl": "pkg:apk/dhi/hubble-ui-backend"
+      },
+      "versions": [
+        "0.13.4-r0",
+        "0.13.4-r1",
+        "0.13.4-r2",
+        "0.13.4-r3",
+        "0.13.4-r4",
+        "0.13.5-r0",
+        "0.13.5-r1",
+        "0.13.5-r10",
+        "0.13.5-r11",
+        "0.13.5-r12",
+        "0.13.5-r13",
+        "0.13.5-r14",
+        "0.13.5-r15",
+        "0.13.5-r2",
+        "0.13.5-r3",
+        "0.13.5-r4",
+        "0.13.5-r5",
+        "0.13.5-r6",
+        "0.13.5-r7",
+        "0.13.5-r8",
+        "0.13.5-r9",
+        "0.13.6-r1",
+        "0.13.6-r2",
+        "0.13.6-r3",
+        "0.13.6-r4",
+        "0.13.6-r5",
+        "0.13.6-r6",
+        "0.13.6-r7",
+        "0.13.6-r8"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "hubble-ui-dev",
+        "purl": "pkg:apk/dhi/hubble-ui-dev"
+      },
+      "versions": [
+        "0.13.5-r1",
+        "0.13.5-r2",
+        "0.13.5-r3",
+        "0.13.5-r4",
+        "0.13.5-r5",
+        "0.13.5-r6",
+        "0.13.5-r7",
+        "0.13.5-r8",
+        "0.13.5-r9",
+        "0.13.6-r2",
+        "0.13.6-r3",
+        "0.13.6-r4",
+        "0.13.6-r5",
+        "0.13.6-r6",
+        "0.13.6-r7",
+        "0.13.6-r8",
+        "0.13.6-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "hubble-ui-fips-dev",
+        "purl": "pkg:apk/dhi/hubble-ui-fips-dev"
+      },
+      "versions": [
+        "0.13.5-r1",
+        "0.13.5-r2",
+        "0.13.5-r3",
+        "0.13.5-r4",
+        "0.13.5-r5",
+        "0.13.5-r6",
+        "0.13.5-r7",
+        "0.13.5-r8",
+        "0.13.5-r9",
+        "0.13.6-r2",
+        "0.13.6-r3",
+        "0.13.6-r4",
+        "0.13.6-r5",
+        "0.13.6-r6",
+        "0.13.6-r7",
+        "0.13.6-r8",
+        "0.13.6-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "hubble-ui-fips",
+        "purl": "pkg:apk/dhi/hubble-ui-fips"
+      },
+      "versions": [
+        "0.13.5-r1",
+        "0.13.5-r2",
+        "0.13.5-r3",
+        "0.13.5-r4",
+        "0.13.5-r5",
+        "0.13.5-r6",
+        "0.13.5-r7",
+        "0.13.5-r8",
+        "0.13.5-r9",
+        "0.13.6-r10",
+        "0.13.6-r11",
+        "0.13.6-r12",
+        "0.13.6-r13",
+        "0.13.6-r14",
+        "0.13.6-r2",
+        "0.13.6-r3",
+        "0.13.6-r4",
+        "0.13.6-r5",
+        "0.13.6-r6",
+        "0.13.6-r7",
+        "0.13.6-r8",
+        "0.13.6-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "hubble-ui",
+        "purl": "pkg:apk/dhi/hubble-ui"
+      },
+      "versions": [
+        "0.13.5-r1",
+        "0.13.5-r2",
+        "0.13.5-r3",
+        "0.13.5-r4",
+        "0.13.5-r5",
+        "0.13.5-r6",
+        "0.13.5-r7",
+        "0.13.5-r8",
+        "0.13.5-r9",
+        "0.13.6-r10",
+        "0.13.6-r11",
+        "0.13.6-r12",
+        "0.13.6-r13",
+        "0.13.6-r14",
+        "0.13.6-r2",
+        "0.13.6-r3",
+        "0.13.6-r4",
+        "0.13.6-r5",
+        "0.13.6-r6",
+        "0.13.6-r7",
+        "0.13.6-r8",
+        "0.13.6-r9"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kubescape-cli-dev",
+        "purl": "pkg:apk/dhi/kubescape-cli-dev"
+      },
+      "versions": [
+        "4.0.10-r0",
+        "4.0.10-r1",
+        "4.0.11-r0",
+        "4.0.12-r0",
+        "4.0.12-r1",
+        "4.0.12-r2",
+        "4.0.12-r3",
+        "4.0.13-r0",
+        "4.0.13-r1",
+        "4.0.13-r2",
+        "4.0.14-r0",
+        "4.0.14-r2",
+        "4.0.14-r3",
+        "4.0.14-r4",
+        "4.0.15-r1",
+        "4.0.17-r0",
+        "4.0.19-r0",
+        "4.0.19-r1",
+        "4.0.2-r0",
+        "4.0.2-r1",
+        "4.0.20-r0",
+        "4.0.20-r1",
+        "4.0.20-r2",
+        "4.0.20-r3",
+        "4.0.21-r0",
+        "4.0.3-r0",
+        "4.0.3-r1",
+        "4.0.5-r0",
+        "4.0.5-r1",
+        "4.0.6-r0",
+        "4.0.6-r1",
+        "4.0.8-r0",
+        "4.0.9-r0",
+        "4.0.9-r1",
+        "4.0.9-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kubescape-cli-fips-dev",
+        "purl": "pkg:apk/dhi/kubescape-cli-fips-dev"
+      },
+      "versions": [
+        "4.0.10-r0",
+        "4.0.10-r1",
+        "4.0.11-r0",
+        "4.0.12-r0",
+        "4.0.12-r1",
+        "4.0.12-r2",
+        "4.0.12-r3",
+        "4.0.13-r0",
+        "4.0.13-r1",
+        "4.0.13-r2",
+        "4.0.14-r0",
+        "4.0.14-r2",
+        "4.0.14-r3",
+        "4.0.14-r4",
+        "4.0.15-r1",
+        "4.0.17-r0",
+        "4.0.19-r0",
+        "4.0.19-r1",
+        "4.0.2-r0",
+        "4.0.2-r1",
+        "4.0.20-r0",
+        "4.0.20-r1",
+        "4.0.20-r2",
+        "4.0.20-r3",
+        "4.0.21-r0",
+        "4.0.3-r0",
+        "4.0.3-r1",
+        "4.0.5-r0",
+        "4.0.5-r1",
+        "4.0.6-r0",
+        "4.0.6-r1",
+        "4.0.8-r0",
+        "4.0.9-r0",
+        "4.0.9-r1",
+        "4.0.9-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kubescape-cli-fips",
+        "purl": "pkg:apk/dhi/kubescape-cli-fips"
+      },
+      "versions": [
+        "4.0.10-r0",
+        "4.0.10-r1",
+        "4.0.11-r0",
+        "4.0.12-r0",
+        "4.0.12-r1",
+        "4.0.12-r2",
+        "4.0.12-r3",
+        "4.0.13-r0",
+        "4.0.13-r1",
+        "4.0.13-r2",
+        "4.0.14-r0",
+        "4.0.14-r2",
+        "4.0.14-r3",
+        "4.0.14-r4",
+        "4.0.15-r1",
+        "4.0.17-r0",
+        "4.0.19-r0",
+        "4.0.19-r1",
+        "4.0.2-r0",
+        "4.0.2-r1",
+        "4.0.20-r0",
+        "4.0.20-r1",
+        "4.0.20-r2",
+        "4.0.20-r3",
+        "4.0.21-r0",
+        "4.0.3-r0",
+        "4.0.3-r1",
+        "4.0.5-r0",
+        "4.0.5-r1",
+        "4.0.6-r0",
+        "4.0.6-r1",
+        "4.0.8-r0",
+        "4.0.9-r0",
+        "4.0.9-r1",
+        "4.0.9-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "kubescape-cli",
+        "purl": "pkg:apk/dhi/kubescape-cli"
+      },
+      "versions": [
+        "4.0.10-r0",
+        "4.0.10-r1",
+        "4.0.11-r0",
+        "4.0.12-r0",
+        "4.0.12-r1",
+        "4.0.12-r2",
+        "4.0.12-r3",
+        "4.0.13-r0",
+        "4.0.13-r1",
+        "4.0.13-r2",
+        "4.0.14-r0",
+        "4.0.14-r2",
+        "4.0.14-r3",
+        "4.0.14-r4",
+        "4.0.15-r1",
+        "4.0.17-r0",
+        "4.0.19-r0",
+        "4.0.19-r1",
+        "4.0.2-r0",
+        "4.0.2-r1",
+        "4.0.20-r0",
+        "4.0.20-r1",
+        "4.0.20-r2",
+        "4.0.20-r3",
+        "4.0.21-r0",
+        "4.0.3-r0",
+        "4.0.3-r1",
+        "4.0.5-r0",
+        "4.0.5-r1",
+        "4.0.6-r0",
+        "4.0.6-r1",
+        "4.0.8-r0",
+        "4.0.9-r0",
+        "4.0.9-r1",
+        "4.0.9-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-b6e3-lwih-kvab-ju6z"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/cilium/cilium/security/advisories/GHSA-fm8w-2m5w-9j7r"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-56743"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/cilium/cilium/pull/46456"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/cilium/cilium/pull/46305"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/cilium/cilium/commit/bacea640404c0805c23515353dc1681c5bf35171"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/cilium/cilium/commit/1c84ae3b58a7cd54f7ee355e6c524c82f620eae8"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/cilium/cilium/releases/tag/v1.19.5"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-fm8w-2m5w-9j7r"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://pkg.go.dev/vuln/GO-2026-6367"
+    }
+  ],
+  "database_specific": {
+    "coverage": "partial",
+    "coverage_exclusions": [
+      "legacy_package_image_owner"
+    ]
+  }
+}
