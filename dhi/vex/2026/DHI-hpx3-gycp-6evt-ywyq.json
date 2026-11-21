@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:00:40Z",
-  "last_updated": "2026-11-21T21:26:20Z",
-  "version": 4,
+  "last_updated": "2026-11-21T22:40:46Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -129,7 +129,9 @@
           "@id": "pkg:apk/dhi/dotnet8-runtime@8.0.34-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-70035 (GHSA-4j9v-h7pp-725h) is a .NET remote code execution issue in Windows Presentation Foundation (WPF): untrusted XAML and XPS content can trigger unsafe URI fetching and navigation and deserialization of untrusted data, and the fix adds restrictive XAML and XPS checks. Microsoft lists Windows as the only affected platform and the Microsoft.WindowsDesktop.App runtime packs for Windows (win-x64, win-x86, win-arm64) as the affected .NET 8 packages, from 8.0.0 through 8.0.31, fixed in 8.0.32 (https://github.com/advisories/GHSA-4j9v-h7pp-725h, https://github.com/dotnet/announcements/issues/451, https://github.com/dotnet/core/blob/main/release-notes/8.0/8.0.32/8.0.32.md). DHI dotnet8-runtime for Alpine 3.23 builds .NET 8 for Linux (linux-musl) from Microsoft's source release. Scanned all 220 packages of the ten published builds (8.0.23-r0, 8.0.24-r0, 8.0.25-r0, 8.0.26-r0, 8.0.27-r0, 8.0.29-r0, 8.0.31-r0, 8.0.32-r0, 8.0.33-r0 and 8.0.34-r0) for x86_64 and aarch64, including the files inside the nupkg and other zip archives they hold. No WPF code is present: there is no PresentationFramework, PresentationCore, System.Xaml, ReachFramework, DirectWriteForwarder or wpfgfx assembly or native library, and no Microsoft.WindowsDesktop.App shared framework or runtime pack. The WPF-related files that are present are the WindowsBase.dll compatibility facade (6 KB or smaller) that ships with the Microsoft.NETCore.App shared framework and its runtime, NativeAOT and reference packs, a type-forwarding facade that redirects a few types to other .NET libraries and contains no WPF code, and the WindowsBase.pdb debug symbol files for those facades in dotnet8-runtime-dbg and dotnet8-runtime-bootstrap; IntelliSense documentation XML files for the Windows desktop APIs (among them PresentationFramework.xml, PresentationCore.xml, System.Xaml.xml and ReachFramework.xml) in a reference package, which describe the APIs and hold no code; and the Windows desktop transport nupkg, which carries only libraries built in the .NET runtime repository (such as System.Security.Cryptography.Pkcs and System.Diagnostics.EventLog) and no WPF code. None of the packages contains a native Windows PE file or a Mach-O file (every PE file in them is a managed .NET assembly), and none contains a Windows runtime pack. So the vulnerable WPF code is not in this owner."
     },
     {
       "vulnerability": {
