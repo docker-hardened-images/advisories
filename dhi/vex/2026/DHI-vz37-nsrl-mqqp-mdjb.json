@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T17:03:58Z",
-  "last_updated": "2026-11-21T14:19:20Z",
-  "version": 39,
+  "last_updated": "2026-11-21T21:25:47Z",
+  "version": 40,
   "statements": [
     {
       "vulnerability": {
@@ -2770,7 +2770,9 @@
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-111497 (GHSA-9v8h-qqgm-4m35) is an out-of-bounds write in the Google Brotli decoder (c/dec/decode.c) in versions 1.0.3 through 1.2.0: a crafted Brotli stream can corrupt decoder state, disclose memory or run code. Microsoft fixed the copy of the Brotli decoder that .NET bundles in .NET 10.0.14 (https://github.com/dotnet/announcements/issues/494, https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.14/10.0.14.md, https://github.com/google/brotli/releases/tag/v1.2.1). DHI dotnet10-runtime for Alpine 3.24 builds .NET 10 for Linux from Microsoft's source release with Alpine's build recipe, which removes the bundled Brotli sources and links Alpine's brotli library instead (UseSystemLibs includes brotli in https://github.com/alpinelinux/aports/blob/3e79705029656d3e638db79420fdbd21bf0e5212/community/dotnet10-runtime/APKBUILD). Scanned all 154 packages of the seven published builds (10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.12-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0) for x86_64 and aarch64, including the files inside their nupkg and tar.gz archives, and read every ELF file and static archive in them: every copy of libSystem.IO.Compression.Native.so, and every other ELF file that refers to Brotli (the singlefilehost app hosts), lists libbrotlidec.so.1 and libbrotlienc.so.1 as needed libraries, and in the copies checked symbol by symbol (10.0.13-r0 x86_64, and every ELF file in the x86_64 10.0.8-r0 dotnet10-runtime-bootstrap package) every Brotli function is an undefined import. In that 10.0.8-r0 package, checked member by member, the static libSystem.IO.Compression.Native.a archives of the NativeAOT runtime packs hold two object files (pal_zlib.c.o and entrypoints.c.o), and none of its static archives defines a Brotli function. Every dotnet10-runtime package declares a dependency on libbrotlidec.so.1. No build of this owner contains its own copy of the Brotli decoder: it runs the decoder from Alpine's brotli package, which carries the fix from 1.2.1-r0 (https://secdb.alpinelinux.org/v3.24/main.json) and is assessed as its own owner."
     },
     {
       "vulnerability": {
