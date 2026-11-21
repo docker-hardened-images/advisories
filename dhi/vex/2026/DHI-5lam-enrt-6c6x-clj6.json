@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:01:34Z",
-  "last_updated": "2026-11-13T20:14:52Z",
-  "version": 2,
+  "last_updated": "2026-11-21T02:05:25Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -169,7 +169,9 @@
           "@id": "pkg:apk/dhi/dotnet9-runtime@9.0.23-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "CVE-2026-70197 (GHSA-4mpw-cpwj-hxxj) is a remote code execution issue in System.Net.Sockets on Windows: reusing a SocketAsyncEventArgs instance across IPv4 and IPv6 datagram sockets can retain an undersized cached native address buffer, allowing an out-of-bounds write during ReceiveFromAsync. Microsoft lists Windows as the only affected platform and the Windows runtime packs (Microsoft.NETCore.App.Runtime.win-*) as the affected packages; the .NET 9 fix shipped in 9.0.21 and was completed in 9.0.22 (https://github.com/dotnet/runtime/security/advisories/GHSA-4mpw-cpwj-hxxj, https://github.com/dotnet/announcements/issues/466, https://github.com/dotnet/runtime/issues/135702, https://github.com/dotnet/core/blob/main/release-notes/9.0/9.0.22/9.0.22.md). System.Net.Sockets is built per platform: the Windows build compiles SocketAsyncEventArgs.Windows.cs, where the native address buffer is kept, and the Unix build compiles SocketAsyncEventArgs.Unix.cs instead (https://github.com/dotnet/runtime/blob/v9.0.22/src/libraries/System.Net.Sockets/src/System.Net.Sockets.csproj). DHI dotnet9-runtime for Alpine 3.23 builds .NET 9 for Linux from Microsoft's source release, and each build's version is the .NET runtime version it carries. Scanned all 242 packages of the eleven published builds (9.0.12-r0, 9.0.13-r0, 9.0.14-r0, 9.0.15-r0, 9.0.16-r0, 9.0.17-r0, 9.0.18-r0, 9.0.20-r0, 9.0.21-r0, 9.0.22-r0 and 9.0.23-r0) for x86_64 and aarch64, including the debug packages and the files inside the nupkg, zip and tar.gz archives they hold: every System.Net.Sockets.dll implementation in them is the Linux (linux-musl) build shipped in the .NET shared framework and the Linux runtime and ILCompiler packs; the other copies are reference assemblies or .NET Framework compatibility facades used by the SDK's build extensions, which hold no socket implementation. None of the packages contains a native Windows PE file, so no Windows runtime pack is present. The Windows receive path that the fix changes is therefore not reached in any published build."
     },
     {
       "vulnerability": {
@@ -204,7 +206,9 @@
           "@id": "pkg:apk/dhi/dotnet9-runtime@9.0.23-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "CVE-2026-70197 (GHSA-4mpw-cpwj-hxxj) is a remote code execution issue in System.Net.Sockets on Windows: reusing a SocketAsyncEventArgs instance across IPv4 and IPv6 datagram sockets can retain an undersized cached native address buffer, allowing an out-of-bounds write during ReceiveFromAsync. Microsoft lists Windows as the only affected platform and the Windows runtime packs (Microsoft.NETCore.App.Runtime.win-*) as the affected packages; the .NET 9 fix shipped in 9.0.21 and was completed in 9.0.22 (https://github.com/dotnet/runtime/security/advisories/GHSA-4mpw-cpwj-hxxj, https://github.com/dotnet/announcements/issues/466, https://github.com/dotnet/runtime/issues/135702, https://github.com/dotnet/core/blob/main/release-notes/9.0/9.0.22/9.0.22.md). System.Net.Sockets is built per platform: the Windows build compiles SocketAsyncEventArgs.Windows.cs, where the native address buffer is kept, and the Unix build compiles SocketAsyncEventArgs.Unix.cs instead (https://github.com/dotnet/runtime/blob/v9.0.22/src/libraries/System.Net.Sockets/src/System.Net.Sockets.csproj). DHI dotnet9-runtime for Alpine 3.24 builds .NET 9 for Linux from Microsoft's source release, and each build's version is the .NET runtime version it carries. Scanned all 154 packages of the seven published builds (9.0.16-r0, 9.0.17-r0, 9.0.18-r0, 9.0.20-r0, 9.0.21-r0, 9.0.22-r0 and 9.0.23-r0) for x86_64 and aarch64, including the debug packages and the files inside the nupkg, zip and tar.gz archives they hold: every System.Net.Sockets.dll implementation in them is the Linux (linux-musl) build shipped in the .NET shared framework and the Linux runtime and ILCompiler packs; the other copies are reference assemblies or .NET Framework compatibility facades used by the SDK's build extensions, which hold no socket implementation. None of the packages contains a native Windows PE file, so no Windows runtime pack is present. The Windows receive path that the fix changes is therefore not reached in any published build."
     }
   ]
 }
