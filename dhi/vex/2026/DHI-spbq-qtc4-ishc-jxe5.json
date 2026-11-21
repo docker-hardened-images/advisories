@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:10Z",
-  "last_updated": "2026-11-20T16:42:41Z",
-  "version": 2,
+  "last_updated": "2026-11-21T16:00:33Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -43,7 +43,8 @@
           "@id": "pkg:deb/dhi/coreutils@9.7-3dhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2017-18018 is a race condition in chown and chgrp from GNU coreutils when they follow symbolic links during a recursive traversal (-R with -L, or -R with --dereference): a user who can write to part of the tree being changed can replace a file with a symlink and have the ownership of an arbitrary file changed (https://lists.gnu.org/archive/html/coreutils/2017-12/msg00045.html, https://www.openwall.com/lists/oss-security/2018/01/04/3, https://security-tracker.debian.org/tracker/CVE-2017-18018). Upstream has not changed the code and has not disputed the report: a coreutils maintainer replied that chown is a wrapper around the chown and lchown system calls and that administrators should not combine --dereference with -R (https://lists.gnu.org/archive/html/coreutils/2017-12/msg00071.html), and the coreutils 9.7 manual now warns, for the dereferencing options, that combining them with --recursive may let an attacker redirect the operation through a symlink (https://sources.debian.org/src/coreutils/9.7-3/doc/coreutils.texi/). The DHI coreutils package for Debian 13 is built from Debian coreutils 9.7-3, which has the same traversal. Debian rates the issue unimportant as neutralised by kernel symlink hardening, but the reporter states that the attack works without relying on fs.protected_symlinks (https://lists.gnu.org/archive/html/coreutils/2017-12/msg00046.html), and that setting belongs to the host kernel, not to this package. Pending: no fix exists upstream, and whether to treat this as a documented limitation of chown -R -L and chgrp -R -L rather than a vulnerability needs a maintainer decision, because the attacker is an unprivileged local user. chown -R and chgrp -R without -L or --dereference do not follow symlinks and are not affected."
     }
   ]
 }
