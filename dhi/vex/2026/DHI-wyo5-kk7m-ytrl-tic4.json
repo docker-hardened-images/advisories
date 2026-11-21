@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:10Z",
-  "version": 1,
+  "last_updated": "2026-11-21T15:46:10Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:apk/dhi/tar@1.35-r5?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2025-45582: GNU tar through 1.35 follows a symbolic link created by one archive when a later archive is extracted into the same directory, so a second archive can write through a ../ link planted by the first and overwrite files outside the extraction directory: https://security-tracker.debian.org/tracker/CVE-2025-45582. GNU tar's maintainer first answered that this is documented behaviour, since the manual advises extracting each untrusted archive into an empty directory (https://lists.gnu.org/archive/html/bug-tar/2025-08/msg00012.html). Upstream has since changed tar to confine extraction to the target directory, and Red Hat rates the CVE Moderate and ships a backport of those upstream changes as its fix (RHSA-2026:0002 for RHEL 10, with RHEL 8 and 9 updates; https://access.redhat.com/security/cve/cve-2025-45582; its tar.spec changelog reads Backport upstream changes to jailify extraction directory ... Fixes CVE-2025-45582: https://gitlab.com/redhat/centos-stream/rpms/tar/-/blob/c10s/tar.spec). No GNU tar release contains that change yet, so this is a fix still to be backported, not a dispute. The only build of this owner published in the DHI Alpine 3.24 repository is 1.35-r5, for x86_64 and aarch64, built from Alpine's tar 1.35-r5 recipe, which builds GNU tar 1.35 with a single patch (ignore-apk-tools-checksums.patch) that does not touch this code: https://github.com/alpinelinux/aports/blob/a9e2a2dc46f377eb25884f7fea9834492de7f518/main/tar/APKBUILD. Every published build is affected. Until a fix ships, extract each untrusted archive into a new empty directory."
     },
     {
       "vulnerability": {
@@ -47,7 +50,9 @@
           "@id": "pkg:deb/dhi/tar@1.35%2Bdfsg-3.1dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2025-45582: GNU tar through 1.35 follows a symbolic link created by one archive when a later archive is extracted into the same directory, so a second archive can write through a ../ link planted by the first and overwrite files outside the extraction directory: https://security-tracker.debian.org/tracker/CVE-2025-45582. GNU tar's maintainer first answered that this is documented behaviour, since the manual advises extracting each untrusted archive into an empty directory (https://lists.gnu.org/archive/html/bug-tar/2025-08/msg00012.html). Upstream has since changed tar to confine extraction to the target directory, and Red Hat rates the CVE Moderate and ships a backport of those upstream changes as its fix (RHSA-2026:0002 for RHEL 10, with RHEL 8 and 9 updates; https://access.redhat.com/security/cve/cve-2025-45582; its tar.spec changelog reads Backport upstream changes to jailify extraction directory ... Fixes CVE-2025-45582: https://gitlab.com/redhat/centos-stream/rpms/tar/-/blob/c10s/tar.spec). No GNU tar release contains that change yet, so this is a fix still to be backported, not a dispute. Every build of this owner published in the DHI Debian repository, three rebuilds of Debian's tar 1.35+dfsg-3.1 for amd64 and arm64, is built from that Debian source, which does not contain the change. Their shipped Debian changelogs show the first two are plain rebuilds and the third adds only a backport for CVE-2026-18477, which concerns incremental restores, not symbolic-link handling during extraction. Every published build is affected. Until a fix ships, extract each untrusted archive into a new empty directory."
     }
   ]
 }
