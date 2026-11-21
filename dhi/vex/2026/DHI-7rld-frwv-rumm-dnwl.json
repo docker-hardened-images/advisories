@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:10Z",
-  "last_updated": "2026-11-20T16:42:41Z",
-  "version": 2,
+  "last_updated": "2026-11-21T17:26:55Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -22,7 +22,9 @@
           "@id": "pkg:apk/dhi/coreutils@9.8-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56392: GNU coreutils unexpand sizes its pending-blanks buffer as the largest tab-stop column times MB_LEN_MAX, and that multiplication can wrap for very large -t values, so the buffer is undersized and later writes overflow the heap (https://security-tracker.debian.org/tracker/CVE-2026-56392, https://www.openwall.com/lists/oss-security/2026/07/25/2). Upstream fixed it in https://github.com/coreutils/coreutils/commit/b60a159fdc5bfcf9988d3a4cb6f53abe8ad5d35d, whose NEWS entry says the bug was introduced in coreutils 9.11, when unexpand gained multibyte support. The DHI coreutils packages for Alpine 3.23 are builds of coreutils 9.8 (9.8-r1 and 9.8-r2). The src/unexpand.c in the coreutils 9.8 release allocates the buffer as ximalloc (max_column_width), with no multiplication. Running unexpand from the coreutils package of both builds on aarch64 with -t set just above SIZE_MAX/4 ends with \"memory exhausted\" instead of writing past a wrapped allocation, so the vulnerable code is not present in either build."
     },
     {
       "vulnerability": {
@@ -34,12 +36,26 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/coreutils@9.11-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update coreutils to 9.11-r1 or later.",
+      "status_notes": "CVE-2026-56392: GNU coreutils unexpand sizes its pending-blanks buffer as the largest tab-stop column times MB_LEN_MAX, and that multiplication can wrap for very large -t values, so the buffer is undersized and later writes overflow the heap (https://security-tracker.debian.org/tracker/CVE-2026-56392, https://www.openwall.com/lists/oss-security/2026/07/25/2). The bug was introduced in coreutils 9.11 and fixed after that release in https://github.com/coreutils/coreutils/commit/b60a159fdc5bfcf9988d3a4cb6f53abe8ad5d35d, which allocates with an overflow-checked xinmalloc (max_column_width, MB_CUR_MAX). The DHI coreutils packages for Alpine 3.24 are builds of coreutils 9.11. The first, 9.11-r0, lacks the fix: run with -t set just above SIZE_MAX/4, its unexpand proceeds with the wrapped allocation (it crashes with a segmentation fault on x86_64, and on aarch64 it exits 0 without reporting the oversized request). 9.11-r1 backports the upstream change: on x86_64 and aarch64 the same command ends with \"memory exhausted\". 9.11-r1 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7rld-frwv-rumm-dnwl",
+        "aliases": [
+          "CVE-2026-56392"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/coreutils@9.11-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56392: GNU coreutils unexpand sizes its pending-blanks buffer as the largest tab-stop column times MB_LEN_MAX, and that multiplication can wrap for very large -t values, so the buffer is undersized and later writes overflow the heap (https://security-tracker.debian.org/tracker/CVE-2026-56392, https://www.openwall.com/lists/oss-security/2026/07/25/2). The bug was introduced in coreutils 9.11 and fixed after that release in https://github.com/coreutils/coreutils/commit/b60a159fdc5bfcf9988d3a4cb6f53abe8ad5d35d, which allocates with an overflow-checked xinmalloc (max_column_width, MB_CUR_MAX). The DHI coreutils packages for Alpine 3.24 are builds of coreutils 9.11. The first, 9.11-r0, lacks the fix: run with -t set just above SIZE_MAX/4, its unexpand proceeds with the wrapped allocation (it crashes with a segmentation fault on x86_64, and on aarch64 it exits 0 without reporting the oversized request). 9.11-r1 backports the upstream change: on x86_64 and aarch64 the same command ends with \"memory exhausted\". 9.11-r1 is the first fixed build."
     },
     {
       "vulnerability": {
@@ -77,7 +93,9 @@
           "@id": "pkg:deb/dhi/coreutils@9.7-3dhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56392: GNU coreutils unexpand sizes its pending-blanks buffer as the largest tab-stop column times MB_LEN_MAX, and that multiplication can wrap for very large -t values, so the buffer is undersized and later writes overflow the heap (https://security-tracker.debian.org/tracker/CVE-2026-56392, https://www.openwall.com/lists/oss-security/2026/07/25/2). Upstream fixed it in https://github.com/coreutils/coreutils/commit/b60a159fdc5bfcf9988d3a4cb6f53abe8ad5d35d, whose NEWS entry says the bug was introduced in coreutils 9.11, when unexpand gained multibyte support. The DHI coreutils packages for Debian 13 are rebuilds of Debian's trixie coreutils 9.7-3. The src/unexpand.c in the coreutils 9.7 release allocates the buffer as ximalloc (max_column_width), with no multiplication; Debian's two patches for 9.7-3 (id group checking and a gnulib NFS ACL fix) do not touch unexpand, and the DHI backports the current packages carry change only sort and uniq. Running unexpand from both coreutils packages the DHI Debian repository publishes for Debian 13 on arm64 with -t set just above SIZE_MAX/4 ends with \"memory exhausted\" instead of writing past a wrapped allocation, so the vulnerable code is not present."
     }
   ]
 }
