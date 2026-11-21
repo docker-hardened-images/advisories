@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T12:25:15Z",
-  "version": 1,
+  "last_updated": "2026-11-21T07:32:37Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:deb/dhi/libtirpc@1.3.6%2Bds-1%2Bdhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-104357: the libtirpc SunRPC UDP (datagram) server transport reuses one receive buffer and resets the XDR decode position for each request without limiting the decode length to the size of the datagram just received, so a short UDP RPC request that follows a longer one can be decoded together with stale bytes left from the earlier request, including credential, verifier or argument fields. See https://www.cve.org/CVERecord?id=CVE-2026-104357, https://bugzilla.redhat.com/show_bug.cgi?id=2576161 and https://security-tracker.debian.org/tracker/CVE-2026-104357 (Debian bug 1154555). No upstream fix has been published: the bug is still open, Debian lists every release including trixie 1.3.6+ds-1 as vulnerable, and svc_dg_recv() in src/svc_dg.c of the libtirpc 1.3.6 release and of the current upstream master still calls XDR_SETPOS(xdrs, 0) and xdr_callmsg() on the buffer created once with the full receive size, without using the received length. The DHI Debian repository publishes two builds of this owner, both rebuilds of Debian's 1.3.6+ds-1, on amd64 and arm64. In each, libtirpc3t64 ships libtirpc.so.3.0.0 and libtirpc-dev ships the static libtirpc.a, and both contain the datagram server transport (the svc_dg_create symbol, and the svc_dg.o object in the static library). Neither build's changelog mentions this CVE: the first is a plain rebuild, and the second adds only backports for CVE-2026-85231 and CVE-2026-85977, which change the RPCSEC_GSS and portmapper/rpcbind list decoders, not the datagram transport. Every published build is affected."
     }
   ]
 }
