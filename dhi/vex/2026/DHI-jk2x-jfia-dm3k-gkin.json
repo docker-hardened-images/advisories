@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T16:04:58Z",
-  "version": 1,
+  "last_updated": "2026-11-21T00:32:15Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:deb/dhi/mesa@25.0.7-2%2Bdeb13u1%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2023-45913 reports a NULL pointer dereference in dri2GetGlxDrawableFromXDrawableId() in Mesa's GLX client code, reached when the X server sends a DRI2_BufferSwapComplete event to an application that is using DRI3: the function dereferenced the DRI2 per-display data, which is not allocated under DRI3 (https://gitlab.freedesktop.org/mesa/mesa/-/issues/9856, https://www.cve.org/CVERecord?id=CVE-2023-45913). The published mesa package ships Mesa's GLX client library as libGLX_mesa.so.0 in libglx-mesa0, built from Mesa 25.0.7 with the Debian 25.0.7-2+deb13u1 changes. That dereference is not in Mesa 25.0.7: upstream commit f79eb4730cd28871d136ab57865b165ce949d070 (glx: move dri2Hash to base glx_display, https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/30375), first in Mesa 24.3, removed the per-display DRI2 structure from this function. In src/glx/dri2_glx.c of Mesa 25.0.7 it looks the drawable up in the GLX display's dri2Hash, which is left unset when no DRI2 screen is created, and __glxHashLookup() in src/glx/glxhash.c returns without dereferencing anything when the table is unset."
     }
   ]
 }

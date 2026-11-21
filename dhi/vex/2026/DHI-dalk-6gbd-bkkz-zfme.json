@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T13:36:32Z",
-  "version": 1,
+  "last_updated": "2026-11-21T00:32:01Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -30,7 +31,8 @@
           "@id": "pkg:deb/dhi/patch@2.8-2dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2021-45261 is a release of an invalid pointer in another_hunk() in src/pch.c, reported against GNU patch 2.7 with a crafted patch file that makes patch crash (https://savannah.gnu.org/bugs/?61685). The upstream report is still open and no upstream change names it: the GNU patch 2.8 ChangeLog has no entry that references it, and the assignment that the fix proposed on the report replaces (p_end = p_ptrn_lines + 1, when a context hunk omits its old lines) is unchanged in the 2.8 src/pch.c. SUSE ships that proposed fix as a downstream patch for 2.7.6 (https://bugzilla.suse.com/show_bug.cgi?id=1194037, SUSE-SU-2026:0781-1) and later dropped it from its 2.8.1 package, saying upstream fixed the bug differently in 2.8, without naming the change (changelog of the openSUSE Factory package, https://build.opensuse.org/package/show/openSUSE:Factory/patch). Debian lists every release, trixie 2.8-2 included, as unfixed with urgency unimportant (https://security-tracker.debian.org/tracker/CVE-2021-45261), and OSV records 2.7 as the last affected version without naming a fix (https://osv.dev/vulnerability/CVE-2021-45261). This owner builds GNU patch 2.8 through Debian source package 2.8-2. We ran the reporter's reproducer: it crashes an AddressSanitizer build of GNU patch 2.7.6 with the invalid free the report describes, while the published arm64 build of this owner and an AddressSanitizer build of GNU patch 2.8 reject it with 'patch line 22 contains NUL byte' before reaching that code, and stop with 'malformed patch at line 25' when its NUL bytes are replaced. Pending: whether any other input still reaches the invalid free in 2.8, which needs the upstream fix identified or the 2.8 code path shown unreachable, and which decides between fixed and affected for every published build."
     }
   ]
 }

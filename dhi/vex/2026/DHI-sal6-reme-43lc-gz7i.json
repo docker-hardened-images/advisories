@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T15:28:37Z",
-  "last_updated": "2026-11-12T21:12:35Z",
-  "version": 2,
+  "last_updated": "2026-11-21T00:32:29Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -22,7 +22,8 @@
           "@id": "pkg:deb/dhi/pixman@0.44.0-3%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "Open question: whether pixman's floating-point combiners can raise a divide-by-zero signal in an application that unmasks that floating-point trap itself, and whether upstream treats that as a pixman defect (https://gitlab.freedesktop.org/pixman/pixman/-/issues/76, open with no maintainer ruling or code change). CVE-2023-37769 reports a floating-point exception (SIGFPE) in combine_inner() in pixman-combine-float.c, reached from combine_conjoint_atop_u_float while pixman's own stress-test program was running; that program calls enable_divbyzero_exceptions() (test/utils/utils.c), which unmasks the trap with feenableexcept(FE_DIVBYZERO). The shared library in the DHI Debian packages (libpixman-1-0 0.44.0, amd64 and arm64) does not call feenableexcept or any other floating-point environment function, and in the default floating-point environment a float division by zero returns infinity rather than raising a signal. In pixman 0.44.0 the divisions in the reported conjoint-atop combiner (the DA_OVER_SA and ONE_MINUS_SA_OVER_DA factors) are guarded by FLOAT_IS_ZERO, but the reported crash came from a build with the trap unmasked, and whether a compiler can still evaluate a guarded division is not settled for every architecture. The packages contain the shared library, its headers and pkg-config file, and debug symbols, and no test programs. Debian rates the CVE unimportant as a crash in a test tool: https://security-tracker.debian.org/tracker/CVE-2023-37769"
     }
   ]
 }
