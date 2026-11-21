@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:10Z",
-  "version": 1,
+  "last_updated": "2026-11-21T05:29:32Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -33,7 +34,9 @@
           "@id": "pkg:deb/dhi/tar@1.35%2Bdfsg-3.1dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
+      "impact_statement": "CVE-2005-2541: GNU tar run as root restores the set-user-ID and set-group-ID bits recorded in an archive without warning, so root extracting an untrusted archive can install setuid or setgid programs (https://security-tracker.debian.org/tracker/CVE-2005-2541, https://bugs.debian.org/328228). The GNU tar maintainer's reply in that bug states the behaviour is intended: tar restores all permissions only when run from a root account, as other tar implementations do and POSIX allows; --no-same-permissions turns it off; and by default tar does not restore those bits for an unprivileged user, so he does not consider it a security concern. Red Hat states it has no plans to change this behaviour (https://access.redhat.com/security/cve/cve-2005-2541), and Debian rates it unimportant. The GNU tar 1.35 source this package builds (Debian 1.35+dfsg-3.1) matches that statement: extr_init() in src/extract.c turns permission preservation on by default only when the effective user is root, and with --no-same-permissions, or when run unprivileged without --same-permissions (-p), extracted modes are limited to the read, write and execute bits. Neither Debian's patches nor this package's change that code. An attacker who supplies an archive cannot make tar restore those bits; that happens only when root extracts it with permission preservation on, which is root's default, and --no-same-permissions avoids it."
     }
   ]
 }

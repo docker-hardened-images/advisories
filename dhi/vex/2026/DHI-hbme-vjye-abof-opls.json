@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:10Z",
-  "version": 1,
+  "last_updated": "2026-11-21T05:29:43Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -21,7 +22,9 @@
           "@id": "pkg:deb/dhi/jansson@2.14-2%2Bdhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-36325 reports an out-of-bounds read in json_loads() in Jansson through 2.13.1, found with a fuzzer that passed a buffer without a terminating NUL byte. Upstream closed the report as not a bug: json_loads() is specified to take a NUL-terminated string, so the fuzzer was invalid, and the maintainer accepted that analysis and closed the issue without a code change (https://github.com/akheron/jansson/issues/548). The CVE record carries the vendor's dispute that the read happens only when a programmer fails to follow the API specification, and Debian calls the assignment bogus for the same reason (https://security-tracker.debian.org/tracker/CVE-2020-36325). The defect, where there is one, is in the calling program. Every published build of this owner, for amd64 and arm64, is Jansson 2.14 built from Debian source package 2.14-2, whose only patch changes a test script. We checked the shipped src/load.c: json_loads() reads its input through string_get(), which stops at the first NUL byte, and the API reference documents json_loads() as taking a NUL-terminated string and json_loadb() for buffers without one. JSON content passed through the documented interfaces cannot make it read past the end of the input. We also ran the crash input from that issue against the published arm64 libjansson4 under Valgrind, NUL-terminated through json_loads() and with its exact length through json_loadb(): both calls return a parse error and Valgrind reports no invalid read."
     }
   ]
 }
