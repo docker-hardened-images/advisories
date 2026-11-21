@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:01:34Z",
-  "last_updated": "2026-11-21T02:05:25Z",
-  "version": 3,
+  "last_updated": "2026-11-21T22:13:56Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -52,7 +52,9 @@
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-70197 (GHSA-4mpw-cpwj-hxxj) is a remote code execution issue in System.Net.Sockets on Windows: reusing a SocketAsyncEventArgs instance across IPv4 and IPv6 datagram sockets can keep an undersized cached native address buffer, allowing an out-of-bounds write during ReceiveFromAsync. Microsoft lists Windows as the only affected platform and, for .NET 10, only the Windows runtime packs (Microsoft.NETCore.App.Runtime for win-x64, win-x86 and win-arm64), affected before 10.0.14 and fixed in 10.0.14; the October 13 update did not carry the fix and the October 25 out-of-band update did (https://github.com/advisories/GHSA-4mpw-cpwj-hxxj, https://github.com/dotnet/announcements/issues/466, https://github.com/dotnet/announcements/issues/493, https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.14/10.0.14.md). The native address buffer that overflows is kept in SocketAsyncEventArgs.Windows.cs, which only the Windows build of System.Net.Sockets compiles (https://github.com/dotnet/dotnet/blob/v10.0.114/src/runtime/src/libraries/System.Net.Sockets/src/System.Net.Sockets.csproj). The fix (dotnet/dotnet commit b7fe82406537b588fdeda2ffcf73284ff83d59cb, in the v10.0.114 source tag and not in v10.0.113) sizes and grows that buffer correctly and also makes the shared Socket.cs replace an undersized cached SocketAddress; the Unix build passes the managed SocketAddress buffer, with its own length, to the receive call instead of a separately allocated native buffer (https://github.com/dotnet/dotnet/blob/v10.0.113/src/runtime/src/libraries/System.Net.Sockets/src/System/Net/Sockets/SocketAsyncEventArgs.Unix.cs). DHI dotnet10-runtime for Alpine 3.23 builds .NET 10 for Linux from Microsoft's dotnet/dotnet source release, and each build's version is the .NET release it carries. Scanned all 264 packages of the twelve published builds (10.0.2-r0, 10.0.3-r0, 10.0.4-r0, 10.0.5-r0, 10.0.6-r0, 10.0.7-r0, 10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0) for x86_64 and aarch64, including the debug packages and the files inside the nupkg, zip and tar.gz archives they hold: they ship the Linux (linux-musl) .NET shared framework and runtime packs, every PE file in them is a managed .NET assembly with a CLR header, and none is a native Windows executable or DLL, so no Windows runtime pack is present. The Windows-only source file that holds the vulnerable buffer handling is therefore not compiled into the System.Net.Sockets assembly of any published build."
     },
     {
       "vulnerability": {
@@ -84,7 +86,9 @@
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-70197 (GHSA-4mpw-cpwj-hxxj) is a remote code execution issue in System.Net.Sockets on Windows: reusing a SocketAsyncEventArgs instance across IPv4 and IPv6 datagram sockets can keep an undersized cached native address buffer, allowing an out-of-bounds write during ReceiveFromAsync. Microsoft lists Windows as the only affected platform and, for .NET 10, only the Windows runtime packs (Microsoft.NETCore.App.Runtime for win-x64, win-x86 and win-arm64), affected before 10.0.14 and fixed in 10.0.14; the October 13 update did not carry the fix and the October 25 out-of-band update did (https://github.com/advisories/GHSA-4mpw-cpwj-hxxj, https://github.com/dotnet/announcements/issues/466, https://github.com/dotnet/announcements/issues/493, https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.14/10.0.14.md). The native address buffer that overflows is kept in SocketAsyncEventArgs.Windows.cs, which only the Windows build of System.Net.Sockets compiles (https://github.com/dotnet/dotnet/blob/v10.0.114/src/runtime/src/libraries/System.Net.Sockets/src/System.Net.Sockets.csproj). The fix (dotnet/dotnet commit b7fe82406537b588fdeda2ffcf73284ff83d59cb, in the v10.0.114 source tag and not in v10.0.113) sizes and grows that buffer correctly and also makes the shared Socket.cs replace an undersized cached SocketAddress; the Unix build passes the managed SocketAddress buffer, with its own length, to the receive call instead of a separately allocated native buffer (https://github.com/dotnet/dotnet/blob/v10.0.113/src/runtime/src/libraries/System.Net.Sockets/src/System/Net/Sockets/SocketAsyncEventArgs.Unix.cs). DHI dotnet10-runtime for Alpine 3.24 builds .NET 10 for Linux from Microsoft's dotnet/dotnet source release, and each build's version is the .NET release it carries. Scanned all 154 packages of the seven published builds (10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.12-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0) for x86_64 and aarch64, including the debug packages and the files inside the nupkg, zip and tar.gz archives they hold: they ship the Linux (linux-musl) .NET shared framework and runtime packs, every PE file in them is a managed .NET assembly with a CLR header, and none is a native Windows executable or DLL, so no Windows runtime pack is present. The Windows-only source file that holds the vulnerable buffer handling is therefore not compiled into the System.Net.Sockets assembly of any published build."
     },
     {
       "vulnerability": {
