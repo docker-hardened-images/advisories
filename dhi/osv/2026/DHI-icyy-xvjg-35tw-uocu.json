@@ -1,14 +1,33 @@
 {
   "schema_version": "1.8.0",
   "id": "DHI-icyy-xvjg-35tw-uocu",
-  "modified": "2026-11-20T14:18:52Z",
+  "modified": "2026-11-21T08:04:45Z",
   "published": "2026-11-20T14:18:52Z",
   "upstream": [
     "CVE-2026-126568"
   ],
   "summary": "Convert::ASN1 versions before 0.37 for Perl allow memory exhaustion via unbounded MSG_PEEK buffer doubling in asn_recv.",
   "details": "Convert::ASN1 versions before 0.37 for Perl allow memory exhaustion via unbounded MSG_PEEK buffer doubling in asn_recv.\n\nasn_recv peeks the socket in a loop, doubling the buffer size on each pass until a tag and length can be decoded. An inverted boolean guard ($tb || rather than $tb &&) prevents the need-more-data exit from firing once a tag byte has been decoded. When asn_decode_length returns no value because the length is absent or incomplete, no exit fires for that case either. MSG_PEEK leaves socket data unconsumed, so each re-peek returns at once while the buffer size doubles.\n\nA single truncated BER header sent to a process calling asn_recv doubles the peek buffer until memory is exhausted. Perl's realloc failure is fatal and not catchable with eval.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
   "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "perl-convert-asn1",
+        "purl": "pkg:apk/dhi/perl-convert-asn1"
+      },
+      "versions": [
+        "0.34-r0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
     {
       "package": {
         "ecosystem": "Docker Hardened Images:Alpine:3.24",
