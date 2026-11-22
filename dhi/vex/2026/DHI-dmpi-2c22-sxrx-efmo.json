@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-21T16:31:30Z",
-  "last_updated": "2026-11-22T07:42:05Z",
-  "version": 4,
+  "last_updated": "2026-11-22T20:34:28Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -85,13 +85,27 @@
           "@id": "pkg:deb/dhi/openssl@3.5.9-1~deb13u1%2Bdhi0?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/openssl@3.5.9-1~deb13u1%2Bdhi1?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/openssl@3.5.9-1~deb13u1%2Bfips%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-121482: verifying a crafted CMS or PKCS#7 SignedData message with CRL checking enabled can take CPU time that grows with the square of the message size, because certificate verification rebuilt the full name of every relative CRL distribution point for every CRL it checked (https://github.com/openssl/openssl/pull/33546). The CVE record lists OpenSSL 3.5.0 up to but not including 3.5.10 as affected (https://www.cve.org/CVERecord?id=CVE-2026-121482). The fix on the openssl-3.5 branch, made after the 3.5.9 release, is https://github.com/openssl/openssl/commit/468c287cf451a834b370b69ab321b8ffdfac23aa, which pre-builds those names once per certificate in crypto/x509/x509_vfy.c and refuses certificates with more than 16 relative distribution points. Debian lists every trixie openssl as vulnerable (https://security-tracker.debian.org/tracker/CVE-2026-121482). The DHI Debian 13 openssl packages are rebuilds of Debian's trixie openssl, from 3.5.5-1~deb13u2 to 3.5.9-1~deb13u1. The second rebuild of 3.5.9-1~deb13u1, the fixed version in the range below, backports that commit: on amd64 and arm64 its libcrypto.so.3 (libssl3t64) contains the error text 'Too many relative dist points in certificate' that the fix adds, the first rebuild of 3.5.9-1~deb13u1 does not, and its changelog records the backport. Every earlier build is based on an OpenSSL release without the fix. The FIPS builds of openssl, whose versions carry a +fips suffix and which use the OpenSSL 3.1.2 FIPS provider, are built separately and do not carry this backport: the FIPS build of 3.5.9-1~deb13u1 sorts above the fixed version, and its libcrypto.so.3 on amd64 and arm64 lacks that error text. The range therefore reopens at that build, so every FIPS build reads as affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-dmpi-2c22-sxrx-efmo",
+        "aliases": [
+          "CVE-2026-121482"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/openssl@3.5.9-1~deb13u1%2Bdhi1?distro=dhi-13"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-121482: verifying a crafted CMS or PKCS#7 SignedData message with CRL checking enabled can take CPU time that grows with the square of the message size, because certificate verification rebuilt the full name of every relative CRL distribution point for every CRL it checked (https://github.com/openssl/openssl/pull/33546). The CVE record lists OpenSSL 3.5.0 up to but not including 3.5.10 as affected (https://www.cve.org/CVERecord?id=CVE-2026-121482). The fix on the openssl-3.5 branch, made after the 3.5.9 release, is https://github.com/openssl/openssl/commit/468c287cf451a834b370b69ab321b8ffdfac23aa, which pre-builds those names once per certificate in crypto/x509/x509_vfy.c and refuses certificates with more than 16 relative distribution points. Debian lists every trixie openssl as vulnerable (https://security-tracker.debian.org/tracker/CVE-2026-121482). The DHI Debian 13 openssl packages are rebuilds of Debian's trixie openssl, from 3.5.5-1~deb13u2 to 3.5.9-1~deb13u1. The second rebuild of 3.5.9-1~deb13u1, the fixed version in the range below, backports that commit: on amd64 and arm64 its libcrypto.so.3 (libssl3t64) contains the error text 'Too many relative dist points in certificate' that the fix adds, the first rebuild of 3.5.9-1~deb13u1 does not, and its changelog records the backport. Every earlier build is based on an OpenSSL release without the fix. The FIPS builds of openssl, whose versions carry a +fips suffix and which use the OpenSSL 3.1.2 FIPS provider, are built separately and do not carry this backport: the FIPS build of 3.5.9-1~deb13u1 sorts above the fixed version, and its libcrypto.so.3 on amd64 and arm64 lacks that error text. The range therefore reopens at that build, so every FIPS build reads as affected."
     }
   ]
 }
