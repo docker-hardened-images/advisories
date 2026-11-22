@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-22T11:30:58Z",
-  "version": 1,
+  "last_updated": "2026-11-22T23:09:10Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -69,7 +70,9 @@
           "@id": "pkg:deb/dhi/expat@2.9.0-1~deb13u1%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-134703: in libexpat 2.10.0 and earlier, the UTF-16 to UTF-16 conversion functions in xmltok.c (DEFINE_UTF16_TO_UTF16) can split a valid surrogate pair when output space is short, so a crafted document in non-native byte order UTF-16 can deliver a lone high surrogate to the character data and default handlers (https://security-tracker.debian.org/tracker/CVE-2026-134703, https://github.com/libexpat/libexpat/pull/1519). Only builds compiled with XML_UNICODE convert parser input with those functions; a UTF-8 build converts with XmlUtf8Convert instead (https://github.com/libexpat/libexpat/blob/R_2_9_0/expat/lib/xmlparse.c). Upstream fixed it after the 2.10.0 release in https://github.com/libexpat/libexpat/commit/702389c818cb402f2423fa998fa11907d621959f, which no expat release contains yet, and Debian lists trixie's 2.9.0-1~deb13u1 as vulnerable. The DHI expat packages for Debian 13 are built from Debian's expat 2.7.1, 2.8.2, 2.8.3 and 2.9.0 sources. We unpacked every published build for amd64 and arm64: each libexpat1 package ships both libexpat.so.1, a UTF-8 build, and libexpatw.so.1, an XML_UNICODE build (its feature list names XML_UNICODE, which libexpat.so.1 does not), and each libexpat1-dev package ships the matching static libexpat.a and libexpatw.a. None of these builds carries the fix, so applications that use libexpatw are affected; libexpat.so.1 and the xmlwf program built on it convert input to UTF-8 and do not use the affected functions."
     }
   ]
 }
