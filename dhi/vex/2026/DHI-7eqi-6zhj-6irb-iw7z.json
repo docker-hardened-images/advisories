@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:59:10Z",
-  "last_updated": "2026-11-21T14:15:56Z",
-  "version": 16,
+  "last_updated": "2026-11-22T01:33:31Z",
+  "version": 17,
   "statements": [
     {
       "vulnerability": {
@@ -1831,7 +1831,8 @@
           "@id": "pkg:deb/dhi/activemq-artemis@2.57.0-8?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-102554 (GHSA-xxph-c9ww-hj94): from Guava 4.0 to 33.7.1, Java deserialization of CompactHashMap, CompactHashSet or MapMakerInternalMap sizes its arrays from a count read from the stream, so a small crafted serialized object can force a multi-gigabyte allocation and an OutOfMemoryError. Guava 33.7.2 caps the initial size at 256 (https://github.com/google/guava/security/advisories/GHSA-xxph-c9ww-hj94, https://github.com/google/guava/commit/b931fe9d6d5cf00bc55714ad3308d086f71850fe, https://github.com/google/guava/releases/tag/v33.7.2). We unpacked all 23 published activemq-artemis packages in the DHI Debian repository, 2.55.0-0 through the current 2.57.0-8, for amd64 and arm64 (2.57.0-0 was published for arm64 only; no debug-symbol packages are published for this source), including every jar inside them. The standalone Guava library is guava-33.6.0-jre.jar in 2.55.0-0 to 2.57.0-4 and guava-33.7.2-jre.jar in 2.57.0-5 to 2.57.0-8, and in every 33.7.2 build that jar's three deserialization paths carry the 256 cap. But every build also ships curator-client-5.9.0.jar (Apache Curator 5.9.0, the current Curator release), which bundles its own relocated copy of Guava under org.apache.curator.shaded.com.google.common, including CompactHashMap, CompactHashSet and MapMakerInternalMap. In every build, the bytecode of that copy's CompactHashMap.readObject, CompactHashSet.readObject and MapMakerInternalMap readMapMaker passes the stream's count straight to init and initialCapacity, without the cap. So every published build, including those with Guava 33.7.2, still contains the vulnerable deserialization code, and a FIXED range at 2.57.0-5 would be wrong. Pending: whether the relocated Curator copy is reachable by attacker-supplied serialized data in Artemis (for example through JMS ObjectMessage deserialization), or a Curator release that bundles a fixed Guava."
     },
     {
       "vulnerability": {
