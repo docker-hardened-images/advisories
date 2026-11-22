@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-18T23:54:07Z",
-  "version": 1,
+  "last_updated": "2026-11-22T20:05:44Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -24,7 +25,9 @@
           "@id": "pkg:apk/dhi/sqlite@3.53.4-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-119586 is a command injection in the .recover command of the sqlite3 command-line shell: .recover prints the CREATE statements stored in a database's sqlite_schema verbatim, so a crafted database can hide a dot-command such as .shell after a valid CREATE statement, and it runs when the .recover output is piped into a second sqlite3, as https://sqlite.org/recovery.html describes, without the --safe option (https://abraxaslabs.tech/research/sqlite-cli-recover, https://www.vulncheck.com/advisories/sqlite-cli-through-3.54.1-command-injection-via-recover-output). SQLite lists it as not a bug in the core library and points to the CLI's --safe option, with no fix (https://sqlite.org/cves.html), and the advisory covers every version through 3.54.1. This owner's builds for Alpine 3.23 in the DHI repository are 3.51.1-r0, 3.51.2-r0 and 3.53.4-r0. Each build's sqlite package ships /usr/bin/sqlite3, which has the SQLite library compiled in, and its .recover command on both x86_64 and aarch64. The sqlite-libs, sqlite-static, sqlite-dev and sqlite-doc packages hold the library, headers and documentation, not the shell. Tested on the aarch64 builds: with 3.53.4-r0, a database whose schema entry was 'CREATE TABLE t(a);' followed by a .shell line made '.recover | sqlite3' run the shell command, and with -safe the second sqlite3 refused it. With 3.51.1-r0 and 3.51.2-r0, the same test file did not run the command, because these versions' .recover executes the whole stored text and drops a table whose text is not valid SQL. A variant wrapping the .shell line in an SQL comment was printed but not run. Those builds are still within the advisory's range, so all builds are treated as affected. No fixed build is published for this owner. Running .recover output only with sqlite3 -safe avoids the issue."
     },
     {
       "vulnerability": {
@@ -41,7 +44,9 @@
           "@id": "pkg:apk/dhi/sqlite@3.53.4-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-119586 is a command injection in the .recover command of the sqlite3 command-line shell: .recover prints the CREATE statements stored in a database's sqlite_schema verbatim, so a crafted database can hide a dot-command such as .shell after a valid CREATE statement, and it runs when the .recover output is piped into a second sqlite3, as https://sqlite.org/recovery.html describes, without the --safe option (https://abraxaslabs.tech/research/sqlite-cli-recover, https://www.vulncheck.com/advisories/sqlite-cli-through-3.54.1-command-injection-via-recover-output). SQLite lists it as not a bug in the core library and points to the CLI's --safe option, with no fix (https://sqlite.org/cves.html), and the advisory covers every version through 3.54.1. This owner's builds for Alpine 3.24 in the DHI repository are 3.53.2-r0 and 3.53.4-r0. Each build's sqlite package ships /usr/bin/sqlite3, which has the SQLite library compiled in, and its .recover command on both x86_64 and aarch64. The sqlite-libs, sqlite-static, sqlite-dev and sqlite-doc packages hold the library, headers and documentation, not the shell. Tested on the aarch64 builds of 3.53.2-r0 and 3.53.4-r0: a database whose schema entry was 'CREATE TABLE t(a);' followed by a .shell line made '.recover | sqlite3' run the shell command, and with -safe the second sqlite3 refused it. No fixed build is published for this owner. Running .recover output only with sqlite3 -safe avoids the issue."
     }
   ]
 }
