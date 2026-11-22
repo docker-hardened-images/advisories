@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T23:53:48Z",
-  "last_updated": "2026-11-22T01:49:17Z",
-  "version": 21,
+  "last_updated": "2026-11-22T03:18:09Z",
+  "version": 22,
   "statements": [
     {
       "vulnerability": {
@@ -3597,7 +3597,9 @@
           "@id": "pkg:apk/dhi/docker-scout-cli-plugin@1.30.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-95839 (GHSA-vwhp-8p66-mq4f): in containerd 2.2.0 to 2.2.9, 2.3.0 to 2.3.6 and 2.4.0 to 2.4.1, image manifest processing can meet a child descriptor that carries the io.containerd.manifest.subject annotation and a malformed digest; the code that builds the referrer garbage-collection label slices the digest without validating it and panics, so pulling or importing such an image can crash the process. It is fixed in containerd 2.2.10, 2.3.7 and 2.4.2 by \"images: skip malformed digests when computing referrer labels\", which changes SetChildrenMappedLabels in core/images/handlers.go and adds the log messages \"skipping child with invalid digest for referrer label\" and \"skipping child with digest too short for referrer label\": https://github.com/containerd/containerd/security/advisories/GHSA-vwhp-8p66-mq4f, https://github.com/containerd/containerd/commit/2181d7baa2a303ea2082e5c0f1a7697787b61ef2 (release/2.3 branch, first released in v2.3.7), https://github.com/containerd/containerd/releases/tag/v2.3.7. Read /usr/libexec/docker/cli-plugins/docker-scout, the only ELF file in the package, in every docker-scout-cli-plugin package published in the DHI Alpine 3.24 repository: 1.25.0-r0, 1.25.0-r1, 1.29.0-r0 and 1.30.0-r0, for x86_64 and aarch64, each verified against the repository index checksum. Every build embeds github.com/containerd/containerd/v2 v2.3.6, inside the affected range, and its Go function names include core/images.SetChildrenMappedLabels and SetChildrenLabels, while neither log message the fix adds is present. No published build carries the fix."
     },
     {
       "vulnerability": {
@@ -3607,12 +3609,6 @@
         ]
       },
       "products": [
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.23"
-        },
         {
           "@id": "pkg:apk/dhi/docker@29.4.0-r1?distro=dhi-3.23"
         },
@@ -3693,6 +3689,25 @@
         },
         {
           "@id": "pkg:apk/dhi/docker@29.9.0-r1?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker to 29.9.1-r0 or later.",
+      "status_notes": "CVE-2026-95839 (GHSA-vwhp-8p66-mq4f): in containerd 2.2.0 to 2.2.9, 2.3.0 to 2.3.6 and 2.4.0 to 2.4.1, image manifest processing can meet a child descriptor that carries the io.containerd.manifest.subject annotation and a malformed digest; the code that builds the referrer garbage-collection label slices the digest without validating it and panics, so pulling or importing such an image can crash the process. It is fixed in containerd 2.2.10, 2.3.7 and 2.4.2 by \"images: skip malformed digests when computing referrer labels\", which changes SetChildrenMappedLabels in core/images/handlers.go and adds the log messages \"skipping child with invalid digest for referrer label\" and \"skipping child with digest too short for referrer label\": https://github.com/containerd/containerd/security/advisories/GHSA-vwhp-8p66-mq4f, https://github.com/containerd/containerd/commit/a2eb01f667b320b00ec218216f26f7b79197d4cd (release/2.4 branch, first released in v2.4.2), https://github.com/containerd/containerd/releases/tag/v2.4.2. Read every package built from the DHI docker source for Alpine 3.23 in the DHI Alpine repository (docker, docker-engine, docker-cli and its other subpackages): 39 builds, 29.4.0-r1 to 29.10.0-r1. docker-cli is published for x86_64 and aarch64 in every build, and so is docker-engine except 29.4.3-r0, which is published for aarch64 only; 29.10.0-r1 is so far published only as docker, docker-cli and docker-engine. The Go programs are /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine and /usr/bin/docker in docker-cli, each dynamically linked against musl (dockerd in some builds also against libnftables); /usr/bin/docker-init is a link to /sbin/tini-static from another package; the other subpackages hold the dockerd-rootless script, OpenRC and systemd service files, a modules-load.d configuration file, shell completions and documentation, with no ELF, PE or Mach-O files, and the docker package itself installs no files. Each package was verified against the repository index checksum, and the Go function names of every ELF program were read from its function table (dockerd, docker-proxy and docker carry no ELF symbol table before 29.10.0-r1). Only dockerd contains containerd code: in every build its function names include github.com/containerd/containerd/v2/core/images.SetChildrenMappedLabels and SetChildrenLabels, and neither function is in docker-proxy or docker: docker-proxy's module list never names github.com/containerd/containerd/v2, and no docker/cli release from v29.4.0 to v29.10.0 vendors it (https://github.com/docker/cli/blob/v29.10.0/vendor.mod). dockerd's build information records github.com/containerd/containerd/v2 v2.2.2 to v2.4.1 in 29.4.0-r1 to 29.9.0-r1, inside the affected ranges, and neither log message the fix adds is present in those builds; from 29.9.1-r0 on it records v2.4.2 and both messages are present. The range ends at 29.9.1-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-42wx-6446-zmdo-qrnw",
+        "aliases": [
+          "CVE-2026-95839"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/docker@29.9.1-r0?distro=dhi-3.23"
@@ -3725,7 +3740,8 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-95839 (GHSA-vwhp-8p66-mq4f): in containerd 2.2.0 to 2.2.9, 2.3.0 to 2.3.6 and 2.4.0 to 2.4.1, image manifest processing can meet a child descriptor that carries the io.containerd.manifest.subject annotation and a malformed digest; the code that builds the referrer garbage-collection label slices the digest without validating it and panics, so pulling or importing such an image can crash the process. It is fixed in containerd 2.2.10, 2.3.7 and 2.4.2 by \"images: skip malformed digests when computing referrer labels\", which changes SetChildrenMappedLabels in core/images/handlers.go and adds the log messages \"skipping child with invalid digest for referrer label\" and \"skipping child with digest too short for referrer label\": https://github.com/containerd/containerd/security/advisories/GHSA-vwhp-8p66-mq4f, https://github.com/containerd/containerd/commit/a2eb01f667b320b00ec218216f26f7b79197d4cd (release/2.4 branch, first released in v2.4.2), https://github.com/containerd/containerd/releases/tag/v2.4.2. Read every package built from the DHI docker source for Alpine 3.23 in the DHI Alpine repository (docker, docker-engine, docker-cli and its other subpackages): 39 builds, 29.4.0-r1 to 29.10.0-r1. docker-cli is published for x86_64 and aarch64 in every build, and so is docker-engine except 29.4.3-r0, which is published for aarch64 only; 29.10.0-r1 is so far published only as docker, docker-cli and docker-engine. The Go programs are /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine and /usr/bin/docker in docker-cli, each dynamically linked against musl (dockerd in some builds also against libnftables); /usr/bin/docker-init is a link to /sbin/tini-static from another package; the other subpackages hold the dockerd-rootless script, OpenRC and systemd service files, a modules-load.d configuration file, shell completions and documentation, with no ELF, PE or Mach-O files, and the docker package itself installs no files. Each package was verified against the repository index checksum, and the Go function names of every ELF program were read from its function table (dockerd, docker-proxy and docker carry no ELF symbol table before 29.10.0-r1). Only dockerd contains containerd code: in every build its function names include github.com/containerd/containerd/v2/core/images.SetChildrenMappedLabels and SetChildrenLabels, and neither function is in docker-proxy or docker: docker-proxy's module list never names github.com/containerd/containerd/v2, and no docker/cli release from v29.4.0 to v29.10.0 vendors it (https://github.com/docker/cli/blob/v29.10.0/vendor.mod). dockerd's build information records github.com/containerd/containerd/v2 v2.2.2 to v2.4.1 in 29.4.0-r1 to 29.9.0-r1, inside the affected ranges, and neither log message the fix adds is present in those builds; from 29.9.1-r0 on it records v2.4.2 and both messages are present. The range ends at 29.9.1-r0."
     },
     {
       "vulnerability": {
@@ -3735,12 +3751,6 @@
         ]
       },
       "products": [
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
-        },
         {
           "@id": "pkg:apk/dhi/docker@29.5.2-r0?distro=dhi-3.24"
         },
@@ -3800,6 +3810,25 @@
         },
         {
           "@id": "pkg:apk/dhi/docker@29.9.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker to 29.9.1-r0 or later.",
+      "status_notes": "CVE-2026-95839 (GHSA-vwhp-8p66-mq4f): in containerd 2.2.0 to 2.2.9, 2.3.0 to 2.3.6 and 2.4.0 to 2.4.1, image manifest processing can meet a child descriptor that carries the io.containerd.manifest.subject annotation and a malformed digest; the code that builds the referrer garbage-collection label slices the digest without validating it and panics, so pulling or importing such an image can crash the process. It is fixed in containerd 2.2.10, 2.3.7 and 2.4.2 by \"images: skip malformed digests when computing referrer labels\", which changes SetChildrenMappedLabels in core/images/handlers.go and adds the log messages \"skipping child with invalid digest for referrer label\" and \"skipping child with digest too short for referrer label\": https://github.com/containerd/containerd/security/advisories/GHSA-vwhp-8p66-mq4f, https://github.com/containerd/containerd/commit/a2eb01f667b320b00ec218216f26f7b79197d4cd (release/2.4 branch, first released in v2.4.2), https://github.com/containerd/containerd/releases/tag/v2.4.2. Read every package built from the DHI docker source for Alpine 3.24 in the DHI Alpine repository (docker, docker-engine, docker-cli and its other subpackages): 32 builds, 29.5.2-r0 to 29.10.0-r1. docker-cli and docker-engine are published for x86_64 and aarch64 in every build; 29.10.0-r1 is so far published only as docker, docker-cli and docker-engine. The Go programs are /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine and /usr/bin/docker in docker-cli, each dynamically linked against musl (dockerd in some builds also against libnftables); /usr/bin/docker-init is a link to /sbin/tini-static from another package; the other subpackages hold the dockerd-rootless script, OpenRC and systemd service files, a modules-load.d configuration file, shell completions and documentation, with no ELF, PE or Mach-O files, and the docker package itself installs no files. Each package was verified against the repository index checksum, and the Go function names of every ELF program were read from its function table (dockerd, docker-proxy and docker carry no ELF symbol table before 29.10.0-r1). Only dockerd contains containerd code: in every build its function names include github.com/containerd/containerd/v2/core/images.SetChildrenMappedLabels and SetChildrenLabels, and neither function is in docker-proxy or docker: docker-proxy's module list never names github.com/containerd/containerd/v2, and no docker/cli release from v29.4.0 to v29.10.0 vendors it (https://github.com/docker/cli/blob/v29.10.0/vendor.mod). dockerd's build information records github.com/containerd/containerd/v2 v2.2.3 to v2.4.1 in 29.5.2-r0 to 29.9.0-r0, inside the affected ranges, and neither log message the fix adds is present in those builds; from 29.9.1-r0 on it records v2.4.2 and both messages are present. The range ends at 29.9.1-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-42wx-6446-zmdo-qrnw",
+        "aliases": [
+          "CVE-2026-95839"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/docker@29.9.1-r0?distro=dhi-3.24"
@@ -3832,7 +3861,8 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-95839 (GHSA-vwhp-8p66-mq4f): in containerd 2.2.0 to 2.2.9, 2.3.0 to 2.3.6 and 2.4.0 to 2.4.1, image manifest processing can meet a child descriptor that carries the io.containerd.manifest.subject annotation and a malformed digest; the code that builds the referrer garbage-collection label slices the digest without validating it and panics, so pulling or importing such an image can crash the process. It is fixed in containerd 2.2.10, 2.3.7 and 2.4.2 by \"images: skip malformed digests when computing referrer labels\", which changes SetChildrenMappedLabels in core/images/handlers.go and adds the log messages \"skipping child with invalid digest for referrer label\" and \"skipping child with digest too short for referrer label\": https://github.com/containerd/containerd/security/advisories/GHSA-vwhp-8p66-mq4f, https://github.com/containerd/containerd/commit/a2eb01f667b320b00ec218216f26f7b79197d4cd (release/2.4 branch, first released in v2.4.2), https://github.com/containerd/containerd/releases/tag/v2.4.2. Read every package built from the DHI docker source for Alpine 3.24 in the DHI Alpine repository (docker, docker-engine, docker-cli and its other subpackages): 32 builds, 29.5.2-r0 to 29.10.0-r1. docker-cli and docker-engine are published for x86_64 and aarch64 in every build; 29.10.0-r1 is so far published only as docker, docker-cli and docker-engine. The Go programs are /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine and /usr/bin/docker in docker-cli, each dynamically linked against musl (dockerd in some builds also against libnftables); /usr/bin/docker-init is a link to /sbin/tini-static from another package; the other subpackages hold the dockerd-rootless script, OpenRC and systemd service files, a modules-load.d configuration file, shell completions and documentation, with no ELF, PE or Mach-O files, and the docker package itself installs no files. Each package was verified against the repository index checksum, and the Go function names of every ELF program were read from its function table (dockerd, docker-proxy and docker carry no ELF symbol table before 29.10.0-r1). Only dockerd contains containerd code: in every build its function names include github.com/containerd/containerd/v2/core/images.SetChildrenMappedLabels and SetChildrenLabels, and neither function is in docker-proxy or docker: docker-proxy's module list never names github.com/containerd/containerd/v2, and no docker/cli release from v29.4.0 to v29.10.0 vendors it (https://github.com/docker/cli/blob/v29.10.0/vendor.mod). dockerd's build information records github.com/containerd/containerd/v2 v2.2.3 to v2.4.1 in 29.5.2-r0 to 29.9.0-r0, inside the affected ranges, and neither log message the fix adds is present in those builds; from 29.9.1-r0 on it records v2.4.2 and both messages are present. The range ends at 29.9.1-r0."
     },
     {
       "vulnerability": {
@@ -10005,7 +10035,9 @@
           "@id": "pkg:deb/dhi/docker-buildx-plugin@0.39.1-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-95839 (GHSA-vwhp-8p66-mq4f): in containerd 2.2.0 to 2.2.9, 2.3.0 to 2.3.6 and 2.4.0 to 2.4.1, image manifest processing can meet a child descriptor that carries the io.containerd.manifest.subject annotation and a malformed digest; the code that builds the referrer garbage-collection label slices the digest without validating it and panics, so pulling or importing such an image can crash the process. It is fixed in containerd 2.2.10, 2.3.7 and 2.4.2 by \"images: skip malformed digests when computing referrer labels\", which changes SetChildrenMappedLabels in core/images/handlers.go and adds the log messages \"skipping child with invalid digest for referrer label\" and \"skipping child with digest too short for referrer label\": https://github.com/containerd/containerd/security/advisories/GHSA-vwhp-8p66-mq4f, https://github.com/containerd/containerd/commit/a2eb01f667b320b00ec218216f26f7b79197d4cd (release/2.4 branch, first released in v2.4.2), https://github.com/containerd/containerd/commit/2181d7baa2a303ea2082e5c0f1a7697787b61ef2 (release/2.3 branch, v2.3.7). Read every published docker-buildx-plugin package in the DHI Debian 13 repository: 44 builds, 0.35.0-2 to the current 0.39.1-1, each for amd64 and arm64; no debug-symbol packages are published for this source. Each holds one program, /usr/libexec/docker/cli-plugins/docker-buildx, a statically linked Go program built with CGO_ENABLED=0. Each package was verified against the repository index checksum. The program embeds github.com/containerd/containerd/v2 (v2.2.6 to v2.4.2) and links its core/images package (Dispatch is among its Go function names in every build), but neither github.com/containerd/containerd/v2/core/images.SetChildrenMappedLabels nor SetChildrenLabels, the function the fix changes and its wrapper, is among the Go function names of any of the 88 programs, so the vulnerable label code is not compiled in. The same search finds both functions in dockerd from the DHI docker packages, which does link them."
     },
     {
       "vulnerability": {
@@ -10145,7 +10177,9 @@
           "@id": "pkg:deb/dhi/docker-compose-plugin@5.8.0-6?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-95839 (GHSA-vwhp-8p66-mq4f): in containerd 2.2.0 to 2.2.9, 2.3.0 to 2.3.6 and 2.4.0 to 2.4.1, image manifest processing can meet a child descriptor that carries the io.containerd.manifest.subject annotation and a malformed digest; the code that builds the referrer garbage-collection label slices the digest without validating it and panics, so pulling or importing such an image can crash the process. It is fixed in containerd 2.2.10, 2.3.7 and 2.4.2 by \"images: skip malformed digests when computing referrer labels\", which changes SetChildrenMappedLabels in core/images/handlers.go and adds the log messages \"skipping child with invalid digest for referrer label\" and \"skipping child with digest too short for referrer label\": https://github.com/containerd/containerd/security/advisories/GHSA-vwhp-8p66-mq4f, https://github.com/containerd/containerd/commit/a2eb01f667b320b00ec218216f26f7b79197d4cd (release/2.4 branch, first released in v2.4.2), https://github.com/containerd/containerd/commit/2181d7baa2a303ea2082e5c0f1a7697787b61ef2 (release/2.3 branch, v2.3.7). Read every published docker-compose-plugin package in the DHI Debian 13 repository: 41 builds, 5.3.1-2 to the current 5.8.0-6, each for amd64 and arm64; no debug-symbol packages are published for this source. Each holds one program, /usr/libexec/docker/cli-plugins/docker-compose, a statically linked Go program built with CGO_ENABLED=0. Each package was verified against the repository index checksum. The program embeds github.com/containerd/containerd/v2 (v2.2.5 to v2.4.2) and links its core/images package (Dispatch is among its Go function names in every build), but neither github.com/containerd/containerd/v2/core/images.SetChildrenMappedLabels nor SetChildrenLabels, the function the fix changes and its wrapper, is among the Go function names of any of the 82 programs, so the vulnerable label code is not compiled in. The same search finds both functions in dockerd from the DHI docker packages, which does link them."
     },
     {
       "vulnerability": {
