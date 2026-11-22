@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:20Z",
-  "last_updated": "2026-11-22T12:25:35Z",
-  "version": 20,
+  "last_updated": "2026-11-22T16:57:38Z",
+  "version": 21,
   "statements": [
     {
       "vulnerability": {
@@ -3375,12 +3375,6 @@
       },
       "products": [
         {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/docker@29.4.0-r1?distro=dhi-3.23"
         },
         {
@@ -3448,6 +3442,25 @@
         },
         {
           "@id": "pkg:apk/dhi/docker@29.8.1-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker to 29.8.2-r0 or later.",
+      "status_notes": "CVE-2026-53493 (GHSA-pg57-6jwg-q645, GO-2026-6597): before containerd 1.7.36, 2.0.13, 2.2.9, 2.3.6 and 2.4.1, the image handlers in core/images (Dispatch and Walk) traverse an OCI index without depth, breadth or deduplication limits, so pulling a crafted image index can consume unbounded CPU and memory. The fix bounds the traversal in core/images/handlers.go and adds the error \"too many descriptors (limit %d)\": https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://pkg.go.dev/vuln/GO-2026-6597, https://github.com/containerd/containerd/commit/3e3b3daabc00cc7e467ebf22d4832966e7da9658 (in v2.3.6), https://github.com/containerd/containerd/releases/tag/v2.3.6. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages. Unpacked every subpackage of every build published in the DHI Alpine 3.23 repository, 39 versions from 29.4.0-r1 to 29.10.0-r1, for x86_64 and aarch64 (29.4.3-r0 has no x86_64 docker-engine package), every download checked against the index checksum, and read the Go build information and function table (read with a reader of the Go symbol table that also works on stripped binaries) of every ELF file. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. The other subpackages contain no ELF files. runtime.main is found in the function table of every one of these programs, so the tables were read. /usr/bin/docker is built from the docker/cli vendor tree; only the 29.10.0-r1 builds record module versions in its build information. dockerd links the vulnerable handlers (core/images.Dispatch is in its function table in every build, and core/images.Walk in many). Its build information records containerd/v2 v2.2.2 to v2.3.5 in every build up to 29.8.1-r0, inside the affected range, and v2.3.6, v2.4.1 or v2.4.2 in every build from 29.8.2-r0 on; a string search finds the fix's error message in dockerd exactly from 29.8.2-r0. docker-proxy and /usr/bin/docker do not contain containerd: no containerd function is in either function table, the containerd/v2 module is absent from the build information of docker-proxy and of the 29.10.0-r1 /usr/bin/docker, and no docker/cli release in these builds vendors it (https://github.com/docker/cli/blob/v29.10.0/vendor/modules.txt). 29.8.2-r0 is the first build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-zyez-rpwn-7cnp-4qoq",
+        "aliases": [
+          "CVE-2026-53493"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/docker@29.8.2-r0?distro=dhi-3.23"
@@ -3492,7 +3505,8 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-53493 (GHSA-pg57-6jwg-q645, GO-2026-6597): before containerd 1.7.36, 2.0.13, 2.2.9, 2.3.6 and 2.4.1, the image handlers in core/images (Dispatch and Walk) traverse an OCI index without depth, breadth or deduplication limits, so pulling a crafted image index can consume unbounded CPU and memory. The fix bounds the traversal in core/images/handlers.go and adds the error \"too many descriptors (limit %d)\": https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://pkg.go.dev/vuln/GO-2026-6597, https://github.com/containerd/containerd/commit/3e3b3daabc00cc7e467ebf22d4832966e7da9658 (in v2.3.6), https://github.com/containerd/containerd/releases/tag/v2.3.6. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages. Unpacked every subpackage of every build published in the DHI Alpine 3.23 repository, 39 versions from 29.4.0-r1 to 29.10.0-r1, for x86_64 and aarch64 (29.4.3-r0 has no x86_64 docker-engine package), every download checked against the index checksum, and read the Go build information and function table (read with a reader of the Go symbol table that also works on stripped binaries) of every ELF file. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. The other subpackages contain no ELF files. runtime.main is found in the function table of every one of these programs, so the tables were read. /usr/bin/docker is built from the docker/cli vendor tree; only the 29.10.0-r1 builds record module versions in its build information. dockerd links the vulnerable handlers (core/images.Dispatch is in its function table in every build, and core/images.Walk in many). Its build information records containerd/v2 v2.2.2 to v2.3.5 in every build up to 29.8.1-r0, inside the affected range, and v2.3.6, v2.4.1 or v2.4.2 in every build from 29.8.2-r0 on; a string search finds the fix's error message in dockerd exactly from 29.8.2-r0. docker-proxy and /usr/bin/docker do not contain containerd: no containerd function is in either function table, the containerd/v2 module is absent from the build information of docker-proxy and of the 29.10.0-r1 /usr/bin/docker, and no docker/cli release in these builds vendors it (https://github.com/docker/cli/blob/v29.10.0/vendor/modules.txt). 29.8.2-r0 is the first build that carries the fix."
     },
     {
       "vulnerability": {
@@ -3502,12 +3516,6 @@
         ]
       },
       "products": [
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
-        },
         {
           "@id": "pkg:apk/dhi/docker@29.5.2-r0?distro=dhi-3.24"
         },
@@ -3558,6 +3566,25 @@
         },
         {
           "@id": "pkg:apk/dhi/docker@29.8.1-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker to 29.8.2-r0 or later.",
+      "status_notes": "CVE-2026-53493 (GHSA-pg57-6jwg-q645, GO-2026-6597): before containerd 1.7.36, 2.0.13, 2.2.9, 2.3.6 and 2.4.1, the image handlers in core/images (Dispatch and Walk) traverse an OCI index without depth, breadth or deduplication limits, so pulling a crafted image index can consume unbounded CPU and memory. The fix bounds the traversal in core/images/handlers.go and adds the error \"too many descriptors (limit %d)\": https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://pkg.go.dev/vuln/GO-2026-6597, https://github.com/containerd/containerd/commit/3e3b3daabc00cc7e467ebf22d4832966e7da9658 (in v2.3.6), https://github.com/containerd/containerd/releases/tag/v2.3.6. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages. Unpacked every subpackage of every build published in the DHI Alpine 3.24 repository, 32 versions from 29.5.2-r0 to 29.10.0-r1, for x86_64 and aarch64, every download checked against the index checksum, and read the Go build information and function table (read with a reader of the Go symbol table that also works on stripped binaries) of every ELF file. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. The other subpackages contain no ELF files. runtime.main is found in the function table of every one of these programs, so the tables were read. /usr/bin/docker is built from the docker/cli vendor tree; only the 29.10.0-r1 builds record module versions in its build information. dockerd links the vulnerable handlers (core/images.Dispatch is in its function table in every build, and core/images.Walk in many). Its build information records containerd/v2 v2.2.3 to v2.3.5 in every build up to 29.8.1-r0, inside the affected range, and v2.3.6, v2.4.1 or v2.4.2 in every build from 29.8.2-r0 on; a string search finds the fix's error message in dockerd exactly from 29.8.2-r0. docker-proxy and /usr/bin/docker do not contain containerd: no containerd function is in either function table, the containerd/v2 module is absent from the build information of docker-proxy and of the 29.10.0-r1 /usr/bin/docker, and no docker/cli release in these builds vendors it (https://github.com/docker/cli/blob/v29.10.0/vendor/modules.txt). 29.8.2-r0 is the first build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-zyez-rpwn-7cnp-4qoq",
+        "aliases": [
+          "CVE-2026-53493"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/docker@29.8.2-r0?distro=dhi-3.24"
@@ -3599,7 +3626,8 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-53493 (GHSA-pg57-6jwg-q645, GO-2026-6597): before containerd 1.7.36, 2.0.13, 2.2.9, 2.3.6 and 2.4.1, the image handlers in core/images (Dispatch and Walk) traverse an OCI index without depth, breadth or deduplication limits, so pulling a crafted image index can consume unbounded CPU and memory. The fix bounds the traversal in core/images/handlers.go and adds the error \"too many descriptors (limit %d)\": https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://pkg.go.dev/vuln/GO-2026-6597, https://github.com/containerd/containerd/commit/3e3b3daabc00cc7e467ebf22d4832966e7da9658 (in v2.3.6), https://github.com/containerd/containerd/releases/tag/v2.3.6. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages. Unpacked every subpackage of every build published in the DHI Alpine 3.24 repository, 32 versions from 29.5.2-r0 to 29.10.0-r1, for x86_64 and aarch64, every download checked against the index checksum, and read the Go build information and function table (read with a reader of the Go symbol table that also works on stripped binaries) of every ELF file. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. The other subpackages contain no ELF files. runtime.main is found in the function table of every one of these programs, so the tables were read. /usr/bin/docker is built from the docker/cli vendor tree; only the 29.10.0-r1 builds record module versions in its build information. dockerd links the vulnerable handlers (core/images.Dispatch is in its function table in every build, and core/images.Walk in many). Its build information records containerd/v2 v2.2.3 to v2.3.5 in every build up to 29.8.1-r0, inside the affected range, and v2.3.6, v2.4.1 or v2.4.2 in every build from 29.8.2-r0 on; a string search finds the fix's error message in dockerd exactly from 29.8.2-r0. docker-proxy and /usr/bin/docker do not contain containerd: no containerd function is in either function table, the containerd/v2 module is absent from the build information of docker-proxy and of the 29.10.0-r1 /usr/bin/docker, and no docker/cli release in these builds vendors it (https://github.com/docker/cli/blob/v29.10.0/vendor/modules.txt). 29.8.2-r0 is the first build that carries the fix."
     },
     {
       "vulnerability": {
@@ -12350,7 +12378,20 @@
         },
         {
           "@id": "pkg:deb/dhi/docker-buildx-plugin@0.37.1-1?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker-buildx-plugin to 0.37.1-2 or later.",
+      "status_notes": "CVE-2026-53493 (GHSA-pg57-6jwg-q645, GO-2026-6597): before containerd 1.7.36, 2.0.13, 2.2.9, 2.3.6 and 2.4.1, the image handlers in core/images (Dispatch and Walk) traverse an OCI index without depth, breadth or deduplication limits, so pulling a crafted image index can consume unbounded CPU and memory. The fix bounds the traversal in core/images/handlers.go and adds the error \"too many descriptors (limit %d)\": https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://pkg.go.dev/vuln/GO-2026-6597, https://github.com/containerd/containerd/commit/3e3b3daabc00cc7e467ebf22d4832966e7da9658 (in v2.3.6), https://github.com/containerd/containerd/releases/tag/v2.3.6. Read the Go build information and function table (read with a reader of the Go symbol table that also works on stripped binaries) of /usr/libexec/docker/cli-plugins/docker-buildx, the only file in the package, in every docker-buildx-plugin package published in the DHI Debian repository for trixie: 45 builds from 0.35.0-2 to 0.39.1-2, for amd64 and arm64, every download checked against the index checksum. No debug-symbol packages are published for this source. runtime.main is found in the function table of every build, so the tables were read. The program links the vulnerable handlers (core/images.Dispatch is in its function table in every build). Every build up to 0.37.1-1 carries containerd/v2 v2.2.6 to v2.3.5, inside the affected range, and lacks the fix's error message; 0.37.1-2 and every later build carry v2.3.6, v2.4.1 or v2.4.2 and contain it (the error message was searched in every build up to 0.39.1-1; 0.39.1-2 carries v2.4.2)."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-zyez-rpwn-7cnp-4qoq",
+        "aliases": [
+          "CVE-2026-53493"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/docker-buildx-plugin@0.37.1-2?distro=dhi-13"
         },
@@ -12448,7 +12489,8 @@
           "@id": "pkg:deb/dhi/docker-buildx-plugin@0.39.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-53493 (GHSA-pg57-6jwg-q645, GO-2026-6597): before containerd 1.7.36, 2.0.13, 2.2.9, 2.3.6 and 2.4.1, the image handlers in core/images (Dispatch and Walk) traverse an OCI index without depth, breadth or deduplication limits, so pulling a crafted image index can consume unbounded CPU and memory. The fix bounds the traversal in core/images/handlers.go and adds the error \"too many descriptors (limit %d)\": https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://pkg.go.dev/vuln/GO-2026-6597, https://github.com/containerd/containerd/commit/3e3b3daabc00cc7e467ebf22d4832966e7da9658 (in v2.3.6), https://github.com/containerd/containerd/releases/tag/v2.3.6. Read the Go build information and function table (read with a reader of the Go symbol table that also works on stripped binaries) of /usr/libexec/docker/cli-plugins/docker-buildx, the only file in the package, in every docker-buildx-plugin package published in the DHI Debian repository for trixie: 45 builds from 0.35.0-2 to 0.39.1-2, for amd64 and arm64, every download checked against the index checksum. No debug-symbol packages are published for this source. runtime.main is found in the function table of every build, so the tables were read. The program links the vulnerable handlers (core/images.Dispatch is in its function table in every build). Every build up to 0.37.1-1 carries containerd/v2 v2.2.6 to v2.3.5, inside the affected range, and lacks the fix's error message; 0.37.1-2 and every later build carry v2.3.6, v2.4.1 or v2.4.2 and contain it (the error message was searched in every build up to 0.39.1-1; 0.39.1-2 carries v2.4.2)."
     },
     {
       "vulnerability": {
@@ -12496,7 +12538,20 @@
         },
         {
           "@id": "pkg:deb/dhi/docker-compose-plugin@5.5.1-1?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker-compose-plugin to 5.5.1-2 or later.",
+      "status_notes": "CVE-2026-53493 (GHSA-pg57-6jwg-q645, GO-2026-6597): before containerd 1.7.36, 2.0.13, 2.2.9, 2.3.6 and 2.4.1, the image handlers in core/images (Dispatch and Walk) traverse an OCI index without depth, breadth or deduplication limits, so pulling a crafted image index can consume unbounded CPU and memory. The fix bounds the traversal in core/images/handlers.go and adds the error \"too many descriptors (limit %d)\": https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://pkg.go.dev/vuln/GO-2026-6597, https://github.com/containerd/containerd/commit/3e3b3daabc00cc7e467ebf22d4832966e7da9658 (in v2.3.6), https://github.com/containerd/containerd/releases/tag/v2.3.6. Read the Go build information and function table (read with a reader of the Go symbol table that also works on stripped binaries) of /usr/libexec/docker/cli-plugins/docker-compose, the only file in the package, in every docker-compose-plugin package published in the DHI Debian repository for trixie: 41 builds from 5.3.1-2 to 5.8.0-6, for amd64 and arm64, every download checked against the index checksum. No debug-symbol packages are published for this source. runtime.main is found in the function table of every build, so the tables were read. The program links the vulnerable Dispatch handler (core/images.Dispatch is in its function table in every build). Every build up to 5.5.1-1 carries containerd/v2 v2.2.5 to v2.3.5, inside the affected range, and lacks the fix's error message; 5.5.1-2 and every later build carry v2.3.6, v2.4.1 or v2.4.2 and contain it."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-zyez-rpwn-7cnp-4qoq",
+        "aliases": [
+          "CVE-2026-53493"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/docker-compose-plugin@5.5.1-2?distro=dhi-13"
         },
@@ -12588,7 +12643,8 @@
           "@id": "pkg:deb/dhi/docker-compose-plugin@5.8.0-6?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-53493 (GHSA-pg57-6jwg-q645, GO-2026-6597): before containerd 1.7.36, 2.0.13, 2.2.9, 2.3.6 and 2.4.1, the image handlers in core/images (Dispatch and Walk) traverse an OCI index without depth, breadth or deduplication limits, so pulling a crafted image index can consume unbounded CPU and memory. The fix bounds the traversal in core/images/handlers.go and adds the error \"too many descriptors (limit %d)\": https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://pkg.go.dev/vuln/GO-2026-6597, https://github.com/containerd/containerd/commit/3e3b3daabc00cc7e467ebf22d4832966e7da9658 (in v2.3.6), https://github.com/containerd/containerd/releases/tag/v2.3.6. Read the Go build information and function table (read with a reader of the Go symbol table that also works on stripped binaries) of /usr/libexec/docker/cli-plugins/docker-compose, the only file in the package, in every docker-compose-plugin package published in the DHI Debian repository for trixie: 41 builds from 5.3.1-2 to 5.8.0-6, for amd64 and arm64, every download checked against the index checksum. No debug-symbol packages are published for this source. runtime.main is found in the function table of every build, so the tables were read. The program links the vulnerable Dispatch handler (core/images.Dispatch is in its function table in every build). Every build up to 5.5.1-1 carries containerd/v2 v2.2.5 to v2.3.5, inside the affected range, and lacks the fix's error message; 5.5.1-2 and every later build carry v2.3.6, v2.4.1 or v2.4.2 and contain it."
     },
     {
       "vulnerability": {
