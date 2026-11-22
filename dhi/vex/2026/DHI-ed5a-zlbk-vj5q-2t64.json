@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:00:58Z",
-  "last_updated": "2026-11-21T02:54:32Z",
-  "version": 5,
+  "last_updated": "2026-11-22T17:10:17Z",
+  "version": 6,
   "statements": [
     {
       "vulnerability": {
@@ -552,7 +552,9 @@
           "@id": "pkg:deb/dhi/dotnet-sdk-8@8.0.428-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "CVE-2026-70162 (GHSA-2fmv-rv2c-59x7) is a .NET denial of service issue in System.Security.Cryptography.Pkcs: on Windows, EnvelopedCms.Decode can do quadratic work on attacker-supplied CMS or PKCS#7 attributes. Microsoft lists Windows as the only affected platform, and the CVE record lists the package on .NET runtimes installed on Windows (https://github.com/advisories/GHSA-2fmv-rv2c-59x7, https://www.cve.org/CVERecord?id=CVE-2026-70162, https://github.com/dotnet/announcements/issues/454). DHI dotnet-sdk-8 for Debian 13 ships the .NET 8 SDK for Linux. Scanned every published build of this source in the DHI Debian repository, 8.0.422-0, 8.0.423-0, 8.0.423-1, 8.0.424-1, 8.0.425-0, 8.0.425-1, 8.0.426-0, 8.0.427-0, 8.0.428-0 and 8.0.428-1, for amd64 and arm64 (the dotnet-sdk-8 and dotnet-sdk-8-oci-config packages; no debug-symbol packages are published), after verifying each against its index checksum and including the files inside the zip archives they hold. The dotnet-sdk-8-oci-config packages carry no copy of System.Security.Cryptography.Pkcs.dll. Every dotnet-sdk-8 build carries it in the ASP.NET Core shared framework under /usr/lib/dotnet/shared/Microsoft.AspNetCore.App/<version>, and under /usr/lib/dotnet/sdk/<version> in the SDK root, FSharp, Containers/containerize, Containers/tasks and dotnet-watch tool directories; 8.0.422-0 and 8.0.423-0 also carry it in the dotnet-format tool directory. The shared-framework copy and the copy in each of those SDK directories is the portable build, the one a .NET runtime on Linux loads, and it makes no calls into the Windows crypt32 library in any build (searched each copy for crypt32 and CryptMsg; the same search finds both in every runtimes/win copy, and every copy contains EnvelopedCms). Each of those SDK directories also holds the Windows build of the assembly under runtimes/win/lib/, which does call crypt32 (CryptMsg functions); .NET selects runtimes/win assets only when running on Windows. So the Windows-only code path is not reached on these Linux builds."
     },
     {
       "vulnerability": {
