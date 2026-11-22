@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T15:33:01Z",
-  "last_updated": "2026-11-22T07:41:48Z",
-  "version": 6,
+  "last_updated": "2026-11-22T22:09:38Z",
+  "version": 7,
   "statements": [
     {
       "vulnerability": {
@@ -76,22 +76,36 @@
           "@id": "pkg:deb/dhi/openssl@3.5.7-1~deb13u3%2Bdhi2?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/openssl@3.5.7-1~deb13u3%2Bdhi3?distro=dhi-13"
+          "@id": "pkg:deb/dhi/openssl@3.5.7-1~deb13u3%2Bfips%2Bdhi0?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/openssl@3.5.7-1~deb13u3%2Bfips%2Bdhi0?distro=dhi-13"
+          "@id": "pkg:deb/dhi/openssl@3.5.9-1~deb13u1%2Bfips%2Bdhi0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-124709 (\"Unbounded Memory Retention in QUIC Server for Rejected Streams\", Low): a QUIC server that rejects a stream opened by the peer can keep that stream's state for the life of the connection if the peer resets the stream before the rejection is signalled, so a client that keeps opening and resetting streams grows server memory without bound. The advisory lists all of OpenSSL 3.5 as vulnerable and fixes it in 3.5.10; the code is outside the FIPS module boundary. https://openssl-library.org/news/secadv/20261117.txt, fix on the openssl-3.5 branch https://github.com/openssl/openssl/commit/f3acb0a3328046741479482c51cec815839e1b05, https://security-tracker.debian.org/tracker/CVE-2026-124709 (no fixed Debian version yet). The DHI Debian 13 openssl packages are rebuilds of Debian's trixie openssl, published in the DHI Debian repository and the DHI enterprise repository (the FIPS builds and the openssl-provider-fips package of every build only in the enterprise repository); the Debian changelog shipped in each libssl3t64 package shows which Debian release a build is based on. That changelog was read from every published build on amd64 and arm64 (25 versions). The upstream fix was backported into the fourth published rebuild of Debian 3.5.7-1~deb13u3 and into both published rebuilds of Debian 3.5.9-1~deb13u1: their changelogs name the backport and their detached debug information (libssl3t64-dbgsym, amd64 and arm64) contains qsm_recv_part_is_terminal, the function the fix adds. No earlier published build's changelog names the fix, and the third rebuild of 3.5.7-1~deb13u3 lacks that function in its debug information. The FIPS builds of 3.5.7-1~deb13u3 and 3.5.9-1~deb13u1 each sort above the fixed rebuilds of the same Debian release but are built without the backport: their changelogs do not name it and their debug information lacks the function while containing qsm_ready_for_gc, the function the fix changes. The range therefore marks that fourth 3.5.7-1~deb13u3 rebuild and the 3.5.9-1~deb13u1 rebuilds fixed and reopens at each FIPS build, and the owner stays affected until a FIPS build carries the fix. The FIPS provider is outside the scope of this issue (the openssl-provider-fips package, read from every build on both architectures, ships the OpenSSL 3.1.2 FIPS provider in the FIPS builds and the FIPS provider from the same OpenSSL release (3.5.5, 3.5.6, 3.5.7 or 3.5.9) in the other builds); the vulnerable QUIC code is in libssl. The fix names as its origin the change that returns a rejected stream's credit (https://github.com/openssl/openssl/commit/1f7d6ca8d55588c930e0301b8e1685e272a6cd9a on the openssl-3.5 branch, first released in OpenSSL 3.5.9), whose own message says that without the credit return the leak is bounded by the stream limit. The builds based on OpenSSL 3.5.5, 3.5.6 and 3.5.7 predate that change and are still treated as affected when they lack the backport, because the advisory lists OpenSSL 3.5 as vulnerable without excluding any release; the 3.5.9 FIPS build includes that change and lacks the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cqt6-schw-wpj4-nld3",
+        "aliases": [
+          "CVE-2026-124709"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/openssl@3.5.7-1~deb13u3%2Bdhi3?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/openssl@3.5.9-1~deb13u1%2Bdhi0?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/openssl@3.5.9-1~deb13u1%2Bdhi1?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/openssl@3.5.9-1~deb13u1%2Bfips%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-124709 (\"Unbounded Memory Retention in QUIC Server for Rejected Streams\", Low): a QUIC server that rejects a stream opened by the peer can keep that stream's state for the life of the connection if the peer resets the stream before the rejection is signalled, so a client that keeps opening and resetting streams grows server memory without bound. The advisory lists all of OpenSSL 3.5 as vulnerable and fixes it in 3.5.10; the code is outside the FIPS module boundary. https://openssl-library.org/news/secadv/20261117.txt, fix on the openssl-3.5 branch https://github.com/openssl/openssl/commit/f3acb0a3328046741479482c51cec815839e1b05, https://security-tracker.debian.org/tracker/CVE-2026-124709 (no fixed Debian version yet). The DHI Debian 13 openssl packages are rebuilds of Debian's trixie openssl, published in the DHI Debian repository and the DHI enterprise repository (the FIPS builds and the openssl-provider-fips package of every build only in the enterprise repository); the Debian changelog shipped in each libssl3t64 package shows which Debian release a build is based on. That changelog was read from every published build on amd64 and arm64 (25 versions). The upstream fix was backported into the fourth published rebuild of Debian 3.5.7-1~deb13u3 and into both published rebuilds of Debian 3.5.9-1~deb13u1: their changelogs name the backport and their detached debug information (libssl3t64-dbgsym, amd64 and arm64) contains qsm_recv_part_is_terminal, the function the fix adds. No earlier published build's changelog names the fix, and the third rebuild of 3.5.7-1~deb13u3 lacks that function in its debug information. The FIPS builds of 3.5.7-1~deb13u3 and 3.5.9-1~deb13u1 each sort above the fixed rebuilds of the same Debian release but are built without the backport: their changelogs do not name it and their debug information lacks the function while containing qsm_ready_for_gc, the function the fix changes. The range therefore marks that fourth 3.5.7-1~deb13u3 rebuild and the 3.5.9-1~deb13u1 rebuilds fixed and reopens at each FIPS build, and the owner stays affected until a FIPS build carries the fix. The FIPS provider is outside the scope of this issue (the openssl-provider-fips package, read from every build on both architectures, ships the OpenSSL 3.1.2 FIPS provider in the FIPS builds and the FIPS provider from the same OpenSSL release (3.5.5, 3.5.6, 3.5.7 or 3.5.9) in the other builds); the vulnerable QUIC code is in libssl. The fix names as its origin the change that returns a rejected stream's credit (https://github.com/openssl/openssl/commit/1f7d6ca8d55588c930e0301b8e1685e272a6cd9a on the openssl-3.5 branch, first released in OpenSSL 3.5.9), whose own message says that without the credit return the leak is bounded by the stream limit. The builds based on OpenSSL 3.5.5, 3.5.6 and 3.5.7 predate that change and are still treated as affected when they lack the backport, because the advisory lists OpenSSL 3.5 as vulnerable without excluding any release; the 3.5.9 FIPS build includes that change and lacks the fix."
     }
   ]
 }
