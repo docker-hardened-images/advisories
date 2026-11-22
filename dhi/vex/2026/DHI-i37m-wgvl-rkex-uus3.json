@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T15:57:36Z",
-  "last_updated": "2026-11-21T11:27:42Z",
-  "version": 2,
+  "last_updated": "2026-11-22T00:14:02Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -17,12 +17,26 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/sudo@1.9.17_p2-r1?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update sudo to 1.9.17_p2-r2 or later.",
+      "status_notes": "CVE-2026-96512: when sudoers rules use NOTBEFORE or NOTAFTER timestamps without a trailing Z, sudo evaluated them in the time zone taken from the invoking user's TZ variable, so a local user could shift the allowed window by about 25 hours (https://www.openwall.com/lists/oss-security/2026/09/24/4). The complete upstream fix is two commits: https://github.com/sudo-project/sudo/commit/db669167ca599f2a94cd8a4c5fae9e473c81a2fd, and https://github.com/sudo-project/sudo/commit/1820a349687522f51023d1ae5925125f59679a8c, which replaced the first change because it was not effective: sudo now removes TZ with unsetenv(\"TZ\") before calling tzset() and works on its own copy of the environment. The Debian tracker lists both commits (https://security-tracker.debian.org/tracker/CVE-2026-96512). This package is built from Alpine aports 3.24-stable community/sudo, which applies both commits from 1.9.17_p2-r2 (https://github.com/alpinelinux/aports/commit/231b3edb78d995cabc640c7e118d8a74fd50e6b4). Checked both published builds for Alpine 3.24, 1.9.17_p2-r1 and 1.9.17_p2-r2, on x86_64 and aarch64 (sudo, sudo-dev, sudo-doc and sudo-doc-extra, checksums verified against the repository index), by disassembling /usr/bin/sudo. In 1.9.17_p2-r2 on both architectures, main calls unsetenv with the string \"TZ\" immediately before tzset(), and the binary has one more reallocarray call site than 1.9.17_p2-r1, for the environment copy. In 1.9.17_p2-r1, main calls tzset() directly after setlocale() with no unsetenv(\"TZ\"), so that build lacks the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-i37m-wgvl-rkex-uus3",
+        "aliases": [
+          "CVE-2026-96512"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/sudo@1.9.17_p2-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-96512: when sudoers rules use NOTBEFORE or NOTAFTER timestamps without a trailing Z, sudo evaluated them in the time zone taken from the invoking user's TZ variable, so a local user could shift the allowed window by about 25 hours (https://www.openwall.com/lists/oss-security/2026/09/24/4). The complete upstream fix is two commits: https://github.com/sudo-project/sudo/commit/db669167ca599f2a94cd8a4c5fae9e473c81a2fd, and https://github.com/sudo-project/sudo/commit/1820a349687522f51023d1ae5925125f59679a8c, which replaced the first change because it was not effective: sudo now removes TZ with unsetenv(\"TZ\") before calling tzset() and works on its own copy of the environment. The Debian tracker lists both commits (https://security-tracker.debian.org/tracker/CVE-2026-96512). This package is built from Alpine aports 3.24-stable community/sudo, which applies both commits from 1.9.17_p2-r2 (https://github.com/alpinelinux/aports/commit/231b3edb78d995cabc640c7e118d8a74fd50e6b4). Checked both published builds for Alpine 3.24, 1.9.17_p2-r1 and 1.9.17_p2-r2, on x86_64 and aarch64 (sudo, sudo-dev, sudo-doc and sudo-doc-extra, checksums verified against the repository index), by disassembling /usr/bin/sudo. In 1.9.17_p2-r2 on both architectures, main calls unsetenv with the string \"TZ\" immediately before tzset(), and the binary has one more reallocarray call site than 1.9.17_p2-r1, for the environment copy. In 1.9.17_p2-r1, main calls tzset() directly after setlocale() with no unsetenv(\"TZ\"), so that build lacks the fix."
     },
     {
       "vulnerability": {
@@ -39,13 +53,27 @@
           "@id": "pkg:deb/dhi/sudo@1.9.16p2-3%2Bdeb13u2%2Bdhi2?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/sudo@1.9.16p2-3%2Bdeb13u2%2Bdhi3?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/sudo@1.9.16p2-3%2Bdeb13u2dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update sudo to 1.9.16p2-3+deb13u2+dhi3 or later.",
+      "status_notes": "CVE-2026-96512: when sudoers rules use NOTBEFORE or NOTAFTER timestamps without a trailing Z, sudo evaluated them in the time zone taken from the invoking user's TZ variable, so a local user could shift the allowed window by about 25 hours (https://www.openwall.com/lists/oss-security/2026/09/24/4). The complete upstream fix is two commits: https://github.com/sudo-project/sudo/commit/db669167ca599f2a94cd8a4c5fae9e473c81a2fd, and https://github.com/sudo-project/sudo/commit/1820a349687522f51023d1ae5925125f59679a8c, which replaced the first change because it was not effective: sudo now removes TZ with unsetenv(\"TZ\") before calling tzset() and works on its own copy of the environment. Debian fixed it for trixie in 1.9.16p2-3+deb13u5 (https://security-tracker.debian.org/tracker/CVE-2026-96512). This package is Debian's 1.9.16p2-3+deb13u2 rebuilt with both commits backported. One build is published in the DHI Debian 13 repository, the version given as the fixed boundary of this range, for amd64 and arm64 (sudo, sudo-ldap, libnss-sudo, sudo-dbgsym and sudo-ldap-dbgsym, checksums verified against the repository index). In /usr/bin/sudo from both sudo and sudo-ldap on both architectures, main calls unsetenv with the string \"TZ\" immediately before tzset(), and os_init_common, located through the dbgsym symbol table, calls reallocarray and stores the result in environ, which is the environment copy added by the second commit. The package changelog records the backport. Earlier rebuilds of 1.9.16p2-3+deb13u2 are no longer published and could not be inspected, so this range leaves them on the affected side."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-i37m-wgvl-rkex-uus3",
+        "aliases": [
+          "CVE-2026-96512"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/sudo@1.9.16p2-3%2Bdeb13u2%2Bdhi3?distro=dhi-13"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-96512: when sudoers rules use NOTBEFORE or NOTAFTER timestamps without a trailing Z, sudo evaluated them in the time zone taken from the invoking user's TZ variable, so a local user could shift the allowed window by about 25 hours (https://www.openwall.com/lists/oss-security/2026/09/24/4). The complete upstream fix is two commits: https://github.com/sudo-project/sudo/commit/db669167ca599f2a94cd8a4c5fae9e473c81a2fd, and https://github.com/sudo-project/sudo/commit/1820a349687522f51023d1ae5925125f59679a8c, which replaced the first change because it was not effective: sudo now removes TZ with unsetenv(\"TZ\") before calling tzset() and works on its own copy of the environment. Debian fixed it for trixie in 1.9.16p2-3+deb13u5 (https://security-tracker.debian.org/tracker/CVE-2026-96512). This package is Debian's 1.9.16p2-3+deb13u2 rebuilt with both commits backported. One build is published in the DHI Debian 13 repository, the version given as the fixed boundary of this range, for amd64 and arm64 (sudo, sudo-ldap, libnss-sudo, sudo-dbgsym and sudo-ldap-dbgsym, checksums verified against the repository index). In /usr/bin/sudo from both sudo and sudo-ldap on both architectures, main calls unsetenv with the string \"TZ\" immediately before tzset(), and os_init_common, located through the dbgsym symbol table, calls reallocarray and stores the result in environ, which is the environment copy added by the second commit. The package changelog records the backport. Earlier rebuilds of 1.9.16p2-3+deb13u2 are no longer published and could not be inspected, so this range leaves them on the affected side."
     }
   ]
 }

@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:32Z",
-  "last_updated": "2026-11-21T22:45:01Z",
-  "version": 56,
+  "last_updated": "2026-11-22T00:14:48Z",
+  "version": 57,
   "statements": [
     {
       "vulnerability": {
@@ -285,7 +285,9 @@
           "@id": "pkg:deb/dhi/airflow@3.4.0-8?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2019-1010022 is a report against the GNU C Library (glibc) that its nptl thread implementation lets an attacker who already has a stack buffer overflow bypass the stack guard; upstream treats it as a non-security bug (https://sourceware.org/bugzilla/show_bug.cgi?id=22850, https://security-tracker.debian.org/tracker/CVE-2019-1010022). This owner does not contain glibc. Unpacked every published airflow package in the DHI Debian repository, 3.3.0-0 through the current 3.4.0-8, for amd64 and arm64 (98 packages; no debug-symbol packages are published for this source), including the files inside the wheel, jar and compressed archives they bundle. It is a Python application installed in a virtual environment under /usr/lib/airflow. From 3.3.0-0 through 3.4.0-0, its native code is 27 Python extension modules, each a shared object that lists the system libc.so.6 in NEEDED; those packages hold no executable program, static archive, Windows or macOS binary. From 3.4.0-1 on, the packages also bundle Ray, NumPy, SciPy, Apache Arrow and other native wheels. Their Linux ELF files are three programs (py-spy and Ray's raylet and gcs_server), which use the system dynamic loader and libc.so.6, plus Python extension modules and the shared libraries those wheels bundle, such as OpenBLAS, libgfortran, Apache Arrow and Ray's Java core worker library. All but seven of them in each package list the system libc.so.6 in NEEDED. The seven are NumPy and SciPy modules: four (NumPy's _operand_flag_tests and _struct_ufunc_tests, and SciPy's _fpumode and ndimage _ctest) list no library, numpy.linalg lapack_lite lists only the bundled OpenBLAS, and scipy.integrate _test_multivariate and _dop list only the system libm.so.6, with _dop on amd64 also listing the system dynamic loader. These packages also carry two NumPy static archives, libnpymath.a and libnpyrandom.a, whose members are NumPy's own math and random-number object files; native Windows launcher programs (.exe) from distlib and setuptools, including inside the pip and setuptools wheels that virtualenv embeds; and, inside Ray's ray_dist.jar, JNA dispatch libraries built for FreeBSD, OpenBSD, Solaris, Windows and macOS (Mach-O) alongside its Linux builds, which list libc.so.6. None of the packages contains a statically linked program or a copy of libc.so.6, the dynamic loader or libc.a. Ray's ray_dist.jar in builds 3.4.0-1 to 3.4.0-8 also holds JNA's two AIX dispatch libraries (libjnidispatch.a for aix-ppc and aix-ppc64), which despite the .a name are XCOFF shared objects built for AIX, not static archives, and are not glibc. glibc is shipped by the separate libc6 package, built from the glibc source, which is a different owner and is assessed on its own."
     },
     {
       "vulnerability": {
