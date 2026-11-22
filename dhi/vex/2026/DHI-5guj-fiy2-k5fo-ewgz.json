@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:10Z",
-  "version": 1,
+  "last_updated": "2026-11-22T22:31:49Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -42,7 +43,9 @@
           "@id": "pkg:deb/dhi/sqlite3@3.46.1-7%2Bdeb13u2%2Bdhi4?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2025-70873: zipfileInflate() in SQLite's zipfile extension returned a blob of the size claimed in a ZIP file's central directory rather than the number of bytes inflate() produced, so a crafted ZIP file can make it return uninitialised heap memory. SQLite lists it at https://www.sqlite.org/cves.html (fixed in 3.52.0; report https://sqlite.org/forum/forumpost/761eac3c82, fix https://github.com/sqlite/sqlite/commit/ee9f4acb1046c69950dd9666002ed9f036def8aa, check-in 9766b47beb). Debian lists trixie as unfixed and notes that the zipfile extension is not built in Debian's binary packages (https://security-tracker.debian.org/tracker/CVE-2025-70873). That holds for the library, but not for the sqlite3 command-line shell, which compiles the zipfile extension in. We checked every published package built from the sqlite3 source for Debian 13 in the DHI Debian repository (3.46.1-7+deb13u2 rebuilds, amd64 and arm64, debug-symbol packages included), each verified against its index checksum. /usr/bin/sqlite3 in the sqlite3 package contains the zipfile virtual table in every build (its zipfile, zipfile_cds and \"inflate() failed (%d)\" strings, and zipfileColumn() and zipfileDeflate() in the matching debug symbols, with zipfileInflate() inlined into zipfileColumn()). A string search finds no zipfile code in libsqlite3.so.0, libsqlite3.a, the csv and icu extensions, the Tcl binding, lemon or the sqlite3-tools programs, while the same search finds each file's own identifying strings (SQLite's, or lemon's version banner). The packaged source carries no fix for this CVE. Against the current arm64 build, SELECT data FROM zipfile(...) on a crafted ZIP whose 5-byte entry claims 4096 uncompressed bytes returns a 4096-byte blob, including a non-zero byte past the inflated data, so the shell is affected. Applications that only link libsqlite3 do not get the zipfile extension from this package."
     }
   ]
 }

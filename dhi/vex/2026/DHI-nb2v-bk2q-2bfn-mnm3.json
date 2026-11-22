@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:10Z",
-  "version": 1,
+  "last_updated": "2026-11-22T22:31:46Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -42,7 +43,9 @@
           "@id": "pkg:deb/dhi/sqlite3@3.46.1-7%2Bdeb13u2%2Bdhi4?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
+      "impact_statement": "CVE-2021-45346: a database file edited so that a record's header claims a longer string than it holds makes a query return bytes from the record that follows it in the same file (https://github.com/guyinatuxedo/sqlite3_record_leaking). SQLite rules this \"Not a bug in SQLite ... This CVE is misinformation\" (https://www.sqlite.org/cves.html, discussion https://sqlite.org/forum/forumpost/53de8864ba114bf6), and the CVE record is tagged disputed: the bytes returned are part of the database file the attacker supplied and could already read or write directly, so nothing outside that file is disclosed. Red Hat closed it WONTFIX and rates sqlite in Red Hat Enterprise Linux 8 and 9 not affected (https://bugzilla.redhat.com/show_bug.cgi?id=2054793), Ubuntu rates sqlite3 not affected (https://ubuntu.com/security/CVE-2021-45346), and Debian rates it negligible (https://security-tracker.debian.org/tracker/CVE-2021-45346, https://bugs.debian.org/1005974). We ran the report's own example files against the current DHI sqlite3 and libsqlite3-0 packages for Debian 13 (3.46.1, arm64). The corrupted files return the documented extra bytes (\"159\", the start of the next record's string, and 11277 in place of 300), which are bytes of the same database file. No bytes from outside the file appear, and PRAGMA integrity_check reports the overlapping record (\"Multiple uses for byte 4072 of page 2\"). This matches upstream's reason: the behaviour is SQLite reading a database the attacker controls, not a disclosure of process memory."
     }
   ]
 }
