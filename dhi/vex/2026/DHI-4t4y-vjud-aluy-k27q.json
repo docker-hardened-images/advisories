@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T16:09:57Z",
-  "last_updated": "2026-11-22T12:25:35Z",
-  "version": 21,
+  "last_updated": "2026-11-22T16:30:48Z",
+  "version": 22,
   "statements": [
     {
       "vulnerability": {
@@ -112,24 +112,6 @@
           "@id": "pkg:apk/dhi/build-dev@2.20.0-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/build-dev@2.20.0-r10?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.20.0-r11?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.20.0-r12?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.20.0-r13?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.20.0-r14?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.20.0-r15?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/build-dev@2.20.0-r1?distro=dhi-3.23"
         },
         {
@@ -149,6 +131,91 @@
         },
         {
           "@id": "pkg:apk/dhi/build-dev@2.20.0-r7?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.6.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.7.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.7.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.7.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.7.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.3-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.9.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.9.1-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.9.2-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build-dev to 2.20.0-r8 or later.",
+      "status_notes": "CVE-2026-61711 (GO-2026-6255, GHSA-7236-3392-c5c6): before BuildKit 0.31.1, a custom frontend could put an invalid SecurityMode value in a build request, and the BuildKit daemon's executor treated the unknown value as a non-sandbox mode without requiring the security.insecure entitlement, which disabled Seccomp and AppArmor for that build container. It is fixed in BuildKit 0.31.1 by commit 3ea6dd0 (security: validate exec security modes), which makes the daemon's executor reject unknown modes and also makes the LLB client library's (*ExecOp).Marshal refuse to serialize one: https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6, https://pkg.go.dev/vuln/GO-2026-6255, https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109, https://github.com/moby/buildkit/releases/tag/v0.31.1. Read the Go build information and the function table (with a reader of the Go symbol table that also works on stripped binaries) of every Go program in every build-dev package published in the DHI Alpine 3.23 repository: 89 builds, 2.6.4-r0 through the current 2.29.1-r1, each for x86_64 and aarch64 except 2.6.4-r0, which is published for aarch64 only, every download checked against the index checksum. Version 2.19.1-r1 is listed three times in each index; the copy the repository serves, which matches one of those entries' checksum, was read. Each package holds one file, the frontend Go program /usr/bin/build. runtime.main is found in the function table of every Go program scanned, so the tables were read. This package is a BuildKit frontend, the program that sends build requests to the daemon, not the daemon: no function table of any Go program in any build contains BuildKit executor code (executor/...), its LLB solver (solver/llbsolver) or its control API server (control). It does carry the client half of the fix: the frontend program contains github.com/moby/buildkit/client/llb.(*ExecOp).Marshal, one of the functions the fix commit changes, in every build, so the status follows the BuildKit version. Every build before 2.20.0-r8 embeds BuildKit 0.26.3 to 0.29.0, inside the affected range; 2.20.0-r8 and every later build embed 0.31.1 or newer. The error text the fix adds, \"invalid security mode\" (from pb.ValidateSecurityMode in BuildKit's solver/pb package, which (*ExecOp).Marshal now calls), is in the frontend program of the build 2.20.0-r8 package (x86_64) and the build-fips 2.20.0-r8 package (aarch64) and absent from both 2.20.0-r7 packages, while BuildKit's client/llb strings are in all four. The current 2.29.1-r1 embeds BuildKit 0.33.0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-4t4y-vjud-aluy-k27q",
+        "aliases": [
+          "CVE-2026-61711"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.20.0-r10?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.20.0-r11?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.20.0-r12?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.20.0-r13?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.20.0-r14?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.20.0-r15?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/build-dev@2.20.0-r8?distro=dhi-3.23"
@@ -227,63 +294,10 @@
         },
         {
           "@id": "pkg:apk/dhi/build-dev@2.29.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.7.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.7.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.7.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.7.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.3-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.3-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.9.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.9.1-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-61711 (GO-2026-6255, GHSA-7236-3392-c5c6): before BuildKit 0.31.1, a custom frontend could put an invalid SecurityMode value in a build request, and the BuildKit daemon's executor treated the unknown value as a non-sandbox mode without requiring the security.insecure entitlement, which disabled Seccomp and AppArmor for that build container. It is fixed in BuildKit 0.31.1 by commit 3ea6dd0 (security: validate exec security modes), which makes the daemon's executor reject unknown modes and also makes the LLB client library's (*ExecOp).Marshal refuse to serialize one: https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6, https://pkg.go.dev/vuln/GO-2026-6255, https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109, https://github.com/moby/buildkit/releases/tag/v0.31.1. Read the Go build information and the function table (with a reader of the Go symbol table that also works on stripped binaries) of every Go program in every build-dev package published in the DHI Alpine 3.23 repository: 89 builds, 2.6.4-r0 through the current 2.29.1-r1, each for x86_64 and aarch64 except 2.6.4-r0, which is published for aarch64 only, every download checked against the index checksum. Version 2.19.1-r1 is listed three times in each index; the copy the repository serves, which matches one of those entries' checksum, was read. Each package holds one file, the frontend Go program /usr/bin/build. runtime.main is found in the function table of every Go program scanned, so the tables were read. This package is a BuildKit frontend, the program that sends build requests to the daemon, not the daemon: no function table of any Go program in any build contains BuildKit executor code (executor/...), its LLB solver (solver/llbsolver) or its control API server (control). It does carry the client half of the fix: the frontend program contains github.com/moby/buildkit/client/llb.(*ExecOp).Marshal, one of the functions the fix commit changes, in every build, so the status follows the BuildKit version. Every build before 2.20.0-r8 embeds BuildKit 0.26.3 to 0.29.0, inside the affected range; 2.20.0-r8 and every later build embed 0.31.1 or newer. The error text the fix adds, \"invalid security mode\" (from pb.ValidateSecurityMode in BuildKit's solver/pb package, which (*ExecOp).Marshal now calls), is in the frontend program of the build 2.20.0-r8 package (x86_64) and the build-fips 2.20.0-r8 package (aarch64) and absent from both 2.20.0-r7 packages, while BuildKit's client/llb strings are in all four. The current 2.29.1-r1 embeds BuildKit 0.33.0."
     },
     {
       "vulnerability": {
@@ -390,24 +404,6 @@
           "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r10?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r11?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r12?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r13?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r14?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r15?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r1?distro=dhi-3.23"
         },
         {
@@ -427,6 +423,91 @@
         },
         {
           "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r7?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.6.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.7.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.7.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.7.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.7.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.3-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.9.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.9.1-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.9.2-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build-fips-dev to 2.20.0-r8 or later.",
+      "status_notes": "CVE-2026-61711 (GO-2026-6255, GHSA-7236-3392-c5c6): before BuildKit 0.31.1, a custom frontend could put an invalid SecurityMode value in a build request, and the BuildKit daemon's executor treated the unknown value as a non-sandbox mode without requiring the security.insecure entitlement, which disabled Seccomp and AppArmor for that build container. It is fixed in BuildKit 0.31.1 by commit 3ea6dd0 (security: validate exec security modes), which makes the daemon's executor reject unknown modes and also makes the LLB client library's (*ExecOp).Marshal refuse to serialize one: https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6, https://pkg.go.dev/vuln/GO-2026-6255, https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109, https://github.com/moby/buildkit/releases/tag/v0.31.1. Read the Go build information and the function table (with a reader of the Go symbol table that also works on stripped binaries) of every Go program in every build-fips-dev package published in the DHI Alpine 3.23 security repository, where the FIPS packages are published and which requires authentication: 89 builds, 2.6.4-r0 through the current 2.29.1-r1, each for x86_64 and aarch64 except 2.6.4-r0, which is published for aarch64 only, every download checked against the index checksum. Version 2.19.1-r1 is listed three times in each index; the copy the repository serves, which matches one of those entries' checksum, was read. Each package holds one file, the frontend Go program /usr/bin/build. runtime.main is found in the function table of every Go program scanned, so the tables were read. This package is a BuildKit frontend, the program that sends build requests to the daemon, not the daemon: no function table of any Go program in any build contains BuildKit executor code (executor/...), its LLB solver (solver/llbsolver) or its control API server (control). It does carry the client half of the fix: the frontend program contains github.com/moby/buildkit/client/llb.(*ExecOp).Marshal, one of the functions the fix commit changes, in every build, so the status follows the BuildKit version. Every build before 2.20.0-r8 embeds BuildKit 0.26.3 to 0.29.0, inside the affected range; 2.20.0-r8 and every later build embed 0.31.1 or newer. The error text the fix adds, \"invalid security mode\" (from pb.ValidateSecurityMode in BuildKit's solver/pb package, which (*ExecOp).Marshal now calls), is in the frontend program of the build 2.20.0-r8 package (x86_64) and the build-fips 2.20.0-r8 package (aarch64) and absent from both 2.20.0-r7 packages, while BuildKit's client/llb strings are in all four. The current 2.29.1-r1 embeds BuildKit 0.33.0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-4t4y-vjud-aluy-k27q",
+        "aliases": [
+          "CVE-2026-61711"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r10?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r11?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r12?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r13?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r14?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r15?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/build-fips-dev@2.20.0-r8?distro=dhi-3.23"
@@ -505,63 +586,10 @@
         },
         {
           "@id": "pkg:apk/dhi/build-fips-dev@2.29.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.7.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.7.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.7.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.7.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.3-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.3-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.9.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.9.1-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-61711 (GO-2026-6255, GHSA-7236-3392-c5c6): before BuildKit 0.31.1, a custom frontend could put an invalid SecurityMode value in a build request, and the BuildKit daemon's executor treated the unknown value as a non-sandbox mode without requiring the security.insecure entitlement, which disabled Seccomp and AppArmor for that build container. It is fixed in BuildKit 0.31.1 by commit 3ea6dd0 (security: validate exec security modes), which makes the daemon's executor reject unknown modes and also makes the LLB client library's (*ExecOp).Marshal refuse to serialize one: https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6, https://pkg.go.dev/vuln/GO-2026-6255, https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109, https://github.com/moby/buildkit/releases/tag/v0.31.1. Read the Go build information and the function table (with a reader of the Go symbol table that also works on stripped binaries) of every Go program in every build-fips-dev package published in the DHI Alpine 3.23 security repository, where the FIPS packages are published and which requires authentication: 89 builds, 2.6.4-r0 through the current 2.29.1-r1, each for x86_64 and aarch64 except 2.6.4-r0, which is published for aarch64 only, every download checked against the index checksum. Version 2.19.1-r1 is listed three times in each index; the copy the repository serves, which matches one of those entries' checksum, was read. Each package holds one file, the frontend Go program /usr/bin/build. runtime.main is found in the function table of every Go program scanned, so the tables were read. This package is a BuildKit frontend, the program that sends build requests to the daemon, not the daemon: no function table of any Go program in any build contains BuildKit executor code (executor/...), its LLB solver (solver/llbsolver) or its control API server (control). It does carry the client half of the fix: the frontend program contains github.com/moby/buildkit/client/llb.(*ExecOp).Marshal, one of the functions the fix commit changes, in every build, so the status follows the BuildKit version. Every build before 2.20.0-r8 embeds BuildKit 0.26.3 to 0.29.0, inside the affected range; 2.20.0-r8 and every later build embed 0.31.1 or newer. The error text the fix adds, \"invalid security mode\" (from pb.ValidateSecurityMode in BuildKit's solver/pb package, which (*ExecOp).Marshal now calls), is in the frontend program of the build 2.20.0-r8 package (x86_64) and the build-fips 2.20.0-r8 package (aarch64) and absent from both 2.20.0-r7 packages, while BuildKit's client/llb strings are in all four. The current 2.29.1-r1 embeds BuildKit 0.33.0."
     },
     {
       "vulnerability": {
@@ -668,24 +696,6 @@
           "@id": "pkg:apk/dhi/build-fips@2.20.0-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/build-fips@2.20.0-r10?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.20.0-r11?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.20.0-r12?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.20.0-r13?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.20.0-r14?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.20.0-r15?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/build-fips@2.20.0-r1?distro=dhi-3.23"
         },
         {
@@ -705,6 +715,91 @@
         },
         {
           "@id": "pkg:apk/dhi/build-fips@2.20.0-r7?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.7.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.7.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.7.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.7.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.3-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.9.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.9.1-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.9.2-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build-fips to 2.20.0-r8 or later.",
+      "status_notes": "CVE-2026-61711 (GO-2026-6255, GHSA-7236-3392-c5c6): before BuildKit 0.31.1, a custom frontend could put an invalid SecurityMode value in a build request, and the BuildKit daemon's executor treated the unknown value as a non-sandbox mode without requiring the security.insecure entitlement, which disabled Seccomp and AppArmor for that build container. It is fixed in BuildKit 0.31.1 by commit 3ea6dd0 (security: validate exec security modes), which makes the daemon's executor reject unknown modes and also makes the LLB client library's (*ExecOp).Marshal refuse to serialize one: https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6, https://pkg.go.dev/vuln/GO-2026-6255, https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109, https://github.com/moby/buildkit/releases/tag/v0.31.1. Read the Go build information and the function table (with a reader of the Go symbol table that also works on stripped binaries) of every Go program in every build-fips package published in the DHI Alpine 3.23 security repository, where the FIPS packages are published and which requires authentication: 89 builds, 2.6.4-r0 through the current 2.29.1-r1, each for x86_64 and aarch64 except 2.6.4-r0, which is published for aarch64 only, every download checked against the index checksum. Version 2.19.1-r1 is listed three times in each index; the copy the repository serves, which matches one of those entries' checksum, was read. The frontend Go program /usr/bin/build ships in every build; the Go programs /opt/docker/dhi/yq (the bundled yq) ship from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on. /opt/docker/dhi/uv, shipped from 2.27.1-r1 on, has no Go build information or Go function table, so it is not a Go program. The only other files are the SPDX documents of the bundled tools, /opt/docker/sbom/uv/.spdx.uv.json and /opt/docker/sbom/yq/.spdx.yq.json, from 2.27.1-r1 on. runtime.main is found in the function table of every Go program scanned, so the tables were read. This package is a BuildKit frontend, the program that sends build requests to the daemon, not the daemon: no function table of any Go program in any build contains BuildKit executor code (executor/...), its LLB solver (solver/llbsolver) or its control API server (control). It does carry the client half of the fix: the frontend program contains github.com/moby/buildkit/client/llb.(*ExecOp).Marshal, one of the functions the fix commit changes, in every build, so the status follows the BuildKit version. Every build before 2.20.0-r8 embeds BuildKit 0.26.3 to 0.29.0 in the frontend program, inside the affected range; 2.20.0-r8 and every later build embed 0.31.1 or newer there, and /usr/bin/dhi-source, shipped from 2.28.0-r1 on, embeds 0.33.0. yq does not contain BuildKit. The error text the fix adds, \"invalid security mode\" (from pb.ValidateSecurityMode in BuildKit's solver/pb package, which (*ExecOp).Marshal now calls), is in the frontend program of the build 2.20.0-r8 package (x86_64) and the build-fips 2.20.0-r8 package (aarch64) and absent from both 2.20.0-r7 packages, while BuildKit's client/llb strings are in all four. The current 2.29.1-r1 embeds BuildKit 0.33.0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-4t4y-vjud-aluy-k27q",
+        "aliases": [
+          "CVE-2026-61711"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.20.0-r10?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.20.0-r11?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.20.0-r12?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.20.0-r13?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.20.0-r14?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.20.0-r15?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/build-fips@2.20.0-r8?distro=dhi-3.23"
@@ -783,63 +878,10 @@
         },
         {
           "@id": "pkg:apk/dhi/build-fips@2.29.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.7.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.7.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.7.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.7.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.3-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.3-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.9.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.9.1-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-61711 (GO-2026-6255, GHSA-7236-3392-c5c6): before BuildKit 0.31.1, a custom frontend could put an invalid SecurityMode value in a build request, and the BuildKit daemon's executor treated the unknown value as a non-sandbox mode without requiring the security.insecure entitlement, which disabled Seccomp and AppArmor for that build container. It is fixed in BuildKit 0.31.1 by commit 3ea6dd0 (security: validate exec security modes), which makes the daemon's executor reject unknown modes and also makes the LLB client library's (*ExecOp).Marshal refuse to serialize one: https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6, https://pkg.go.dev/vuln/GO-2026-6255, https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109, https://github.com/moby/buildkit/releases/tag/v0.31.1. Read the Go build information and the function table (with a reader of the Go symbol table that also works on stripped binaries) of every Go program in every build-fips package published in the DHI Alpine 3.23 security repository, where the FIPS packages are published and which requires authentication: 89 builds, 2.6.4-r0 through the current 2.29.1-r1, each for x86_64 and aarch64 except 2.6.4-r0, which is published for aarch64 only, every download checked against the index checksum. Version 2.19.1-r1 is listed three times in each index; the copy the repository serves, which matches one of those entries' checksum, was read. The frontend Go program /usr/bin/build ships in every build; the Go programs /opt/docker/dhi/yq (the bundled yq) ship from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on. /opt/docker/dhi/uv, shipped from 2.27.1-r1 on, has no Go build information or Go function table, so it is not a Go program. The only other files are the SPDX documents of the bundled tools, /opt/docker/sbom/uv/.spdx.uv.json and /opt/docker/sbom/yq/.spdx.yq.json, from 2.27.1-r1 on. runtime.main is found in the function table of every Go program scanned, so the tables were read. This package is a BuildKit frontend, the program that sends build requests to the daemon, not the daemon: no function table of any Go program in any build contains BuildKit executor code (executor/...), its LLB solver (solver/llbsolver) or its control API server (control). It does carry the client half of the fix: the frontend program contains github.com/moby/buildkit/client/llb.(*ExecOp).Marshal, one of the functions the fix commit changes, in every build, so the status follows the BuildKit version. Every build before 2.20.0-r8 embeds BuildKit 0.26.3 to 0.29.0 in the frontend program, inside the affected range; 2.20.0-r8 and every later build embed 0.31.1 or newer there, and /usr/bin/dhi-source, shipped from 2.28.0-r1 on, embeds 0.33.0. yq does not contain BuildKit. The error text the fix adds, \"invalid security mode\" (from pb.ValidateSecurityMode in BuildKit's solver/pb package, which (*ExecOp).Marshal now calls), is in the frontend program of the build 2.20.0-r8 package (x86_64) and the build-fips 2.20.0-r8 package (aarch64) and absent from both 2.20.0-r7 packages, while BuildKit's client/llb strings are in all four. The current 2.29.1-r1 embeds BuildKit 0.33.0."
     },
     {
       "vulnerability": {
@@ -946,24 +988,6 @@
           "@id": "pkg:apk/dhi/build@2.20.0-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/build@2.20.0-r10?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.20.0-r11?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.20.0-r12?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.20.0-r13?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.20.0-r14?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.20.0-r15?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/build@2.20.0-r1?distro=dhi-3.23"
         },
         {
@@ -983,6 +1007,94 @@
         },
         {
           "@id": "pkg:apk/dhi/build@2.20.0-r7?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.4.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.3-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.9.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.9.1-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.9.2-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build to 2.20.0-r8 or later.",
+      "status_notes": "CVE-2026-61711 (GO-2026-6255, GHSA-7236-3392-c5c6): before BuildKit 0.31.1, a custom frontend could put an invalid SecurityMode value in a build request, and the BuildKit daemon's executor treated the unknown value as a non-sandbox mode without requiring the security.insecure entitlement, which disabled Seccomp and AppArmor for that build container. It is fixed in BuildKit 0.31.1 by commit 3ea6dd0 (security: validate exec security modes), which makes the daemon's executor reject unknown modes and also makes the LLB client library's (*ExecOp).Marshal refuse to serialize one: https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6, https://pkg.go.dev/vuln/GO-2026-6255, https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109, https://github.com/moby/buildkit/releases/tag/v0.31.1. Read the Go build information and the function table (with a reader of the Go symbol table that also works on stripped binaries) of every Go program in every build package published in the DHI Alpine 3.23 repository: 90 builds, 2.4.4-r0 through the current 2.29.1-r1, each for x86_64 and aarch64 except 2.6.4-r0, which is published for aarch64 only, every download checked against the index checksum. Version 2.19.1-r1 is listed three times in each index; the copy the repository serves, which matches one of those entries' checksum, was read. The frontend Go program is installed as /opt/docker/dhi/build in 2.4.4-r0 and as /usr/bin/build from 2.6.4-r0 on; the Go programs /opt/docker/dhi/yq (the bundled yq) ship from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on. /opt/docker/dhi/uv, shipped from 2.27.1-r1 on, has no Go build information or Go function table, so it is not a Go program. The only other files are the SPDX documents of the bundled tools, /opt/docker/sbom/uv/.spdx.uv.json and /opt/docker/sbom/yq/.spdx.yq.json, from 2.27.1-r1 on. runtime.main is found in the function table of every Go program scanned, so the tables were read. This package is a BuildKit frontend, the program that sends build requests to the daemon, not the daemon: no function table of any Go program in any build contains BuildKit executor code (executor/...), its LLB solver (solver/llbsolver) or its control API server (control). It does carry the client half of the fix: the frontend program contains github.com/moby/buildkit/client/llb.(*ExecOp).Marshal, one of the functions the fix commit changes, in every build, so the status follows the BuildKit version. Every build before 2.20.0-r8 embeds BuildKit 0.26.3 to 0.29.0 in the frontend program, inside the affected range; 2.20.0-r8 and every later build embed 0.31.1 or newer there, and /usr/bin/dhi-source, shipped from 2.28.0-r1 on, embeds 0.33.0. yq does not contain BuildKit. The error text the fix adds, \"invalid security mode\" (from pb.ValidateSecurityMode in BuildKit's solver/pb package, which (*ExecOp).Marshal now calls), is in the frontend program of the build 2.20.0-r8 package (x86_64) and the build-fips 2.20.0-r8 package (aarch64) and absent from both 2.20.0-r7 packages, while BuildKit's client/llb strings are in all four. The current 2.29.1-r1 embeds BuildKit 0.33.0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-4t4y-vjud-aluy-k27q",
+        "aliases": [
+          "CVE-2026-61711"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/build@2.20.0-r10?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.20.0-r11?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.20.0-r12?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.20.0-r13?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.20.0-r14?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.20.0-r15?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/build@2.20.0-r8?distro=dhi-3.23"
@@ -1061,66 +1173,10 @@
         },
         {
           "@id": "pkg:apk/dhi/build@2.29.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.4.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.3-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.3-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.9.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.9.1-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-61711 (GO-2026-6255, GHSA-7236-3392-c5c6): before BuildKit 0.31.1, a custom frontend could put an invalid SecurityMode value in a build request, and the BuildKit daemon's executor treated the unknown value as a non-sandbox mode without requiring the security.insecure entitlement, which disabled Seccomp and AppArmor for that build container. It is fixed in BuildKit 0.31.1 by commit 3ea6dd0 (security: validate exec security modes), which makes the daemon's executor reject unknown modes and also makes the LLB client library's (*ExecOp).Marshal refuse to serialize one: https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6, https://pkg.go.dev/vuln/GO-2026-6255, https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109, https://github.com/moby/buildkit/releases/tag/v0.31.1. Read the Go build information and the function table (with a reader of the Go symbol table that also works on stripped binaries) of every Go program in every build package published in the DHI Alpine 3.23 repository: 90 builds, 2.4.4-r0 through the current 2.29.1-r1, each for x86_64 and aarch64 except 2.6.4-r0, which is published for aarch64 only, every download checked against the index checksum. Version 2.19.1-r1 is listed three times in each index; the copy the repository serves, which matches one of those entries' checksum, was read. The frontend Go program is installed as /opt/docker/dhi/build in 2.4.4-r0 and as /usr/bin/build from 2.6.4-r0 on; the Go programs /opt/docker/dhi/yq (the bundled yq) ship from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on. /opt/docker/dhi/uv, shipped from 2.27.1-r1 on, has no Go build information or Go function table, so it is not a Go program. The only other files are the SPDX documents of the bundled tools, /opt/docker/sbom/uv/.spdx.uv.json and /opt/docker/sbom/yq/.spdx.yq.json, from 2.27.1-r1 on. runtime.main is found in the function table of every Go program scanned, so the tables were read. This package is a BuildKit frontend, the program that sends build requests to the daemon, not the daemon: no function table of any Go program in any build contains BuildKit executor code (executor/...), its LLB solver (solver/llbsolver) or its control API server (control). It does carry the client half of the fix: the frontend program contains github.com/moby/buildkit/client/llb.(*ExecOp).Marshal, one of the functions the fix commit changes, in every build, so the status follows the BuildKit version. Every build before 2.20.0-r8 embeds BuildKit 0.26.3 to 0.29.0 in the frontend program, inside the affected range; 2.20.0-r8 and every later build embed 0.31.1 or newer there, and /usr/bin/dhi-source, shipped from 2.28.0-r1 on, embeds 0.33.0. yq does not contain BuildKit. The error text the fix adds, \"invalid security mode\" (from pb.ValidateSecurityMode in BuildKit's solver/pb package, which (*ExecOp).Marshal now calls), is in the frontend program of the build 2.20.0-r8 package (x86_64) and the build-fips 2.20.0-r8 package (aarch64) and absent from both 2.20.0-r7 packages, while BuildKit's client/llb strings are in all four. The current 2.29.1-r1 embeds BuildKit 0.33.0."
     },
     {
       "vulnerability": {
