@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-17T17:52:21Z",
-  "version": 1,
+  "last_updated": "2026-11-22T19:55:22Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -27,7 +28,8 @@
           "@id": "pkg:deb/dhi/systemd@257.13-1~deb13u1dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2013-4392 is a time-of-check/time-of-use race in the way systemd updated file permissions and SELinux security contexts, which let a local user redirect the change to another file through a symbolic link (https://www.openwall.com/lists/oss-security/2013/10/01/9). The affected files were never specified. Red Hat closed its bug as UPSTREAM without naming a fixed version, after noting that a fix needed O_PATH-based file handling and a hard-link count check (https://bugzilla.redhat.com/show_bug.cgi?id=859060). Debian lists every release, including trixie's 257.13-1~deb13u1, as unfixed and of unimportant severity (https://security-tracker.debian.org/tracker/CVE-2013-4392). Every published build of this package is made from Debian's systemd 257.13-1~deb13u1. In that version, systemd-tmpfiles opens each target with O_PATH and O_NOFOLLOW through a symlink-safe path walk, changes modes, ownership and SELinux labels through that file descriptor, and refuses to change hard-linked files unless the fs.protected_hardlinks sysctl is on (https://github.com/systemd/systemd/blob/v257.13/src/tmpfiles/tmpfiles.c). The open question is whether this closes the race for systemd as a whole. No upstream commit or distribution advisory ties a fix to this CVE, and the advisory does not name the code path, so we cannot yet confirm that every place where systemd changes permissions or labels is covered."
     }
   ]
 }
