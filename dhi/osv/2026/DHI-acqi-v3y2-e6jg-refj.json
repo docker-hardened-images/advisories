@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-acqi-v3y2-e6jg-refj",
+  "modified": "2026-11-23T22:07:18Z",
+  "published": "2026-11-23T22:07:18Z",
+  "upstream": [
+    "CVE-2026-130822"
+  ],
+  "summary": "### Impact",
+  "details": "### Impact\r\n\r\nThis is a use-after-free (CWE-416). Any authenticated user who can write to a key that other clients are blocked on (for example with `BLPOP`, `BLMPOP`, `BZPOPMIN` or `XREAD BLOCK`) can trigger it on a server with client eviction enabled. The blocked clients do not have to belong to the attacker. The result is a reliable crash of the server process.\r\n\r\nServers with `maxmemory-clients 0` (the default) are not affected.\r\n\r\n### Details\r\n\r\nAfter a command runs, `processCommand()` in `src/server.c` calls `handleClientsBlockedOnKeys()` to serve the clients blocked on keys the command made ready. `unblockClientOnKey()` in `src/blocked.c` points `server.current_client` at each blocked client and re-executes its command through `processCommandAndResetClient()`, and `processCommand()` starts by calling `evictClients()`.\r\n\r\nIf the replies sent to blocked clients earlier in the same pass push client memory over `maxmemory-clients`, `evictClients()` can pick the client whose command made the key ready, which is still on the call stack. `freeClient()` in `src/networking.c` only defers freeing for `server.current_client`, so that client is freed immediately, and `commandProcessed()`, `updateClientMemUsageAndBucket()` and `beforeNextClient()` then run on the freed client. Among other things, `resetClient()` reads the argument vector pointers stored in the freed client and frees them.\r\n\r\n### Mitigation\r\n\r\nYou can mitigate this issue by setting `maxmemory-clients` to `0`, which disables client eviction. If you do, make sure `client-output-buffer-limit` and `maxmemory` still bound client memory.\r\n\r\nIf client eviction is required, you can reduce exposure by using Valkey ACLs so that untrusted users cannot write to keys that other clients block on, and cannot run the blocking commands (`BLPOP`, `BRPOP`, `BLMOVE`, `BRPOPLPUSH`, `BLMPOP`, `BZPOPMIN`, `BZPOPMAX`, `BZMPOP`, and `XREAD` / `XREADGROUP` with `BLOCK`).\r\n\r\n### Credits\r\n\r\nThe defect was found and fixed by https://github.com/nadav-levanoni (issue #5422, fix #5435).",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-7.2",
+        "purl": "pkg:deb/dhi/valkey-7.2"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "7.2.14-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "7.2.14-0",
+        "7.2.15-0",
+        "7.2.16-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-8.0",
+        "purl": "pkg:deb/dhi/valkey-8.0"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.0.10-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "8.0.10-0",
+        "8.0.11-0",
+        "8.0.12-0",
+        "8.0.13-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-8.1",
+        "purl": "pkg:deb/dhi/valkey-8.1"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.1.9-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "8.1.10-0",
+        "8.1.11-0",
+        "8.1.12-0",
+        "8.1.9-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-9.1",
+        "purl": "pkg:deb/dhi/valkey-9.1"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "9.1.1-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "9.1.1-0",
+        "9.1.2-0",
+        "9.1.3-0",
+        "9.1.4-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-acqi-v3y2-e6jg-refj"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/valkey-io/valkey/security/advisories/GHSA-3885-pq5f-788j"
+    }
+  ]
+}

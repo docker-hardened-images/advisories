@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-4dan-tsbk-23va-fztt",
+  "modified": "2026-11-23T22:07:18Z",
+  "published": "2026-11-23T22:07:18Z",
+  "upstream": [
+    "GHSA-fq2f-crmw-q97r"
+  ],
+  "summary": "## Impact",
+  "details": "## Impact\r\n\r\nAn attacker who can run scripting commands can free the Lua interpreter\r\nstate out from under the script debugger's cached command table, leaving a\r\ndangling pointer that is dereferenced on the next debugger command. This\r\nyields a reliable crash of the server process, and can be escalated to\r\ncontrol of an indirect call by reclaiming the freed heap chunk with\r\nattacker-controlled bytes.\r\n\r\nThis issue affects the 9.x line. The defect was introduced when the Lua\r\nscripting engine was moved into a Valkey module. The 8.0.x and 8.1.x lines\r\nuse the previous non-module debugger and are not affected.\r\n\r\n## Details\r\n\r\n`ldbGenerateDebuggerCommandsArray` in `src/modules/lua/debug_lua.c` builds\r\nthe interactive debugger command table once and caches it in a file-scope\r\nstatic, binding the then-current `lua_State` pointer into each command\r\ndescriptor's context field. The table is never rebuilt or invalidated.\r\n\r\n`SCRIPT FLUSH ASYNC` recreates the scripting engine, creating the\r\nreplacement interpreter state before freeing the previous one on the\r\nlazyfree thread. Nothing clears the cached command table, so its context\r\nis left pointing at a freed chunk. Any subsequent debugger command\r\ndereferences it.\r\n\r\nBecause the freed chunk lives on the ordinary allocator heap, it can be\r\nreclaimed with attacker-controlled bytes and shaped into a counterfeit\r\ninterpreter state, at which point the next allocation performed by the\r\ninterpreter calls the allocator function pointer stored inside that state.\r\n\r\nA second use-after-free in `ldbLogStackValue` is fixed in the same change:\r\nthe logged module string was freed while the debugger log list still held\r\na reference to it.\r\n\r\n## Mitigation\r\n\r\nYou can mitigate this issue by using Valkey ACLs to restrict the SCRIPT\r\ncommand, in particular `SCRIPT DEBUG`, if your application doesn't intend\r\nto use the script debugger.\r\n\r\n## Credits\r\n\r\nThe defect was independently reported by Trung Nguyen (@everping) of\r\nCyStack, by Phuc Nguyen Dinh (pucagit) of CyStack, and Han Sang-Kyung (toky1219@gmail.com).\r\n\r\nThe fix was authored by https://github.com/Baraa-Hasheesh.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-7.2",
+        "purl": "pkg:deb/dhi/valkey-7.2"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "7.2.14-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "7.2.14-0",
+        "7.2.15-0",
+        "7.2.16-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-8.0",
+        "purl": "pkg:deb/dhi/valkey-8.0"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.0.10-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "8.0.10-0",
+        "8.0.11-0",
+        "8.0.12-0",
+        "8.0.13-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-8.1",
+        "purl": "pkg:deb/dhi/valkey-8.1"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.1.9-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "8.1.10-0",
+        "8.1.11-0",
+        "8.1.12-0",
+        "8.1.9-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-9.1",
+        "purl": "pkg:deb/dhi/valkey-9.1"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "9.1.1-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "9.1.1-0",
+        "9.1.2-0",
+        "9.1.3-0",
+        "9.1.4-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-4dan-tsbk-23va-fztt"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/valkey-io/valkey/security/advisories/GHSA-fq2f-crmw-q97r"
+    }
+  ]
+}

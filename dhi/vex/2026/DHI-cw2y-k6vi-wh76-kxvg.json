@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T23:57:22Z",
-  "version": 1,
+  "last_updated": "2026-11-22T21:08:26Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:apk/dhi/protobuf@31.1-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-0994 (GHSA-7gcm-g887-7qv7): google.protobuf.json_format.ParseDict() in the Python protobuf library does not count nested google.protobuf.Any messages against max_recursion_depth, so deeply nested Any values in untrusted JSON bypass the limit and exhaust the Python stack (https://github.com/protocolbuffers/protobuf/issues/25070, https://github.com/protocolbuffers/protobuf/pull/25239). PyPI protobuf before 5.29.6, and 6.30.0rc1 to 6.33.4, is affected (https://github.com/advisories/GHSA-7gcm-g887-7qv7). The upstream fix changes the Python module python/google/protobuf/json_format.py and its test. DHI protobuf for Alpine 3.23 is built from Alpine's protobuf package recipe, which builds the C++ libraries and the compiler and no Python bindings; its one published build, 31.1-r1, has the subpackages protobuf, libprotobuf, libprotobuf-lite, libprotoc, protoc, protobuf-dev and protobuf-vim. Unpacked all of them for x86_64 and aarch64: they hold musl-linked shared libraries (libprotobuf, libprotobuf-lite, libprotoc, libutf8_range, libutf8_validity), the protoc, protoc-gen-upb and protoc-gen-upbdefs programs, a static libupb.a, C++ headers, the .proto definitions of the well-known types, CMake and pkg-config files and a vim syntax file. None contains a Python file or the json_format module; the Python protobuf library is not part of this owner."
     },
     {
       "vulnerability": {
@@ -32,7 +35,28 @@
           "@id": "pkg:apk/dhi/protobuf@31.1-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-0994 (GHSA-7gcm-g887-7qv7): google.protobuf.json_format.ParseDict() in the Python protobuf library does not count nested google.protobuf.Any messages against max_recursion_depth, so deeply nested Any values in untrusted JSON bypass the limit and exhaust the Python stack (https://github.com/protocolbuffers/protobuf/issues/25070, https://github.com/protocolbuffers/protobuf/pull/25239). PyPI protobuf before 5.29.6, and 6.30.0rc1 to 6.33.4, is affected (https://github.com/advisories/GHSA-7gcm-g887-7qv7). The upstream fix changes the Python module python/google/protobuf/json_format.py and its test. DHI protobuf for Alpine 3.24 is built from Alpine's protobuf package recipe, which builds the C++ libraries and the compiler and no Python bindings; its one published build, 31.1-r1, has the subpackages protobuf, libprotobuf, libprotobuf-lite, libprotoc, protoc, protobuf-dev and protobuf-vim. Unpacked all of them for x86_64 and aarch64: they hold musl-linked shared libraries (libprotobuf, libprotobuf-lite, libprotoc, libutf8_range, libutf8_validity), the protoc, protoc-gen-upb and protoc-gen-upbdefs programs, a static libupb.a, C++ headers, the .proto definitions of the well-known types, CMake and pkg-config files and a vim syntax file. None contains a Python file or the json_format module; the Python protobuf library is not part of this owner."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cw2y-k6vi-wh76-kxvg",
+        "aliases": [
+          "CVE-2026-0994"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/protobuf@3.21.12-11dhi0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/protobuf@3.21.12-11dhi1?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update protobuf to 3.21.12-11+deb13u1+dhi0 or later.",
+      "status_notes": "CVE-2026-0994 (GHSA-7gcm-g887-7qv7): google.protobuf.json_format.ParseDict() in the Python protobuf library does not count nested google.protobuf.Any messages against max_recursion_depth, so deeply nested Any values in untrusted JSON bypass the limit and exhaust the Python stack (https://github.com/protocolbuffers/protobuf/issues/25070, https://github.com/protocolbuffers/protobuf/pull/25239). PyPI protobuf before 5.29.6, and 6.30.0rc1 to 6.33.4, is affected (https://github.com/advisories/GHSA-7gcm-g887-7qv7). Debian fixed it for trixie in protobuf 3.21.12-11+deb13u1, whose changelog reads \"Fix CVE-2026-0994: JSON recursion depth bypass (closes: #1126302)\" (https://security-tracker.debian.org/tracker/CVE-2026-0994). The DHI protobuf packages for Debian 13 are rebuilds of Debian's trixie protobuf, and the only protobuf version now published in the DHI Debian repository is a rebuild of Debian's 3.21.12-11+deb13u1 security update (libprotobuf32t64, libprotobuf-lite32t64, libprotoc32t64, protobuf-compiler and python3-protobuf with their -dbgsym packages, plus libprotobuf-dev and libprotoc-dev, for amd64 and arm64). We checked that build against the index checksum on amd64 and arm64: its package changelog carries Debian's entry for this CVE, and the json_format.py in its python3-protobuf package converts nested well-known types inside an Any through ConvertMessage(), so each nested Any message counts against max_recursion_depth, as in the upstream fix. Every published build carries the fix, so the range ends at that build."
     },
     {
       "vulnerability": {
@@ -44,9 +68,19 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/protobuf@3.21.12-11%2Bdeb13u1%2Bdhi0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/protobuf@3.21.12-11%2Bdhi1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/protobuf@3.21.12-11%2Bdhi2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/protobuf@3.21.12-11%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-0994 (GHSA-7gcm-g887-7qv7): google.protobuf.json_format.ParseDict() in the Python protobuf library does not count nested google.protobuf.Any messages against max_recursion_depth, so deeply nested Any values in untrusted JSON bypass the limit and exhaust the Python stack (https://github.com/protocolbuffers/protobuf/issues/25070, https://github.com/protocolbuffers/protobuf/pull/25239). PyPI protobuf before 5.29.6, and 6.30.0rc1 to 6.33.4, is affected (https://github.com/advisories/GHSA-7gcm-g887-7qv7). Debian fixed it for trixie in protobuf 3.21.12-11+deb13u1, whose changelog reads \"Fix CVE-2026-0994: JSON recursion depth bypass (closes: #1126302)\" (https://security-tracker.debian.org/tracker/CVE-2026-0994). The DHI protobuf packages for Debian 13 are rebuilds of Debian's trixie protobuf, and the only protobuf version now published in the DHI Debian repository is a rebuild of Debian's 3.21.12-11+deb13u1 security update (libprotobuf32t64, libprotobuf-lite32t64, libprotoc32t64, protobuf-compiler and python3-protobuf with their -dbgsym packages, plus libprotobuf-dev and libprotoc-dev, for amd64 and arm64). We checked that build against the index checksum on amd64 and arm64: its package changelog carries Debian's entry for this CVE, and the json_format.py in its python3-protobuf package converts nested well-known types inside an Any through ConvertMessage(), so each nested Any message counts against max_recursion_depth, as in the upstream fix. Every published build carries the fix, so the range ends at that build."
     }
   ]
 }
