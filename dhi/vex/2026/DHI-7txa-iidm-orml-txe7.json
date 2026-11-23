@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-17T17:52:21Z",
-  "version": 1,
+  "last_updated": "2026-11-23T22:41:20Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -27,7 +28,9 @@
           "@id": "pkg:deb/dhi/systemd@257.13-1~deb13u1dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2023-31438 describes an attacker who can already write to a sealed systemd journal file truncating it and resuming sealing so that journalctl --verify reports no error. The research behind it is at https://github.com/kastel-security/Journald/blob/main/journald-publication.pdf (section 5.2). The CVE record notes that the systemd maintainers reportedly denied that any of the findings was a security vulnerability, and Debian rates it unimportant with no fix in any release, listing every release up to and including sid as vulnerable: https://security-tracker.debian.org/tracker/CVE-2023-31438 . Upstream merged commit e375bc5fcc in systemd v255, https://github.com/systemd/systemd/pull/28886 . With it, journald now seals every epoch, and the verifier rejects a gap in the epoch sequence for journal files marked as continuously sealed, but only warns for older files. That commit's message says it partially addresses this CVE, and that a complete fix would need exactly one seal per epoch, which has not been done. Every published build of this package is systemd 257.13 (Debian 257.13-1~deb13u1), built with Forward Secure Sealing enabled. On amd64 and arm64, every published libsystemd-shared package's libsystemd-shared-257.so contains the partial fix's 'Epoch sequence not continuous' check. Because upstream describes that change as partial, the package is treated as affected. Exploiting it needs write access to the journal files themselves."
     }
   ]
 }
