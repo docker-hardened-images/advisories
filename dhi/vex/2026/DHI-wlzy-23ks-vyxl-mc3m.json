@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T20:59:44Z",
-  "version": 1,
+  "last_updated": "2026-11-23T18:36:00Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:deb/dhi/flac@1.5.0%2Bds-2%2Bdeb13u0%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-132199 is a symlink-following file overwrite in libFLAC metadata editing (Red Hat bug 2576760, https://bugzilla.redhat.com/show_bug.cgi?id=2576760, and Debian bug 1154902, https://bugs.debian.org/1154902). Upstream commit 685f4f69 (\"Let libFLAC handle symlinks on metadata handling\", https://github.com/xiph/flac/commit/685f4f69d19ac351b59a03f2d9eb84131b1e9cd4), first released in flac 1.5.0, makes a size-changing metadata edit on a file reached through a symbolic link rename its temporary file to the raw readlink() target. rename() resolves a relative target against the current working directory rather than the link's directory, so a planted relative symlink can turn a victim's edit, for example metaflac --set-tag, into an overwrite of another file the victim can write; the readlink() result is also not checked for -1. Red Hat's analysis finds no upstream fix in release 1.5.0 or on master, and the Debian security tracker lists trixie 1.5.0+ds-2 as vulnerable with no fixed version (https://security-tracker.debian.org/tracker/CVE-2026-132199). DHI flac for Debian 13 is rebuilt from Debian's 1.5.0+ds-2 source, and its only published build is 1.5.0+ds-2+deb13u0+dhi0 (flac, libflac14, libflac++11, libflac-dev, libflac++-dev, libflac-doc and the flac, libflac14 and libflac++11 -dbgsym packages, amd64 and arm64, checksums verified against the repository index). Checked the shipped source: transport_tempfile_() in src/libFLAC/metadata_iterators.c calls readlink() and renames the temporary file to the link target unchanged, Debian's single patch (which removes a build path from a generated documentation tag file) does not touch that file, and the shipped changelog records only a rebuild on top of Debian's 1.5.0+ds-2. On both architectures, libFLAC.so.14 in libflac14 and the static libFLAC.a in libflac-dev reference readlink and carry the .metadata_edit temporary-file suffix, and /usr/bin/metaflac and /usr/bin/flac in the flac package and libFLAC++.so.11 in libflac++11 are dynamically linked against libFLAC.so.14. Every published build is affected."
     }
   ]
 }

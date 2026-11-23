@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:10Z",
-  "last_updated": "2026-11-23T18:14:45Z",
-  "version": 100,
+  "last_updated": "2026-11-23T18:36:16Z",
+  "version": 101,
   "statements": [
     {
       "vulnerability": {
@@ -21992,8 +21992,9 @@
           "@id": "pkg:deb/dhi/glibc@2.41-12%2Bdeb13u5%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation",
-      "status_notes": "CVE-2026-124024 (GLIBC-SA-2026-0031, glibc bug 34914): when converting crafted UCS-4 input to the IBM1390 or IBM1399 character sets, the GNU C Library (glibc) iconv converter in iconvdata/ibm1364.c checks for a following combining character with `inptr + 4 < inend` and then reads 4 bytes at inptr + 4, so it can read up to 3 bytes past the end of the input buffer and crash the calling program. https://sourceware.org/bugzilla/show_bug.cgi?id=34914, https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=advisories/GLIBC-SA-2026-0031, https://security-tracker.debian.org/tracker/CVE-2026-124024. The one glibc version published in the DHI Debian repository, a rebuild of Debian 2.41-12+deb13u4, ships the converters as IBM1390.so and IBM1399.so in the libc6 gconv directory on amd64 and arm64, and the glibc 2.41 source in its glibc-source package still has that guard in the to-IBM1390/IBM1399 direction; the Debian stable-branch updates included there change other parts of this file but leave that guard as it is. Upstream has not committed a fix: a patch correcting the guard was posted for review on libc-alpha on 2026-11-12 (https://sourceware.org/pipermail/libc-alpha/2026-November/182107.html) and is not in the glibc repository, and Debian lists every release, including trixie (now at 2.41-12+deb13u5), as vulnerable (Debian bug 1154286), and the advisory names no fix commit. Pending: an upstream fix commit, then a published DHI glibc build that backports it."
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-124024 (GLIBC-SA-2026-0031, glibc bug 34914): when converting crafted UCS-4 input to the IBM1390 or IBM1399 character sets, the GNU C Library (glibc) iconv converter in iconvdata/ibm1364.c checks for a following combining character with `inptr + 4 < inend` and then reads 4 bytes at inptr + 4, so it can read up to 3 bytes past the end of the input buffer and crash the calling program. https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=advisories/GLIBC-SA-2026-0031, https://sourceware.org/bugzilla/show_bug.cgi?id=34914, https://security-tracker.debian.org/tracker/CVE-2026-124024. Upstream fixed it on the master branch for glibc 2.45 in commit 77fe280828e85ac329e5644e8546440e9c1b0453, which changes that check to `inend - inptr >= 8`: https://sourceware.org/git/?p=glibc.git;a=commit;h=77fe280828e85ac329e5644e8546440e9c1b0453. The fix is not on the glibc 2.41 stable branch, and Debian lists every release as vulnerable, including trixie at its current 2.41-12+deb13u5 (Debian bug 1154286). We checked every glibc build published in the DHI Debian repository: two builds, DHI rebuilds of Debian's glibc 2.41-12+deb13u4 and 2.41-12+deb13u5, on amd64 and arm64. In both, the libc6 package installs IBM1390.so and IBM1399.so in the gconv directory; the glibc 2.41 source shipped in the glibc-source package still has the `inptr + 4 < inend` check, and the glibc 2.41 stable-branch updates that Debian applies change other parts of ibm1364.c but not that check; and the Debian changelog shipped in libc6 records no fix for this CVE. The libc6 and glibc-source packages were verified against the repository index checksums. Every published build ships the affected code without the fix, so every build is affected. A fixed build will follow a backport of that commit."
     },
     {
       "vulnerability": {

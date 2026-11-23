@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T20:59:44Z",
-  "version": 1,
+  "last_updated": "2026-11-23T18:36:04Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:deb/dhi/flac@1.5.0%2Bds-2%2Bdeb13u0%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-132857 is a stack buffer overflow in the flac command-line encoder (Red Hat bug 2576238, https://bugzilla.redhat.com/show_bug.cgi?id=2576238, and Debian bug 1154903, https://bugs.debian.org/1154903). When flac re-encodes a FLAC or Ogg FLAC input, EncoderSession_init_encoder() in src/flac/encode.c appends one metadata block per --picture option to the fixed 1024-entry metadata_blocks array without the bounds check that the vorbis comment, cuesheet, seektable and padding writers carry, so a crafted input with close to 1024 metadata blocks combined with --picture options writes past the array; Red Hat reproduced a crash with three or more --picture options. Red Hat's analysis states that metaflac and other libFLAC API users are not affected, because the array belongs to the flac program. No upstream fix has been released, and the Debian security tracker lists trixie 1.5.0+ds-2 as vulnerable with no fixed version (https://security-tracker.debian.org/tracker/CVE-2026-132857). DHI flac for Debian 13 is rebuilt from Debian's 1.5.0+ds-2 source, and its only published build is 1.5.0+ds-2+deb13u0+dhi0 (flac, libflac14, libflac++11, libflac-dev, libflac++-dev, libflac-doc and the flac, libflac14 and libflac++11 -dbgsym packages, amd64 and arm64, checksums verified against the repository index). Checked the shipped source: the picture loop in EncoderSession_init_encoder() at src/flac/encode.c line 1717 still appends without a bound, Debian's single patch (which removes a build path from a generated documentation tag file) does not touch that file, and the shipped changelog records only a rebuild on top of Debian's 1.5.0+ds-2. The affected program is /usr/bin/flac in the flac package, which offers the --picture option on both architectures. Every published build is affected."
     }
   ]
 }
