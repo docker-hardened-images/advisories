@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T06:30:21Z",
-  "last_updated": "2026-11-12T23:05:10Z",
-  "version": 2,
+  "last_updated": "2026-11-23T19:07:36Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -22,7 +22,9 @@
           "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
+      "impact_statement": "CVE-2023-51767 reports that OpenSSH through 10.0 might allow a Rowhammer attack, for authentication bypass, because the integer variable authenticated in mm_answer_authpassword() does not resist the flip of a single bit; the CVE record limits it to an attacker co-located on the same host with user privileges, and records that the OpenSSH maintainers dispute it. OpenSSH disputed it on the oss-security list: https://www.openwall.com/lists/oss-security/2025/09/22/1. They do not consider it the application's job to defend against platform hardware weaknesses, and they point out that the paper the CVE rests on, https://arxiv.org/abs/2309.02545, achieved the bypass only after modifying the software under test or by attacking with root privileges: it synchronised with the privileged sshd process by sending it signals, and needed control over the memory layout of the separately executed sshd process that handles each connection, and an unprivileged attacker can do neither. OpenSSH has no fix for it and does not intend one. Debian records the same upstream position: https://security-tracker.debian.org/tracker/CVE-2023-51767. The DHI Debian 13 openssh packages are rebuilds of Debian's trixie openssh 1:10.0p1-7+deb13u4. In each of its three published builds, on amd64 and arm64, the name mm_answer_authpassword, which OpenSSH writes into that function's log messages, is in /usr/lib/openssh/sshd-session of the openssh-server package, the program /usr/sbin/sshd starts for each connection, and not in /usr/sbin/sshd or /usr/lib/openssh/sshd-auth. The code the CVE names is therefore present; this status rests on OpenSSH's reason that an attacker without root privileges cannot carry out the attack, not on the code being absent."
     }
   ]
 }
