@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T03:07:03Z",
-  "version": 1,
+  "last_updated": "2026-11-23T11:40:56Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update mariadb to 1:11.8.6-0+deb13u1+dhi3 or later.",
+      "status_notes": "CVE-2026-107821 (GHSA-c4gx-34mg-95q5, MDEV-40571): from MariaDB 10.6.1 until 11.8.9 and the other fixed releases, the server did not sufficiently validate counts, offsets, lengths and field boundaries in table definition (FRM) metadata when opening a binary FRM file, so an attacker able to place a crafted FRM file in the data directory could cause out-of-bounds reads or writes, crash the server or potentially run code. It is fixed in MariaDB 11.8.9 by upstream commit 3b1c2e58abab5571bec4ff52773ddc75b1738da9, which adds the checks in sql/table.cc: https://github.com/MariaDB/server/security/advisories/GHSA-c4gx-34mg-95q5, https://github.com/MariaDB/server/commit/3b1c2e58abab5571bec4ff52773ddc75b1738da9, https://security-tracker.debian.org/tracker/CVE-2026-107821. The DHI mariadb packages backport that change onto 11.8.6 from the fourth DHI rebuild, the version this range names as fixed. We checked every mariadb build published in the DHI Debian repository: four successive DHI rebuilds of Debian's mariadb 1:11.8.6-0+deb13u1 (called the first to fourth rebuild below; the fourth is the current build), each with 56 binary packages per architecture including the -dbgsym packages, on amd64 and arm64; every package read was verified against the repository index checksum. Between the third and fourth rebuilds the server binary's FRM loading functions change on both architectures (from the -dbgsym symbol tables: TABLE_SHARE::init_from_binary_frm_image and create_key_infos change size, and fix_type_pointers appears with the new signature the fix gives it), and the Debian changelog shipped in mariadb-server-core records the backport in the fourth rebuild only. The range ends at the first build that carries it."
     }
   ]
 }
