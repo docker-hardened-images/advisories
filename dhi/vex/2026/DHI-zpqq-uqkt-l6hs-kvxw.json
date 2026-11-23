@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-21T16:31:30Z",
-  "last_updated": "2026-11-22T07:41:48Z",
-  "version": 4,
+  "last_updated": "2026-11-23T20:38:42Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -91,7 +91,9 @@
           "@id": "pkg:deb/dhi/openssl@3.5.9-1~deb13u1%2Bfips%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-121481: in OpenSSL 4.0 and 4.1, EVP_EncodeBlock() computes the size of its base64 output in a way that overflows a signed integer for input lengths close to INT_MAX, so it writes past the documented end of the caller's output buffer. The fix is proposed in OpenSSL pull request 33652, which targets master and the 4.0 and 4.1 branches only: https://www.cve.org/CVERecord?id=CVE-2026-121481, https://github.com/openssl/openssl/pull/33652. The CVE record lists only OpenSSL 4.0.0 up to but not including 4.0.4, and 4.1.0 up to but not including 4.1.1, as affected. Every DHI Debian 13 openssl package is built from Debian's trixie OpenSSL 3.5 source (3.5.5 to 3.5.9); the openssl-provider-fips packages ship the OpenSSL 3.1.2 FIPS provider in the +fips builds and the build's own 3.5 FIPS provider in the others, all older than 4.0. In OpenSSL 3.5, EVP_EncodeBlock() calls evp_encodeblock_int(), which loops over the input three bytes at a time and writes exactly four output bytes per group plus a terminating NUL, never more than the documented 4*((len+2)/3)+1 bytes; it has no up-front size calculation, and the base64 encoder that 4.0 added (encode_base64_avx2) does not exist. The encoder is unchanged between openssl-3.5.5 and openssl-3.5.9: https://github.com/openssl/openssl/blob/openssl-3.5.9/crypto/evp/encode.c. Checked in the debug symbols of libcrypto.so.3 (libssl3t64-dbgsym) in the 3.5.6-1~deb13u1 build and the latest 3.5.9-1~deb13u1 build on amd64 and arm64: each defines EVP_EncodeBlock and evp_encodeblock_int and has no base64_avx2 function. The code the CVE describes is not in these packages."
     }
   ]
 }
