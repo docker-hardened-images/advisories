@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:32Z",
-  "last_updated": "2026-11-23T06:17:00Z",
-  "version": 87,
+  "last_updated": "2026-11-23T06:23:01Z",
+  "version": 88,
   "statements": [
     {
       "vulnerability": {
@@ -42883,7 +42883,9 @@
           "@id": "pkg:deb/dhi/postgresql-17@17.12-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-125709 is in libstdc++, the GCC C++ standard library: when basic_filebuf::overflow fails to write its buffer, the put pointer is left past the end of the buffer and later writes overflow it (GCC PR libstdc++/118099, https://gcc.gnu.org/bugzilla/show_bug.cgi?id=118099, fixed upstream by https://github.com/gcc-mirror/gcc/commit/2d296e9f024edbb49cad1f3ebb5ae34c71ea5f7a; https://bugzilla.redhat.com/show_bug.cgi?id=2569390, https://security-tracker.debian.org/tracker/CVE-2026-125709). This package does not contain libstdc++. Unpacked all 96 binary packages published from the postgresql-17 source in the DHI Debian repository, for amd64 and arm64: the rebuilds of Debian's 17.11-0+deb13u1 and 17.12-0+deb13u1 (postgresql-17, postgresql-client-17, postgresql-server-dev-17, postgresql-plperl-17, postgresql-plpython3-17, postgresql-pltcl-17, libpq5, libpq-dev, libecpg6, libecpg-dev, libecpg-compat3 and libpgtypes3, and their debug-symbol packages) and the 17.11-1 and 17.12-0 postgresql-17 packages. The programs, including the postgres server, and the client libraries are dynamically linked ELF files that list the system libc.so.6 in NEEDED. Some server extension modules, which are loaded into the postgres server process and resolve C library symbols from it, list no libc.so.6 of their own: in each rebuild of Debian's source, 27 with no NEEDED entries at all, earthdistance.so (whose one NEEDED entry is libm.so.6), bool_plperl.so (libperl, and on amd64 also the dynamic loader ld-linux-x86-64.so.2) and ltree_plpython3.so (libpython); in the 17.11-1 and 17.12-0 packages, 36 on amd64 and 35 on arm64 with no NEEDED entries, plus earthdistance.so and sslinfo.so (whose one NEEDED entry is libcrypto.so.3). The static archives shipped (libpq.a, libecpg.a, libecpg_compat.a, libpgtypes.a, libpgport.a, libpgport_shlib.a, libpgcommon.a, libpgcommon_shlib.a and libpgfeutils.a) hold PostgreSQL's own object files, and the debug-symbol packages hold detached debug information. No package contains a statically linked program, a PE file, a Mach-O file or a jar, whl, zip or nupkg archive. One file uses the C++ runtime: the LLVM JIT provider llvmjit.so in the postgresql-17 packages, which lists libLLVM.so.19.1, libstdc++.so.6 and libgcc_s.so.1 in NEEDED and loads them from the system at run time. No package contains a copy of libstdc++.so.6, libstdc++.a or libgcc_s, and the name basic_filebuf occurs in none of the ELF files or static archives in these packages, llvmjit.so included (which does contain other libstdc++ names such as basic_string). libstdc++ reaches an image through the packages built from the gcc-14 source (libstdc++6, libstdc++-14-dev, ...), which are not part of this owner and are assessed on their own."
     },
     {
       "vulnerability": {
