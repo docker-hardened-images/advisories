@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:10:41Z",
-  "last_updated": "2026-11-23T18:18:28Z",
-  "version": 11,
+  "last_updated": "2026-11-23T18:22:52Z",
+  "version": 12,
   "statements": [
     {
       "vulnerability": {
@@ -2860,7 +2860,9 @@
           "@id": "pkg:apk/dhi/external-dns-fips@0.24.0-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-32288 (GO-2026-4869): tar.Reader in the Go standard library's archive/tar package can allocate an unbounded amount of memory when reading an archive with a very large number of sparse regions in the old GNU sparse map format. It is fixed in Go 1.25.9 and 1.26.2, and Go 1.27 releases include the fix: https://pkg.go.dev/vuln/GO-2026-4869, https://go.dev/issue/78301, https://go.dev/cl/763766, the release-branch.go1.26 backport https://github.com/golang/go/commit/a34b5e4d55e39efc9af0d803969e9399a553acf3 (in go1.26.2, not go1.26.1), https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU. We read every published external-dns-fips package for Alpine 3.23 in the authenticated DHI Alpine security repository, where the FIPS packages are published: 33 builds, 0.20.0-r0 to 0.24.0-r5, x86_64 and aarch64, each download checked against the repository index checksum. Each package holds one file, /usr/bin/external-dns, a Go program built with CGO_ENABLED=0 and the Go Cryptographic Module (GOFIPS140=v1.0.0-c2097c7c) that has no ELF interpreter and no dynamic section. The Go toolchain recorded in each program's build information, the same on both architectures, is: 0.20.0-r0 with Go 1.25.7; 0.20.0-r1 to 0.21.0-r0 with Go 1.26.1; 0.21.0-r1 to 0.21.0-r2 with Go 1.26.2; 0.21.0-r3 to 0.21.0-r5 with Go 1.26.3; 0.21.0-r6 to 0.21.0-r7 with Go 1.26.4; 0.21.0-r8 to 0.21.0-r11 with Go 1.26.5; 0.21.0-r12 with Go 1.26.6; 0.21.0-r13 to 0.22.0-r0 with Go 1.26.7; 0.22.0-r1 to 0.22.0-r3 with Go 1.26.8; 0.23.0-r1 to 0.23.0-r2 with Go 1.27.1; 0.23.0-r3 with Go 1.27.2; 0.23.0-r4 to 0.24.0-r2 with Go 1.27.3; 0.24.0-r3 to 0.24.0-r5 with Go 1.27.4. The vulnerable code is in the archive/tar package (tar.Reader.Next, readOldGNUSparseMap and readGNUSparseMap1x0). In no build does the program's Go function table contain any archive/tar function, and a search of the bytes of every binary, which also finds the names of inlined functions, finds no name beginning with archive/tar. (the form in which Go records that package's functions and methods). In the builds we also searched for the bare text, external-dns-fips 0.20.0-r1 for aarch64 and 0.24.0-r5 for x86_64, archive/tar occurs once, as a package name in the Go standard library's table of GODEBUG settings, which a program we built with Go 1.26.1 that does not import archive/tar contains as well; it is data, not archive/tar code. Both checks find runtime.main in every binary. As a positive control, the same two checks on a program we built with Go 1.26.1 for linux/amd64 and linux/arm64 that reads a tar archive find archive/tar.(*Reader).Next, (*Reader).readOldGNUSparseMap and readGNUSparseMap1x0. The vulnerable code is not compiled into any build of this owner."
     },
     {
       "vulnerability": {
@@ -2970,7 +2972,9 @@
           "@id": "pkg:apk/dhi/external-dns@0.24.0-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-32288 (GO-2026-4869): tar.Reader in the Go standard library's archive/tar package can allocate an unbounded amount of memory when reading an archive with a very large number of sparse regions in the old GNU sparse map format. It is fixed in Go 1.25.9 and 1.26.2, and Go 1.27 releases include the fix: https://pkg.go.dev/vuln/GO-2026-4869, https://go.dev/issue/78301, https://go.dev/cl/763766, the release-branch.go1.26 backport https://github.com/golang/go/commit/a34b5e4d55e39efc9af0d803969e9399a553acf3 (in go1.26.2, not go1.26.1), https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU. We read every published external-dns package for Alpine 3.23 in the DHI Alpine repository: 33 builds, 0.20.0-r0 to 0.24.0-r5, x86_64 and aarch64, each download checked against the repository index checksum. Each package holds one file, /usr/bin/external-dns, a Go program built with CGO_ENABLED=0 that has no ELF interpreter and no dynamic section. The Go toolchain recorded in each program's build information, the same on both architectures, is: 0.20.0-r0 with Go 1.25.7; 0.20.0-r1 to 0.21.0-r0 with Go 1.26.1; 0.21.0-r1 to 0.21.0-r2 with Go 1.26.2; 0.21.0-r3 to 0.21.0-r5 with Go 1.26.3; 0.21.0-r6 to 0.21.0-r7 with Go 1.26.4; 0.21.0-r8 to 0.21.0-r11 with Go 1.26.5; 0.21.0-r12 with Go 1.26.6; 0.21.0-r13 to 0.22.0-r0 with Go 1.26.7; 0.22.0-r1 to 0.22.0-r3 with Go 1.26.8; 0.23.0-r1 to 0.23.0-r2 with Go 1.27.1; 0.23.0-r3 with Go 1.27.2; 0.23.0-r4 to 0.24.0-r2 with Go 1.27.3; 0.24.0-r3 to 0.24.0-r5 with Go 1.27.4. The vulnerable code is in the archive/tar package (tar.Reader.Next, readOldGNUSparseMap and readGNUSparseMap1x0). In no build does the program's Go function table contain any archive/tar function, and a search of the bytes of every binary, which also finds the names of inlined functions, finds no name beginning with archive/tar. (the form in which Go records that package's functions and methods). In the builds we also searched for the bare text, external-dns 0.20.0-r0, 0.21.0-r0 and 0.24.0-r5 for x86_64 and 0.21.0-r1 for aarch64, archive/tar occurs once, as a package name in the Go standard library's table of GODEBUG settings, which a program we built with Go 1.26.1 that does not import archive/tar contains as well; it is data, not archive/tar code. Both checks find runtime.main in every binary. As a positive control, the same two checks on a program we built with Go 1.26.1 for linux/amd64 and linux/arm64 that reads a tar archive find archive/tar.(*Reader).Next, (*Reader).readOldGNUSparseMap and readGNUSparseMap1x0. The vulnerable code is not compiled into any build of this owner."
     },
     {
       "vulnerability": {
