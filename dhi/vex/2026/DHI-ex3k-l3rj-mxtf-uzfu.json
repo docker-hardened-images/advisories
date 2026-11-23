@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T15:43:07Z",
-  "last_updated": "2026-11-23T21:20:26Z",
-  "version": 3,
+  "last_updated": "2026-11-23T23:05:57Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -28,7 +28,8 @@
           "@id": "pkg:deb/dhi/openjpeg2@2.5.3-2.1~deb13u2%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2016-9580 is an integer overflow in the TIFF reader tiftoimage, in src/bin/jp2/converttif.c, of OpenJPEG 2.1.2 that leads to a heap buffer overflow in convert_8u32s_C1R when opj_compress reads a crafted TIFF file, reported as https://github.com/uclouvain/openjpeg/issues/871 and on oss-security: https://www.openwall.com/lists/oss-security/2016/12/09/4. The fix was merged upstream through pull request 975, merge commit https://github.com/uclouvain/openjpeg/commit/0394f8d0f1c981e0bc587beddc14d1fb0b265b1b, and first released in 2.2.0: https://github.com/uclouvain/openjpeg/commit/00f45684a8339e69ed55df2397f3c19d09fecaed validates samples per pixel (1 to 4), bits per sample (1 to 16) and encoded strip sizes, and https://github.com/uclouvain/openjpeg/commit/57e36dbfeb57451444c5c20eab66ab0bedd3d3b3 adds the tiWidth * tiSpp overflow bounds check before the row buffer is allocated. This package builds OpenJPEG 2.5.3, which contains both. Checked in the shipped 2.5.3 tiftoimage: it rejects tiSpp of 0 or above 4, tiBps of 0 or above 16, and zero width or height; aborts with 'Buffer overflow' when tiWidth * tiSpp would exceed the TIFF size limit divided by tiBps or by sizeof(OPJ_INT32); and aborts when TIFFReadEncodedStrip returns less than 1 or more than the strip size. The opj_compress binary in every published libopenjp2-tools build, amd64 and arm64, links libtiff and carries these checks' error messages. Every published build of this package is built from the same OpenJPEG 2.5.3 source, through Debian source package openjpeg2 2.5.3-2.1~deb13u2, and contains the fix; the range boundary is the first published package version."
     }
   ]
 }

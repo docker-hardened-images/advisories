@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T15:52:54Z",
-  "last_updated": "2026-11-23T21:20:26Z",
-  "version": 3,
+  "last_updated": "2026-11-23T23:05:55Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -28,7 +28,8 @@
           "@id": "pkg:deb/dhi/openjpeg2@2.5.3-2.1~deb13u2%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2016-9113 is a NULL pointer dereference in imagetobmp in the opj_decompress tool, reported against OpenJPEG 2.1.2, reached when image->comps[0].data is left NULL after decoding. The reporter confirmed that the proof of concept no longer crashes on later releases: https://github.com/uclouvain/openjpeg/issues/856. No reproducer was published, no fix commit is named and the issue is still open. Every openjpeg2 build published in the DHI Debian repository, on amd64 and arm64, is built from Debian's OpenJPEG 2.5.3 source, 2.5.3-2.1~deb13u2. In that source the decoder fails with 'Failed to decode all used components' whenever a requested component has no decoded data, on both the whole-image and the single-tile paths, a check released in 2.4.0 by https://github.com/uclouvain/openjpeg/commit/b2751967ecabf8d8856e85ab91e25d4f235e2eb3. opj_decompress then exits with 'failed to decode image' or 'failed to decode tile' before any colour conversion or output writer runs. The libopenjp2.so.7 and opj_decompress binaries in every published build, amd64 and arm64, carry these error messages. So imagetobmp is never given NULL component data. Debian has recorded no fixed version and rates the issue unimportant: https://security-tracker.debian.org/tracker/CVE-2016-9113. Every published build carries these changes, so the range ends at the first one."
     }
   ]
 }

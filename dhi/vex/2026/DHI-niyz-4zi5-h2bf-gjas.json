@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T16:02:17Z",
-  "last_updated": "2026-11-23T21:20:26Z",
-  "version": 3,
+  "last_updated": "2026-11-23T23:05:59Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -28,7 +28,8 @@
           "@id": "pkg:deb/dhi/openjpeg2@2.5.3-2.1~deb13u2%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2016-9581 is an infinite loop in tiftoimage, the TIFF reader of the opj_compress tool, that leads to a heap buffer overflow in convert_32s_C1P1, reported against OpenJPEG 2.1.2: https://github.com/uclouvain/openjpeg/issues/872. Debian names https://github.com/szukw000/openjpeg/commit/cadff5fb6e73398de26a92e96d3d7cac893af255 as the fix, though it has recorded no fixed version and rates the issue unimportant: https://security-tracker.debian.org/tracker/CVE-2016-9581. The same tiftoimage checks reached upstream through pull request 975, merge commit https://github.com/uclouvain/openjpeg/commit/0394f8d0f1c981e0bc587beddc14d1fb0b265b1b, first released in 2.2.0: https://github.com/uclouvain/openjpeg/commit/00f45684a8339e69ed55df2397f3c19d09fecaed adds the samples-per-pixel, bit-depth, zero-dimension and encoded-strip-size checks, and https://github.com/uclouvain/openjpeg/commit/57e36dbfeb57451444c5c20eab66ab0bedd3d3b3 adds the row-size overflow check. Upstream closed the issue in August 2017. Every openjpeg2 build published in the DHI Debian repository, on amd64 and arm64, is built from Debian's OpenJPEG 2.5.3 source, 2.5.3-2.1~deb13u2. Its tiftoimage in src/bin/jp2/converttif.c rejects samples per pixel outside 1 to 4, bit depths outside 1 to 16 and zero width or height, aborts with 'Buffer overflow' when the row size would exceed the largest allocation it can make, and aborts when TIFFReadEncodedStrip returns less than 1 or more than the strip size, so the strip loop cannot run without consuming data. The opj_compress binary in every published libopenjp2-tools build, amd64 and arm64, links libtiff and carries these checks' error messages. Every published build carries these changes, so the range ends at the first one."
     }
   ]
 }
