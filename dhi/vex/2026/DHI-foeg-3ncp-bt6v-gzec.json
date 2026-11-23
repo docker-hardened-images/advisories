@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:18:15Z",
-  "last_updated": "2026-11-23T09:23:00Z",
-  "version": 11,
+  "last_updated": "2026-11-23T10:49:42Z",
+  "version": 12,
   "statements": [
     {
       "vulnerability": {
@@ -1315,6 +1315,22 @@
           "@id": "pkg:deb/dhi/airflow@3.3.2-0?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/airflow@3.3.2-1?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update airflow to 3.3.2-2 or later.",
+      "status_notes": "CVE-2026-97689 (GHSA-vxq7-64xx-v4gw): when urllib3's streaming API (HTTPResponse.stream() and read_chunked()) decodes a chunked response, it reads each chunk-size line with an unbounded readline(), so a malicious server can send a very long line with no newline and make the client buffer far more memory than intended. It affects urllib3 1.10.3 up to but not including 2.8.0 and is fixed in 2.8.0, which limits the chunk-size line and the trailing CRLF line to 65536 bytes (_MAX_CHUNK_LINE_LENGTH) and raises ProtocolError beyond that (https://github.com/urllib3/urllib3/security/advisories/GHSA-vxq7-64xx-v4gw, https://github.com/urllib3/urllib3/commit/cd770b059b543be29298ea5c52afb0b1b090f5ed, https://github.com/urllib3/urllib3/releases/tag/2.8.0). Read every published airflow package in the DHI Debian repository: 50 builds, 3.3.0-0 to the current 3.4.0-9, each for amd64 and arm64, each checked against the index SHA256; no other binary package and no debug-symbol package is published for this source. The scan covered every file in each package, including the members of the wheel, jar and other zip-format archives inside it, and looked at every directory named urllib3, its version and its response.py; both architectures agree for every build. Builds 3.3.0-0 to 3.3.2-1 ship one copy, urllib3 2.7.0 under /usr/lib/airflow/lib/python3.13/site-packages, whose response.py still reads the chunk-size line with an unbounded readline(). From 3.3.2-2 that copy is urllib3 2.8.0, by its dist-info metadata and _version.py, and its response.py has the 65536-byte limit. Builds 3.4.0-1 to 3.4.0-9 also carry the copy vendored in snowflake-connector-python, the copy vendored in the pip 26.2.2 wheel that virtualenv embeds for new environments (its vendor list pins urllib3 2.8.0), and a botocore compatibility directory that holds only __init__.py and exceptions.py and no HTTP response code; both vendored copies report version 2.8.0 and their response.py has the same limit. So 3.3.2-2 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-foeg-3ncp-bt6v-gzec",
+        "aliases": [
+          "CVE-2026-97689"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/airflow@3.3.2-10?distro=dhi-13"
         },
         {
@@ -1343,9 +1359,6 @@
         },
         {
           "@id": "pkg:deb/dhi/airflow@3.3.2-19?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/airflow@3.3.2-1?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/airflow@3.3.2-2?distro=dhi-13"
@@ -1402,7 +1415,8 @@
           "@id": "pkg:deb/dhi/airflow@3.4.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-97689 (GHSA-vxq7-64xx-v4gw): when urllib3's streaming API (HTTPResponse.stream() and read_chunked()) decodes a chunked response, it reads each chunk-size line with an unbounded readline(), so a malicious server can send a very long line with no newline and make the client buffer far more memory than intended. It affects urllib3 1.10.3 up to but not including 2.8.0 and is fixed in 2.8.0, which limits the chunk-size line and the trailing CRLF line to 65536 bytes (_MAX_CHUNK_LINE_LENGTH) and raises ProtocolError beyond that (https://github.com/urllib3/urllib3/security/advisories/GHSA-vxq7-64xx-v4gw, https://github.com/urllib3/urllib3/commit/cd770b059b543be29298ea5c52afb0b1b090f5ed, https://github.com/urllib3/urllib3/releases/tag/2.8.0). Read every published airflow package in the DHI Debian repository: 50 builds, 3.3.0-0 to the current 3.4.0-9, each for amd64 and arm64, each checked against the index SHA256; no other binary package and no debug-symbol package is published for this source. The scan covered every file in each package, including the members of the wheel, jar and other zip-format archives inside it, and looked at every directory named urllib3, its version and its response.py; both architectures agree for every build. Builds 3.3.0-0 to 3.3.2-1 ship one copy, urllib3 2.7.0 under /usr/lib/airflow/lib/python3.13/site-packages, whose response.py still reads the chunk-size line with an unbounded readline(). From 3.3.2-2 that copy is urllib3 2.8.0, by its dist-info metadata and _version.py, and its response.py has the 65536-byte limit. Builds 3.4.0-1 to 3.4.0-9 also carry the copy vendored in snowflake-connector-python, the copy vendored in the pip 26.2.2 wheel that virtualenv embeds for new environments (its vendor list pins urllib3 2.8.0), and a botocore compatibility directory that holds only __init__.py and exceptions.py and no HTTP response code; both vendored copies report version 2.8.0 and their response.py has the same limit. So 3.3.2-2 is the first fixed build."
     },
     {
       "vulnerability": {
