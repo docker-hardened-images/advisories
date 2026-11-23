@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:32Z",
-  "last_updated": "2026-11-23T15:46:42Z",
-  "version": 94,
+  "last_updated": "2026-11-23T16:11:37Z",
+  "version": 95,
   "statements": [
     {
       "vulnerability": {
@@ -42825,7 +42825,9 @@
           "@id": "pkg:deb/dhi/postgresql-15@15.2-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2019-1010024 is a report against the GNU C Library (glibc) that its caches of thread stacks and heaps let an attacker bypass ASLR (https://sourceware.org/bugzilla/show_bug.cgi?id=22852, https://security-tracker.debian.org/tracker/CVE-2019-1010024). This owner does not contain glibc. Unpacked every postgresql-15 package published in the DHI Debian repository, each checked against the index SHA256: 15.19-1 and 15.2-0 on amd64 and arm64 (15.2-0 is PostgreSQL 15.20 by the version string of /usr/bin/postgres, although it sorts below 15.19-1); no debug-symbol packages are published for it. Each package holds 122 ELF programs and shared objects, none statically linked. The 37 programs use the system dynamic loader (/lib64/ld-linux-x86-64.so.2 on amd64, /lib/ld-linux-aarch64.so.1 on arm64) and list libc.so.6 as a dependency. 39 server modules on amd64 and 38 on arm64 list no libc.so.6 of their own (37 and 36 have no dependencies at all, earthdistance.so needs only libm.so.6 and sslinfo.so only libcrypto.so.3) and take C library symbols from the postgres process that loads them. The nine static archives (libpq.a, libecpg.a, libecpg_compat.a, libpgtypes.a, libpgport.a, libpgport_shlib.a, libpgcommon.a, libpgcommon_shlib.a and libpgfeutils.a, 180 members) hold PostgreSQL's own object files and no C library object. Each package also ships 939 (15.19-1) or 940 (15.2-0) LLVM bitcode files used for JIT compilation, which are not native code. No package contains a PE or Mach-O file or a jar, whl, zip or nupkg archive, no file or archive member is named like libc, the dynamic loader, libpthread, libm, libdl, librt or crt1, and none carries the glibc version banner. glibc reaches an image through the separate libc6 package, which is assessed under its own owner."
     },
     {
       "vulnerability": {
