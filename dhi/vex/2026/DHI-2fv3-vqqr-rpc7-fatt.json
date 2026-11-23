@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:32Z",
-  "last_updated": "2026-11-23T17:13:35Z",
-  "version": 99,
+  "last_updated": "2026-11-23T18:08:20Z",
+  "version": 100,
   "statements": [
     {
       "vulnerability": {
@@ -21629,6 +21629,22 @@
           "@id": "pkg:deb/dhi/gcc-14@14.2.0-19%2Bdeb13u0%2Bdhi7?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/gcc-14@14.2.0-19dhi0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update gcc-14 to 14.2.0-19+deb13u0+dhi8 or later.",
+      "status_notes": "CVE-2026-125709 (GCC PR libstdc++/118099, https://gcc.gnu.org/bugzilla/show_bug.cgi?id=118099, https://bugzilla.redhat.com/show_bug.cgi?id=2569390): when basic_filebuf::overflow in libstdc++ fails to write its buffer after storing the overflow character, the put pointer is left past the end of the buffer, so repeated failing sputc() calls write further past it. It is fixed upstream on the GCC master branch by https://gcc.gnu.org/g:2d296e9f024edbb49cad1f3ebb5ae34c71ea5f7a, whose only library change is to basic_filebuf::overflow in bits/fstream.tcc (a guard that rewinds the put pointer when writing the buffer fails; the commit also adds tests), and on the releases/gcc-16 branch by its backport https://gcc.gnu.org/g:68b1b9056c70acb31f2964963b51c480ff820602. Two later master commits on the same bug report (https://gcc.gnu.org/g:43e4d697586364decbad7f67a204189afef6e765 and https://gcc.gnu.org/g:f46b50adcf752de0e1e0e24e17f42a5075770f48) avoid possible null pointer arithmetic with partial codecvt conversions in the unbuffered path and restructure the fix so the put pointer is not advanced before the write; the bug report records only the one releases/gcc-16 commit. No gcc-14 release has the fix, and the Debian security tracker lists trixie's gcc-14 14.2.0-19 as vulnerable (https://security-tracker.debian.org/tracker/CVE-2026-125709). The DHI gcc-14 packages for Debian 13 are rebuilt from Debian's 14.2.0-19 source and carry a backport of commit 2d296e9 from the fourth of the five 14.2.0-19 rebuilds in the DHI Debian repository on 2026-11-23. We checked libstdc++6, libstdc++-14-dev, libstdc++-14-pic and libstdc++6-14-dbg in all five rebuilds on amd64 and arm64, each verified against its index checksum, reading the symbol sizes of basic_filebuf<char>::overflow and basic_filebuf<wchar_t>::overflow in libstdc++.so.6, libstdc++.a and libstdc++_pic.a, with basic_filebuf<char>::xsputn as a control. In the first three rebuilds the two overflow functions are 542 and 570 bytes on amd64 and 524 and 512 bytes on arm64 in libstdc++6, libstdc++.a and libstdc++_pic.a (700 and 713, and 708 and 700, in the debug libraries of libstdc++6-14-dbg); in the fourth and fifth rebuilds they are 589 and 611 bytes on amd64 and 600 and 548 bytes on arm64 (764 and 777, and 756 and 748, in the debug libraries), while xsputn keeps its size in every rebuild. The bits/fstream.tcc header installed by libstdc++-14-dev contains the fix's guard in the fourth and fifth rebuilds and lacks it in the first three. The range ends at the fourth rebuild, the first published build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-2fv3-vqqr-rpc7-fatt",
+        "aliases": [
+          "CVE-2026-125709"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/gcc-14@14.2.0-19%2Bdeb13u0%2Bdhi8?distro=dhi-13"
         },
         {
@@ -21648,12 +21664,10 @@
         },
         {
           "@id": "pkg:deb/dhi/gcc-14@14.2.0-19%2Bdhi5?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/gcc-14@14.2.0-19dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-125709 (GCC PR libstdc++/118099, https://gcc.gnu.org/bugzilla/show_bug.cgi?id=118099, https://bugzilla.redhat.com/show_bug.cgi?id=2569390): when basic_filebuf::overflow in libstdc++ fails to write its buffer after storing the overflow character, the put pointer is left past the end of the buffer, so repeated failing sputc() calls write further past it. It is fixed upstream on the GCC master branch by https://gcc.gnu.org/g:2d296e9f024edbb49cad1f3ebb5ae34c71ea5f7a, whose only library change is to basic_filebuf::overflow in bits/fstream.tcc (a guard that rewinds the put pointer when writing the buffer fails; the commit also adds tests), and on the releases/gcc-16 branch by its backport https://gcc.gnu.org/g:68b1b9056c70acb31f2964963b51c480ff820602. Two later master commits on the same bug report (https://gcc.gnu.org/g:43e4d697586364decbad7f67a204189afef6e765 and https://gcc.gnu.org/g:f46b50adcf752de0e1e0e24e17f42a5075770f48) avoid possible null pointer arithmetic with partial codecvt conversions in the unbuffered path and restructure the fix so the put pointer is not advanced before the write; the bug report records only the one releases/gcc-16 commit. No gcc-14 release has the fix, and the Debian security tracker lists trixie's gcc-14 14.2.0-19 as vulnerable (https://security-tracker.debian.org/tracker/CVE-2026-125709). The DHI gcc-14 packages for Debian 13 are rebuilt from Debian's 14.2.0-19 source and carry a backport of commit 2d296e9 from the fourth of the five 14.2.0-19 rebuilds in the DHI Debian repository on 2026-11-23. We checked libstdc++6, libstdc++-14-dev, libstdc++-14-pic and libstdc++6-14-dbg in all five rebuilds on amd64 and arm64, each verified against its index checksum, reading the symbol sizes of basic_filebuf<char>::overflow and basic_filebuf<wchar_t>::overflow in libstdc++.so.6, libstdc++.a and libstdc++_pic.a, with basic_filebuf<char>::xsputn as a control. In the first three rebuilds the two overflow functions are 542 and 570 bytes on amd64 and 524 and 512 bytes on arm64 in libstdc++6, libstdc++.a and libstdc++_pic.a (700 and 713, and 708 and 700, in the debug libraries of libstdc++6-14-dbg); in the fourth and fifth rebuilds they are 589 and 611 bytes on amd64 and 600 and 548 bytes on arm64 (764 and 777, and 756 and 748, in the debug libraries), while xsputn keeps its size in every rebuild. The bits/fstream.tcc header installed by libstdc++-14-dev contains the fix's guard in the fourth and fifth rebuilds and lacks it in the first three. The range ends at the fourth rebuild, the first published build with the fix."
     },
     {
       "vulnerability": {
