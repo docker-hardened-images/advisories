@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:32Z",
-  "last_updated": "2026-11-23T08:49:32Z",
-  "version": 81,
+  "last_updated": "2026-11-23T08:53:34Z",
+  "version": 82,
   "statements": [
     {
       "vulnerability": {
@@ -42838,7 +42838,9 @@
           "@id": "pkg:deb/dhi/postgresql-17@17.12-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2010-4756 is in the glob() implementation of the GNU C Library (glibc): crafted glob expressions that match no pathnames consume CPU and memory, as shown through STAT commands to an FTP daemon. https://security-tracker.debian.org/tracker/CVE-2010-4756 records it as standard POSIX behaviour that applications calling glob must limit themselves. This package does not contain glibc. Unpacked all 96 binary packages published from the postgresql-17 source in the DHI Debian repository, for amd64 and arm64: the rebuilds of Debian's 17.11-0+deb13u1 and 17.12-0+deb13u1 (postgresql-17, postgresql-client-17, postgresql-server-dev-17, postgresql-plperl-17, postgresql-plpython3-17, postgresql-pltcl-17, libpq5, libpq-dev, libecpg6, libecpg-dev, libecpg-compat3 and libpgtypes3, and their debug-symbol packages) and the 17.11-1 and 17.12-0 postgresql-17 packages. The programs, including the postgres server, and the client libraries are dynamically linked ELF files that list the system libc.so.6 in NEEDED. Some server extension modules, which are loaded into the postgres server process and resolve C library symbols from it, list no libc.so.6 of their own: in each rebuild of Debian's source, 27 with no NEEDED entries at all, earthdistance.so (whose one NEEDED entry is libm.so.6), bool_plperl.so (libperl, and on amd64 also the dynamic loader ld-linux-x86-64.so.2) and ltree_plpython3.so (libpython); in the 17.11-1 and 17.12-0 packages, 36 on amd64 and 35 on arm64 with no NEEDED entries, plus earthdistance.so and sslinfo.so (whose one NEEDED entry is libcrypto.so.3). The static archives shipped (libpq.a, libecpg.a, libecpg_compat.a, libpgtypes.a, libpgport.a, libpgport_shlib.a, libpgcommon.a, libpgcommon_shlib.a and libpgfeutils.a) hold PostgreSQL's own object files, and the debug-symbol packages hold detached debug information. None of the packages contains libc.so.6, the dynamic loader, libc.a, libpthread, a gconv module or another glibc library, the glibc version banner, a statically linked program, a PE or Mach-O file, or a jar, whl, zip or nupkg archive. glibc reaches an image through the packages built from the glibc source (libc6, libc-bin, nscd, ...), which are not part of this owner and are assessed on their own."
     },
     {
       "vulnerability": {
