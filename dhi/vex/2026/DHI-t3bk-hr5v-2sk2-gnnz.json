@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:32Z",
-  "last_updated": "2026-11-23T18:14:45Z",
-  "version": 87,
+  "last_updated": "2026-11-23T19:06:37Z",
+  "version": 88,
   "statements": [
     {
       "vulnerability": {
@@ -294,7 +294,9 @@
           "@id": "pkg:deb/dhi/airflow@3.4.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2019-1010023 is a report against the dynamic loader of the GNU C Library (glibc) that running ldd on a crafted ELF file whose segments overlap the loader can execute code from it; the glibc maintainers do not treat it as a security vulnerability, because ldd is not meant to be run on untrusted binaries. https://sourceware.org/bugzilla/show_bug.cgi?id=22851 and https://security-tracker.debian.org/tracker/CVE-2019-1010023. This package does not contain glibc. Checked the contents of all 100 published airflow packages in the DHI Debian repository, 3.3.0-0 to 3.4.0-9 for amd64 and arm64 (no debug-symbol packages are published for this source), recursing into the wheel and jar files they bundle; every download was checked against the checksum in the package index. Builds 3.3.0-0 to 3.4.0-0 hold 27 ELF files each, all Python extension modules dynamically linked against the system libc.so.6, and no other native code. Builds 3.4.0-1 to 3.4.0-9 add NumPy, SciPy and Ray and hold 405 to 424 ELF files each. All but 15 of them list libc.so.6 as a dependency, among them the py-spy, Ray raylet and Ray gcs_server programs. Of those 15, seven are NumPy and SciPy extension modules with no libc.so.6 entry of their own, which use the C library already loaded by the Python interpreter, and eight are the JNA dispatch libraries for FreeBSD, OpenBSD and Solaris inside Ray's ray_dist.jar, which are built for those systems and not for Linux. Those builds also carry NumPy's static archives libnpymath.a and libnpyrandom.a, whose nine members are NumPy's own math and random-distribution objects; 31 native Windows PE files with no .NET CLR header (the launcher .exe files of distlib, of setuptools and of the pip and setuptools wheels that virtualenv embeds, and JNA's three Windows jnidispatch.dll files); and JNA's two macOS (Mach-O) jnidispatch libraries. No ELF file in any build is statically linked. No file in any build is a copy of libc.so.6, the dynamic loader, libc.a or another glibc library, and none carries the glibc version banner. Ray's ray_dist.jar in builds 3.4.0-1 to 3.4.0-9 also holds JNA's two AIX dispatch libraries (libjnidispatch.a for aix-ppc and aix-ppc64), which despite the .a name are XCOFF shared objects built for AIX, not static archives, and are not glibc. The C library airflow runs against comes from glibc's own packages, such as libc6."
     },
     {
       "vulnerability": {
@@ -437,7 +439,9 @@
           "@id": "pkg:deb/dhi/alloy-dev@1.22.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2019-1010023 is a report against the dynamic loader of the GNU C Library (glibc) that running ldd on a crafted ELF file whose segments overlap the loader can execute code from it; the glibc maintainers do not treat it as a security vulnerability, because ldd is not meant to be run on untrusted binaries. https://sourceware.org/bugzilla/show_bug.cgi?id=22851 and https://security-tracker.debian.org/tracker/CVE-2019-1010023. This package does not contain glibc. Listed the contents and read the ELF headers of every published alloy-dev package for Debian 13 in the DHI Debian repository: 1.18.1-0 to 1.22.0-16, 43 versions on amd64 and 44 on arm64 (1.21.2-0 is published for arm64 only), 87 packages, each matched to the repository's SHA-256 checksum; no debug-symbol packages are published for this source. Each package holds one file, /usr/bin/alloy. /usr/bin/alloy is the only ELF file in every package: a Go program built with cgo, whose dynamic section names only libc.so.6 and the dynamic loader (ld-linux-x86-64.so.2 in all 43 amd64 builds, ld-linux-aarch64.so.1 in all 44 arm64 builds), so it uses the system C library at run time. No package contains libc.so.6, a dynamic loader, libc.a or another static archive, a gconv module, or a PE or Mach-O file. A search of /usr/bin/alloy in 1.18.1-0 and 1.22.0-16 (amd64) and 1.21.2-1 (arm64) found no glibc version banner, while the same search finds the libc.so.6 name in each. The C library alloy runs against comes from glibc's own packages, such as libc6."
     },
     {
       "vulnerability": {
@@ -580,7 +584,9 @@
           "@id": "pkg:deb/dhi/alloy-fips-dev@1.22.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2019-1010023 is a report against the dynamic loader of the GNU C Library (glibc) that running ldd on a crafted ELF file whose segments overlap the loader can execute code from it; the glibc maintainers do not treat it as a security vulnerability, because ldd is not meant to be run on untrusted binaries. https://sourceware.org/bugzilla/show_bug.cgi?id=22851 and https://security-tracker.debian.org/tracker/CVE-2019-1010023. This package does not contain glibc. Listed the contents and read the ELF headers of every published alloy-fips-dev package for Debian 13 in the authenticated DHI Debian security repository, where the FIPS packages are published: 1.18.1-0 to 1.22.0-16, 43 versions on amd64 and 44 on arm64 (1.21.2-0 is published for arm64 only), 87 packages, each matched to the repository's SHA-256 checksum; no debug-symbol packages are published for this source. Each package holds one file, /usr/bin/alloy. /usr/bin/alloy is the only ELF file in every package: a Go program built with cgo and Go's FIPS 140 mode (GOFIPS140), whose dynamic section names only libc.so.6 and the dynamic loader (ld-linux-x86-64.so.2 in all 43 amd64 builds, ld-linux-aarch64.so.1 in all 44 arm64 builds), so it uses the system C library at run time. No package contains libc.so.6, a dynamic loader, libc.a or another static archive, a gconv module, or a PE or Mach-O file. A search of /usr/bin/alloy in 1.18.1-0 and 1.22.0-16 (amd64) and 1.21.2-1 (arm64) found no glibc version banner, while the same search finds the libc.so.6 name in each. The C library alloy runs against comes from glibc's own packages, such as libc6."
     },
     {
       "vulnerability": {
@@ -723,7 +729,9 @@
           "@id": "pkg:deb/dhi/alloy-fips@1.22.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2019-1010023 is a report against the dynamic loader of the GNU C Library (glibc) that running ldd on a crafted ELF file whose segments overlap the loader can execute code from it; the glibc maintainers do not treat it as a security vulnerability, because ldd is not meant to be run on untrusted binaries. https://sourceware.org/bugzilla/show_bug.cgi?id=22851 and https://security-tracker.debian.org/tracker/CVE-2019-1010023. This package does not contain glibc. Listed the contents and read the ELF headers of every published alloy-fips package for Debian 13 in the authenticated DHI Debian security repository, where the FIPS packages are published: 1.18.1-0 to 1.22.0-16, 43 versions on amd64 and 44 on arm64 (1.21.2-0 is published for arm64 only), 87 packages, each matched to the repository's SHA-256 checksum; no debug-symbol packages are published for this source. Each package holds three files: /usr/bin/alloy, an example configuration file (/etc/alloy/config.alloy) and an SPDX JSON software bill of materials for the web UI. /usr/bin/alloy is the only ELF file in every package: a Go program built with cgo and Go's FIPS 140 mode (GOFIPS140), whose dynamic section names only libc.so.6 and the dynamic loader (ld-linux-x86-64.so.2 in all 43 amd64 builds, ld-linux-aarch64.so.1 in all 44 arm64 builds), so it uses the system C library at run time. No package contains libc.so.6, a dynamic loader, libc.a or another static archive, a gconv module, or a PE or Mach-O file. A search of /usr/bin/alloy in 1.18.1-0 and 1.22.0-16 (amd64) and 1.21.2-1 (arm64) found no glibc version banner, while the same search finds the libc.so.6 name in each. The C library alloy runs against comes from glibc's own packages, such as libc6."
     },
     {
       "vulnerability": {
@@ -866,7 +874,9 @@
           "@id": "pkg:deb/dhi/alloy@1.22.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2019-1010023 is a report against the dynamic loader of the GNU C Library (glibc) that running ldd on a crafted ELF file whose segments overlap the loader can execute code from it; the glibc maintainers do not treat it as a security vulnerability, because ldd is not meant to be run on untrusted binaries. https://sourceware.org/bugzilla/show_bug.cgi?id=22851 and https://security-tracker.debian.org/tracker/CVE-2019-1010023. This package does not contain glibc. Listed the contents and read the ELF headers of every published alloy package for Debian 13 in the DHI Debian repository: 1.18.1-0 to 1.22.0-16, 43 versions on amd64 and 44 on arm64 (1.21.2-0 is published for arm64 only), 87 packages, each matched to the repository's SHA-256 checksum; no debug-symbol packages are published for this source. Each package holds three files: /usr/bin/alloy, an example configuration file (/etc/alloy/config.alloy) and an SPDX JSON software bill of materials for the web UI. /usr/bin/alloy is the only ELF file in every package: a Go program built with cgo, whose dynamic section names only libc.so.6 and the dynamic loader (ld-linux-x86-64.so.2 in all 43 amd64 builds, ld-linux-aarch64.so.1 in all 44 arm64 builds), so it uses the system C library at run time. No package contains libc.so.6, a dynamic loader, libc.a or another static archive, a gconv module, or a PE or Mach-O file. A search of /usr/bin/alloy in 1.18.1-0 and 1.22.0-16 (amd64) and 1.21.2-1 (arm64) found no glibc version banner, while the same search finds the libc.so.6 name in each. The C library alloy runs against comes from glibc's own packages, such as libc6."
     },
     {
       "vulnerability": {
@@ -31689,7 +31699,9 @@
           "@id": "pkg:deb/dhi/k8s-sidecar@2.14.3-7?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2019-1010023 is a report against the dynamic loader of the GNU C Library (glibc) that running ldd on a crafted ELF file whose segments overlap the loader can execute code from it; the glibc maintainers do not treat it as a security vulnerability, because ldd is not meant to be run on untrusted binaries. https://sourceware.org/bugzilla/show_bug.cgi?id=22851 and https://security-tracker.debian.org/tracker/CVE-2019-1010023. This package does not contain glibc. Unpacked all 44 published k8s-sidecar packages in the DHI Debian repository, 2.10.1-0 to 2.14.3-7 for amd64 and arm64, each checked against the checksum in the package index, recursing into the archive files they bundle; no debug-symbol packages are published for this source. Each holds the k8s-sidecar Python application in a virtual environment under /usr/lib/k8s-sidecar, whose python links point to the system /usr/bin/python3.14, so it ships no Python interpreter binary of its own. Its ELF files are Python extension modules: 5 per package up to 2.13.3-0, 13 in 2.14.1-0 and 14 from 2.14.1-1. All of them are shared objects that list libc.so.6 as a dependency; none lacks it and none is statically linked. The packages up to 2.14.1-0 also carry pip, whose vendored distlib holds six native Windows launcher executables (t32.exe, t64.exe, t64-arm.exe, w32.exe, w64.exe and w64-arm.exe, none with a .NET CLR header), and python-dateutil's dateutil-zoneinfo.tar.gz, which holds time-zone data files and a METADATA file and no native code; later packages include neither. No package contains a static archive, a Mach-O file, a zip, wheel or jar archive, or a file named like libc.so.6, the dynamic loader, libc.a or a gconv module, and none carries the glibc version banner; the only file in any package that names the GNU C Library is python-dateutil's tz.py, in a documentation reference to the C library's TZ variable. The C library k8s-sidecar runs against comes from glibc's own packages, such as libc6."
     },
     {
       "vulnerability": {
