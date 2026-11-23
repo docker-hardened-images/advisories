@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T15:35:17Z",
-  "version": 1,
+  "last_updated": "2026-11-23T14:18:34Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -24,7 +25,9 @@
           "@id": "pkg:deb/dhi/nss@2:3.110-1%2Bdeb13u4%2Bdhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2017-11697 is a floating point exception in __hash_open() in lib/dbm/src/hash.c, part of NSS's legacy DBM database code, triggered by a crafted cert8.db file (https://bugzilla.mozilla.org/show_bug.cgi?id=1360900, https://seclists.org/fulldisclosure/2017/Aug/17). Mozilla closed the bug as WONTFIX in December 2019: its comment says these bugs are real and easily demonstrated but need local modification of the profile directory that holds the database, and that the fix is to move to the SQLite database format rather than repair the legacy DBM code (https://bugzilla.mozilla.org/show_bug.cgi?id=1360900#c6). No NSS release fixes it, and Debian lists every release, including trixie, as vulnerable and unfixed (https://security-tracker.debian.org/tracker/CVE-2017-11697, https://bugs.debian.org/873258). NSS renamed the double-underscore DBM functions in 2018 (https://github.com/nss-dev/nss/commit/b9dad25d9564) without changing their logic. The DHI Debian repository publishes three builds of nss for Debian 13: a rebuild of Debian's 2:3.110-1+deb13u4 and builds of NSS 3.131.1 and 3.132. We checked the libnss3 and libnss3-dbgsym packages of all three on amd64 and arm64, verified against the index checksums. Every libnss3 package ships the legacy DBM module libnssdbm3.so, and its debug symbols in every build contain dbm_hash_open (the function the CVE calls __hash_open). No published build carries a fix, so every build is affected."
     }
   ]
 }

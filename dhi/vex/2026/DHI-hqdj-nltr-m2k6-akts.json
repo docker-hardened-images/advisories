@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T15:48:39Z",
-  "last_updated": "2026-11-12T21:12:35Z",
-  "version": 2,
+  "last_updated": "2026-11-23T14:18:47Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -17,12 +17,26 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/openjpeg2@2.5.3-2.1~deb13u2%2Bdhi2?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update openjpeg2 to 2.5.3-2.1~deb13u2+dhi3 or later.",
+      "status_notes": "CVE-2026-107080 is an out-of-bounds read and write in opj_dwt_encode_and_deinterleave_v() in src/lib/openjp2/dwt.c, the vertical pass of the forward 5/3 wavelet transform used when encoding: a resolution level with zero height at an odd start makes it address its scratch buffer past the end (https://github.com/uclouvain/openjpeg/issues/1673, reported at https://www.openwall.com/lists/oss-security/2026/10/05/5). The upstream fix is still an open pull request, https://github.com/uclouvain/openjpeg/pull/1674, whose commit https://github.com/uclouvain/openjpeg/commit/843b78e2712edab13bbda30662465d443a062716 adds an early return when height is 0; no OpenJPEG release carries it yet, and Debian lists every release as vulnerable (https://security-tracker.debian.org/tracker/CVE-2026-107080). This package backports that guard, without the upstream regression test, into its build of Debian's openjpeg2 2.5.3-2.1~deb13u2. Checked in the binaries of all four published builds on amd64 and arm64, using the function address from each build's own debug symbols: in the fourth and current build, the fixed version in the range below, both the shared library libopenjp2.so.2.5.3 (libopenjp2-7) and the static archive libopenjp2.a (libopenjp2-7-dev) begin opj_dwt_encode_and_deinterleave_v() with a test of the height argument that returns at once when it is zero, while in the three earlier builds the function starts directly on the column fetch with no such test. The fixed build's changelog records the backport and the earlier builds' changelogs do not. The other programs and libraries built from this source (the opj_* tools and libopenjpip) do not contain the function, per the fixed build's debug symbols on both architectures; the opj_compress, opj_decompress and opj_dump tools link libopenjp2.so.7, the library that contains it. The three earlier builds are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-hqdj-nltr-m2k6-akts",
+        "aliases": [
+          "CVE-2026-107080"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/openjpeg2@2.5.3-2.1~deb13u2%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-107080 is an out-of-bounds read and write in opj_dwt_encode_and_deinterleave_v() in src/lib/openjp2/dwt.c, the vertical pass of the forward 5/3 wavelet transform used when encoding: a resolution level with zero height at an odd start makes it address its scratch buffer past the end (https://github.com/uclouvain/openjpeg/issues/1673, reported at https://www.openwall.com/lists/oss-security/2026/10/05/5). The upstream fix is still an open pull request, https://github.com/uclouvain/openjpeg/pull/1674, whose commit https://github.com/uclouvain/openjpeg/commit/843b78e2712edab13bbda30662465d443a062716 adds an early return when height is 0; no OpenJPEG release carries it yet, and Debian lists every release as vulnerable (https://security-tracker.debian.org/tracker/CVE-2026-107080). This package backports that guard, without the upstream regression test, into its build of Debian's openjpeg2 2.5.3-2.1~deb13u2. Checked in the binaries of all four published builds on amd64 and arm64, using the function address from each build's own debug symbols: in the fourth and current build, the fixed version in the range below, both the shared library libopenjp2.so.2.5.3 (libopenjp2-7) and the static archive libopenjp2.a (libopenjp2-7-dev) begin opj_dwt_encode_and_deinterleave_v() with a test of the height argument that returns at once when it is zero, while in the three earlier builds the function starts directly on the column fetch with no such test. The fixed build's changelog records the backport and the earlier builds' changelogs do not. The other programs and libraries built from this source (the opj_* tools and libopenjpip) do not contain the function, per the fixed build's debug symbols on both architectures; the opj_compress, opj_decompress and opj_dump tools link libopenjp2.so.7, the library that contains it. The three earlier builds are affected."
     }
   ]
 }
