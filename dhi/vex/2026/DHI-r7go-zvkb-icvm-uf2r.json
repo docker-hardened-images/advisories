@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T06:02:34Z",
-  "last_updated": "2026-11-12T22:56:09Z",
-  "version": 2,
+  "last_updated": "2026-11-23T15:02:14Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -22,7 +22,9 @@
           "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2020-15778: when scp copies files to a remote host with the legacy scp protocol, toremote() in scp.c sends the destination path to the remote shell inside the command \"scp -t <destination>\" without quoting it, so shell metacharacters such as backticks in the destination run as commands on the remote host with the remote account's rights (https://github.com/cpandya2909/CVE-2020-15778, https://security-tracker.debian.org/tracker/CVE-2020-15778, https://bugzilla.redhat.com/show_bug.cgi?id=1860487). It matters where an account is meant to be limited to copying files. OpenSSH declined to change it, replying that attempts to detect and prevent anomalous argument transfers stand a great chance of breaking existing workflows (quoted in the reporter's write-up and in https://www.cve.org/CVERecord?id=CVE-2020-15778), and the Debian security tracker lists every Debian release, including trixie, as vulnerable and rates it unimportant. Since OpenSSH 9.0, scp uses the SFTP protocol by default, which does not pass file names through the remote shell (https://www.openssh.com/txt/release-9.0); the legacy protocol, and with it this behaviour, is still used when scp is run with -O. OpenSSH 10.0p1 and Debian's patched source keep the unquoted \"%s -t %s%s\" command in toremote(). The DHI Debian repository publishes three builds of openssh for Debian 13, all rebuilds of Debian's 1:10.0p1-7+deb13u4. We checked the openssh-server and openssh-client packages and their debug-symbol packages for all three builds on amd64 and arm64, each verified against the index checksum, and the source of Debian's 1:10.0p1-7+deb13u4 (https://salsa.debian.org/ssh-team/openssh/-/tree/debian/1%2510.0p1-7+deb13u4). In every build, /usr/bin/scp in the openssh-client package carries that command format, and its debug symbols contain toremote. This owner carries no change to this code, so every published build is affected."
     }
   ]
 }
