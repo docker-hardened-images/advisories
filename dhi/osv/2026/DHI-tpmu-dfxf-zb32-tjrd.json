@@ -1,13 +1,13 @@
 {
   "schema_version": "1.8.0",
   "id": "DHI-tpmu-dfxf-zb32-tjrd",
-  "modified": "2026-11-11T20:00:57Z",
+  "modified": "2026-11-23T23:25:27Z",
   "published": "2026-11-11T20:00:57Z",
   "upstream": [
     "CVE-2026-19654"
   ],
-  "summary": "A unauthenticated remote peer may lead rsyslogd to crash due to a flaw in the optional imptcp module. A crafted input…",
-  "details": "A unauthenticated remote peer may lead rsyslogd to crash due to a flaw in the optional imptcp module. A crafted input sequence during oversize-frame recovery can cause an invalid internal message length and terminate rsyslogd. No confidentiality or integrity impact, privilege escalation, or code execution has been identified. imtcp and the default imptcp framing modes are not affected.",
+  "summary": "## Summary",
+  "details": "## Summary\r\n\r\nThis issue is **not active in default rsyslog installations**. It affects only deployments that explicitly load the optional `imptcp` input module and configure an `imptcp` listener with the non-default `framing.delimiter.regex` setting.\r\n\r\nAn unauthenticated remote client that can establish a TCP connection to such a listener can send crafted input that terminates the `rsyslogd` process, resulting in a denial of service.\r\n\r\nNo confidentiality or integrity impact has been demonstrated.\r\n\r\n## Affected configurations\r\n\r\nA deployment is affected only if all of the following apply:\r\n\r\n1. The optional `imptcp` module is installed and explicitly loaded:\r\n\r\n   ```rsyslog\r\n   module(load=\"imptcp\")\r\n   ```\r\n\r\n2. An `imptcp` input is configured with `framing.delimiter.regex`, for example:\r\n\r\n   ```rsyslog\r\n   input(\r\n       type=\"imptcp\"\r\n       port=\"514\"\r\n       framing.delimiter.regex=\"^<[0-9]{1,3}>...\"\r\n   )\r\n   ```\r\n\r\n3. An attacker can establish a TCP connection to that listener.\r\n\r\nDefault `imptcp` framing, including octet-counted and newline-delimited framing, is not affected. The `imtcp` module is also not affected by this issue.\r\n\r\n## Mitigation\r\n\r\nUpgrade to the rsyslog daily stable build published on **2026-07-23 (CEST)** or later.\r\n\r\nUntil an upgrade is available, affected deployments can mitigate the issue by one of the following:\r\n\r\n- Replace the affected `imptcp` listener with an equivalent `imtcp` listener\r\n- Remove `framing.delimiter.regex` from affected `imptcp` inputs and use standard framing.\r\n- Disable the affected `imptcp` listener or unload `imptcp` if it is not required.\r\n- Restrict network access to the listener to trusted senders.\r\n\r\n## Affected versions\r\n\r\nThe vulnerable regex-framing implementation was introduced in rsyslog **v8.36.0**.\r\n\r\nScheduled stable releases from **v8.36.0 through v8.2606.0** are affected when used with the configuration described above. Daily stable builds published before **2026-07-23 (CEST)** are also affected.\r\n\r\nThe fix is included in daily stable builds published on or after **2026-07-23 (CEST)** and will be included in the next scheduled stable release.\r\n\r\n## Credit\r\n\r\nThanks to Raphael Eikenberg for reporting this issue.\r\n",
   "severity": [
     {
       "type": "CVSS_V3",
@@ -21,6 +21,16 @@
         "name": "rsyslog",
         "purl": "pkg:apk/dhi/rsyslog"
       },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.2512.0-r0"
+            }
+          ]
+        }
+      ],
       "versions": [
         "8.2512.0-r0",
         "8.2512.0-r1",
@@ -36,6 +46,16 @@
         "name": "rsyslog",
         "purl": "pkg:apk/dhi/rsyslog"
       },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.2604.0-r0"
+            }
+          ]
+        }
+      ],
       "versions": [
         "8.2604.0-r0",
         "8.2604.0-r1",
@@ -54,19 +74,7 @@
     },
     {
       "type": "ADVISORY",
-      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-19654"
-    },
-    {
-      "type": "ADVISORY",
       "url": "https://github.com/rsyslog/rsyslog/security/advisories/GHSA-cj5r-wh2m-7w29"
-    },
-    {
-      "type": "ADVISORY",
-      "url": "https://bugzilla.redhat.com/show_bug.cgi?id=2502868"
-    },
-    {
-      "type": "ADVISORY",
-      "url": "https://access.redhat.com/security/cve/CVE-2026-19654"
     },
     {
       "type": "ADVISORY",
@@ -99,6 +107,18 @@
     {
       "type": "ADVISORY",
       "url": "https://security-tracker.debian.org/tracker/CVE-2026-19654"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-19654"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://bugzilla.redhat.com/show_bug.cgi?id=2502868"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-19654"
     },
     {
       "type": "ADVISORY",
