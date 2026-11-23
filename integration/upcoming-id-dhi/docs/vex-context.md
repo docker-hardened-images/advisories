@@ -25,18 +25,18 @@ semantics, a package version is affected if it is listed in
 | Assessment state | Generated DHI OSV role | Generated DHI VEX role | Scanner result |
 | --- | --- | --- | --- |
 | `affected` | Creates a finding through native ranges and enumerated affected versions. | Confirms DHI assessment and adds status/action context. | Report finding with DHI context. |
-| `under_investigation` | Creates a finding for each exact DHI package version covered by the current assessment and listed in `affected[].versions`; no affected interval is defined. | Marks the matching DHI product assessment as unresolved and adds status context. | Report an explicitly listed version even without VEX; when VEX is consumed, show the under-investigation context. |
+| `under_investigation` | Creates a finding through known versions and an eligible open-ended safe suffix. | Marks the matching DHI product assessment as unresolved and adds status context. | Report listed versions and versions matching published ranges even without VEX; when VEX is consumed, show the under-investigation context. |
 | `not_affected` | Prevents a finding by omitting positive OSV coverage for the DHI package/version. | Explains the assessment for exact product matches and remains the published advisory artifact when the advisory is VEX-only. | No finding. |
 | `fixed` | Prevents a finding by ending the affected range before the fixed version. | Marks exact DHI product versions as fixed. | No finding for fixed versions. |
 
-For vulnerability discovery, scanners treat each listed
-`under_investigation` version as affected until Docker resolves the assessment.
-The OSV coverage is scoped to the applicable DHI package, lineage, release, and
-exact versions listed in `affected[].versions`. Resolution replaces that
-coverage with the determined `affected` or `fixed` coverage, or removes it for
-`not_affected`. An OSV-only consumer therefore reports an explicitly listed
-package version as a finding. Because the entry has no `affected[].ranges`,
-other unlisted versions do not match it.
+For vulnerability discovery, scanners match an `under_investigation` package's
+published versions and ranges as a union within its lineage and base release.
+A safe suffix can start after earlier explicitly listed versions. An entry
+without a range is valid and matches only its listed versions. An eligible range has no upper bound, so a
+new version matches even before the feed enumerates it. Resolution replaces
+this coverage with assessed affected/fixed ranges or removes it for
+`not_affected`. VEX remains exact-product context: an unlisted version may
+match OSV without a corresponding VEX product statement.
 
 The `fixed` VEX context is exact product context, not a range. A scanner should
 not show a `fixed` statement for `pkg:apk/dhi/foo@1.23` as applying to an image
@@ -110,11 +110,25 @@ VEX record, but scanners are not required to consume it to determine whether a
 finding exists. In particular, an `under_investigation` result is discoverable
 from OSV alone; VEX explains why that result is unresolved.
 
-When a scanner does consume VEX, every generated OSV affected package is
-expected to have a matching product in the paired VEX document for the same
-package, release, and exact version. A missing document or product match is a
-feed integrity error, not a normal no-context path. Continue to report the OSV
-finding and surface the integrity error; do not suppress the finding.
+When a scanner does consume VEX, the paired document is expected to exist.
+A missing paired document is a feed-integrity error, including for range-only
+OSV matches. Continue to report the OSV finding and surface the error.
+
+Within an available paired document, distinguish these cases for the matching
+OSV package and release:
+
+- A version explicitly listed in `affected[].versions` is expected to have a
+  matching exact-version VEX product. If that product is missing, report the
+  OSV finding and a feed-integrity error.
+- A version absent from `affected[].versions` but matched by `affected[].ranges`
+  may have no corresponding VEX product yet. This is an expected range-only
+  finding, not a feed-integrity error. Report the OSV finding without exact-product
+  VEX context; do not infer a VEX status from another version's statement.
+
+If an exact-product statement is present, apply its context as described above,
+including reporting contradictory `fixed` or `not_affected` status as an
+OSV/VEX state mismatch. Never suppress an OSV finding because VEX context is
+missing.
 
 Scanners should not need to query upstream Alpine or Debian OSV feeds for a
 DHI-owned base-layer package after generated DHI OSV data exists. When scanning

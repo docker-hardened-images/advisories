@@ -155,9 +155,10 @@ pkg:apk/dhi/coreutils@9.11-r0?distro=dhi-3.24
 `affected[].versions` and `affected[].ranges` have union semantics. Exact
 versions remain useful alongside `ECOSYSTEM` ranges because consumers without
 the package manager's native comparator can still perform precise equality
-matching. For an `under_investigation` assessment, generated DHI OSV uses
-`affected[].versions` and omits `affected[].ranges` because the assessment does
-not define an affected interval.
+matching. For an `under_investigation` package assessment, generated DHI OSV
+retains known versions and may add an open-ended `ECOSYSTEM` range from a safe
+suffix. Without known exclusions this is the native earliest covered version. Unlisted versions at or above that boundary also match within the same package,
+lineage, and base release; no fixed boundary is claimed.
 
 APK affected entry:
 
@@ -199,8 +200,8 @@ Debian affected entry:
 }
 ```
 
-Alpine `under_investigation` entry with enumerated versions and no
-`affected[].ranges`:
+Alpine `under_investigation` entry with known versions and an open-ended range
+covering versions from the earliest known covered version within its lineage and base release:
 
 ```json
 {
@@ -209,6 +210,72 @@ Alpine `under_investigation` entry with enumerated versions and no
     "name": "python-3.12",
     "purl": "pkg:apk/dhi/python-3.12"
   },
+  "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "3.12.13-r7"}]}],
   "versions": ["3.12.13-r7"]
 }
 ```
+
+### Separate Python version lines already have separate package identities
+
+The published [OSV record for `DHI-3czz-efwu-b2ii-jquo`](https://github.com/docker-hardened-images/advisories/blob/d1572e5f00b10cc8204dd9e67ebd43057940a129/dhi/osv/2026/DHI-3czz-efwu-b2ii-jquo.json)
+(`PSF-2018-8`), pinned to commit `d1572e5f`, contains six Python package
+entries. Two examples in `Docker Hardened Images:Alpine:3.23` are:
+
+| Package PURL | Enumerated versions in this snapshot |
+| --- | ---: |
+| `pkg:apk/dhi/python-3.11` | 23 |
+| `pkg:apk/dhi/python-3.12` | 23 |
+
+The [paired VEX record](https://github.com/docker-hardened-images/advisories/blob/d1572e5f00b10cc8204dd9e67ebd43057940a129/dhi/vex/2026/DHI-3czz-efwu-b2ii-jquo.json)
+has separate `under_investigation` statements for those packages, each naming
+its own 23 exact products. The published OSV snapshot enumerates versions and
+contains no ranges for these entries. This change preserves those existing
+identities and adds an independent open-ended range to each package, starting
+at that package's eligible native safe suffix. With no exclusions this is its
+earliest covered version; a historical unmarked record remains enumerated until
+rematerialized. A range on `python-3.11`
+does not match `python-3.12`, even in the same ecosystem.
+
+No version-line inference or new package identity is needed for this Python
+case. This does not assume that every package encodes its version line in its
+name: parallel lines sharing one package identity remain conservatively covered
+unless vulnerability-specific evidence supports refinement.
+
+### Why this under-investigation boundary is safe for the DHI universe
+
+The producer's working package set is complete for the DHI package universe
+within the same package identity, lineage and base release. An advisory-aware
+resolver can select a subset using positive applicability evidence. The
+materializer compares complete and retained versions, then chooses the native
+earliest retained release strictly after every known exclusion. No exclusions
+means the native minimum. Retained `r0,r2` with excluded `r1` publishes explicit
+`r0,r2` plus an open range from `r2`. Retained `r0,r1` with excluded `r2` has no
+safe suffix and stays enumerated. An exclusion below the proposed start does
+not move it. Native APK/dpkg ordering includes epochs and revisions; versions
+are not ordered lexically.
+
+Missing or inconsistent comparison evidence leaves exact enumeration. Historical
+records without pinned eligibility also remain enumerated until rematerialized.
+Consumers match the published ranges and versions as a union; they must not
+invent a range from the smallest listed version. Older explicit releases below
+a published suffix still match. This uses existing DHI inventory evidence and
+makes no assertion about upstream versions or other package scopes.
+
+The boundary represents DHI coverage, not the actual introduction of the
+vulnerability. Broad unresolved coverage above it is intentional: a new release
+at or above the boundary matches before explicit enumeration catches up. A new
+or backfilled DHI version below the current boundary requires regeneration.
+Earlier unlisted versions do not match this entry; that is not a general claim
+that older upstream versions are safe. If the producer can no longer guarantee
+complete inventory, this lower-bound policy must be revisited.
+
+Refine coverage only with positive vulnerability-specific evidence: an explicit
+assessment or a verified mapping from advisory evidence to DHI package
+versions. Definition metadata can identify parallel version lines, but does not
+establish each line's affected cutoff. Version gaps and missing matches alone
+must not narrow coverage or manufacture a fix. Where evidence is absent, broad
+coverage is preferred to a scanning blind spot.
+
+Comparator-equivalent spellings use a deterministic lexical tie-break.
+Versions rejected by the native parser fail publication rather than silently
+falling back to `0` or inventing a boundary.

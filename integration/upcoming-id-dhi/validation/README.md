@@ -81,6 +81,14 @@ versions, provide native OSV `ECOSYSTEM` ranges, or provide both. Static
 validation treats those fields as a union, following the
 [OSV affected-version algorithm](https://ossf.github.io/osv-schema/#affected-fields).
 
+The static harness uses a fixture-scoped tokenizer, not native APK or dpkg
+comparators. Its simple numeric/revision probes demonstrate union matching and
+range boundaries for these synthetic examples only. It does not validate
+prerelease, epoch or Debian `~` ordering and must not be used as a native-version
+conformance test. Native ordering is covered by the companion renderer's tests;
+production scanner integrations must use the package manager's native ordering.
+No additional Debian ordering conformance is claimed by this static suite.
+
 Static validation also checks the public package identity:
 - OSV package PURLs carry no qualifiers. They sit under a
   `Docker Hardened Images:Alpine:<release>` or
@@ -92,13 +100,22 @@ Static validation also checks the public package identity:
   OpenVEX subset rule, with the same release.
 - No fixture PURL may carry `os_*` qualifiers.
 
-The affected/fixed scenarios also declare `range_only_matching_versions`:
+The affected, fixed, and under-investigation scenarios declare `range_only_matching_versions`:
 versions inside the fixture's affected range but absent from its explicit
 `versions` list. The harness requires these to produce findings through the
 same matching function used for the installed version. Together with the
-exact-version-only `under_investigation` case, these probes exercise both
-branches of the union. They are synthetic matching probes, not additional
+explicit installed-version checks, these probes exercise both branches
+of the union, including an unlisted future under-investigation release. They are synthetic matching probes, not additional
 installed packages or claims about published releases.
+
+The original unresolved fixture uses its installed version as the minimum.
+Two additional static variants exercise a safe suffix above an earlier listed
+version, and valid enumeration-only coverage when the latest release is excluded.
+The manifest supplies `covered_versions` and `investigation_range_start` (null
+means no range); the harness verifies that encoding and its matching behavior.
+Excluded `r8` must not match; explicit `r7` still does, and the safe-suffix variant
+matches unlisted `r10`. This is not a native-comparator or producer-eligibility
+validator; those properties are covered by Inbox's APK/Debian regressions.
 
 Embedded language package PURLs, such as `pkg:pypi/...` or `pkg:npm/...`, are
 provenance in fixture metadata and the example SBOM parent-child relationship.
@@ -160,8 +177,8 @@ data is available through the production advisory pipeline.
 - Both `affected` and `under_investigation` assessments produce active
   generated DHI OSV findings. The `under_investigation` fixture matches
   the exact version covered by the current assessment before VEX is applied.
-  Because the entry has no `affected[].ranges`, an unlisted version does not
-  match; VEX supplies the unresolved assessment context.
+  Its open-ended `ECOSYSTEM` range also matches an unlisted future release
+  without VEX; VEX supplies unresolved context for exact known products.
 - `affected` and `fixed` fixtures retain native ranges and also enumerate
   affected versions. Each includes a positive range-matching probe absent
   from the enumerated versions, so a versions-only matcher fails validation.
