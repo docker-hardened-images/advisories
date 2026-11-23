@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T16:52:19Z",
-  "last_updated": "2026-11-23T06:22:06Z",
-  "version": 6,
+  "last_updated": "2026-11-23T19:49:59Z",
+  "version": 7,
   "statements": [
     {
       "vulnerability": {
@@ -72,7 +72,20 @@
         },
         {
           "@id": "pkg:apk/dhi/openssl@3.5.6-r1?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update openssl to 3.5.7-r0 or later.",
+      "status_notes": "CVE-2026-45446 (\"Incorrect Tag Processing for Empty Messages in AES-GCM-SIV and AES-SIV modes\", Low): OpenSSL's provider implementations of AES-GCM-SIV and AES-SIV compute the expected tag only when decryption is given ciphertext, so when an application supplies additional authenticated data and finishes decryption without a ciphertext update, as can happen for an empty ciphertext, an attacker can forge empty messages with arbitrary additional data (with AES-GCM-SIV in a single message with an all-zero tag; with AES-SIV only if the application reuses the decryption context without resetting the key). No protocol implemented in OpenSSL itself uses these modes, so only applications that build their own protocol on the EVP interface and skip the ciphertext update for empty messages are exposed. OpenSSL 3.5 is affected and fixed in OpenSSL 3.5.7; the FIPS modules are not affected because these algorithms are not FIPS approved and the code is outside the FIPS module boundary. https://openssl-library.org/news/secadv/20260609.txt. Fix on the openssl-3.5 branch: https://github.com/openssl/openssl/commit/7fe3f33a3b3a4c487aa4dcdbc87057f66ffd2b85, first released in OpenSSL 3.5.7. Alpine fixed it in openssl 3.5.7-r0: https://security.alpinelinux.org/vuln/CVE-2026-45446. The published DHI Alpine 3.23 builds from the openssl source (the main repository packages, and the openssl-fips FIPS-provider package in the DHI enterprise repository, built from the same source at matching versions from 3.5.5_git20260330-r1 on) are 3.5.4-r0, 3.5.5-r0, 3.5.5_git20260330-r1, 3.5.6-r0, 3.5.6-r1, 3.5.7-r0, 3.5.7-r1, 3.5.8-r0, 3.5.8-r1, 3.5.9-r0, 3.5.9-r1 and 3.5.9-r2, each on x86_64 and aarch64. The libcrypto in every one of these builds reports the OpenSSL release of its package version (3.5.5_git20260330-r1, a git snapshot dated 30 March 2026, reports 3.5.5). Builds before 3.5.7-r0 are based on OpenSSL 3.5.6 or earlier, and 3.5.7-r0 and every later build on OpenSSL 3.5.7 or later. The fix makes AES-SIV reset its final state to -1 when its context parameters are set and makes AES-GCM-SIV clear its stored tag when the key is initialised and compute the tag when no ciphertext was processed. In the disassembly of libcrypto, located with the shipped debug symbols, aes_siv_set_ctx_params() stores -1 into the SIV context and aes_gcm_siv_initkey() zeroes the 16-byte stored tag in 3.5.7-r0 and every later build, and neither store is present in 3.5.4-r0, 3.5.5-r0, 3.5.5_git20260330-r1, 3.5.6-r0 or 3.5.6-r1, on both architectures (debug symbols from the openssl-dbg package of each build). The openssl-fips package holds only the FIPS provider (fips.so, built from the same OpenSSL release as the package version in every build on both architectures) and its configuration files; the advisory places the affected code outside the FIPS module boundary, and none of the fips.so files in these builds names an SIV cipher."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-erwa-fff7-shnv-eil6",
+        "aliases": [
+          "CVE-2026-45446"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/openssl@3.5.7-r0?distro=dhi-3.23"
         },
@@ -95,7 +108,8 @@
           "@id": "pkg:apk/dhi/openssl@3.5.9-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-45446 (\"Incorrect Tag Processing for Empty Messages in AES-GCM-SIV and AES-SIV modes\", Low): OpenSSL's provider implementations of AES-GCM-SIV and AES-SIV compute the expected tag only when decryption is given ciphertext, so when an application supplies additional authenticated data and finishes decryption without a ciphertext update, as can happen for an empty ciphertext, an attacker can forge empty messages with arbitrary additional data (with AES-GCM-SIV in a single message with an all-zero tag; with AES-SIV only if the application reuses the decryption context without resetting the key). No protocol implemented in OpenSSL itself uses these modes, so only applications that build their own protocol on the EVP interface and skip the ciphertext update for empty messages are exposed. OpenSSL 3.5 is affected and fixed in OpenSSL 3.5.7; the FIPS modules are not affected because these algorithms are not FIPS approved and the code is outside the FIPS module boundary. https://openssl-library.org/news/secadv/20260609.txt. Fix on the openssl-3.5 branch: https://github.com/openssl/openssl/commit/7fe3f33a3b3a4c487aa4dcdbc87057f66ffd2b85, first released in OpenSSL 3.5.7. Alpine fixed it in openssl 3.5.7-r0: https://security.alpinelinux.org/vuln/CVE-2026-45446. The published DHI Alpine 3.23 builds from the openssl source (the main repository packages, and the openssl-fips FIPS-provider package in the DHI enterprise repository, built from the same source at matching versions from 3.5.5_git20260330-r1 on) are 3.5.4-r0, 3.5.5-r0, 3.5.5_git20260330-r1, 3.5.6-r0, 3.5.6-r1, 3.5.7-r0, 3.5.7-r1, 3.5.8-r0, 3.5.8-r1, 3.5.9-r0, 3.5.9-r1 and 3.5.9-r2, each on x86_64 and aarch64. The libcrypto in every one of these builds reports the OpenSSL release of its package version (3.5.5_git20260330-r1, a git snapshot dated 30 March 2026, reports 3.5.5). Builds before 3.5.7-r0 are based on OpenSSL 3.5.6 or earlier, and 3.5.7-r0 and every later build on OpenSSL 3.5.7 or later. The fix makes AES-SIV reset its final state to -1 when its context parameters are set and makes AES-GCM-SIV clear its stored tag when the key is initialised and compute the tag when no ciphertext was processed. In the disassembly of libcrypto, located with the shipped debug symbols, aes_siv_set_ctx_params() stores -1 into the SIV context and aes_gcm_siv_initkey() zeroes the 16-byte stored tag in 3.5.7-r0 and every later build, and neither store is present in 3.5.4-r0, 3.5.5-r0, 3.5.5_git20260330-r1, 3.5.6-r0 or 3.5.6-r1, on both architectures (debug symbols from the openssl-dbg package of each build). The openssl-fips package holds only the FIPS provider (fips.so, built from the same OpenSSL release as the package version in every build on both architectures) and its configuration files; the advisory places the affected code outside the FIPS module boundary, and none of the fips.so files in these builds names an SIV cipher."
     },
     {
       "vulnerability": {
@@ -107,7 +121,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/openssl@3.5.6-r1?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update openssl to 3.5.7-r0 or later.",
+      "status_notes": "CVE-2026-45446 (\"Incorrect Tag Processing for Empty Messages in AES-GCM-SIV and AES-SIV modes\", Low): OpenSSL's provider implementations of AES-GCM-SIV and AES-SIV compute the expected tag only when decryption is given ciphertext, so when an application supplies additional authenticated data and finishes decryption without a ciphertext update, as can happen for an empty ciphertext, an attacker can forge empty messages with arbitrary additional data (with AES-GCM-SIV in a single message with an all-zero tag; with AES-SIV only if the application reuses the decryption context without resetting the key). No protocol implemented in OpenSSL itself uses these modes, so only applications that build their own protocol on the EVP interface and skip the ciphertext update for empty messages are exposed. OpenSSL 3.5 is affected and fixed in OpenSSL 3.5.7; the FIPS modules are not affected because these algorithms are not FIPS approved and the code is outside the FIPS module boundary. https://openssl-library.org/news/secadv/20260609.txt. Fix on the openssl-3.5 branch: https://github.com/openssl/openssl/commit/7fe3f33a3b3a4c487aa4dcdbc87057f66ffd2b85, first released in OpenSSL 3.5.7. Alpine fixed it in openssl 3.5.7-r0: https://security.alpinelinux.org/vuln/CVE-2026-45446. The published DHI Alpine 3.24 builds from the openssl source (the main repository packages, and the openssl-fips FIPS-provider package in the DHI enterprise repository, built from the same source at the same versions) are 3.5.6-r1, 3.5.7-r0, 3.5.7-r1, 3.5.8-r1, 3.5.9-r0, 3.5.9-r2 and 3.5.9-r3, each on x86_64 and aarch64. The libcrypto in every one of these builds reports the OpenSSL release of its package version. Builds before 3.5.7-r0 are based on OpenSSL 3.5.6 or earlier, and 3.5.7-r0 and every later build on OpenSSL 3.5.7 or later. The fix makes AES-SIV reset its final state to -1 when its context parameters are set and makes AES-GCM-SIV clear its stored tag when the key is initialised and compute the tag when no ciphertext was processed. In the disassembly of libcrypto, located with the shipped debug symbols, aes_siv_set_ctx_params() stores -1 into the SIV context and aes_gcm_siv_initkey() zeroes the 16-byte stored tag in 3.5.7-r0 and every later build, and neither store is present in 3.5.6-r1, on both architectures (debug symbols from the openssl-dbg package of each build). The openssl-fips package holds only the FIPS provider (fips.so, built from the same OpenSSL release as the package version in every build on both architectures) and its configuration files; the advisory places the affected code outside the FIPS module boundary, and none of the fips.so files in these builds names an SIV cipher."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-erwa-fff7-shnv-eil6",
+        "aliases": [
+          "CVE-2026-45446"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/openssl@3.5.7-r0?distro=dhi-3.24"
         },
@@ -127,7 +154,8 @@
           "@id": "pkg:apk/dhi/openssl@3.5.9-r3?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-45446 (\"Incorrect Tag Processing for Empty Messages in AES-GCM-SIV and AES-SIV modes\", Low): OpenSSL's provider implementations of AES-GCM-SIV and AES-SIV compute the expected tag only when decryption is given ciphertext, so when an application supplies additional authenticated data and finishes decryption without a ciphertext update, as can happen for an empty ciphertext, an attacker can forge empty messages with arbitrary additional data (with AES-GCM-SIV in a single message with an all-zero tag; with AES-SIV only if the application reuses the decryption context without resetting the key). No protocol implemented in OpenSSL itself uses these modes, so only applications that build their own protocol on the EVP interface and skip the ciphertext update for empty messages are exposed. OpenSSL 3.5 is affected and fixed in OpenSSL 3.5.7; the FIPS modules are not affected because these algorithms are not FIPS approved and the code is outside the FIPS module boundary. https://openssl-library.org/news/secadv/20260609.txt. Fix on the openssl-3.5 branch: https://github.com/openssl/openssl/commit/7fe3f33a3b3a4c487aa4dcdbc87057f66ffd2b85, first released in OpenSSL 3.5.7. Alpine fixed it in openssl 3.5.7-r0: https://security.alpinelinux.org/vuln/CVE-2026-45446. The published DHI Alpine 3.24 builds from the openssl source (the main repository packages, and the openssl-fips FIPS-provider package in the DHI enterprise repository, built from the same source at the same versions) are 3.5.6-r1, 3.5.7-r0, 3.5.7-r1, 3.5.8-r1, 3.5.9-r0, 3.5.9-r2 and 3.5.9-r3, each on x86_64 and aarch64. The libcrypto in every one of these builds reports the OpenSSL release of its package version. Builds before 3.5.7-r0 are based on OpenSSL 3.5.6 or earlier, and 3.5.7-r0 and every later build on OpenSSL 3.5.7 or later. The fix makes AES-SIV reset its final state to -1 when its context parameters are set and makes AES-GCM-SIV clear its stored tag when the key is initialised and compute the tag when no ciphertext was processed. In the disassembly of libcrypto, located with the shipped debug symbols, aes_siv_set_ctx_params() stores -1 into the SIV context and aes_gcm_siv_initkey() zeroes the 16-byte stored tag in 3.5.7-r0 and every later build, and neither store is present in 3.5.6-r1, on both architectures (debug symbols from the openssl-dbg package of each build). The openssl-fips package holds only the FIPS provider (fips.so, built from the same OpenSSL release as the package version in every build on both architectures) and its configuration files; the advisory places the affected code outside the FIPS module boundary, and none of the fips.so files in these builds names an SIV cipher."
     },
     {
       "vulnerability": {
@@ -160,7 +188,20 @@
         },
         {
           "@id": "pkg:deb/dhi/openssl@3.5.6-1~deb13u1dhi0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update openssl to 3.5.6-1~deb13u2+dhi0 or later.",
+      "status_notes": "CVE-2026-45446 (\"Incorrect Tag Processing for Empty Messages in AES-GCM-SIV and AES-SIV modes\", Low): OpenSSL's provider implementations of AES-GCM-SIV and AES-SIV compute the expected tag only when decryption is given ciphertext, so when an application supplies additional authenticated data and finishes decryption without a ciphertext update, as can happen for an empty ciphertext, an attacker can forge empty messages with arbitrary additional data (with AES-GCM-SIV in a single message with an all-zero tag; with AES-SIV only if the application reuses the decryption context without resetting the key). No protocol implemented in OpenSSL itself uses these modes, so only applications that build their own protocol on the EVP interface and skip the ciphertext update for empty messages are exposed. OpenSSL 3.5 is affected and fixed in OpenSSL 3.5.7; the FIPS modules are not affected because these algorithms are not FIPS approved and the code is outside the FIPS module boundary. https://openssl-library.org/news/secadv/20260609.txt. Fix on the openssl-3.5 branch: https://github.com/openssl/openssl/commit/7fe3f33a3b3a4c487aa4dcdbc87057f66ffd2b85, first released in OpenSSL 3.5.7. Debian fixed it for trixie in openssl 3.5.6-1~deb13u2, DSA-6335-1: https://security-tracker.debian.org/tracker/CVE-2026-45446. The DHI Debian 13 openssl packages are rebuilds of Debian's trixie openssl, published in the DHI Debian repository and the DHI enterprise repository (the FIPS builds, and the openssl-provider-fips package of every build, only in the enterprise repository); the Debian changelog shipped in each libssl3t64 package shows which Debian release a build is based on. That changelog was read from every published build on amd64 and arm64: 25 versions, 17 standard and 8 FIPS builds, based on Debian 3.5.5-1~deb13u2, 3.5.6-1~deb13u1, 3.5.6-1~deb13u2, 3.5.7-1~deb13u2, 3.5.7-1~deb13u3 and 3.5.9-1~deb13u1. No build based on Debian 3.5.5-1~deb13u2 or 3.5.6-1~deb13u1, FIPS builds included, names CVE-2026-45446. The first published rebuild of Debian 3.5.6-1~deb13u2, the fixed boundary here, and every later build, FIPS builds included, carry Debian's 3.5.6-1~deb13u2 entry naming it. The fix makes AES-SIV reset its final state to -1 when its context parameters are set and makes AES-GCM-SIV clear its stored tag when the key is initialised and compute the tag when no ciphertext was processed. In the disassembly of libcrypto, located with the shipped debug symbols, aes_siv_set_ctx_params() stores -1 into the SIV context and aes_gcm_siv_initkey() zeroes the 16-byte stored tag in every build from the first rebuild of Debian 3.5.6-1~deb13u2 on, FIPS builds included, and neither store is present in any earlier build, on both architectures (debug symbols from the libssl3t64-dbgsym package of each build). Of the FIPS providers, the openssl-provider-fips package, read from every build on both architectures, ships the OpenSSL 3.1.2 FIPS provider in the FIPS builds and the FIPS provider from the build's own OpenSSL release (3.5.5, 3.5.6, 3.5.7 or 3.5.9) in the other builds; none of these fips.so files, the 3.1.2 provider included, names an SIV cipher, and the FIPS builds' libcrypto and libssl are Debian's 3.5 libraries checked above."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-erwa-fff7-shnv-eil6",
+        "aliases": [
+          "CVE-2026-45446"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/openssl@3.5.6-1~deb13u2%2Bdhi0?distro=dhi-13"
         },
@@ -213,7 +254,8 @@
           "@id": "pkg:deb/dhi/openssl@3.5.9-1~deb13u1%2Bfips%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-45446 (\"Incorrect Tag Processing for Empty Messages in AES-GCM-SIV and AES-SIV modes\", Low): OpenSSL's provider implementations of AES-GCM-SIV and AES-SIV compute the expected tag only when decryption is given ciphertext, so when an application supplies additional authenticated data and finishes decryption without a ciphertext update, as can happen for an empty ciphertext, an attacker can forge empty messages with arbitrary additional data (with AES-GCM-SIV in a single message with an all-zero tag; with AES-SIV only if the application reuses the decryption context without resetting the key). No protocol implemented in OpenSSL itself uses these modes, so only applications that build their own protocol on the EVP interface and skip the ciphertext update for empty messages are exposed. OpenSSL 3.5 is affected and fixed in OpenSSL 3.5.7; the FIPS modules are not affected because these algorithms are not FIPS approved and the code is outside the FIPS module boundary. https://openssl-library.org/news/secadv/20260609.txt. Fix on the openssl-3.5 branch: https://github.com/openssl/openssl/commit/7fe3f33a3b3a4c487aa4dcdbc87057f66ffd2b85, first released in OpenSSL 3.5.7. Debian fixed it for trixie in openssl 3.5.6-1~deb13u2, DSA-6335-1: https://security-tracker.debian.org/tracker/CVE-2026-45446. The DHI Debian 13 openssl packages are rebuilds of Debian's trixie openssl, published in the DHI Debian repository and the DHI enterprise repository (the FIPS builds, and the openssl-provider-fips package of every build, only in the enterprise repository); the Debian changelog shipped in each libssl3t64 package shows which Debian release a build is based on. That changelog was read from every published build on amd64 and arm64: 25 versions, 17 standard and 8 FIPS builds, based on Debian 3.5.5-1~deb13u2, 3.5.6-1~deb13u1, 3.5.6-1~deb13u2, 3.5.7-1~deb13u2, 3.5.7-1~deb13u3 and 3.5.9-1~deb13u1. No build based on Debian 3.5.5-1~deb13u2 or 3.5.6-1~deb13u1, FIPS builds included, names CVE-2026-45446. The first published rebuild of Debian 3.5.6-1~deb13u2, the fixed boundary here, and every later build, FIPS builds included, carry Debian's 3.5.6-1~deb13u2 entry naming it. The fix makes AES-SIV reset its final state to -1 when its context parameters are set and makes AES-GCM-SIV clear its stored tag when the key is initialised and compute the tag when no ciphertext was processed. In the disassembly of libcrypto, located with the shipped debug symbols, aes_siv_set_ctx_params() stores -1 into the SIV context and aes_gcm_siv_initkey() zeroes the 16-byte stored tag in every build from the first rebuild of Debian 3.5.6-1~deb13u2 on, FIPS builds included, and neither store is present in any earlier build, on both architectures (debug symbols from the libssl3t64-dbgsym package of each build). Of the FIPS providers, the openssl-provider-fips package, read from every build on both architectures, ships the OpenSSL 3.1.2 FIPS provider in the FIPS builds and the FIPS provider from the build's own OpenSSL release (3.5.5, 3.5.6, 3.5.7 or 3.5.9) in the other builds; none of these fips.so files, the 3.1.2 provider included, names an SIV cipher, and the FIPS builds' libcrypto and libssl are Debian's 3.5 libraries checked above."
     }
   ]
 }

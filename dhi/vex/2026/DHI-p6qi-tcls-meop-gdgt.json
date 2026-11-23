@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T10:35:19Z",
-  "version": 1,
+  "last_updated": "2026-11-23T19:50:39Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:deb/dhi/shadow@1:4.17.4-2%2Bdhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2007-5686 is a report that the initscripts package of rPath Linux 1 created /var/log/btmp, the log of failed login attempts, with insecure permissions, so local users could read authentication attempts and sshd stopped logging failed attempts: https://www.cve.org/CVERecord?id=CVE-2007-5686. Debian tracks it against shadow as unimportant, noting that login.defs sets LOG_UNKFAIL_ENAB to no so unknown user names are not recorded on login failures: https://security-tracker.debian.org/tracker/CVE-2007-5686. This owner does not contain the vulnerable component. Unpacked all 45 binary packages published from the shadow source in the DHI Debian repository, each checked against the index SHA256: the three published builds of shadow 4.17.4, made from Debian's 1:4.17.4-2 source, for amd64 and arm64, namely passwd, uidmap, libsubid5, libsubid-dev and the architecture-independent login.defs, and the debug-symbol packages passwd-dbgsym, uidmap-dbgsym and libsubid5-dbgsym. None of them contains rPath's initscripts, an init script or a login program: the programs are the account tools chage, chfn, chgpasswd, chpasswd, chsh, expiry, gpasswd, groupadd, groupdel, groupmod, grpck, grpconv, grpunconv, newusers, passwd, pwck, pwconv, pwunconv, shadowconfig, useradd, userdel, usermod, vigr and vipw in passwd, and getsubids, newgidmap and newuidmap in uidmap, the same in every build. No package ships or creates /var/log/btmp: its only tmpfiles.d entry, passwd.conf, removes stale password lock files at boot, and no program, library, configuration file or maintainer script in the packages mentions btmp (the same search finds the login.defs path in the passwd programs). The login.defs file in every build sets LOG_UNKFAIL_ENAB to no."
     }
   ]
 }
