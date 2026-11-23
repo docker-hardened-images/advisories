@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T15:42:02Z",
-  "last_updated": "2026-11-23T21:20:26Z",
-  "version": 3,
+  "last_updated": "2026-11-23T23:06:31Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -28,7 +28,8 @@
           "@id": "pkg:deb/dhi/openjpeg2@2.5.3-2.1~deb13u2%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2016-9115 is a heap buffer over-read in imagetotga in the opj_decompress tool, reported against OpenJPEG 2.1.2 as a read of image->comps[0].data past the end of the decoded component buffer when writing a TGA file from a crafted j2k file: https://github.com/uclouvain/openjpeg/issues/858. The reporter closed the issue in October 2017 after confirming that the proof of concept no longer crashes on the latest version; no reproducer was published and no fix commit is named. Every openjpeg2 build published in the DHI Debian repository, on amd64 and arm64, is built from Debian's OpenJPEG 2.5.3 source, 2.5.3-2.1~deb13u2. In that source imagetotga first checks that every component has the same subsampling, precision and signedness, which gives every component the same decoded width and height, then reads comps[0].w * comps[0].h samples from each component it uses: the second and third as colour only when the image has at least three components, and the last as alpha only when it has two or four. The decoder sizes every output component buffer from that component's decoded width and height: opj_j2k_update_image_data in src/lib/openjp2/j2k.c either allocates w * h samples with an overflow check or reuses a tile buffer only when its stride, width and height match the component exactly, and the single whole-image tile path hands over the tile buffer that src/lib/openjp2/tcd.c allocates at the decoded resolution, which for that layout has the component's own width and height. It also fails with 'Failed to decode all used components' when any requested component has no data, a check released in 2.4.0 by https://github.com/uclouvain/openjpeg/commit/b2751967ecabf8d8856e85ab91e25d4f235e2eb3. opj_decompress then exits before any output writer runs. So imagetotga cannot read past the end of a component buffer. Debian has recorded no fixed version, rates the issue unimportant and notes the function is only exposed in the command-line tool: https://security-tracker.debian.org/tracker/CVE-2016-9115. Every published build carries these changes, so the range ends at the first one."
     }
   ]
 }
