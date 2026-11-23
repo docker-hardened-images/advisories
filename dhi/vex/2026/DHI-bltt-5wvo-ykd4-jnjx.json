@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-09T20:59:56Z",
-  "last_updated": "2026-11-23T23:25:27Z",
-  "version": 3,
+  "last_updated": "2026-11-23T23:49:02Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -46,7 +46,9 @@
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-76014: the BusyBox wget applet still accepts its -T (timeout) option when BusyBox is built with the FEATURE_WGET_TIMEOUT option turned off. In that configuration the place the option value is stored is compiled as a null pointer, so the generic option parser writes the number through a null pointer and wget crashes: https://github.com/mirror/busybox/issues/124. In the BusyBox 1.37.0 source of networking/wget.c the storage for -T is IF_FEATURE_WGET_TIMEOUT(&G.timeout_seconds) IF_NOT_FEATURE_WGET_TIMEOUT(NULL), so the null pointer exists only in builds with the timeout option off. The patch the CVE record names, https://github.com/mirror/busybox/commit/83a40bf7a93c8ac093d33ab452222dd5b9eb57ff, is not in the BusyBox repository at git.busybox.net, and on 23 November 2026 its master branch still had the unguarded option string and the same null storage. Debian has not fixed it and rates it unimportant (crash in a command-line tool): https://security-tracker.debian.org/tracker/CVE-2026-76014. This decision does not rest on that rating. The DHI busybox packages are built from Debian's BusyBox 1:1.37.0-6 source, and Debian's build configurations for the two flavours DHI publishes, the dynamically linked deb flavour (package busybox) and the static flavour (package busybox-static), both set CONFIG_FEATURE_WGET_TIMEOUT=y. Debian's third flavour, the installer udeb, has wget turned off and is not published by DHI. Checked every package built from this source in the DHI Debian repository, busybox, busybox-static, busybox-syslogd, udhcpc, udhcpd, busybox-dbgsym and busybox-static-dbgsym, in all four published builds on amd64 and arm64, each against the checksum in the package index. The wget applet is built into both programs the source ships, /usr/bin/busybox in busybox and in busybox-static. busybox-syslogd, udhcpc and udhcpd contain no ELF file, and each debug-symbol package holds the separate debug file for its program. Tested all 16 programs (four builds, two programs, two architectures): each lists -T SEC in its wget usage, busybox wget -T 2 against a local listener that never answers stops after 2 seconds with \"download timed out\", which shows the -T value is stored in the timeout, and busybox wget -T 0, the reproducer from the issue, exits with status 1 and does not crash. As a positive control, unmodified BusyBox 1.37.0 built with FEATURE_WGET_TIMEOUT turned off crashes with a segmentation fault on busybox wget -T 0 in the same test. All four published builds also carry a backport of the wget change from 83a40bf, as their shipped changelogs state, but with the timeout option on that change does not alter the compiled code. 83a40bf also adds a null check to the shared BusyBox option parser, which the backport does not include. In the BusyBox 1.37.0 source the only other option-parser calls that pass a null destination for a numeric option are in popmaildir (-R and -L) and mkfs.reiser (-b), and both applets are turned off in Debian's deb and static configurations and missing from the applet list of all 16 programs. So the status rests on the build configuration: no published build has a numeric option with a null destination, so the null write cannot happen."
     }
   ]
 }
