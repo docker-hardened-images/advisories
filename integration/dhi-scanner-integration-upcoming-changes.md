@@ -15,8 +15,8 @@ First, `/etc/os-release` will report `ID=dhi` instead of `ID=alpine` or
 `ID=debian`, giving scanners an unambiguous signal that an image is a DHI image
 without relying on display-string heuristics.
 
-Second, DHI will publish an authoritative OSV feed, available through Docker's
-advisory repository and planned for osv.dev ingestion, that covers DHI-owned OS
+Second, DHI publishes an authoritative [OSV feed](../dhi/osv/), available through Docker's
+advisory repository and [osv.dev](https://osv.dev/list?ecosystem=Docker+Hardened+Images), that covers DHI-owned OS
 packages whose scanner-observed identities use `pkg:apk/dhi/...` and
 `pkg:deb/dhi/...` PURLs.
 
@@ -168,5 +168,6 @@ images and the generated DHI OSV/VEX model.
 
 ## Timeline
 
-Work is ongoing. The release is planned for the end of November 2026. Docker
-will share more specific dates as the release approaches.
+The first 100 images will cut over on **November 30, 2026**. Catalog migration
+will continue through **January 2027**. See the [migration status](README.md#migration-status--november-23-2026)
+for the image list, published canary images, and new OSV/VEX feeds.
