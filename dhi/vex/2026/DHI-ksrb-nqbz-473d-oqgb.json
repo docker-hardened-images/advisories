@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:32Z",
-  "last_updated": "2026-11-23T18:14:45Z",
-  "version": 96,
+  "last_updated": "2026-11-23T19:33:46Z",
+  "version": 97,
   "statements": [
     {
       "vulnerability": {
@@ -31700,7 +31700,9 @@
           "@id": "pkg:deb/dhi/k8s-sidecar@2.14.3-7?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2019-1010025 is a report against the GNU C Library (glibc) that the heap address of a thread created with pthread_create is aligned and so can be guessed, which bypasses address-space layout randomisation; the glibc maintainers do not treat an ASLR bypass on its own as a vulnerability, and Debian rates it unimportant. https://sourceware.org/bugzilla/show_bug.cgi?id=22853 and https://security-tracker.debian.org/tracker/CVE-2019-1010025. This package does not contain glibc. Unpacked all 44 published k8s-sidecar packages in the DHI Debian repository, 2.10.1-0 to 2.14.3-7 for amd64 and arm64, each checked against the checksum in the package index, recursing into the archive files they bundle; no debug-symbol packages are published for this source. Each holds the k8s-sidecar Python application in a virtual environment under /usr/lib/k8s-sidecar, whose python links point to the system /usr/bin/python3.14, so it ships no Python interpreter binary of its own. Its ELF files are Python extension modules: 5 per package up to 2.13.3-0, 13 in 2.14.1-0 and 14 from 2.14.1-1. All of them are shared objects that list libc.so.6 as a dependency; none lacks it and none is statically linked. The packages up to 2.14.1-0 also carry pip, whose vendored distlib holds six native Windows launcher executables (t32.exe, t64.exe, t64-arm.exe, w32.exe, w64.exe and w64-arm.exe, none with a .NET CLR header), and python-dateutil's dateutil-zoneinfo.tar.gz, which holds time-zone data files and a METADATA file and no native code; later packages include neither. No package contains a static archive, a Mach-O file, a zip, wheel or jar archive, or a file named like libc.so.6, the dynamic loader, libc.a or a gconv module, and none carries the glibc version banner; the only file in any package that names the GNU C Library is python-dateutil's tz.py, in a documentation reference to the C library's TZ variable. The C library k8s-sidecar runs against comes from glibc's own packages, such as libc6."
     },
     {
       "vulnerability": {
