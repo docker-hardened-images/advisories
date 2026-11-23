@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:32Z",
-  "last_updated": "2026-11-23T15:46:42Z",
-  "version": 95,
+  "last_updated": "2026-11-23T16:38:47Z",
+  "version": 96,
   "statements": [
     {
       "vulnerability": {
@@ -42931,7 +42931,9 @@
           "@id": "pkg:deb/dhi/postgresql-18@18.7-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-125709 is GCC bug libstdc++/118099: when std::basic_filebuf::overflow cannot write out its put area after storing the overflow character, it leaves the put pointer past the end of the buffer, and each further failed write stores further past it (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=118099, https://bugzilla.redhat.com/show_bug.cgi?id=2569390). Upstream fixed it in libstdc++-v3/include/bits/fstream.tcc: https://github.com/gcc-mirror/gcc/commit/2d296e9f024edbb49cad1f3ebb5ae34c71ea5f7a. The code ships in the C++ standard library built from gcc-14 (the libstdc++6 package), which this package does not contain. Unpacked every published postgresql-18 build in the DHI Debian repository (18.6-1 and 18.7-0, on amd64 and arm64, each checked against the index SHA256; no debug-symbol packages are published for this source) and read every ELF file, including the members of its static archives: no file is, or bundles, a copy of libstdc++, and no ELF file defines std::basic_filebuf::overflow. The one ELF file that uses the C++ standard library is the LLVM JIT provider llvmjit.so, which links libstdc++.so.6 and libLLVM.so.19.1 dynamically from their own packages; no other ELF file links libstdc++. The static archives (libpq.a, libpq-oauth.a, libpgport.a, libpgport_shlib.a, libpgcommon.a, libpgcommon_shlib.a, libpgfeutils.a, libecpg.a, libecpg_compat.a and libpgtypes.a) hold PostgreSQL's own objects and no C++ standard library code. Any fix for this CVE reaches this package's users through the libstdc++6 package, not through this one."
     },
     {
       "vulnerability": {
