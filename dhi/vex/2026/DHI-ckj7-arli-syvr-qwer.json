@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T22:01:41Z",
-  "last_updated": "2026-11-21T19:43:31Z",
-  "version": 4,
+  "last_updated": "2026-11-23T05:15:04Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -682,7 +682,9 @@
           "@id": "pkg:apk/dhi/python-3.14@3.14.8-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "asyncio's ProactorEventLoop.sock_recvfrom_into() did not check nbytes against the buffer size, so the Windows-only _overlapped extension (Overlapped.WSARecvFromInto() in Modules/overlapped.c) could write past the end of the buffer. Upstream fixed it in https://github.com/python/cpython/issues/148808 (3.14 commit https://github.com/python/cpython/commit/27522b7d6e6588f03e61099dd858cd5a9314e2f2), first released in CPython 3.14.5; see the advisory https://mail.python.org/archives/list/security-announce@python.org/thread/KWTPIQBOOOUNQP7UFSLBI437NJDFLA3F/ and https://www.cve.org/CVERecord?id=CVE-2026-3298, which states that non-Windows platforms are not affected. CPython builds _overlapped only on Windows: the source tree has a Windows project file for it (PCbuild/_overlapped.vcxproj) and no entry for it in the configure and Modules/Setup build used on Linux. Checked every published build of the DHI Alpine 3.23 python-3.14 package on x86_64 and aarch64 (3.14.3-r0 to 3.14.10-r4): none of the 570 binary packages built from it (python-3.14, pyc-3.14 and the -dbg, -dev, -doc, -gdbm, -pyc, -pycache and -tests packages) contains a file whose name includes 'overlapped', and the static library libpython3.14.a in every -dev package on both architectures has no such member. No ELF file and no static library in any of the 570 packages contains the module's PyInit__overlapped entry point, while the same search finds PyInit__socket or PyInit__asyncio in every python-3.14 package. asyncio.windows_events, which ships as Python source, refuses to import ('win32 only')."
     },
     {
       "vulnerability": {
