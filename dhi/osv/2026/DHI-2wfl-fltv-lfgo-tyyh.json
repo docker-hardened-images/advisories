@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-2wfl-fltv-lfgo-tyyh",
+  "modified": "2026-11-23T16:08:04Z",
+  "published": "2026-11-23T16:08:04Z",
+  "upstream": [
+    "GHSA-6hxq-p678-4hr2"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n`validateCertificatePath()` does not verify that an attestation's certificate chain actually terminates at a configured trust anchor. When walking the chain it stops at the first self-signed certificate it finds (which could be user-supplied), and exits early.\n\nThis happens before the configured Apple/Google/etc trust anchor (which is concatenated to the end of the chain) is reached.\n\nA user can therefore register a credential and have the server accept it as if it were backed by a genuine Apple / Android SafetyNet / Yubikey / etc.\n\n## Details\n`packages/server/src/helpers/validateCertificatePath.ts`:\n\nThe configured trust anchor is appended to the end of the untrusted chain (line **83**):\n\n```ts\nconst x5cWithTrustAnchor = x5cCertsParsed.concat([anchor]);\n```\n\nThe walk then verifies each cert was signed by the next, but breaks on the first self-signed cert (lines **104–116**):\n\n```ts\nif (issuer.subject === issuer.issuer) {\n  // Root cert detected, make sure it signed itself\n  const issuerSignedIssuer = await issuer.verify(\n    { publicKey: issuer.publicKey, signatureOnly: true },\n    WebCrypto,\n  );\n  if (!issuerSignedIssuer) {\n    throw new InvalidSubjectAndIssuer();\n  }\n  break;   // <-- exits before the appended trust anchor is ever checked if user supplied self-signed cert comes first\n}\n```\n\nThe success condition is therefore \"the certs form an internally-consistent chain ending in some self-signed cert\" Rather than \"the chain terminates at one of the configured trust anchors.\"\n\n## Exploit shape\n\n```\nattacker sends:  x5c = [ forgedLeaf (signed by attacker root),\n                         attackerSelfSignedRoot ]\n\nlibrary builds:  [ forgedLeaf, attackerSelfSignedRoot, <configured Apple/Google/etc root> ]\n\nwalk:  forgedLeaf -> attackerSelfSignedRoot        (verifies, attacker controls both)\n       attackerSelfSignedRoot is self-signed        -> break\n       attackerSelfSignedRoot -> configured root    (NEVER CHECKED)\n```\n\n`return true`. The configured anchor never gets checked.\n\n\nAs far as observed, all attestation enforcement uses validateCertificatePath when using MDS etc.",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:A/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "logto-1",
+        "purl": "pkg:deb/dhi/logto-1"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.45.0-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "1.45.0-0",
+        "1.45.0-1",
+        "1.45.0-2",
+        "1.45.0-3",
+        "1.45.0-4",
+        "1.46.0-0",
+        "1.46.0-1",
+        "1.46.0-2",
+        "1.46.0-3",
+        "1.46.0-4",
+        "1.46.0-5"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-2wfl-fltv-lfgo-tyyh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-6hxq-p678-4hr2"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/MasterKale/SimpleWebAuthn/security/advisories/GHSA-6hxq-p678-4hr2"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/MasterKale/SimpleWebAuthn/commit/dd0d73c716a528e6645efafbd43a972b64df71f9"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/MasterKale/SimpleWebAuthn/commit/8a53d70f42bcbb7c744ef1b90e6db35bc4b26d06"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/MasterKale/SimpleWebAuthn/commit/67a41fed3dfd96cab1dcf414f6d1792a72e06e35"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/MasterKale/SimpleWebAuthn/releases/tag/v13.3.2"
+    }
+  ]
+}
