@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T22:21:51Z",
-  "last_updated": "2026-11-23T07:24:20Z",
-  "version": 29,
+  "last_updated": "2026-11-23T11:24:22Z",
+  "version": 30,
   "statements": [
     {
       "vulnerability": {
@@ -1564,7 +1564,9 @@
           "@id": "pkg:apk/dhi/alertmanager-dev@0.35.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-78662 (GO-2026-6354): in golang.org/x/crypto/ssh, a malicious peer could flood requests on a channel that was not yet established and deadlock the whole connection. It is fixed in golang.org/x/crypto v0.56.0: https://pkg.go.dev/vuln/GO-2026-6354, https://go.dev/issue/81316, https://go.dev/cl/826504. The advisory's vulnerable code is in the golang.org/x/crypto/ssh package: Dial, NewClientConn, NewControlClientConn, NewServerConn, (*channel).Accept, (*channel).handlePacket, (*channel).responseMessageReceived. Read every published alertmanager-dev package for Alpine 3.23 in the DHI Alpine repository: 36 builds, 0.31.1-r0 to the current 0.35.0-r2 (there is no 0.33.1-r4), each for x86_64 and aarch64 (72 packages), every download checked against the checksum in the package index. Each package holds two files, /usr/bin/alertmanager and /usr/bin/amtool, statically linked Go programs (no ELF interpreter and no dynamic section) with no ELF symbol table (linked with -ldflags \"-s -w\"; the Go function table is present), built with CGO_ENABLED=0. The Go build information lists golang.org/x/crypto v0.47.0 in 0.31.1-r0 to 0.31.1-r3, v0.49.0 in 0.31.1-r4, v0.50.0 in 0.31.1-r5 to 0.32.1-r1, v0.52.0 in 0.32.1-r2 to 0.32.2-r0, v0.53.0 in 0.33.0-r0 to 0.33.1-r1, v0.54.0 in 0.33.1-r2 to 0.33.1-r3, v0.55.0 in 0.33.1-r5 to 0.34.0-r3, v0.56.0 in 0.34.0-r4, v0.57.0 in 0.34.0-r5 to 0.34.1-r1 and v0.58.0 in 0.34.1-r2 to 0.35.0-r2. The function names the Go linker records in each program (its pclntab, read with a debug/gosym reader) were searched in all 72 packages, leaving out the standard library's own copies under vendor/golang.org/x/: the only golang.org/x/crypto packages with functions in them are bcrypt and blowfish in alertmanager and bcrypt in amtool, and no build contains any function from golang.org/x/crypto/ssh or its subpackages (including ssh/agent and ssh/knownhosts), so none of the advisory's vulnerable functions is present, including in the builds whose golang.org/x/crypto version is before v0.56.0. A string search of every binary, which also covers the names of inlined functions, finds golang.org/x/crypto names in each binary but no golang.org/x/crypto/ssh name. Positive control: the same reader finds runtime.main and golang.org/x/crypto/bcrypt functions in every binary of every build, and, in a test program built for linux/amd64 with -ldflags \"-s -w\" against golang.org/x/crypto v0.55.0 that calls the advisory's functions, finds Dial, NewClientConn, NewControlClientConn, NewServerConn, (*channel).Accept and (*channel).handlePacket; (*channel).responseMessageReceived was inlined there and appears in its string table. The vulnerable code is not compiled into any published build of this package."
     },
     {
       "vulnerability": {
@@ -1683,7 +1685,9 @@
           "@id": "pkg:apk/dhi/alertmanager-fips-dev@0.35.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-78662 (GO-2026-6354): in golang.org/x/crypto/ssh, a malicious peer could flood requests on a channel that was not yet established and deadlock the whole connection. It is fixed in golang.org/x/crypto v0.56.0: https://pkg.go.dev/vuln/GO-2026-6354, https://go.dev/issue/81316, https://go.dev/cl/826504. The advisory's vulnerable code is in the golang.org/x/crypto/ssh package: Dial, NewClientConn, NewControlClientConn, NewServerConn, (*channel).Accept, (*channel).handlePacket, (*channel).responseMessageReceived. Read every published alertmanager-fips-dev package for Alpine 3.23 in the DHI Alpine security repository: 36 builds, 0.31.1-r0 to the current 0.35.0-r2 (there is no 0.33.1-r4), each for x86_64 and aarch64 (72 packages), every download checked against the checksum in the package index. Each package holds two files, /usr/bin/alertmanager and /usr/bin/amtool, statically linked Go programs (no ELF interpreter and no dynamic section) with no ELF symbol table (linked with -ldflags \"-s -w\"; the Go function table is present), built with CGO_ENABLED=0 and the fips140v1.0 build tag. The Go build information lists golang.org/x/crypto v0.47.0 in 0.31.1-r0 to 0.31.1-r3, v0.49.0 in 0.31.1-r4, v0.50.0 in 0.31.1-r5 to 0.32.1-r1, v0.52.0 in 0.32.1-r2 to 0.32.2-r0, v0.53.0 in 0.33.0-r0 to 0.33.1-r1, v0.54.0 in 0.33.1-r2 to 0.33.1-r3, v0.55.0 in 0.33.1-r5 to 0.34.0-r3, v0.56.0 in 0.34.0-r4, v0.57.0 in 0.34.0-r5 to 0.34.1-r1 and v0.58.0 in 0.34.1-r2 to 0.35.0-r2. The function names the Go linker records in each program (its pclntab, read with a debug/gosym reader) were searched in all 72 packages, leaving out the standard library's own copies under vendor/golang.org/x/: the only golang.org/x/crypto packages with functions in them are bcrypt and blowfish in alertmanager and bcrypt in amtool, and no build contains any function from golang.org/x/crypto/ssh or its subpackages (including ssh/agent and ssh/knownhosts), so none of the advisory's vulnerable functions is present, including in the builds whose golang.org/x/crypto version is before v0.56.0. A string search of every binary, which also covers the names of inlined functions, finds golang.org/x/crypto names in each binary but no golang.org/x/crypto/ssh name. Positive control: the same reader finds runtime.main and golang.org/x/crypto/bcrypt functions in every binary of every build, and, in a test program built for linux/amd64 with -ldflags \"-s -w\" against golang.org/x/crypto v0.55.0 that calls the advisory's functions, finds Dial, NewClientConn, NewControlClientConn, NewServerConn, (*channel).Accept and (*channel).handlePacket; (*channel).responseMessageReceived was inlined there and appears in its string table. The vulnerable code is not compiled into any published build of this package."
     },
     {
       "vulnerability": {
@@ -1802,7 +1806,9 @@
           "@id": "pkg:apk/dhi/alertmanager-fips@0.35.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-78662 (GO-2026-6354): in golang.org/x/crypto/ssh, a malicious peer could flood requests on a channel that was not yet established and deadlock the whole connection. It is fixed in golang.org/x/crypto v0.56.0: https://pkg.go.dev/vuln/GO-2026-6354, https://go.dev/issue/81316, https://go.dev/cl/826504. The advisory's vulnerable code is in the golang.org/x/crypto/ssh package: Dial, NewClientConn, NewControlClientConn, NewServerConn, (*channel).Accept, (*channel).handlePacket, (*channel).responseMessageReceived. Read every published alertmanager-fips package for Alpine 3.23 in the DHI Alpine security repository: 36 builds, 0.31.1-r0 to the current 0.35.0-r2 (there is no 0.33.1-r4), each for x86_64 and aarch64 (72 packages), every download checked against the checksum in the package index. Each package holds two files, /usr/bin/alertmanager and /usr/bin/amtool, statically linked Go programs (no ELF interpreter and no dynamic section) with no ELF symbol table (linked with -ldflags \"-s -w\"; the Go function table is present), built with CGO_ENABLED=0 and the fips140v1.0 build tag. The Go build information lists golang.org/x/crypto v0.47.0 in 0.31.1-r0 to 0.31.1-r3, v0.49.0 in 0.31.1-r4, v0.50.0 in 0.31.1-r5 to 0.32.1-r1, v0.52.0 in 0.32.1-r2 to 0.32.2-r0, v0.53.0 in 0.33.0-r0 to 0.33.1-r1, v0.54.0 in 0.33.1-r2 to 0.33.1-r3, v0.55.0 in 0.33.1-r5 to 0.34.0-r3, v0.56.0 in 0.34.0-r4, v0.57.0 in 0.34.0-r5 to 0.34.1-r1 and v0.58.0 in 0.34.1-r2 to 0.35.0-r2. The function names the Go linker records in each program (its pclntab, read with a debug/gosym reader) were searched in all 72 packages, leaving out the standard library's own copies under vendor/golang.org/x/: the only golang.org/x/crypto packages with functions in them are bcrypt and blowfish in alertmanager and bcrypt in amtool, and no build contains any function from golang.org/x/crypto/ssh or its subpackages (including ssh/agent and ssh/knownhosts), so none of the advisory's vulnerable functions is present, including in the builds whose golang.org/x/crypto version is before v0.56.0. A string search of every binary, which also covers the names of inlined functions, finds golang.org/x/crypto names in each binary but no golang.org/x/crypto/ssh name. Positive control: the same reader finds runtime.main and golang.org/x/crypto/bcrypt functions in every binary of every build, and, in a test program built for linux/amd64 with -ldflags \"-s -w\" against golang.org/x/crypto v0.55.0 that calls the advisory's functions, finds Dial, NewClientConn, NewControlClientConn, NewServerConn, (*channel).Accept and (*channel).handlePacket; (*channel).responseMessageReceived was inlined there and appears in its string table. The vulnerable code is not compiled into any published build of this package."
     },
     {
       "vulnerability": {
@@ -1921,7 +1927,9 @@
           "@id": "pkg:apk/dhi/alertmanager@0.35.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-78662 (GO-2026-6354): in golang.org/x/crypto/ssh, a malicious peer could flood requests on a channel that was not yet established and deadlock the whole connection. It is fixed in golang.org/x/crypto v0.56.0: https://pkg.go.dev/vuln/GO-2026-6354, https://go.dev/issue/81316, https://go.dev/cl/826504. The advisory's vulnerable code is in the golang.org/x/crypto/ssh package: Dial, NewClientConn, NewControlClientConn, NewServerConn, (*channel).Accept, (*channel).handlePacket, (*channel).responseMessageReceived. Read every published alertmanager package for Alpine 3.23 in the DHI Alpine repository: 36 builds, 0.31.1-r0 to the current 0.35.0-r2 (there is no 0.33.1-r4), each for x86_64 and aarch64 (72 packages), every download checked against the checksum in the package index. Each package holds two files, /usr/bin/alertmanager and /usr/bin/amtool, statically linked Go programs (no ELF interpreter and no dynamic section) with no ELF symbol table (linked with -ldflags \"-s -w\"; the Go function table is present), built with CGO_ENABLED=0. The Go build information lists golang.org/x/crypto v0.47.0 in 0.31.1-r0 to 0.31.1-r3, v0.49.0 in 0.31.1-r4, v0.50.0 in 0.31.1-r5 to 0.32.1-r1, v0.52.0 in 0.32.1-r2 to 0.32.2-r0, v0.53.0 in 0.33.0-r0 to 0.33.1-r1, v0.54.0 in 0.33.1-r2 to 0.33.1-r3, v0.55.0 in 0.33.1-r5 to 0.34.0-r3, v0.56.0 in 0.34.0-r4, v0.57.0 in 0.34.0-r5 to 0.34.1-r1 and v0.58.0 in 0.34.1-r2 to 0.35.0-r2. The function names the Go linker records in each program (its pclntab, read with a debug/gosym reader) were searched in all 72 packages, leaving out the standard library's own copies under vendor/golang.org/x/: the only golang.org/x/crypto packages with functions in them are bcrypt and blowfish in alertmanager and bcrypt in amtool, and no build contains any function from golang.org/x/crypto/ssh or its subpackages (including ssh/agent and ssh/knownhosts), so none of the advisory's vulnerable functions is present, including in the builds whose golang.org/x/crypto version is before v0.56.0. A string search of every binary, which also covers the names of inlined functions, finds golang.org/x/crypto names in each binary but no golang.org/x/crypto/ssh name. Positive control: the same reader finds runtime.main and golang.org/x/crypto/bcrypt functions in every binary of every build, and, in a test program built for linux/amd64 with -ldflags \"-s -w\" against golang.org/x/crypto v0.55.0 that calls the advisory's functions, finds Dial, NewClientConn, NewControlClientConn, NewServerConn, (*channel).Accept and (*channel).handlePacket; (*channel).responseMessageReceived was inlined there and appears in its string table. The vulnerable code is not compiled into any published build of this package."
     },
     {
       "vulnerability": {
@@ -106234,7 +106242,20 @@
         },
         {
           "@id": "pkg:deb/dhi/alloy-dev@1.19.2-2?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update alloy-dev to 1.19.2-3 or later.",
+      "status_notes": "CVE-2026-78662 (GO-2026-6354): before golang.org/x/crypto v0.56.0, a malicious SSH peer can flood a channel that has been opened but not yet confirmed with requests, which deadlocks the whole connection in the golang.org/x/crypto/ssh package; v0.56.0 marks a channel usable only once it is established and until then drops every packet other than the open confirmation or failure without blocking (https://pkg.go.dev/vuln/GO-2026-6354, https://go.dev/issue/81316, https://go.dev/cl/826504, https://groups.google.com/g/golang-announce/c/1y3fb2np35U). Read every published alloy-dev package for Debian 13 in the DHI Debian repository: 44 builds, 1.18.1-0 to the current 1.22.0-16, for amd64 and arm64 (1.21.2-0 is published for arm64 only), 87 packages, each checked against the index SHA256; no debug-symbol package is published for this source. Each package installs one file, /usr/bin/alloy. Both architectures of a build carry the same Go and module versions, and no build replaces the module. In every package, the function symbols of /usr/bin/alloy (go tool nm) include ssh.NewClientConn, (*channel).Accept and (*channel).handlePacket, which the advisory names as affected, so the vulnerable code is linked. The golang.org/x/crypto version by build is 1.18.1-0 to 1.19.2-2: v0.55.0; 1.19.2-3: v0.56.0; 1.19.2-4 to 1.20.1-2: v0.57.0; 1.20.1-3 to 1.21.3-3: v0.58.0; 1.21.3-4 to 1.22.0-16: v0.59.0. The range ends at 1.19.2-3, the first build with v0.56.0 or later."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-z37r-oc3a-prh4-etf6",
+        "aliases": [
+          "CVE-2026-78662"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/alloy-dev@1.19.2-3?distro=dhi-13"
         },
@@ -106344,7 +106365,8 @@
           "@id": "pkg:deb/dhi/alloy-dev@1.22.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-78662 (GO-2026-6354): before golang.org/x/crypto v0.56.0, a malicious SSH peer can flood a channel that has been opened but not yet confirmed with requests, which deadlocks the whole connection in the golang.org/x/crypto/ssh package; v0.56.0 marks a channel usable only once it is established and until then drops every packet other than the open confirmation or failure without blocking (https://pkg.go.dev/vuln/GO-2026-6354, https://go.dev/issue/81316, https://go.dev/cl/826504, https://groups.google.com/g/golang-announce/c/1y3fb2np35U). Read every published alloy-dev package for Debian 13 in the DHI Debian repository: 44 builds, 1.18.1-0 to the current 1.22.0-16, for amd64 and arm64 (1.21.2-0 is published for arm64 only), 87 packages, each checked against the index SHA256; no debug-symbol package is published for this source. Each package installs one file, /usr/bin/alloy. Both architectures of a build carry the same Go and module versions, and no build replaces the module. In every package, the function symbols of /usr/bin/alloy (go tool nm) include ssh.NewClientConn, (*channel).Accept and (*channel).handlePacket, which the advisory names as affected, so the vulnerable code is linked. The golang.org/x/crypto version by build is 1.18.1-0 to 1.19.2-2: v0.55.0; 1.19.2-3: v0.56.0; 1.19.2-4 to 1.20.1-2: v0.57.0; 1.20.1-3 to 1.21.3-3: v0.58.0; 1.21.3-4 to 1.22.0-16: v0.59.0. The range ends at 1.19.2-3, the first build with v0.56.0 or later."
     },
     {
       "vulnerability": {
@@ -106377,7 +106399,20 @@
         },
         {
           "@id": "pkg:deb/dhi/alloy-fips-dev@1.19.2-2?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update alloy-fips-dev to 1.19.2-3 or later.",
+      "status_notes": "CVE-2026-78662 (GO-2026-6354): before golang.org/x/crypto v0.56.0, a malicious SSH peer can flood a channel that has been opened but not yet confirmed with requests, which deadlocks the whole connection in the golang.org/x/crypto/ssh package; v0.56.0 marks a channel usable only once it is established and until then drops every packet other than the open confirmation or failure without blocking (https://pkg.go.dev/vuln/GO-2026-6354, https://go.dev/issue/81316, https://go.dev/cl/826504, https://groups.google.com/g/golang-announce/c/1y3fb2np35U). Read every published alloy-fips-dev package for Debian 13 in the authenticated DHI Debian security repository, where the FIPS packages are published: 44 builds, 1.18.1-0 to the current 1.22.0-16, for amd64 and arm64 (1.21.2-0 is published for arm64 only), 87 packages, each checked against the index SHA256; no debug-symbol package is published for this source. Each package installs one file, /usr/bin/alloy. Both architectures of a build carry the same Go and module versions, and no build replaces the module. In every package, the function symbols of /usr/bin/alloy (go tool nm) include ssh.NewClientConn, (*channel).Accept and (*channel).handlePacket, which the advisory names as affected, so the vulnerable code is linked. The golang.org/x/crypto version by build is 1.18.1-0 to 1.19.2-2: v0.55.0; 1.19.2-3: v0.56.0; 1.19.2-4 to 1.20.1-2: v0.57.0; 1.20.1-3 to 1.21.3-3: v0.58.0; 1.21.3-4 to 1.22.0-16: v0.59.0. The range ends at 1.19.2-3, the first build with v0.56.0 or later."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-z37r-oc3a-prh4-etf6",
+        "aliases": [
+          "CVE-2026-78662"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/alloy-fips-dev@1.19.2-3?distro=dhi-13"
         },
@@ -106487,7 +106522,8 @@
           "@id": "pkg:deb/dhi/alloy-fips-dev@1.22.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-78662 (GO-2026-6354): before golang.org/x/crypto v0.56.0, a malicious SSH peer can flood a channel that has been opened but not yet confirmed with requests, which deadlocks the whole connection in the golang.org/x/crypto/ssh package; v0.56.0 marks a channel usable only once it is established and until then drops every packet other than the open confirmation or failure without blocking (https://pkg.go.dev/vuln/GO-2026-6354, https://go.dev/issue/81316, https://go.dev/cl/826504, https://groups.google.com/g/golang-announce/c/1y3fb2np35U). Read every published alloy-fips-dev package for Debian 13 in the authenticated DHI Debian security repository, where the FIPS packages are published: 44 builds, 1.18.1-0 to the current 1.22.0-16, for amd64 and arm64 (1.21.2-0 is published for arm64 only), 87 packages, each checked against the index SHA256; no debug-symbol package is published for this source. Each package installs one file, /usr/bin/alloy. Both architectures of a build carry the same Go and module versions, and no build replaces the module. In every package, the function symbols of /usr/bin/alloy (go tool nm) include ssh.NewClientConn, (*channel).Accept and (*channel).handlePacket, which the advisory names as affected, so the vulnerable code is linked. The golang.org/x/crypto version by build is 1.18.1-0 to 1.19.2-2: v0.55.0; 1.19.2-3: v0.56.0; 1.19.2-4 to 1.20.1-2: v0.57.0; 1.20.1-3 to 1.21.3-3: v0.58.0; 1.21.3-4 to 1.22.0-16: v0.59.0. The range ends at 1.19.2-3, the first build with v0.56.0 or later."
     },
     {
       "vulnerability": {
@@ -106520,7 +106556,20 @@
         },
         {
           "@id": "pkg:deb/dhi/alloy-fips@1.19.2-2?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update alloy-fips to 1.19.2-3 or later.",
+      "status_notes": "CVE-2026-78662 (GO-2026-6354): before golang.org/x/crypto v0.56.0, a malicious SSH peer can flood a channel that has been opened but not yet confirmed with requests, which deadlocks the whole connection in the golang.org/x/crypto/ssh package; v0.56.0 marks a channel usable only once it is established and until then drops every packet other than the open confirmation or failure without blocking (https://pkg.go.dev/vuln/GO-2026-6354, https://go.dev/issue/81316, https://go.dev/cl/826504, https://groups.google.com/g/golang-announce/c/1y3fb2np35U). Read every published alloy-fips package for Debian 13 in the authenticated DHI Debian security repository, where the FIPS packages are published: 44 builds, 1.18.1-0 to the current 1.22.0-16, for amd64 and arm64 (1.21.2-0 is published for arm64 only), 87 packages, each checked against the index SHA256; no debug-symbol package is published for this source. Each package installs /usr/bin/alloy, its only ELF program, plus the default configuration /etc/alloy/config.alloy and an SPDX SBOM JSON file under /opt/docker/sbom. Both architectures of a build carry the same Go and module versions, and no build replaces the module. In every package, the function symbols of /usr/bin/alloy (go tool nm) include ssh.NewClientConn, (*channel).Accept and (*channel).handlePacket, which the advisory names as affected, so the vulnerable code is linked. The golang.org/x/crypto version by build is 1.18.1-0 to 1.19.2-2: v0.55.0; 1.19.2-3: v0.56.0; 1.19.2-4 to 1.20.1-2: v0.57.0; 1.20.1-3 to 1.21.3-3: v0.58.0; 1.21.3-4 to 1.22.0-16: v0.59.0. The range ends at 1.19.2-3, the first build with v0.56.0 or later."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-z37r-oc3a-prh4-etf6",
+        "aliases": [
+          "CVE-2026-78662"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/alloy-fips@1.19.2-3?distro=dhi-13"
         },
@@ -106630,7 +106679,8 @@
           "@id": "pkg:deb/dhi/alloy-fips@1.22.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-78662 (GO-2026-6354): before golang.org/x/crypto v0.56.0, a malicious SSH peer can flood a channel that has been opened but not yet confirmed with requests, which deadlocks the whole connection in the golang.org/x/crypto/ssh package; v0.56.0 marks a channel usable only once it is established and until then drops every packet other than the open confirmation or failure without blocking (https://pkg.go.dev/vuln/GO-2026-6354, https://go.dev/issue/81316, https://go.dev/cl/826504, https://groups.google.com/g/golang-announce/c/1y3fb2np35U). Read every published alloy-fips package for Debian 13 in the authenticated DHI Debian security repository, where the FIPS packages are published: 44 builds, 1.18.1-0 to the current 1.22.0-16, for amd64 and arm64 (1.21.2-0 is published for arm64 only), 87 packages, each checked against the index SHA256; no debug-symbol package is published for this source. Each package installs /usr/bin/alloy, its only ELF program, plus the default configuration /etc/alloy/config.alloy and an SPDX SBOM JSON file under /opt/docker/sbom. Both architectures of a build carry the same Go and module versions, and no build replaces the module. In every package, the function symbols of /usr/bin/alloy (go tool nm) include ssh.NewClientConn, (*channel).Accept and (*channel).handlePacket, which the advisory names as affected, so the vulnerable code is linked. The golang.org/x/crypto version by build is 1.18.1-0 to 1.19.2-2: v0.55.0; 1.19.2-3: v0.56.0; 1.19.2-4 to 1.20.1-2: v0.57.0; 1.20.1-3 to 1.21.3-3: v0.58.0; 1.21.3-4 to 1.22.0-16: v0.59.0. The range ends at 1.19.2-3, the first build with v0.56.0 or later."
     },
     {
       "vulnerability": {
@@ -106663,7 +106713,20 @@
         },
         {
           "@id": "pkg:deb/dhi/alloy@1.19.2-2?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update alloy to 1.19.2-3 or later.",
+      "status_notes": "CVE-2026-78662 (GO-2026-6354): before golang.org/x/crypto v0.56.0, a malicious SSH peer can flood a channel that has been opened but not yet confirmed with requests, which deadlocks the whole connection in the golang.org/x/crypto/ssh package; v0.56.0 marks a channel usable only once it is established and until then drops every packet other than the open confirmation or failure without blocking (https://pkg.go.dev/vuln/GO-2026-6354, https://go.dev/issue/81316, https://go.dev/cl/826504, https://groups.google.com/g/golang-announce/c/1y3fb2np35U). Read every published alloy package for Debian 13 in the DHI Debian repository: 44 builds, 1.18.1-0 to the current 1.22.0-16, for amd64 and arm64 (1.21.2-0 is published for arm64 only), 87 packages, each checked against the index SHA256; no debug-symbol package is published for this source. Each package installs /usr/bin/alloy, its only ELF program, plus the default configuration /etc/alloy/config.alloy and an SPDX SBOM JSON file under /opt/docker/sbom. Both architectures of a build carry the same Go and module versions, and no build replaces the module. In every package, the function symbols of /usr/bin/alloy (go tool nm) include ssh.NewClientConn, (*channel).Accept and (*channel).handlePacket, which the advisory names as affected, so the vulnerable code is linked. The golang.org/x/crypto version by build is 1.18.1-0 to 1.19.2-2: v0.55.0; 1.19.2-3: v0.56.0; 1.19.2-4 to 1.20.1-2: v0.57.0; 1.20.1-3 to 1.21.3-3: v0.58.0; 1.21.3-4 to 1.22.0-16: v0.59.0. The range ends at 1.19.2-3, the first build with v0.56.0 or later."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-z37r-oc3a-prh4-etf6",
+        "aliases": [
+          "CVE-2026-78662"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/alloy@1.19.2-3?distro=dhi-13"
         },
@@ -106773,7 +106836,8 @@
           "@id": "pkg:deb/dhi/alloy@1.22.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-78662 (GO-2026-6354): before golang.org/x/crypto v0.56.0, a malicious SSH peer can flood a channel that has been opened but not yet confirmed with requests, which deadlocks the whole connection in the golang.org/x/crypto/ssh package; v0.56.0 marks a channel usable only once it is established and until then drops every packet other than the open confirmation or failure without blocking (https://pkg.go.dev/vuln/GO-2026-6354, https://go.dev/issue/81316, https://go.dev/cl/826504, https://groups.google.com/g/golang-announce/c/1y3fb2np35U). Read every published alloy package for Debian 13 in the DHI Debian repository: 44 builds, 1.18.1-0 to the current 1.22.0-16, for amd64 and arm64 (1.21.2-0 is published for arm64 only), 87 packages, each checked against the index SHA256; no debug-symbol package is published for this source. Each package installs /usr/bin/alloy, its only ELF program, plus the default configuration /etc/alloy/config.alloy and an SPDX SBOM JSON file under /opt/docker/sbom. Both architectures of a build carry the same Go and module versions, and no build replaces the module. In every package, the function symbols of /usr/bin/alloy (go tool nm) include ssh.NewClientConn, (*channel).Accept and (*channel).handlePacket, which the advisory names as affected, so the vulnerable code is linked. The golang.org/x/crypto version by build is 1.18.1-0 to 1.19.2-2: v0.55.0; 1.19.2-3: v0.56.0; 1.19.2-4 to 1.20.1-2: v0.57.0; 1.20.1-3 to 1.21.3-3: v0.58.0; 1.21.3-4 to 1.22.0-16: v0.59.0. The range ends at 1.19.2-3, the first build with v0.56.0 or later."
     },
     {
       "vulnerability": {
