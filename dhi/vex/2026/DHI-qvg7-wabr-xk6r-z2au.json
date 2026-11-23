@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-09T21:03:05Z",
-  "last_updated": "2026-11-18T19:32:06Z",
-  "version": 2,
+  "last_updated": "2026-11-23T23:07:18Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -16,11 +16,30 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bb7dhi0?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdeb13u0%2Bdhi3?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdeb13u0%2Bdhi4?distro=dhi-13"
         },
+        {
+          "@id": "pkg:deb/dhi/busybox@1:1.37.0-6dhi0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update busybox to 1:1.37.0-6+deb13u0+dhi5 or later.",
+      "status_notes": "CVE-2026-88841: in the BusyBox dpkg applet (archival/dpkg.c), write_status_file() does not reset its field_start cursor between package stanzas, so when one invocation removes two packages and the first stanza is larger than the second, it reads past the second stanza's buffer and silently corrupts the dpkg status file: https://bugzilla.redhat.com/show_bug.cgi?id=2539987. Red Hat names the upstream fixes https://github.com/mirror/busybox/commit/f5a4a02a157e250d28976e2ba4ea61a2fa7eb51f, which stops read_package_field() returning an offset past the end of the buffer, and https://github.com/mirror/busybox/commit/d5cc94063b2bb5b54fe1021e54600cbcbce6a350, which starts the cursor at zero for each stanza. Debian has not fixed it and rates it unimportant: https://security-tracker.debian.org/tracker/CVE-2026-88841. The DHI busybox packages are built from Debian's BusyBox 1.37.0 source, 1:1.37.0-6, with those upstream changes backported in the later builds. Checked every package built from this source in the DHI Debian repository, busybox, busybox-static, busybox-syslogd, udhcpc, udhcpd and the busybox and busybox-static debug-symbol packages, in all four published builds on amd64 and arm64, each checked against the checksum in the package index. The dpkg applet is compiled into both programs the source ships, /usr/bin/busybox in busybox (dynamically linked against the system C library) and in busybox-static (statically linked): dpkg_main is in the symbol table of every debug-symbol package. busybox-syslogd, udhcpc and udhcpd contain no ELF file: they carry symbolic links to /usr/bin/busybox, shell scripts (init scripts, and udhcpc's /etc/udhcpc/default.script), systemd units, configuration files, lintian overrides and documentation. Reproduced the bug with each of the 16 busybox and busybox-static binaries (four builds, two programs, two architectures): with a status file holding a larger stanza followed by a smaller one, dpkg -r on both packages drops the second package's stanza from the status file in the two older builds, and keeps it, with its status changed to deinstall ok config-files, in the two newer builds. The shipped changelog of the two newer builds lists the backport of the upstream BusyBox dpkg fixes for this CVE, and the two older ones do not. The range ends at the first build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-qvg7-wabr-xk6r-z2au",
+        "aliases": [
+          "CVE-2026-88841"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdeb13u0%2Bdhi5?distro=dhi-13"
         },
@@ -38,12 +57,10 @@
         },
         {
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdhi3?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/busybox@1:1.37.0-6dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-88841: in the BusyBox dpkg applet (archival/dpkg.c), write_status_file() does not reset its field_start cursor between package stanzas, so when one invocation removes two packages and the first stanza is larger than the second, it reads past the second stanza's buffer and silently corrupts the dpkg status file: https://bugzilla.redhat.com/show_bug.cgi?id=2539987. Red Hat names the upstream fixes https://github.com/mirror/busybox/commit/f5a4a02a157e250d28976e2ba4ea61a2fa7eb51f, which stops read_package_field() returning an offset past the end of the buffer, and https://github.com/mirror/busybox/commit/d5cc94063b2bb5b54fe1021e54600cbcbce6a350, which starts the cursor at zero for each stanza. Debian has not fixed it and rates it unimportant: https://security-tracker.debian.org/tracker/CVE-2026-88841. The DHI busybox packages are built from Debian's BusyBox 1.37.0 source, 1:1.37.0-6, with those upstream changes backported in the later builds. Checked every package built from this source in the DHI Debian repository, busybox, busybox-static, busybox-syslogd, udhcpc, udhcpd and the busybox and busybox-static debug-symbol packages, in all four published builds on amd64 and arm64, each checked against the checksum in the package index. The dpkg applet is compiled into both programs the source ships, /usr/bin/busybox in busybox (dynamically linked against the system C library) and in busybox-static (statically linked): dpkg_main is in the symbol table of every debug-symbol package. busybox-syslogd, udhcpc and udhcpd contain no ELF file: they carry symbolic links to /usr/bin/busybox, shell scripts (init scripts, and udhcpc's /etc/udhcpc/default.script), systemd units, configuration files, lintian overrides and documentation. Reproduced the bug with each of the 16 busybox and busybox-static binaries (four builds, two programs, two architectures): with a status file holding a larger stanza followed by a smaller one, dpkg -r on both packages drops the second package's stanza from the status file in the two older builds, and keeps it, with its status changed to deinstall ok config-files, in the two newer builds. The shipped changelog of the two newer builds lists the backport of the upstream BusyBox dpkg fixes for this CVE, and the two older ones do not. The range ends at the first build that carries the fix."
     }
   ]
 }
