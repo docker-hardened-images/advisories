@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T04:15:18Z",
-  "version": 1,
+  "last_updated": "2026-11-23T11:51:28Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update mariadb to 1:11.8.6-0+deb13u1+dhi1 or later.",
+      "status_notes": "CVE-2026-107823 (GHSA-g2q2-3936-cp37, MDEV-40484): from MariaDB 10.6.1 until 11.8.9 and the other fixed releases, the view FRM parser did not safely encode newline characters embedded in a user name, so an account with CREATE USER and CREATE VIEW WITH GRANT OPTION could create a user name that the parser reads as extra view metadata, such as the definer or security type, and escalate its privileges. It is fixed in MariaDB 11.8.9 by upstream commit 8a642bc8103aadc6b2087d781ba8e1595616a2c4: https://github.com/MariaDB/server/security/advisories/GHSA-g2q2-3936-cp37, https://github.com/MariaDB/server/commit/8a642bc8103aadc6b2087d781ba8e1595616a2c4, https://security-tracker.debian.org/tracker/CVE-2026-107823. The DHI mariadb packages backport that change onto 11.8.6 from the second DHI rebuild, the version this range names as fixed. We checked every mariadb build published in the DHI Debian repository: four successive DHI rebuilds of Debian's mariadb 1:11.8.6-0+deb13u1 (called the first to fourth rebuild below; the fourth is the current build), each with 56 binary packages per architecture including the -dbgsym packages, on amd64 and arm64; every package read was verified against the repository index checksum. Between the first and second rebuilds the server binary's view-file parser and writer (File_parser::parse and sql_create_definition_file, from the -dbgsym symbol tables) change on both architectures, the MDEV-40484 regression test is in mysql-test/main/view_grant.result of mariadb-test-data from the second rebuild on and absent in the first, and the Debian changelog shipped in mariadb-server-core records the backport from the second rebuild on. The range ends at the first build that carries it."
     }
   ]
 }
