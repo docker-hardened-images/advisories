@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T07:08:31Z",
-  "version": 1,
+  "last_updated": "2026-11-23T13:59:12Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -15,6 +16,9 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/iputils@3:20240905-3%2Bdeb13u0%2Bdhi2?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/iputils@3:20240905-3%2Bdhi0?distro=dhi-13"
         },
         {
@@ -24,7 +28,8 @@
           "@id": "pkg:deb/dhi/iputils@3:20240905-3%2Bdhi2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2025-47268: ping in iputils before 20250602 allows a denial of service or incorrect statistics via a crafted ICMP Echo Reply, because of a signed 64-bit integer overflow in the round-trip-time calculation. Upstream fixed it in commit 070cfacd (https://github.com/iputils/iputils/commit/070cfacd7348386173231fb16fad4983d4e6ae40, iputils issue https://github.com/iputils/iputils/issues/584), which bounds tv_sec and tv_usec before computing the trip time in gather_statistics() in ping/ping_common.c. The Debian tracker lists trixie's 3:20240905-3 as vulnerable and the fix in 3:20250605-1 (https://security-tracker.debian.org/tracker/CVE-2025-47268). DHI iputils for Debian 13 rebuilds trixie's 3:20240905-3 with that upstream commit backported. The DHI Debian repository publishes one build of it, the fixed-version bound below (iputils-ping, iputils-tracepath, iputils-arping and iputils-clockdiff with their dbgsym packages, amd64 and arm64, checksums verified against the repository index). Its /usr/bin/ping on both architectures contains the two warnings the fix adds, \"Warning: invalid tv_usec %ld us\" and \"Warning: invalid tv_sec %ld s\", and the reworded \"time of day goes back (%ld s)\" message, and no longer contains the pre-fix \"time of day goes back (%ldus)\" form; its Debian changelog records the backport. The range ends at that build, the first and only one published, which carries the fix."
     }
   ]
 }
