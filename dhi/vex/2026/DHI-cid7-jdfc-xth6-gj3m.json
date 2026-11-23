@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T05:55:16Z",
-  "last_updated": "2026-11-12T22:53:09Z",
-  "version": 2,
+  "last_updated": "2026-11-23T13:03:33Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -22,7 +22,9 @@
           "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2020-14145 is an information leak in the OpenSSH client's host key algorithm negotiation: ssh reorders the host key algorithms it offers so that the types of keys already in its known_hosts files come first, which lets a man-in-the-middle tell whether the client already holds a host key for the server and attack only first connections, where it holds none (https://www.cve.org/CVERecord?id=CVE-2020-14145, https://security-tracker.debian.org/tracker/CVE-2020-14145). OpenSSH 8.4 added a partial mitigation that offers the default order unchanged when a known key matches the default first-preference algorithm (https://github.com/openssh/openssh-portable/commit/b3855ff053f5078ec3d3c653cdaedefaa5fc362d, https://www.openssh.org/txt/release-8.4, https://www.openwall.com/lists/oss-security/2020/12/02/1). The reordering itself remains and no upstream fix exists: the Debian security tracker rates the issue unimportant, lists every Debian release as vulnerable and notes that the OpenSSH project does not plan to change the behaviour. This owner is affected in every published build. Checked the openssh-client package of each of the three published builds of Debian's 1:10.0p1-7+deb13u4 source in the DHI Debian repository, for amd64 and arm64, each against the index SHA256: /usr/bin/ssh reports OpenSSH_10.0p2 and contains the reordering code, including its \"prefer hostkeyalgs\" and \"using HostkeyAlgorithms verbatim\" debug messages, and this owner carries no change to it. The issue is in the ssh client; sshd is not involved. Until a fix exists, a client avoids the reordering by setting HostKeyAlgorithms in ssh_config to an explicit list that does not start with + or -, because ssh only reorders when that option is unset or only appends or removes algorithms."
     }
   ]
 }

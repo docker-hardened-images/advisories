@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T16:00:28Z",
-  "version": 1,
+  "last_updated": "2026-11-23T13:03:38Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -27,7 +28,9 @@
           "@id": "pkg:deb/dhi/bison@2:3.8.2%2Bdfsg-1dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-8733 was published by VulDB as a reachable assertion in GNU Bison up to 3.8.2, in the function __obstack_vprintf_internal of the file obprintf.c, based on crash reports with a stack trace (https://github.com/akimd/bison/issues/114, https://github.com/akimd/bison/issues/113). The CVE has since been rejected: VulDB withdrew it because further investigation showed it was not a security issue and the files referenced in the stack trace do not exist in Bison (https://www.cve.org/CVERecord?id=CVE-2025-8733). obprintf.c and __obstack_vprintf_internal belong to the GNU C Library (glibc), not to Bison, as noted on the report (https://github.com/akimd/bison/issues/113#issuecomment-3425623327) and by a Gnulib developer on oss-security (https://www.openwall.com/lists/oss-security/2025/10/27/12); the assertion shown in the reported stack trace is not in the glibc 2.41 version of that file (https://sourceware.org/git/?p=glibc.git;a=blob;f=libio/obprintf.c;hb=refs/heads/release/2.41/master). Checked the single published build of Debian's bison 2:3.8.2+dfsg-1 source in the DHI Debian repository, for amd64 and arm64: the bison, bison-dbgsym and libbison-dev packages, each checked against the repository index checksum. /usr/bin/bison contains no obprintf.c code and no __obstack_vprintf_internal function; it calls the C library's __obstack_printf_chk, which it imports from glibc. The decompressed debug information in bison-dbgsym names no obprintf.c source file, while it does name Bison's own parse-gram.c and Gnulib's obstack.c. libbison-dev's static library liby.a holds only main.o and yyerror.o. The named code ships only in glibc's libc6 package, which is a different owner and is assessed on its own."
     }
   ]
 }

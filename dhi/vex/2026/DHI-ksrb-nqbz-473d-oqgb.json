@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:32Z",
-  "last_updated": "2026-11-23T12:52:22Z",
-  "version": 87,
+  "last_updated": "2026-11-23T13:03:28Z",
+  "version": 88,
   "statements": [
     {
       "vulnerability": {
@@ -294,7 +294,9 @@
           "@id": "pkg:deb/dhi/airflow@3.4.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2019-1010025 is a report that the GNU C Library (glibc) lets an attacker guess the heap addresses of threads created with pthread_create, weakening ASLR; the CVE record notes the glibc maintainers' position that an ASLR bypass by itself is not a vulnerability (https://sourceware.org/bugzilla/show_bug.cgi?id=22853, https://security-tracker.debian.org/tracker/CVE-2019-1010025). This package does not contain glibc. Checked the contents of all 100 published airflow packages in the DHI Debian repository, 3.3.0-0 to the current 3.4.0-9 for amd64 and arm64 (no debug-symbol packages are published for this source), recursing into the wheel and jar files they bundle; every download was checked against the checksum in the package index. Builds 3.3.0-0 to 3.4.0-0 hold 27 ELF files each, all Python extension modules dynamically linked against the system libc.so.6, and no other native code. Builds 3.4.0-1 to 3.4.0-9 add NumPy, SciPy and Ray and hold 405 to 424 ELF files each. All but 15 of them list libc.so.6 as a dependency, among them the py-spy, Ray raylet and Ray gcs_server programs. Of those 15, seven are NumPy and SciPy extension modules with no libc.so.6 entry of their own, which use the C library already loaded by the Python interpreter, and eight are the JNA dispatch libraries for FreeBSD, OpenBSD and Solaris inside Ray's ray_dist.jar, which are built for those systems and not for Linux. Those builds also carry NumPy's static archives libnpymath.a and libnpyrandom.a, whose nine members are NumPy's own math and random-distribution objects; 31 native Windows PE files with no .NET CLR header (the launcher .exe files of distlib, of setuptools and of the pip and setuptools wheels that virtualenv embeds, and JNA's three Windows jnidispatch.dll files); and JNA's two macOS (Mach-O) jnidispatch libraries. No ELF file in any build is statically linked. No file in any build is a copy of libc.so.6, the dynamic loader, libc.a or another glibc library, and none carries the glibc version banner. Ray's ray_dist.jar in builds 3.4.0-1 to 3.4.0-9 also holds JNA's two AIX dispatch libraries (libjnidispatch.a for aix-ppc and aix-ppc64), which despite the .a name are XCOFF shared objects built for AIX, not static archives, and are not glibc. glibc is shipped by the separate libc6 package, built from the glibc source, which is a different owner and is assessed on its own."
     },
     {
       "vulnerability": {
@@ -35659,7 +35661,9 @@
           "@id": "pkg:deb/dhi/memcached@1.6.45-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2019-1010025 is a report that the GNU C Library (glibc) lets an attacker guess the heap address of a thread created with pthread_create, weakening ASLR; the CVE record notes the glibc maintainers' position that an ASLR bypass by itself is not a vulnerability (https://sourceware.org/bugzilla/show_bug.cgi?id=22853, https://security-tracker.debian.org/tracker/CVE-2019-1010025). This package does not contain glibc. Unpacked every package published from the memcached source in the DHI Debian repository, for amd64 and arm64 (20 packages, each checked against the repository index checksum): memcached 1.6.45-0 and 1.6.45-1, and the 0.16.0-0, 0.16.0-1, 0.17.0-1 and 0.17.0-2 builds published under both the memcached and memcached-dev names, which hold the Prometheus memcached exporter. No debug-symbol packages are published for this source. Each package holds one file. In 1.6.45 it is /usr/bin/memcached, a dynamically linked C program that lists libevent, libsasl2, OpenSSL (libssl and libcrypto) and the system libc.so.6 as dependencies. In the 0.16 and 0.17 builds it is /usr/bin/memcached_exporter, a statically linked Go program built with cgo disabled, which contains no C library. No package contains libc.so.6, the dynamic loader, a static archive, a PE or Mach-O file, or the glibc version banner. glibc reaches an image only through the separate libc6 package, which is not part of this owner and is assessed on its own."
     },
     {
       "vulnerability": {
