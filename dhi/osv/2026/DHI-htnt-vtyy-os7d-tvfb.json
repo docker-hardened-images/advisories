@@ -1,13 +1,13 @@
 {
   "schema_version": "1.8.0",
   "id": "DHI-htnt-vtyy-os7d-tvfb",
-  "modified": "2026-11-21T12:19:56Z",
+  "modified": "2026-11-23T19:49:43Z",
   "published": "2026-11-12T00:42:35Z",
   "upstream": [
     "CVE-2025-15284"
   ],
-  "summary": "Improper Input Validation vulnerability in qs (parse modules) allows HTTP DoS.This issue affects qs: < 6.14.1.",
-  "details": "Improper Input Validation vulnerability in qs (parse modules) allows HTTP DoS.This issue affects qs: < 6.14.1.\n\n\nSummary\n\nThe arrayLimit option in qs did not enforce limits for bracket notation (a[]=1&a[]=2), only for indexed notation (a[0]=1). This is a consistency bug; arrayLimit should apply uniformly across all array notations.\n\nNote: The default parameterLimit of 1000 effectively mitigates the DoS scenario originally described. With default options, bracket notation cannot produce arrays larger than parameterLimit regardless of arrayLimit, because each a[]=valueconsumes one parameter slot. The severity has been reduced accordingly.\n\nDetails\n\nThe arrayLimit option only checked limits for indexed notation (a[0]=1&a[1]=2) but did not enforce it for bracket notation (a[]=1&a[]=2).\n\nVulnerable code (lib/parse.js:159-162):\n\nif (root === '[]' && options.parseArrays) {\n    obj = utils.combine([], leaf);  // No arrayLimit check\n}\n\n\n\n\n\nWorking code (lib/parse.js:175):\n\nelse if (index <= options.arrayLimit) {  // Limit checked here\n    obj = [];\n    obj[index] = leaf;\n}\n\n\n\n\n\nThe bracket notation handler at line 159 uses utils.combine([], leaf) without validating against options.arrayLimit, while indexed notation at line 175 checks index <= options.arrayLimit before creating arrays.\n\n\n\nPoC\n\nconst qs = require('qs');\nconst result = qs.parse('a[]=1&a[]=2&a[]=3&a[]=4&a[]=5&a[]=6', { arrayLimit: 5 });\nconsole.log(result.a.length);  // Output: 6 (should be max 5)\n\n\n\n\n\nNote on parameterLimit interaction: The original advisory's \"DoS demonstration\" claimed a length of 10,000, but parameterLimit (default: 1000) caps parsing to 1,000 parameters. With default options, the actual output is 1,000, not 10,000.\n\nImpact\n\nConsistency bug in arrayLimit enforcement. With default parameterLimit, the practical DoS risk is negligible since parameterLimit already caps the total number of parsed parameters (and thus array elements from bracket notation). The risk increases only when parameterLimit is explicitly set to a very high value.",
+  "summary": "Improper Input Validation vulnerability in qs (parse modules) allows HTTP DoS.",
+  "details": "Improper Input Validation vulnerability in qs (parse modules) allows HTTP DoS.\n\nThis issue affects qs: < 6.14.1.\n\n\nSummary\n\n\n\n\n\nThe arrayLimit option in qs did not enforce limits for bracket notation (a[]=1&a[]=2), only for indexed notation (a[0]=1). This is a consistency bug; arrayLimit should apply uniformly across all array notations.\n\n\n\nNote: The default parameterLimit of 1000 effectively mitigates the DoS scenario originally described. With default options, bracket notation cannot produce arrays larger than parameterLimit regardless of arrayLimit, because each a[]=valueconsumes one parameter slot. The severity has been reduced accordingly.\n\nDetails\n\n\n\n\n\nThe arrayLimit option only checked limits for indexed notation (a[0]=1&a[1]=2) but did not enforce it for bracket notation (a[]=1&a[]=2).\n\n\n\nVulnerable code (lib/parse.js:159-162):\n\n\n\nif (root === '[]' && options.parseArrays) {\n    obj = utils.combine([], leaf);  // No arrayLimit check\n}\n\n\n\n\n\n\n\nWorking code (lib/parse.js:175):\n\n\n\nelse if (index <= options.arrayLimit) {  // Limit checked here\n    obj = [];\n    obj[index] = leaf;\n}\n\n\n\n\n\n\n\nThe bracket notation handler at line 159 uses utils.combine([], leaf) without validating against options.arrayLimit, while indexed notation at line 175 checks index <= options.arrayLimit before creating arrays.\n\n\n\n\n\nPoC\n\n\n\n\n\nconst qs = require('qs');\nconst result = qs.parse('a[]=1&a[]=2&a[]=3&a[]=4&a[]=5&a[]=6', { arrayLimit: 5 });\nconsole.log(result.a.length);  // Output: 6 (should be max 5)\n\n\n\n\n\n\n\nNote on parameterLimit interaction: The original advisory's \"DoS demonstration\" claimed a length of 10,000, but parameterLimit (default: 1000) caps parsing to 1,000 parameters. With default options, the actual output is 1,000, not 10,000.\n\nImpact\n\n\n\nConsistency bug in arrayLimit enforcement. With default parameterLimit, the practical DoS risk is negligible since parameterLimit already caps the total number of parsed parameters (and thus array elements from bracket notation). The risk increases only when parameterLimit is explicitly set to a very high value.",
   "severity": [
     {
       "type": "CVSS_V3",
@@ -25,6 +25,16 @@
         "name": "jupyterhub-k8s-singleuser-sample-fips",
         "purl": "pkg:apk/dhi/jupyterhub-k8s-singleuser-sample-fips"
       },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.4.5-r0"
+            }
+          ]
+        }
+      ],
       "versions": [
         "4.4.5-r0",
         "4.4.5-r1",
@@ -42,6 +52,16 @@
         "name": "jupyterhub-k8s-singleuser-sample",
         "purl": "pkg:apk/dhi/jupyterhub-k8s-singleuser-sample"
       },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.4.5-r0"
+            }
+          ]
+        }
+      ],
       "versions": [
         "4.4.5-r0",
         "4.4.5-r1",
@@ -59,6 +79,16 @@
         "name": "socket-cli-2",
         "purl": "pkg:apk/dhi/socket-cli-2"
       },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.1.0-r0"
+            }
+          ]
+        }
+      ],
       "versions": [
         "2.1.0-r0",
         "2.1.0-r1",
@@ -77,6 +107,16 @@
         "name": "datahub-ingestion",
         "purl": "pkg:deb/dhi/datahub-ingestion"
       },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.5.0.7-0"
+            }
+          ]
+        }
+      ],
       "versions": [
         "1.5.0.7-0",
         "1.6.0.1-0",
@@ -107,7 +147,8 @@
         "1.7.0.19-6",
         "1.7.0.20-6",
         "1.7.0.20-7",
-        "1.7.0.20-8"
+        "1.7.0.20-8",
+        "1.7.0.20-9"
       ],
       "database_specific": {
         "owner_kind": "HSP"
@@ -119,6 +160,16 @@
         "name": "grist",
         "purl": "pkg:deb/dhi/grist"
       },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.7.17-0"
+            }
+          ]
+        }
+      ],
       "versions": [
         "1.7.17-0",
         "1.7.17-1",
@@ -171,6 +222,16 @@
         "name": "jupyterhub-k8s-singleuser-sample-fips",
         "purl": "pkg:deb/dhi/jupyterhub-k8s-singleuser-sample-fips"
       },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.4.5-0"
+            }
+          ]
+        }
+      ],
       "versions": [
         "4.4.5-0",
         "4.4.5-1",
@@ -188,6 +249,16 @@
         "name": "jupyterhub-k8s-singleuser-sample",
         "purl": "pkg:deb/dhi/jupyterhub-k8s-singleuser-sample"
       },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.4.5-0"
+            }
+          ]
+        }
+      ],
       "versions": [
         "4.4.5-0",
         "4.4.5-1",
