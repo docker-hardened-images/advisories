@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:10Z",
-  "last_updated": "2026-11-23T16:55:07Z",
-  "version": 41,
+  "last_updated": "2026-11-23T17:55:45Z",
+  "version": 42,
   "statements": [
     {
       "vulnerability": {
@@ -5999,7 +5999,9 @@
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.39.1-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p): on Windows, the Docker CLI plugin manager (github.com/docker/cli/cli-plugins/manager) searched C:\\ProgramData\\Docker\\cli-plugins, a directory that a low-privileged user can create, so plugin binaries planted there could run with the privileges of the user invoking docker. The advisory states \"This issue does not impact non-Windows binaries or projects that do not use the plugin manager code\", lists github.com/docker/cli from 19.03.0 up to but not including 29.2.0 as affected, and links the fix, docker/cli pull request 6713 (commit 13759330b1f7), which removes that directory from the Windows-only plugin search list in cli-plugins/manager/manager_windows.go: https://github.com/advisories/GHSA-p436-gjf2-799p. The vulnerable code is not in this package. Read every published docker-cli-buildx package for Alpine 3.23 (0.33.0-r1 to 0.39.1-r1; 29 aarch64 and 28 x86_64 builds), each checked against the repository index checksum: each holds one program, /usr/libexec/docker/cli-plugins/docker-buildx, a Linux ELF executable (dynamically linked against musl through 0.39.0-r0, statically linked in 0.39.1-r0 and 0.39.1-r1) whose Go build information records GOOS=linux and github.com/docker/cli v29.3.1 to v29.9.3, all at or after the fixed 29.2.0. Go compiles manager_windows.go only into Windows binaries, so the Windows plugin search path is not in any of these programs. Listing the Go packages compiled into each program from its own function table confirms it: every build contains the docker/cli packages cli-plugins/plugin and cli-plugins/socket, no build contains the cli-plugins/manager package, and none contains the string ProgramData. The same listing does find cli-plugins/manager in /usr/bin/docker from the docker-cli 29.10.0-r1 package, which links it."
     },
     {
       "vulnerability": {
@@ -6091,7 +6093,9 @@
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.39.1-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p): on Windows, the Docker CLI plugin manager (github.com/docker/cli/cli-plugins/manager) searched C:\\ProgramData\\Docker\\cli-plugins, a directory that a low-privileged user can create, so plugin binaries planted there could run with the privileges of the user invoking docker. The advisory states \"This issue does not impact non-Windows binaries or projects that do not use the plugin manager code\", lists github.com/docker/cli from 19.03.0 up to but not including 29.2.0 as affected, and links the fix, docker/cli pull request 6713 (commit 13759330b1f7), which removes that directory from the Windows-only plugin search list in cli-plugins/manager/manager_windows.go: https://github.com/advisories/GHSA-p436-gjf2-799p. The vulnerable code is not in this package. Read every published docker-cli-buildx package for Alpine 3.24 (0.34.1-r0 to 0.39.1-r1; 27 builds each for x86_64 and aarch64), each checked against the repository index checksum: each holds one program, /usr/libexec/docker/cli-plugins/docker-buildx, a Linux ELF executable (dynamically linked against musl through 0.39.0-r0, statically linked in 0.39.1-r0 and 0.39.1-r1) whose Go build information records GOOS=linux and github.com/docker/cli v29.4.3 to v29.9.3, all at or after the fixed 29.2.0. Go compiles manager_windows.go only into Windows binaries, so the Windows plugin search path is not in any of these programs. Listing the Go packages compiled into each program from its own function table confirms it: every build contains the docker/cli packages cli-plugins/plugin and cli-plugins/socket, no build contains the cli-plugins/manager package, and none contains the string ProgramData. The same listing does find cli-plugins/manager in /usr/bin/docker from the docker-cli 29.10.0-r1 package, which links it."
     },
     {
       "vulnerability": {
