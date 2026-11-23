@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T06:40:41Z",
-  "last_updated": "2026-11-12T23:05:10Z",
-  "version": 2,
+  "last_updated": "2026-11-23T14:32:40Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -22,7 +22,8 @@
           "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2008-3234 says a remote authenticated user can obtain arbitrary SELinux roles in Debian's sshd by appending a role to the user name (https://security-tracker.debian.org/tracker/CVE-2008-3234). The behaviour comes from Debian's selinux-role patch, which lets a user name carry a requested SELinux role; OpenSSH upstream rejected that patch (https://bugzilla.mindrot.org/show_bug.cgi?id=1641) and Debian, which added it for https://bugs.debian.org/394795, still carries it in openssh 1:10.0p1-7+deb13u4. Debian lists it as unfixed and unimportant, with the note \"this is by design\". The DHI Debian repository publishes three builds of openssh for Debian 13, all rebuilds of Debian's 1:10.0p1-7+deb13u4. We checked the openssh-server packages of all three on amd64 and arm64, verified against the index checksums: sshd, sshd-session and sshd-auth all link libselinux.so.1 and import get_default_context_with_rolelevel, and sshd-session and sshd-auth contain the patch's role handling (mm_inform_authrole), so the code is present. Pending: a primary maintainer statement of why role selection is by design (the role is passed to libselinux, which should only grant a role the SELinux policy allows for that user), and a check on an SELinux-enforcing host that a user cannot get a role the policy does not allow."
     }
   ]
 }

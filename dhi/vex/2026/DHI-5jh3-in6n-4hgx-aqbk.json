@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T06:24:12Z",
-  "last_updated": "2026-11-12T23:05:10Z",
-  "version": 2,
+  "last_updated": "2026-11-23T14:32:30Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -22,7 +22,9 @@
           "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2007-2243 lets a remote client find out whether a user account exists by trying S/KEY authentication when ChallengeResponseAuthentication is enabled, in OpenSSH 4.6 and earlier (https://security-tracker.debian.org/tracker/CVE-2007-2243, https://bugs.debian.org/436571). The affected code is sshd's internal S/KEY support. OpenSSH removed it in 7.8 (release notes: \"sshd(8): remove internal support for S/Key multiple factor authentication. S/Key may still be used via PAM or BSD auth.\", https://www.openssh.com/txt/release-7.8), and its last source file, auth-skey.c, was deleted from OpenSSH portable before 8.2 (https://github.com/openssh/openssh-portable/commit/7652a57662969bd5c61448b3843ec6d407ad12be). This owner is built from OpenSSH 10.0p1. The DHI Debian repository publishes three builds of openssh for Debian 13, all rebuilds of Debian's 1:10.0p1-7+deb13u4. We checked the openssh-server and openssh-server-dbgsym packages of all three on amd64 and arm64, verified against the index checksums: the debug symbols of sshd, sshd-session and sshd-auth contain no S/KEY function, while in every build the same search finds the keyboard-interactive and PAM functions (auth2_challenge, sshpam_init_ctx) in sshd-session and sshd-auth, which handle authentication. No S/KEY or OPIE PAM module is published in the DHI Debian repository: its package index has no package named for either. The only S/KEY text left in the binaries is the configuration keyword skeyauthentication, which OpenSSH 10.0 keeps as an alias for KbdInteractiveAuthentication."
     }
   ]
 }
