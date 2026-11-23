@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T15:59:10Z",
-  "last_updated": "2026-11-23T21:20:26Z",
-  "version": 3,
+  "last_updated": "2026-11-23T22:55:33Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -28,7 +28,8 @@
           "@id": "pkg:deb/dhi/openjpeg2@2.5.3-2.1~deb13u2%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2016-10505 covers NULL pointer dereferences in the opj_decompress tool's imagetopnm, sycc444_to_rgb, sycc422_to_rgb and color_esycc_to_rgb functions in OpenJPEG before 2.2.0, reached when a crafted j2k file decodes with no data for a component. Upstream closed each report as no longer reproducible before the 2.2.0 release: https://github.com/uclouvain/openjpeg/issues/776, https://github.com/uclouvain/openjpeg/issues/784, https://github.com/uclouvain/openjpeg/issues/785, https://github.com/uclouvain/openjpeg/issues/792. Every openjpeg2 build published in the DHI Debian repository, on amd64 and arm64, is built from Debian's OpenJPEG 2.5.3 source, 2.5.3-2.1~deb13u2. In that source the decoder fails with 'Failed to decode all used components' whenever a requested component has no decoded data, on both the whole-image and the single-tile paths, a check released in 2.4.0 by https://github.com/uclouvain/openjpeg/commit/b2751967ecabf8d8856e85ab91e25d4f235e2eb3. opj_decompress then exits with 'failed to decode image' or 'failed to decode tile' before any colour conversion or output writer runs. The libopenjp2.so.7 and opj_decompress binaries in every published build, amd64 and arm64, carry these error messages. Debian has recorded no fixed version and rates the issue unimportant: https://security-tracker.debian.org/tracker/CVE-2016-10505. Every published build carries these changes, so the range ends at the first one."
     }
   ]
 }
