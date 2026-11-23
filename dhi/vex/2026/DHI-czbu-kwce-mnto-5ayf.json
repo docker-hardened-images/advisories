@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T08:15:34Z",
-  "last_updated": "2026-11-23T06:23:04Z",
-  "version": 3,
+  "last_updated": "2026-11-23T19:07:06Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -32,7 +32,7 @@
         }
       ],
       "status": "under_investigation",
-      "status_notes": "CVE-2005-1119: visudo creates its temporary file as <sudoers>.tmp in the same directory as the sudoers file it edits, so a local user with write access to that directory could redirect the write through a symlink. sudo 1.9.16p2, the version this package is built from, still places the temporary file that way (plugins/sudoers/visudo.c, https://sources.debian.org/src/sudo/1.9.16p2-3%2Bdeb13u2/plugins/sudoers/visudo.c/); upstream keeps this deliberately so the new file can be renamed over the old one, and has published no advisory for this CVE. Debian rates the issue unimportant, calls it a policy violation rather than a security problem, and records no fixed version (https://security-tracker.debian.org/tracker/CVE-2005-1119, https://bugs.debian.org/283161); Red Hat states it only manifests when visudo is run on a sudoers file in a world-writable directory (https://access.redhat.com/security/cve/CVE-2005-1119). Pending: a decision on whether that precondition, a sudoers file kept in a directory writable by untrusted local users, is outside the supported configuration for every consumer of this package. Until then this is not recorded as not affected, because the argument rests on how each consumer lays out its sudoers files rather than on the package itself."
+      "status_notes": "CVE-2005-1119: visudo creates its temporary file as <sudoers>.tmp in the same directory as the sudoers file it edits, so a local user with write access to that directory could redirect the write through a symlink. sudo 1.9.16p2, the version both published builds of this package are made from (Debian's 1.9.16p2-3+deb13u2 and 1.9.16p2-3+deb13u5 sources), still creates the temporary file that way, opening it without O_EXCL or O_NOFOLLOW and then renaming it over the sudoers file: https://sources.debian.org/src/sudo/1.9.16p2-3%2Bdeb13u5/plugins/sudoers/visudo.c/. The visudo program in the sudo and sudo-ldap packages of both builds, on amd64 and arm64, carries that %s.tmp file name. Upstream has published no advisory for this CVE. Debian rates the issue unimportant, calls it a policy violation rather than a security problem, and records no fixed version: https://security-tracker.debian.org/tracker/CVE-2005-1119, https://bugs.debian.org/283161. Red Hat states that it does not consider this a security issue because the bug can only manifest if visudo is invoked on a sudoers file contained in a world-writable directory: https://access.redhat.com/security/cve/CVE-2005-1119. Pending: a decision on whether that precondition, a sudoers file kept in a directory writable by untrusted local users, is outside the supported configuration for every consumer of this package. Until then this is not recorded as not affected, because the argument rests on how each consumer lays out its sudoers files rather than on the package itself."
     }
   ]
 }

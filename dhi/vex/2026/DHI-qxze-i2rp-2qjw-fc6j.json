@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T16:52:19Z",
-  "last_updated": "2026-11-22T07:45:41Z",
-  "version": 5,
+  "last_updated": "2026-11-23T19:06:55Z",
+  "version": 6,
   "statements": [
     {
       "vulnerability": {
@@ -65,7 +65,20 @@
         },
         {
           "@id": "pkg:deb/dhi/openssl@3.5.7-1~deb13u2%2Bfips%2Bdhi0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update openssl to 3.5.7-1~deb13u3+dhi0 or later.",
+      "status_notes": "CVE-2026-84784 (\"QUIC: Unbounded RETIRE_CONNECTION_ID Backlog\", Low): a malicious remote QUIC peer can send NEW_CONNECTION_ID frames that make the local OpenSSL QUIC stack queue a RETIRE_CONNECTION_ID frame for each one, because the stack retired the destination connection ID as soon as it received the frame instead of after the peer acknowledged the retirement; if the peer also withholds ACKs, the queue can grow to about 400 MB. OpenSSL 3.5 is affected and fixed in OpenSSL 3.5.9. https://openssl-library.org/news/secadv/20260929.txt, fix on the openssl-3.5 branch https://github.com/openssl/openssl/commit/dba3c48d653c64fcbc9070a17a0ee2b3e2f3af1f, first released in OpenSSL 3.5.9. Debian fixed it for trixie in openssl 3.5.7-1~deb13u3, DSA-6531-1: https://security-tracker.debian.org/tracker/CVE-2026-84784. The DHI Debian 13 openssl packages are rebuilds of Debian's trixie openssl, published in the DHI Debian repository and the DHI enterprise repository (the FIPS builds, and the openssl-provider-fips package of every build, only in the enterprise repository); the Debian changelog shipped in each libssl3t64 package shows which Debian release a build is based on. That changelog was read from every published build on amd64 and arm64: 25 versions, 17 standard and 8 FIPS builds, based on Debian 3.5.5-1~deb13u2, 3.5.6-1~deb13u1, 3.5.6-1~deb13u2, 3.5.7-1~deb13u2, 3.5.7-1~deb13u3 and 3.5.9-1~deb13u1. No build based on Debian 3.5.5-1~deb13u2, 3.5.6-1~deb13u1, 3.5.6-1~deb13u2 or 3.5.7-1~deb13u2, FIPS builds included, names CVE-2026-84784. The first published rebuild of Debian 3.5.7-1~deb13u3, the fixed boundary here, and every later build, FIPS builds included, carry Debian's 3.5.7-1~deb13u3 entry naming it. The fix moves the retirement to the point where the queued RETIRE_CONNECTION_ID frame is released, through a new callback, free_frame_rtcid(), in libssl's QUIC channel code. That function is in the libssl symbol table (shipped debug symbols from the libssl3t64-dbgsym package of each build) of every build from the first rebuild of Debian 3.5.7-1~deb13u3 on, FIPS builds included, and absent from every earlier build, on both architectures, while SSL_new() and ossl_quic_rstream_new() are present in every build. Of the FIPS providers, the openssl-provider-fips package, read from every build on both architectures, ships the OpenSSL 3.1.2 FIPS provider in the FIPS builds and the FIPS provider from the build's own OpenSSL release (3.5.5, 3.5.6, 3.5.7 or 3.5.9) in the other builds; the advisory places the QUIC implementation outside the FIPS module boundary, and the FIPS builds' libcrypto and libssl are Debian's 3.5 libraries checked above."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-qxze-i2rp-2qjw-fc6j",
+        "aliases": [
+          "CVE-2026-84784"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/openssl@3.5.7-1~deb13u3%2Bdhi0?distro=dhi-13"
         },
@@ -91,7 +104,8 @@
           "@id": "pkg:deb/dhi/openssl@3.5.9-1~deb13u1%2Bfips%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-84784 (\"QUIC: Unbounded RETIRE_CONNECTION_ID Backlog\", Low): a malicious remote QUIC peer can send NEW_CONNECTION_ID frames that make the local OpenSSL QUIC stack queue a RETIRE_CONNECTION_ID frame for each one, because the stack retired the destination connection ID as soon as it received the frame instead of after the peer acknowledged the retirement; if the peer also withholds ACKs, the queue can grow to about 400 MB. OpenSSL 3.5 is affected and fixed in OpenSSL 3.5.9. https://openssl-library.org/news/secadv/20260929.txt, fix on the openssl-3.5 branch https://github.com/openssl/openssl/commit/dba3c48d653c64fcbc9070a17a0ee2b3e2f3af1f, first released in OpenSSL 3.5.9. Debian fixed it for trixie in openssl 3.5.7-1~deb13u3, DSA-6531-1: https://security-tracker.debian.org/tracker/CVE-2026-84784. The DHI Debian 13 openssl packages are rebuilds of Debian's trixie openssl, published in the DHI Debian repository and the DHI enterprise repository (the FIPS builds, and the openssl-provider-fips package of every build, only in the enterprise repository); the Debian changelog shipped in each libssl3t64 package shows which Debian release a build is based on. That changelog was read from every published build on amd64 and arm64: 25 versions, 17 standard and 8 FIPS builds, based on Debian 3.5.5-1~deb13u2, 3.5.6-1~deb13u1, 3.5.6-1~deb13u2, 3.5.7-1~deb13u2, 3.5.7-1~deb13u3 and 3.5.9-1~deb13u1. No build based on Debian 3.5.5-1~deb13u2, 3.5.6-1~deb13u1, 3.5.6-1~deb13u2 or 3.5.7-1~deb13u2, FIPS builds included, names CVE-2026-84784. The first published rebuild of Debian 3.5.7-1~deb13u3, the fixed boundary here, and every later build, FIPS builds included, carry Debian's 3.5.7-1~deb13u3 entry naming it. The fix moves the retirement to the point where the queued RETIRE_CONNECTION_ID frame is released, through a new callback, free_frame_rtcid(), in libssl's QUIC channel code. That function is in the libssl symbol table (shipped debug symbols from the libssl3t64-dbgsym package of each build) of every build from the first rebuild of Debian 3.5.7-1~deb13u3 on, FIPS builds included, and absent from every earlier build, on both architectures, while SSL_new() and ossl_quic_rstream_new() are present in every build. Of the FIPS providers, the openssl-provider-fips package, read from every build on both architectures, ships the OpenSSL 3.1.2 FIPS provider in the FIPS builds and the FIPS provider from the build's own OpenSSL release (3.5.5, 3.5.6, 3.5.7 or 3.5.9) in the other builds; the advisory places the QUIC implementation outside the FIPS module boundary, and the FIPS builds' libcrypto and libssl are Debian's 3.5 libraries checked above."
     }
   ]
 }
