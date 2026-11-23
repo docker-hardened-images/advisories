@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T06:12:56Z",
-  "last_updated": "2026-11-12T23:05:10Z",
-  "version": 2,
+  "last_updated": "2026-11-23T14:48:18Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -22,7 +22,9 @@
           "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2019-6110: the scp client passes whatever the server writes to its standard error stream straight to the user's terminal, so a malicious server or a man in the middle can print terminal control sequences that, for example, hide additional files being transferred (https://sintonen.fi/advisories/scp-client-multiple-vulnerabilities.txt, https://security-tracker.debian.org/tracker/CVE-2019-6110). OpenSSH does not consider this a vulnerability and does not filter the stream: its maintainer wrote that a lot depends on stderr being present, such as login warning banners, that it is impractical for scp to process it selectively, and that scp should not be used with untrusted servers (https://lists.mindrot.org/pipermail/openssh-unix-dev/2019-January/037475.html). No OpenSSH release changes this, and the Debian security tracker lists every Debian release, including trixie, as vulnerable and rates it unimportant. In OpenSSH 10.0p1 and in Debian's patched source, do_cmd() in scp.c starts ssh with only its standard input and output redirected, so the server's standard error reaches the terminal unfiltered, both in the default SFTP mode and in the legacy scp mode (scp -O). The DHI Debian repository publishes three builds of openssh for Debian 13, all rebuilds of Debian's 1:10.0p1-7+deb13u4. We checked the openssh-server and openssh-client packages and their debug-symbol packages for all three builds on amd64 and arm64, each verified against the index checksum, and the source of Debian's 1:10.0p1-7+deb13u4 (https://salsa.debian.org/ssh-team/openssh/-/tree/debian/1%2510.0p1-7+deb13u4). Every openssh-client package ships /usr/bin/scp, and its debug symbols contain do_cmd in every build. This owner carries no change to this code, so every published build is affected."
     }
   ]
 }

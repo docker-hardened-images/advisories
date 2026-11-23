@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T06:18:05Z",
-  "last_updated": "2026-11-12T23:05:10Z",
-  "version": 2,
+  "last_updated": "2026-11-23T14:48:10Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -22,7 +22,9 @@
           "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2016-20012 lets a remote party that already holds a user's public key test whether sshd accepts that key for a given account: when a client asks whether a key is acceptable without sending a signature, sshd answers with SSH_MSG_USERAUTH_PK_OK only if the key may log in to that account (https://www.cve.org/CVERecord?id=CVE-2016-20012, https://security-tracker.debian.org/tracker/CVE-2016-20012). This query step is part of the SSH authentication protocol (RFC 4252 section 7, https://datatracker.ietf.org/doc/html/rfc4252#section-7). OpenSSH declined to change it: its developers describe it as a limited account-existence oracle rather than user enumeration, and say that removing the query would make clients unlock private keys for attempts that will fail, exposing keys more often (https://github.com/openssh/openssh-portable/pull/270#issuecomment-920577097, https://github.com/openssh/openssh-portable/pull/270#issuecomment-1646101299). No OpenSSH release changes the behaviour, and the Debian security tracker lists every Debian release, including trixie, as vulnerable and rates it unimportant. In OpenSSH 10.0p1 and in Debian's patched source, userauth_pubkey() in auth2-pubkey.c still sends SSH_MSG_USERAUTH_PK_OK only when the key is allowed for the account. The DHI Debian repository publishes three builds of openssh for Debian 13, all rebuilds of Debian's 1:10.0p1-7+deb13u4. We checked the openssh-server and openssh-client packages and their debug-symbol packages for all three builds on amd64 and arm64, each verified against the index checksum, and the source of Debian's 1:10.0p1-7+deb13u4 (https://salsa.debian.org/ssh-team/openssh/-/tree/debian/1%2510.0p1-7+deb13u4). In every build, the debug symbols of sshd-auth, the program that runs user authentication, contain userauth_pubkey, and sshd-auth carries that function's \"test pkalg\" debug message. This owner carries no change to this code, so every published build is affected."
     }
   ]
 }

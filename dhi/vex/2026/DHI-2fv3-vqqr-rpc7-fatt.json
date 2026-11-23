@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:32Z",
-  "last_updated": "2026-11-23T10:45:02Z",
-  "version": 92,
+  "last_updated": "2026-11-23T14:48:42Z",
+  "version": 93,
   "statements": [
     {
       "vulnerability": {
@@ -42852,7 +42852,9 @@
           "@id": "pkg:deb/dhi/postgresql-15@15.2-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-125709 is GCC bug libstdc++/118099: when std::basic_filebuf::overflow cannot write out its put area after storing the overflow character, it leaves the put pointer past the end of the buffer, and each further failed write stores further past it (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=118099, https://security-tracker.debian.org/tracker/CVE-2026-125709). Upstream fixed it in libstdc++: https://github.com/gcc-mirror/gcc/commit/2d296e9f024edbb49cad1f3ebb5ae34c71ea5f7a. The code ships in the C++ standard library built from gcc-14 (the libstdc++6 package), which this package does not contain. Unpacked every published postgresql-15 build in the DHI Debian repository, each checked against the index SHA256: 15.19-1 and 15.2-0 on amd64 and arm64 (15.2-0 is PostgreSQL 15.20 by the version string of /usr/bin/postgres, although it sorts below 15.19-1); no debug-symbol packages are published for this source. Each build holds 122 programs and shared objects, all dynamically linked; 39 server modules on amd64 and 38 on arm64 list no libc.so.6 of their own (earthdistance.so needs only libm.so.6, sslinfo.so only libcrypto.so.3, the rest have no dependencies). The nine static archives (libpq.a, libecpg.a, libecpg_compat.a, libpgtypes.a, libpgport.a, libpgport_shlib.a, libpgcommon.a, libpgcommon_shlib.a and libpgfeutils.a, 180 members) hold PostgreSQL's own object files. No package contains a PE or Mach-O file or a jar, whl, zip or nupkg archive. The one file that uses the C++ standard library is the LLVM JIT provider llvmjit.so, which lists libLLVM.so.19.1, libstdc++.so.6 and libgcc_s.so.1 as dependencies and loads them from their own packages at run time. No package contains a copy of libstdc++, and the name basic_filebuf occurs in no file, llvmjit.so included. A fix for this CVE reaches this package's users through the libstdc++6 package, not through this one."
     },
     {
       "vulnerability": {
