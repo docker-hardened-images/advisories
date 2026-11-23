@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-09T20:59:56Z",
-  "last_updated": "2026-11-18T19:32:06Z",
-  "version": 2,
+  "last_updated": "2026-11-23T23:15:25Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -16,11 +16,30 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bb7dhi0?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdeb13u0%2Bdhi3?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdeb13u0%2Bdhi4?distro=dhi-13"
         },
+        {
+          "@id": "pkg:deb/dhi/busybox@1:1.37.0-6dhi0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update busybox to 1:1.37.0-6+deb13u0+dhi5 or later.",
+      "status_notes": "CVE-2026-88835: in the BusyBox dpkg applet (archival/dpkg.c), read_package_field() mishandles a control or status field that has a name but an empty value right before the terminating NUL. Its restart path then steps past the end of the buffer and reads adjacent heap memory, which can crash dpkg: https://bugzilla.redhat.com/show_bug.cgi?id=2531349. The upstream fix is the commit titled \"dpkg: fix cases where read_package_field() returns offset past NUL\", https://github.com/mirror/busybox/commit/f5a4a02a157e250d28976e2ba4ea61a2fa7eb51f, which makes the function stop at the NUL. It builds on the cleanups in https://github.com/mirror/busybox/commit/e2c5cc04206008acc82d28dac4fcb1963e8f0acf and https://github.com/mirror/busybox/commit/43a9d7d31560ad4e9d6a341207b1aa191cb9b0db. All three commits are on the master branch of the BusyBox git repository at git.busybox.net, after the 1.38.0 release. Debian has not fixed it and rates it unimportant: https://security-tracker.debian.org/tracker/CVE-2026-88835. The DHI busybox packages are built from Debian's BusyBox 1:1.37.0-6 source, with those three upstream changes backported in the later builds. Checked every package built from this source in the DHI Debian repository, busybox, busybox-static, busybox-syslogd, udhcpc, udhcpd, busybox-dbgsym and busybox-static-dbgsym, in all four published builds on amd64 and arm64, each against the checksum in the package index. The dpkg applet is built into both programs the source ships, /usr/bin/busybox in busybox (dynamically linked against the system C library) and in busybox-static (statically linked). busybox-syslogd, udhcpc and udhcpd contain no ELF file: they hold symbolic links to /usr/bin/busybox and its manual page, plus init scripts, systemd units, the udhcpc hook script, configuration files, manual pages and documentation. Each debug-symbol package holds the separate debug file for its program and a documentation link. Reproduced the bug with each of the 16 programs (four builds, two programs, two architectures), running busybox dpkg -l with a dpkg status file whose last field is an empty Depends: line. In the two older builds the read runs past the end of the heap buffer holding the stanza: valgrind reports an invalid read in all eight programs, and they typically crash with a segmentation fault, depending on the heap layout. In the two newer builds the package is listed normally and valgrind reports no invalid read. The shipped changelog of the two newer builds lists the backport of the upstream BusyBox dpkg fixes for this CVE, and the two older ones do not. The range ends at the first build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-zhv6-pcfm-2445-jijq",
+        "aliases": [
+          "CVE-2026-88835"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdeb13u0%2Bdhi5?distro=dhi-13"
         },
@@ -38,12 +57,10 @@
         },
         {
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdhi3?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/busybox@1:1.37.0-6dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-88835: in the BusyBox dpkg applet (archival/dpkg.c), read_package_field() mishandles a control or status field that has a name but an empty value right before the terminating NUL. Its restart path then steps past the end of the buffer and reads adjacent heap memory, which can crash dpkg: https://bugzilla.redhat.com/show_bug.cgi?id=2531349. The upstream fix is the commit titled \"dpkg: fix cases where read_package_field() returns offset past NUL\", https://github.com/mirror/busybox/commit/f5a4a02a157e250d28976e2ba4ea61a2fa7eb51f, which makes the function stop at the NUL. It builds on the cleanups in https://github.com/mirror/busybox/commit/e2c5cc04206008acc82d28dac4fcb1963e8f0acf and https://github.com/mirror/busybox/commit/43a9d7d31560ad4e9d6a341207b1aa191cb9b0db. All three commits are on the master branch of the BusyBox git repository at git.busybox.net, after the 1.38.0 release. Debian has not fixed it and rates it unimportant: https://security-tracker.debian.org/tracker/CVE-2026-88835. The DHI busybox packages are built from Debian's BusyBox 1:1.37.0-6 source, with those three upstream changes backported in the later builds. Checked every package built from this source in the DHI Debian repository, busybox, busybox-static, busybox-syslogd, udhcpc, udhcpd, busybox-dbgsym and busybox-static-dbgsym, in all four published builds on amd64 and arm64, each against the checksum in the package index. The dpkg applet is built into both programs the source ships, /usr/bin/busybox in busybox (dynamically linked against the system C library) and in busybox-static (statically linked). busybox-syslogd, udhcpc and udhcpd contain no ELF file: they hold symbolic links to /usr/bin/busybox and its manual page, plus init scripts, systemd units, the udhcpc hook script, configuration files, manual pages and documentation. Each debug-symbol package holds the separate debug file for its program and a documentation link. Reproduced the bug with each of the 16 programs (four builds, two programs, two architectures), running busybox dpkg -l with a dpkg status file whose last field is an empty Depends: line. In the two older builds the read runs past the end of the heap buffer holding the stanza: valgrind reports an invalid read in all eight programs, and they typically crash with a segmentation fault, depending on the heap layout. In the two newer builds the package is listed normally and valgrind reports no invalid read. The shipped changelog of the two newer builds lists the backport of the upstream BusyBox dpkg fixes for this CVE, and the two older ones do not. The range ends at the first build that carries the fix."
     }
   ]
 }
