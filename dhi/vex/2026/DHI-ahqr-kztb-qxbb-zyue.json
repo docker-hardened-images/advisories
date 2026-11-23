@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T13:39:41Z",
-  "last_updated": "2026-11-23T06:23:04Z",
-  "version": 3,
+  "last_updated": "2026-11-23T08:17:26Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -20,7 +20,20 @@
         },
         {
           "@id": "pkg:apk/dhi/patch@2.8-r1?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update patch to 2.8.1-r1 or later.",
+      "status_notes": "CVE-2026-56288: consecutive end-of-file newline markers in a crafted unified-diff corrupt GNU patch's hunk data so that it passes a NULL pointer to fwrite() and crashes. GNU patch through 2.8 is affected (CERT Polska, https://cert.pl/en/posts/2026/07/CVE-2026-56288/), and upstream fixed it in https://cgit.git.savannah.gnu.org/cgit/patch.git/commit/?id=e6d6a4e021660679d7fc9150f981d4920f722313, which stops another_hunk() in src/pch.c from reducing a line's length to zero when it handles a \"\\ No newline at end of file\" marker. The GNU patch 2.8.1 release tarball (https://ftp.gnu.org/gnu/patch/patch-2.8.1.tar.xz) contains that change, and Alpine lists the CVE under 2.8.1-r0 in its 3.24-stable main/patch APKBUILD secfixes (https://gitlab.alpinelinux.org/alpine/aports/-/blob/3.24-stable/main/patch/APKBUILD). This owner's Alpine 3.24 builds are 2.8-r0, 2.8-r1, 2.8.1-r1 and 2.8.1-r2, which we downloaded for x86_64 and aarch64 and checked against the index checksum. 2.8-r0 and 2.8-r1 package GNU patch 2.8, and their /usr/bin/patch programs are byte-identical on each architecture, so 2.8-r1 carries no fix and both are affected. 2.8.1-r1 and 2.8.1-r2 package GNU patch 2.8.1 (the program reports version 2.8.1, and the two builds' programs are byte-identical), so they carry the fix. The range ends at 2.8.1-r1, the first build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ahqr-kztb-qxbb-zyue",
+        "aliases": [
+          "CVE-2026-56288"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/patch@2.8.1-r1?distro=dhi-3.24"
         },
@@ -28,7 +41,24 @@
           "@id": "pkg:apk/dhi/patch@2.8.1-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56288: consecutive end-of-file newline markers in a crafted unified-diff corrupt GNU patch's hunk data so that it passes a NULL pointer to fwrite() and crashes. GNU patch through 2.8 is affected (CERT Polska, https://cert.pl/en/posts/2026/07/CVE-2026-56288/), and upstream fixed it in https://cgit.git.savannah.gnu.org/cgit/patch.git/commit/?id=e6d6a4e021660679d7fc9150f981d4920f722313, which stops another_hunk() in src/pch.c from reducing a line's length to zero when it handles a \"\\ No newline at end of file\" marker. The GNU patch 2.8.1 release tarball (https://ftp.gnu.org/gnu/patch/patch-2.8.1.tar.xz) contains that change, and Alpine lists the CVE under 2.8.1-r0 in its 3.24-stable main/patch APKBUILD secfixes (https://gitlab.alpinelinux.org/alpine/aports/-/blob/3.24-stable/main/patch/APKBUILD). This owner's Alpine 3.24 builds are 2.8-r0, 2.8-r1, 2.8.1-r1 and 2.8.1-r2, which we downloaded for x86_64 and aarch64 and checked against the index checksum. 2.8-r0 and 2.8-r1 package GNU patch 2.8, and their /usr/bin/patch programs are byte-identical on each architecture, so 2.8-r1 carries no fix and both are affected. 2.8.1-r1 and 2.8.1-r2 package GNU patch 2.8.1 (the program reports version 2.8.1, and the two builds' programs are byte-identical), so they carry the fix. The range ends at 2.8.1-r1, the first build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ahqr-kztb-qxbb-zyue",
+        "aliases": [
+          "CVE-2026-56288"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/patch@2.8-2dhi0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update patch to 2.8-2+deb13u0+dhi3 or later.",
+      "status_notes": "CVE-2026-56288: consecutive end-of-file newline markers in a crafted unified-diff corrupt GNU patch's hunk data so that it passes a NULL pointer to fwrite() and crashes. GNU patch through 2.8 is affected (CERT Polska, https://cert.pl/en/posts/2026/07/CVE-2026-56288/), and upstream fixed it in https://cgit.git.savannah.gnu.org/cgit/patch.git/commit/?id=e6d6a4e021660679d7fc9150f981d4920f722313, which stops another_hunk() in src/pch.c from reducing a line's length to zero when it handles a \"\\ No newline at end of file\" marker. Debian has not fixed it in trixie (https://security-tracker.debian.org/tracker/CVE-2026-56288). The DHI Debian repository publishes two builds of patch for Debian 13, on amd64 and arm64: 2.8-2+deb13u0+dhi3, a rebuild of Debian's 2.8-2, and 2.8-2+deb13u1+dhi0, a rebuild of Debian's 2.8-2+deb13u1. Both package changelogs record the backport of the upstream fix, and we confirmed it in the shipped programs on amd64 and arm64. The fix adds a line-length check before each call to incomplete_line(). Given a unified hunk whose removed line is empty and followed by a no-newline marker, and a normal-format hunk whose only line is \"< \" followed by such a marker, both DHI builds reject the patch as malformed, while Debian's own 2.8-2+deb13u1 program cuts each line to zero length and goes on to try the hunk. We also disassembled another_hunk() in /usr/bin/patch, located with the matching debug-symbol packages: its instructions in 2.8-2+deb13u1+dhi0 are identical to those in 2.8-2+deb13u0+dhi3 on both architectures. Every published build carries the fix, so the range ends at 2.8-2+deb13u0+dhi3, the lower of the two."
     },
     {
       "vulnerability": {
@@ -52,12 +82,10 @@
         },
         {
           "@id": "pkg:deb/dhi/patch@2.8-2%2Bdhi3?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/patch@2.8-2dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56288: consecutive end-of-file newline markers in a crafted unified-diff corrupt GNU patch's hunk data so that it passes a NULL pointer to fwrite() and crashes. GNU patch through 2.8 is affected (CERT Polska, https://cert.pl/en/posts/2026/07/CVE-2026-56288/), and upstream fixed it in https://cgit.git.savannah.gnu.org/cgit/patch.git/commit/?id=e6d6a4e021660679d7fc9150f981d4920f722313, which stops another_hunk() in src/pch.c from reducing a line's length to zero when it handles a \"\\ No newline at end of file\" marker. Debian has not fixed it in trixie (https://security-tracker.debian.org/tracker/CVE-2026-56288). The DHI Debian repository publishes two builds of patch for Debian 13, on amd64 and arm64: 2.8-2+deb13u0+dhi3, a rebuild of Debian's 2.8-2, and 2.8-2+deb13u1+dhi0, a rebuild of Debian's 2.8-2+deb13u1. Both package changelogs record the backport of the upstream fix, and we confirmed it in the shipped programs on amd64 and arm64. The fix adds a line-length check before each call to incomplete_line(). Given a unified hunk whose removed line is empty and followed by a no-newline marker, and a normal-format hunk whose only line is \"< \" followed by such a marker, both DHI builds reject the patch as malformed, while Debian's own 2.8-2+deb13u1 program cuts each line to zero length and goes on to try the hunk. We also disassembled another_hunk() in /usr/bin/patch, located with the matching debug-symbol packages: its instructions in 2.8-2+deb13u1+dhi0 are identical to those in 2.8-2+deb13u0+dhi3 on both architectures. Every published build carries the fix, so the range ends at 2.8-2+deb13u0+dhi3, the lower of the two."
     }
   ]
 }
