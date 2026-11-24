@@ -61,7 +61,7 @@ the VEX status to suppress the contradictory OSV finding.
 ## VEX Product Identity
 
 For cutover images, generated VEX statements for OS packages name concrete DHI
-package product PURLs. A product carries the exact installed version and exactly
+package product PURLs. A product carries that identity's exact version and exactly
 one qualifier, `distro=dhi-<release>`:
 
 ```json
@@ -97,6 +97,12 @@ follows [Package identity and versioning](package-identity-and-versioning.md).
 
 A statement may list more than one product for the same package version.
 Match any of them.
+
+For a source-scoped advisory, match VEX against the associated source identity
+described in [the matching process](package-identity-and-versioning.md#matching-process).
+For example, a `glibc` product matches the SBOM's `glibc` identity, while
+`libc6` remains the installed binary. The `upstream=glibc` qualifier on `libc6`
+does not make those two PURLs equal or bypass the subset rule.
 
 Do not substitute an upstream `ID_LIKE` package PURL or treat a subcomponent
 PURL as the product match key.
