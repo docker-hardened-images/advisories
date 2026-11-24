@@ -1,7 +1,7 @@
 {
   "schema_version": "1.8.0",
   "id": "DHI-mcq2-slto-zpkj-svoh",
-  "modified": "2026-11-24T18:51:44Z",
+  "modified": "2026-11-24T21:14:12Z",
   "published": "2026-11-13T17:02:28Z",
   "upstream": [
     "RUSTSEC-2026-0253"
@@ -9,6 +9,55 @@
   "summary": "`LruCache::pop()` in `lru` was not panic-safe. If the `Drop` implementation of a stored key panics during `pop()`…",
   "details": "`LruCache::pop()` in `lru` was not panic-safe. If the `Drop` implementation of a stored key panics during `pop()`, `self.detach()` is never called, leaving dangling pointers in the internal doubly-linked list.\n\nA subsequent cache operation that triggers eviction can then dereference these dangling pointers:\n- The node is freed from the map, but remains linked in the LRU list due to the skipped `detach()` call\n- When a new insertion causes eviction, the LRU traversal encounters the dangling pointer\n- This results in a write to already-freed memory during the eviction process\n\n## Impact\n\n- **CWE-416 (Use-After-Free):** memory corruption when subsequent cache operations access freed node pointers in the linked list\n- **CWE-415 (Double Free):** potential heap corruption when the same memory is freed multiple times\n\nBoth types of undefined behavior can be invoked in safe Rust, but only if unwinding panics are enabled and `std::panic::catch_unwind` is used with key types that have potentially-panicking `Drop` implementations.\n\n## Fix\n\nFixed in `lru` 0.18.2 by detaching the node from the linked list before freeing it and dropping the key ([lru-rs#238](https://github.com/jeromefroe/lru-rs/pull/238)).",
   "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "gitlab-rails-19",
+        "purl": "pkg:apk/dhi/gitlab-rails-19"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "19.1.8-r0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "19.1.8-r0",
+        "19.1.8-r1",
+        "19.4.1-r0",
+        "19.4.1-r1",
+        "19.4.1-r2",
+        "19.4.1-r3",
+        "19.4.2-r0",
+        "19.5.3-r0",
+        "19.5.3-r1",
+        "19.5.3-r2",
+        "19.5.3-r3",
+        "19.5.3-r4",
+        "19.5.3-r5",
+        "19.5.3-r6",
+        "19.5.3-r7",
+        "19.5.3-r8",
+        "19.5.4-r0",
+        "19.5.4-r1",
+        "19.5.5-r0",
+        "19.5.5-r1",
+        "19.5.5-r2",
+        "19.5.6-r0",
+        "19.5.6-r1",
+        "19.6.0-r0",
+        "19.6.0-r1",
+        "19.6.1-r0",
+        "19.6.1-r1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
     {
       "package": {
         "ecosystem": "Docker Hardened Images:Alpine:3.24",
