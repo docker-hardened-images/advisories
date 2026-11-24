@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:56:08Z",
-  "last_updated": "2026-11-20T04:20:23Z",
-  "version": 4,
+  "last_updated": "2026-11-24T17:03:36Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -15,12 +15,6 @@
         ]
       },
       "products": [
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
-        },
         {
           "@id": "pkg:apk/dhi/docker@29.5.2-r0?distro=dhi-3.24"
         },
@@ -35,6 +29,25 @@
         },
         {
           "@id": "pkg:apk/dhi/docker@29.6.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker to 29.6.1-r0 or later.",
+      "status_notes": "CVE-2026-61711 (GHSA-7236-3392-c5c6, GO-2026-6255): a custom BuildKit frontend could send a build request with a security mode that is neither sandbox nor insecure. executor/oci.generateSecurityOpts then returned no options, so the build container ran without the seccomp and AppArmor profiles even though the security.insecure entitlement had not been granted. Linux capabilities were still applied. It is fixed in BuildKit v0.31.1 by commit 3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (pull request 6896), which adds pb.ValidateSecurityMode and calls it from generateSecurityOpts and the LLB client, rejecting unknown modes: https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6, https://pkg.go.dev/vuln/GO-2026-6255, https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109, https://github.com/moby/buildkit/releases/tag/v0.31.1 . OSV lists no affected symbols, so we checked the function the commit changes. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages (docker-bash-completion, docker-fish-completion, docker-zsh-completion, docker-doc, docker-openrc, docker-rootless-extras, docker-rootless-extras-openrc and docker-systemd). We checked every package built from that source in the DHI Alpine 3.24 repository, 32 versions from 29.5.2-r0 to 29.10.0-r1 for x86_64 and aarch64 (29.10.0-r1 publishes only docker, docker-engine and docker-cli), from unpacked packages verified against the index checksum. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. docker-engine also carries /usr/bin/docker-init, a symbolic link to tini-static, which another package provides (seen in 29.5.2-r0, 29.10.0-r0 and 29.10.0-r1, the builds whose full listings we read). We read each program's function table from the Go line table, with runtime.main found in every one as a control. dockerd embeds BuildKit for its builder, and its function table contains executor/oci.generateSecurityOpts in every build. docker and docker-proxy contain no BuildKit executor/oci functions. So the status follows the BuildKit version in dockerd. dockerd's Go build information shows github.com/moby/buildkit v0.30.0 in 29.5.2-r0 to 29.5.3-r1 and v0.31.0 in 29.6.0-r0, and v0.31.1 or later (up to v0.35.0) in every build from 29.6.1-r0, matching upstream Docker Engine 29.6.1: https://github.com/moby/moby/blob/docker-v29.6.1/go.mod . The BuildKit source of every one of those later releases calls ValidateSecurityMode in generateSecurityOpts. The fix's error string \"invalid security mode %d\" is absent from dockerd in 29.6.0-r0 and present in 29.6.1-r0, in the x86_64 and aarch64 packages. FIXED at 29.6.1-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-qnqp-gwjb-azhu-a5l3",
+        "aliases": [
+          "GHSA-7236-3392-c5c6"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/docker@29.6.1-r0?distro=dhi-3.24"
@@ -112,7 +125,8 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-61711 (GHSA-7236-3392-c5c6, GO-2026-6255): a custom BuildKit frontend could send a build request with a security mode that is neither sandbox nor insecure. executor/oci.generateSecurityOpts then returned no options, so the build container ran without the seccomp and AppArmor profiles even though the security.insecure entitlement had not been granted. Linux capabilities were still applied. It is fixed in BuildKit v0.31.1 by commit 3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (pull request 6896), which adds pb.ValidateSecurityMode and calls it from generateSecurityOpts and the LLB client, rejecting unknown modes: https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6, https://pkg.go.dev/vuln/GO-2026-6255, https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109, https://github.com/moby/buildkit/releases/tag/v0.31.1 . OSV lists no affected symbols, so we checked the function the commit changes. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages (docker-bash-completion, docker-fish-completion, docker-zsh-completion, docker-doc, docker-openrc, docker-rootless-extras, docker-rootless-extras-openrc and docker-systemd). We checked every package built from that source in the DHI Alpine 3.24 repository, 32 versions from 29.5.2-r0 to 29.10.0-r1 for x86_64 and aarch64 (29.10.0-r1 publishes only docker, docker-engine and docker-cli), from unpacked packages verified against the index checksum. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. docker-engine also carries /usr/bin/docker-init, a symbolic link to tini-static, which another package provides (seen in 29.5.2-r0, 29.10.0-r0 and 29.10.0-r1, the builds whose full listings we read). We read each program's function table from the Go line table, with runtime.main found in every one as a control. dockerd embeds BuildKit for its builder, and its function table contains executor/oci.generateSecurityOpts in every build. docker and docker-proxy contain no BuildKit executor/oci functions. So the status follows the BuildKit version in dockerd. dockerd's Go build information shows github.com/moby/buildkit v0.30.0 in 29.5.2-r0 to 29.5.3-r1 and v0.31.0 in 29.6.0-r0, and v0.31.1 or later (up to v0.35.0) in every build from 29.6.1-r0, matching upstream Docker Engine 29.6.1: https://github.com/moby/moby/blob/docker-v29.6.1/go.mod . The BuildKit source of every one of those later releases calls ValidateSecurityMode in generateSecurityOpts. The fix's error string \"invalid security mode %d\" is absent from dockerd in 29.6.0-r0 and present in 29.6.1-r0, in the x86_64 and aarch64 packages. FIXED at 29.6.1-r0."
     }
   ]
 }

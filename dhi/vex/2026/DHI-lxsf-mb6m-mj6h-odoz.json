@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:56:08Z",
-  "last_updated": "2026-11-20T04:20:09Z",
-  "version": 4,
+  "last_updated": "2026-11-24T17:03:47Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -15,12 +15,6 @@
         ]
       },
       "products": [
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
-        },
         {
           "@id": "pkg:apk/dhi/docker@29.5.2-r0?distro=dhi-3.24"
         },
@@ -95,6 +89,25 @@
         },
         {
           "@id": "pkg:apk/dhi/docker@29.9.2-r3?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker to 29.9.3-r0 or later.",
+      "status_notes": "CVE-2026-116591 (GHSA-fpmh-frq8-7rj8, GO-2026-6865): a crafted two-block zstd frame makes the zstd DecodeAll and streaming decoders of github.com/klauspost/compress panic with an out-of-range index instead of returning an error, so any program that decompresses untrusted zstd input can be crashed. fse readNCount accepts a normalized count of 32768, which wraps when stored as int16, and huff0.ReadTable reuses the FSE scratch state between blocks. Go's vulnerability database lists every version before 1.20.2 as affected and names fse.Compress, fse.Decompress, fse.Scratch.readNCount, fse.Scratch.validateNorm, huff0.Compress1X, huff0.Compress4X, huff0.EstimateSizes, huff0.ReadTable and huff0.Scratch.AppendTable. It is fixed in v1.20.2 by commit 7f5d8528720c895a6106f201719f87eb030a565d, which rejects counts above 32767 in readNCount and limits the Huffman-weight table log to 6 in huff0.ReadTable: https://github.com/klauspost/compress/security/advisories/GHSA-fpmh-frq8-7rj8, https://pkg.go.dev/vuln/GO-2026-6865, https://github.com/klauspost/compress/commit/7f5d8528720c895a6106f201719f87eb030a565d, https://github.com/klauspost/compress/releases/tag/v1.20.2 . This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages (docker-bash-completion, docker-fish-completion, docker-zsh-completion, docker-doc, docker-openrc, docker-rootless-extras, docker-rootless-extras-openrc and docker-systemd). We checked every package built from that source in the DHI Alpine 3.24 repository, 32 versions from 29.5.2-r0 to 29.10.0-r1 for x86_64 and aarch64 (29.10.0-r1 publishes only docker, docker-engine and docker-cli), from unpacked packages verified against the index checksum. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. docker-engine also carries /usr/bin/docker-init, a symbolic link to tini-static, which another package provides (seen in 29.5.2-r0, 29.10.0-r0 and 29.10.0-r1, the builds whose full listings we read). We read each program's function table from the Go line table, with runtime.main found in every one as a control. dockerd contains fse.Compress, fse.Decompress, fse.Scratch.readNCount, huff0.Compress1X, huff0.Compress4X and huff0.ReadTable in every build, and huff0.Scratch.AppendTable from 29.7.1-r0. docker contains fse.Decompress, fse.Scratch.readNCount and huff0.ReadTable in every build, and fse.Compress and huff0.Scratch.AppendTable from 29.8.0-r0. docker-proxy contains none of the listed functions. So the status follows the module version in both dockerd and docker. dockerd's Go build information shows klauspost/compress v1.18.6 to v1.20.1 in every build up to 29.9.2-r2, and v1.20.2 from 29.9.2-r3, where DHI updated the module ahead of the upstream release. The docker CLI is built from the vendor directory of the docker/cli release of the same version, and its build information records module versions only in 29.10.0-r1 (v1.20.2). docker/cli's vendor.mod lists klauspost/compress v1.18.5 to v1.20.1 for every release up to v29.9.2, and v1.20.2 for v29.9.3 and v29.10.0, so the docker program in 29.9.2-r3 still carries v1.20.1: https://raw.githubusercontent.com/docker/cli/v29.9.2/vendor.mod, https://raw.githubusercontent.com/docker/cli/v29.9.3/vendor.mod . We confirmed this in the x86_64 and aarch64 packages of 29.9.2-r2, 29.9.2-r3 and 29.9.3-r0 by searching the binaries' bytes for the two error strings the fix adds (\"corrupt input: weights tableLog too big\" and \"corruption detected (count %d > %d)\"). Both are absent from dockerd in 29.9.2-r2 and from docker in 29.9.2-r2 and 29.9.2-r3, and present in dockerd from 29.9.2-r3 and in docker in 29.9.3-r0. The huff0.ReadTable symbol name is present in all of these binaries as a control. Every build from 29.9.3-r0 carries v1.20.2 in both programs. FIXED at 29.9.3-r0, the first build in which both programs are fixed."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lxsf-mb6m-mj6h-odoz",
+        "aliases": [
+          "GHSA-fpmh-frq8-7rj8"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/docker@29.9.3-r0?distro=dhi-3.24"
@@ -112,7 +125,8 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-116591 (GHSA-fpmh-frq8-7rj8, GO-2026-6865): a crafted two-block zstd frame makes the zstd DecodeAll and streaming decoders of github.com/klauspost/compress panic with an out-of-range index instead of returning an error, so any program that decompresses untrusted zstd input can be crashed. fse readNCount accepts a normalized count of 32768, which wraps when stored as int16, and huff0.ReadTable reuses the FSE scratch state between blocks. Go's vulnerability database lists every version before 1.20.2 as affected and names fse.Compress, fse.Decompress, fse.Scratch.readNCount, fse.Scratch.validateNorm, huff0.Compress1X, huff0.Compress4X, huff0.EstimateSizes, huff0.ReadTable and huff0.Scratch.AppendTable. It is fixed in v1.20.2 by commit 7f5d8528720c895a6106f201719f87eb030a565d, which rejects counts above 32767 in readNCount and limits the Huffman-weight table log to 6 in huff0.ReadTable: https://github.com/klauspost/compress/security/advisories/GHSA-fpmh-frq8-7rj8, https://pkg.go.dev/vuln/GO-2026-6865, https://github.com/klauspost/compress/commit/7f5d8528720c895a6106f201719f87eb030a565d, https://github.com/klauspost/compress/releases/tag/v1.20.2 . This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages (docker-bash-completion, docker-fish-completion, docker-zsh-completion, docker-doc, docker-openrc, docker-rootless-extras, docker-rootless-extras-openrc and docker-systemd). We checked every package built from that source in the DHI Alpine 3.24 repository, 32 versions from 29.5.2-r0 to 29.10.0-r1 for x86_64 and aarch64 (29.10.0-r1 publishes only docker, docker-engine and docker-cli), from unpacked packages verified against the index checksum. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. docker-engine also carries /usr/bin/docker-init, a symbolic link to tini-static, which another package provides (seen in 29.5.2-r0, 29.10.0-r0 and 29.10.0-r1, the builds whose full listings we read). We read each program's function table from the Go line table, with runtime.main found in every one as a control. dockerd contains fse.Compress, fse.Decompress, fse.Scratch.readNCount, huff0.Compress1X, huff0.Compress4X and huff0.ReadTable in every build, and huff0.Scratch.AppendTable from 29.7.1-r0. docker contains fse.Decompress, fse.Scratch.readNCount and huff0.ReadTable in every build, and fse.Compress and huff0.Scratch.AppendTable from 29.8.0-r0. docker-proxy contains none of the listed functions. So the status follows the module version in both dockerd and docker. dockerd's Go build information shows klauspost/compress v1.18.6 to v1.20.1 in every build up to 29.9.2-r2, and v1.20.2 from 29.9.2-r3, where DHI updated the module ahead of the upstream release. The docker CLI is built from the vendor directory of the docker/cli release of the same version, and its build information records module versions only in 29.10.0-r1 (v1.20.2). docker/cli's vendor.mod lists klauspost/compress v1.18.5 to v1.20.1 for every release up to v29.9.2, and v1.20.2 for v29.9.3 and v29.10.0, so the docker program in 29.9.2-r3 still carries v1.20.1: https://raw.githubusercontent.com/docker/cli/v29.9.2/vendor.mod, https://raw.githubusercontent.com/docker/cli/v29.9.3/vendor.mod . We confirmed this in the x86_64 and aarch64 packages of 29.9.2-r2, 29.9.2-r3 and 29.9.3-r0 by searching the binaries' bytes for the two error strings the fix adds (\"corrupt input: weights tableLog too big\" and \"corruption detected (count %d > %d)\"). Both are absent from dockerd in 29.9.2-r2 and from docker in 29.9.2-r2 and 29.9.2-r3, and present in dockerd from 29.9.2-r3 and in docker in 29.9.3-r0. The huff0.ReadTable symbol name is present in all of these binaries as a control. Every build from 29.9.3-r0 carries v1.20.2 in both programs. FIXED at 29.9.3-r0, the first build in which both programs are fixed."
     }
   ]
 }

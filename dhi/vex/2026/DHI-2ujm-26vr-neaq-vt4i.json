@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:56:08Z",
-  "last_updated": "2026-11-20T04:19:37Z",
-  "version": 4,
+  "last_updated": "2026-11-24T17:04:02Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -15,12 +15,6 @@
         ]
       },
       "products": [
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
-        },
         {
           "@id": "pkg:apk/dhi/docker@29.5.2-r0?distro=dhi-3.24"
         },
@@ -35,6 +29,25 @@
         },
         {
           "@id": "pkg:apk/dhi/docker@29.6.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker to 29.6.1-r0 or later.",
+      "status_notes": "GHSA-jpcc-p29g-p8mq (CVE-2026-47262, GO-2026-5475): containerd reads an image's user-database files (etc/passwd and etc/group) without a size limit when it resolves the user for a new container, so a crafted image can exhaust memory and get the containerd process killed. It is fixed in containerd 2.3.2, 2.2.5, 2.1.9, 2.0.10 and 1.7.33: https://github.com/containerd/containerd/security/advisories/GHSA-jpcc-p29g-p8mq, https://pkg.go.dev/vuln/GO-2026-5475 . On the release/2.2 branch the fix is commit https://github.com/containerd/containerd/commit/30708e8d1142287e9c6bb839f1b3f84c71ca4485 (in v2.2.5, not v2.2.4), which outside tests changes only pkg/oci/spec_opts.go: openUserFile now refuses non-regular files and caps reads at 10 MiB through the new wrapUserFile function and limitedFile type. The Go vulnerability database lists no affected symbols, so we checked the function the fix changes. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages. We covered every subpackage of every build in the DHI Alpine 3.24 repository, 32 versions from 29.5.2-r0 to 29.10.0-r1, for x86_64 and aarch64, with each package scan matched to the index checksum. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. We read the function table of every Go program in every build from its Go line table, with runtime.main as a control, and its Go build information. dockerd links containerd's pkg/oci package as a library and contains openUserFile in every build; docker and docker-proxy do not contain it. dockerd's build information shows github.com/containerd/containerd/v2 at v2.2.3 or v2.2.4 in every build up to 29.6.0-r0, and at v2.2.5 from 29.6.1-r0, then v2.3.3 to v2.3.6 and v2.4.1 to v2.4.2 in later builds; Docker Engine 29.6.1 takes v2.2.5 in commit https://github.com/moby/moby/commit/660e8f985892936b617559c9e32bd93d88381ecf . As a check on the boundary, wrapUserFile and limitedFile.Read, which the fix adds, are absent from dockerd's function table in every build up to 29.6.0-r0 and present in every build from 29.6.1-r0, on both architectures. FIXED at 29.6.1-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-2ujm-26vr-neaq-vt4i",
+        "aliases": [
+          "GHSA-jpcc-p29g-p8mq"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/docker@29.6.1-r0?distro=dhi-3.24"
@@ -112,7 +125,8 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-jpcc-p29g-p8mq (CVE-2026-47262, GO-2026-5475): containerd reads an image's user-database files (etc/passwd and etc/group) without a size limit when it resolves the user for a new container, so a crafted image can exhaust memory and get the containerd process killed. It is fixed in containerd 2.3.2, 2.2.5, 2.1.9, 2.0.10 and 1.7.33: https://github.com/containerd/containerd/security/advisories/GHSA-jpcc-p29g-p8mq, https://pkg.go.dev/vuln/GO-2026-5475 . On the release/2.2 branch the fix is commit https://github.com/containerd/containerd/commit/30708e8d1142287e9c6bb839f1b3f84c71ca4485 (in v2.2.5, not v2.2.4), which outside tests changes only pkg/oci/spec_opts.go: openUserFile now refuses non-regular files and caps reads at 10 MiB through the new wrapUserFile function and limitedFile type. The Go vulnerability database lists no affected symbols, so we checked the function the fix changes. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages. We covered every subpackage of every build in the DHI Alpine 3.24 repository, 32 versions from 29.5.2-r0 to 29.10.0-r1, for x86_64 and aarch64, with each package scan matched to the index checksum. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. We read the function table of every Go program in every build from its Go line table, with runtime.main as a control, and its Go build information. dockerd links containerd's pkg/oci package as a library and contains openUserFile in every build; docker and docker-proxy do not contain it. dockerd's build information shows github.com/containerd/containerd/v2 at v2.2.3 or v2.2.4 in every build up to 29.6.0-r0, and at v2.2.5 from 29.6.1-r0, then v2.3.3 to v2.3.6 and v2.4.1 to v2.4.2 in later builds; Docker Engine 29.6.1 takes v2.2.5 in commit https://github.com/moby/moby/commit/660e8f985892936b617559c9e32bd93d88381ecf . As a check on the boundary, wrapUserFile and limitedFile.Read, which the fix adds, are absent from dockerd's function table in every build up to 29.6.0-r0 and present in every build from 29.6.1-r0, on both architectures. FIXED at 29.6.1-r0."
     }
   ]
 }

@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:56:08Z",
-  "last_updated": "2026-11-20T04:19:56Z",
-  "version": 4,
+  "last_updated": "2026-11-24T17:03:41Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -15,12 +15,6 @@
         ]
       },
       "products": [
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
-        },
         {
           "@id": "pkg:apk/dhi/docker@29.5.2-r0?distro=dhi-3.24"
         },
@@ -35,6 +29,25 @@
         },
         {
           "@id": "pkg:apk/dhi/docker@29.6.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker to 29.6.1-r0 or later.",
+      "status_notes": "CVE-2026-61712 (GHSA-72x6-4j93-7w86, GO-2026-6256): BuildKit parses a container's /etc/passwd and /etc/group without a size limit, so a crafted base image or build can exhaust memory and get the BuildKit process killed. It is the BuildKit variant of containerd advisory GHSA-jpcc-p29g-p8mq. It is fixed in BuildKit v0.31.1. On the v0.31 release branch the fix is commit 69a3924648e485acb3faad3081e03a8554431255 (pull request 6896), which opens these files through openUserFile, rejecting non-regular files and reading at most 10 MiB, in executor/oci/user.go and solver/llbsolver/ops/user_linux.go: https://github.com/moby/buildkit/security/advisories/GHSA-72x6-4j93-7w86, https://pkg.go.dev/vuln/GO-2026-6256, https://github.com/moby/buildkit/commit/69a3924648e485acb3faad3081e03a8554431255, https://github.com/moby/buildkit/releases/tag/v0.31.1 . This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages (docker-bash-completion, docker-fish-completion, docker-zsh-completion, docker-doc, docker-openrc, docker-rootless-extras, docker-rootless-extras-openrc and docker-systemd). We checked every package built from that source in the DHI Alpine 3.24 repository, 32 versions from 29.5.2-r0 to 29.10.0-r1 for x86_64 and aarch64 (29.10.0-r1 publishes only docker, docker-engine and docker-cli), from unpacked packages verified against the index checksum. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. docker-engine also carries /usr/bin/docker-init, a symbolic link to tini-static, which another package provides (seen in 29.5.2-r0, 29.10.0-r0 and 29.10.0-r1, the builds whose full listings we read). We read each program's function table from the Go line table, with runtime.main found in every one as a control. dockerd embeds BuildKit for its builder. Its function table contains 23 to 26 of the 26 functions Go's vulnerability database lists for this advisory in every build, including executor/oci.GetUser, executor/oci.openUserFile, llbsolver/ops.readUser and the ExecOp, SourceOp and FileOp Exec and CacheMap methods. docker and docker-proxy contain no BuildKit executor/oci or solver/llbsolver/ops functions. So the status follows the BuildKit version in dockerd. dockerd's Go build information shows github.com/moby/buildkit v0.30.0 in 29.5.2-r0 to 29.5.3-r1 and v0.31.0 in 29.6.0-r0, and v0.31.1 or later (up to v0.35.0) in every build from 29.6.1-r0, matching upstream Docker Engine 29.6.1: https://github.com/moby/moby/blob/docker-v29.6.1/go.mod . The method the fix adds, executor/oci.(*limitedReadCloser).Read, and its solver/llbsolver/ops copy are absent from dockerd in every build up to 29.6.0-r0 and present in every build from 29.6.1-r0, on both architectures. FIXED at 29.6.1-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cb56-cxjx-45wy-hw52",
+        "aliases": [
+          "GHSA-72x6-4j93-7w86"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/docker@29.6.1-r0?distro=dhi-3.24"
@@ -112,7 +125,8 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-61712 (GHSA-72x6-4j93-7w86, GO-2026-6256): BuildKit parses a container's /etc/passwd and /etc/group without a size limit, so a crafted base image or build can exhaust memory and get the BuildKit process killed. It is the BuildKit variant of containerd advisory GHSA-jpcc-p29g-p8mq. It is fixed in BuildKit v0.31.1. On the v0.31 release branch the fix is commit 69a3924648e485acb3faad3081e03a8554431255 (pull request 6896), which opens these files through openUserFile, rejecting non-regular files and reading at most 10 MiB, in executor/oci/user.go and solver/llbsolver/ops/user_linux.go: https://github.com/moby/buildkit/security/advisories/GHSA-72x6-4j93-7w86, https://pkg.go.dev/vuln/GO-2026-6256, https://github.com/moby/buildkit/commit/69a3924648e485acb3faad3081e03a8554431255, https://github.com/moby/buildkit/releases/tag/v0.31.1 . This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages (docker-bash-completion, docker-fish-completion, docker-zsh-completion, docker-doc, docker-openrc, docker-rootless-extras, docker-rootless-extras-openrc and docker-systemd). We checked every package built from that source in the DHI Alpine 3.24 repository, 32 versions from 29.5.2-r0 to 29.10.0-r1 for x86_64 and aarch64 (29.10.0-r1 publishes only docker, docker-engine and docker-cli), from unpacked packages verified against the index checksum. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. docker-engine also carries /usr/bin/docker-init, a symbolic link to tini-static, which another package provides (seen in 29.5.2-r0, 29.10.0-r0 and 29.10.0-r1, the builds whose full listings we read). We read each program's function table from the Go line table, with runtime.main found in every one as a control. dockerd embeds BuildKit for its builder. Its function table contains 23 to 26 of the 26 functions Go's vulnerability database lists for this advisory in every build, including executor/oci.GetUser, executor/oci.openUserFile, llbsolver/ops.readUser and the ExecOp, SourceOp and FileOp Exec and CacheMap methods. docker and docker-proxy contain no BuildKit executor/oci or solver/llbsolver/ops functions. So the status follows the BuildKit version in dockerd. dockerd's Go build information shows github.com/moby/buildkit v0.30.0 in 29.5.2-r0 to 29.5.3-r1 and v0.31.0 in 29.6.0-r0, and v0.31.1 or later (up to v0.35.0) in every build from 29.6.1-r0, matching upstream Docker Engine 29.6.1: https://github.com/moby/moby/blob/docker-v29.6.1/go.mod . The method the fix adds, executor/oci.(*limitedReadCloser).Read, and its solver/llbsolver/ops copy are absent from dockerd in every build up to 29.6.0-r0 and present in every build from 29.6.1-r0, on both architectures. FIXED at 29.6.1-r0."
     }
   ]
 }
