@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T16:09:57Z",
-  "last_updated": "2026-11-23T16:54:04Z",
-  "version": 28,
+  "last_updated": "2026-11-24T05:21:38Z",
+  "version": 29,
   "statements": [
     {
       "vulnerability": {
@@ -5860,7 +5860,9 @@
           "@id": "pkg:apk/dhi/metrics-server-dev@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39883 (GHSA-hfvc-g4fc-pqhx, GO-2026-5426): the OpenTelemetry Go SDK's host ID resource detector runs the kenv command by bare name, found through PATH, so on DragonFly BSD, FreeBSD, NetBSD, OpenBSD and Solaris a local attacker who controls PATH can run their own program in its place. It affects go.opentelemetry.io/otel/sdk 1.15.0 to 1.42.0 and is fixed in 1.43.0: https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hfvc-g4fc-pqhx, https://pkg.go.dev/vuln/GO-2026-5426, https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.43.0. The resource package source of go.opentelemetry.io/otel/sdk v1.40.0 is at https://github.com/open-telemetry/opentelemetry-go/tree/sdk/v1.40.0/sdk/resource and v1.43.0, v1.44.0, v1.46.0 and v1.47.0 use the same build constraints: the host ID reader that calls kenv, hostIDReaderBSD, is installed only by host_id_bsd.go, which is built only for DragonFly BSD, FreeBSD, NetBSD, OpenBSD and Solaris, and the command helper it uses is in host_id_exec.go, built only for Darwin, the BSDs and Solaris; a Linux build installs hostIDReaderLinux from host_id_linux.go, which reads /etc/machine-id or /var/lib/dbus/machine-id and starts no command. We read every published metrics-server-dev package in the DHI Alpine 3.23 repository: 29 builds, 0.8.1-r0 to 0.9.1-r2, each for x86_64 and aarch64, each verified against its index checksum. Each package installs a single file, /usr/bin/metrics-server, a statically linked Go program built with CGO_ENABLED=0 and GOOS=linux; its Go build information, its Go function table and a raw byte search were read in every build. 0.8.1-r0 to 0.8.1-r6 contain go.opentelemetry.io/otel/sdk v1.40.0, inside the advisory's range, and 0.8.1-r7 and every later build contain v1.43.0 to v1.47.0, which carry the fix. In every build the function table lists (*hostIDReaderLinux).read among the go.opentelemetry.io/otel/sdk/resource functions, but no hostIDReaderBSD or hostIDReaderDarwin method and no execCommand helper, and no build contains the byte string kenv or hostIDReaderBSD, while runtime.main is in every function table. No build has resource.New, the entry point the Go vulnerability database lists for this advisory, in its function table. The kenv code path is not in any published build."
     },
     {
       "vulnerability": {
@@ -5958,7 +5960,9 @@
           "@id": "pkg:apk/dhi/metrics-server-fips-dev@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39883 (GHSA-hfvc-g4fc-pqhx, GO-2026-5426): the OpenTelemetry Go SDK's host ID resource detector runs the kenv command by bare name, found through PATH, so on DragonFly BSD, FreeBSD, NetBSD, OpenBSD and Solaris a local attacker who controls PATH can run their own program in its place. It affects go.opentelemetry.io/otel/sdk 1.15.0 to 1.42.0 and is fixed in 1.43.0: https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hfvc-g4fc-pqhx, https://pkg.go.dev/vuln/GO-2026-5426, https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.43.0. The resource package source of go.opentelemetry.io/otel/sdk v1.40.0 is at https://github.com/open-telemetry/opentelemetry-go/tree/sdk/v1.40.0/sdk/resource and v1.43.0, v1.44.0, v1.46.0 and v1.47.0 use the same build constraints: the host ID reader that calls kenv, hostIDReaderBSD, is installed only by host_id_bsd.go, which is built only for DragonFly BSD, FreeBSD, NetBSD, OpenBSD and Solaris, and the command helper it uses is in host_id_exec.go, built only for Darwin, the BSDs and Solaris; a Linux build installs hostIDReaderLinux from host_id_linux.go, which reads /etc/machine-id or /var/lib/dbus/machine-id and starts no command. We read every published metrics-server-fips-dev package in the DHI Alpine 3.23 security repository, where the FIPS packages are published: 29 builds, 0.8.1-r0 to 0.9.1-r2, each for x86_64 and aarch64, each verified against its index checksum. Each package installs a single file, /usr/bin/metrics-server, a statically linked Go program built with CGO_ENABLED=0 and GOOS=linux; its Go build information, its Go function table and a raw byte search were read in every build. 0.8.1-r0 to 0.8.1-r6 contain go.opentelemetry.io/otel/sdk v1.40.0, inside the advisory's range, and 0.8.1-r7 and every later build contain v1.43.0 to v1.47.0, which carry the fix. In every build the function table lists (*hostIDReaderLinux).read among the go.opentelemetry.io/otel/sdk/resource functions, but no hostIDReaderBSD or hostIDReaderDarwin method and no execCommand helper, and no build contains the byte string kenv or hostIDReaderBSD, while runtime.main is in every function table. No build has resource.New, the entry point the Go vulnerability database lists for this advisory, in its function table. The kenv code path is not in any published build."
     },
     {
       "vulnerability": {
@@ -6056,7 +6060,9 @@
           "@id": "pkg:apk/dhi/metrics-server-fips@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39883 (GHSA-hfvc-g4fc-pqhx, GO-2026-5426): the OpenTelemetry Go SDK's host ID resource detector runs the kenv command by bare name, found through PATH, so on DragonFly BSD, FreeBSD, NetBSD, OpenBSD and Solaris a local attacker who controls PATH can run their own program in its place. It affects go.opentelemetry.io/otel/sdk 1.15.0 to 1.42.0 and is fixed in 1.43.0: https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hfvc-g4fc-pqhx, https://pkg.go.dev/vuln/GO-2026-5426, https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.43.0. The resource package source of go.opentelemetry.io/otel/sdk v1.40.0 is at https://github.com/open-telemetry/opentelemetry-go/tree/sdk/v1.40.0/sdk/resource and v1.43.0, v1.44.0, v1.46.0 and v1.47.0 use the same build constraints: the host ID reader that calls kenv, hostIDReaderBSD, is installed only by host_id_bsd.go, which is built only for DragonFly BSD, FreeBSD, NetBSD, OpenBSD and Solaris, and the command helper it uses is in host_id_exec.go, built only for Darwin, the BSDs and Solaris; a Linux build installs hostIDReaderLinux from host_id_linux.go, which reads /etc/machine-id or /var/lib/dbus/machine-id and starts no command. We read every published metrics-server-fips package in the DHI Alpine 3.23 security repository, where the FIPS packages are published: 29 builds, 0.8.1-r0 to 0.9.1-r2, each for x86_64 and aarch64, each verified against its index checksum. Each package installs a single file, /usr/bin/metrics-server, a statically linked Go program built with CGO_ENABLED=0 and GOOS=linux; its Go build information, its Go function table and a raw byte search were read in every build. 0.8.1-r0 to 0.8.1-r6 contain go.opentelemetry.io/otel/sdk v1.40.0, inside the advisory's range, and 0.8.1-r7 and every later build contain v1.43.0 to v1.47.0, which carry the fix. In every build the function table lists (*hostIDReaderLinux).read among the go.opentelemetry.io/otel/sdk/resource functions, but no hostIDReaderBSD or hostIDReaderDarwin method and no execCommand helper, and no build contains the byte string kenv or hostIDReaderBSD, while runtime.main is in every function table. No build has resource.New, the entry point the Go vulnerability database lists for this advisory, in its function table. The kenv code path is not in any published build."
     },
     {
       "vulnerability": {
@@ -6154,7 +6160,9 @@
           "@id": "pkg:apk/dhi/metrics-server@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39883 (GHSA-hfvc-g4fc-pqhx, GO-2026-5426): the OpenTelemetry Go SDK's host ID resource detector runs the kenv command by bare name, found through PATH, so on DragonFly BSD, FreeBSD, NetBSD, OpenBSD and Solaris a local attacker who controls PATH can run their own program in its place. It affects go.opentelemetry.io/otel/sdk 1.15.0 to 1.42.0 and is fixed in 1.43.0: https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hfvc-g4fc-pqhx, https://pkg.go.dev/vuln/GO-2026-5426, https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.43.0. The resource package source of go.opentelemetry.io/otel/sdk v1.40.0 is at https://github.com/open-telemetry/opentelemetry-go/tree/sdk/v1.40.0/sdk/resource and v1.43.0, v1.44.0, v1.46.0 and v1.47.0 use the same build constraints: the host ID reader that calls kenv, hostIDReaderBSD, is installed only by host_id_bsd.go, which is built only for DragonFly BSD, FreeBSD, NetBSD, OpenBSD and Solaris, and the command helper it uses is in host_id_exec.go, built only for Darwin, the BSDs and Solaris; a Linux build installs hostIDReaderLinux from host_id_linux.go, which reads /etc/machine-id or /var/lib/dbus/machine-id and starts no command. We read every published metrics-server package in the DHI Alpine 3.23 repository: 29 builds, 0.8.1-r0 to 0.9.1-r2, each for x86_64 and aarch64, each verified against its index checksum. Each package installs a single file, /usr/bin/metrics-server, a statically linked Go program built with CGO_ENABLED=0 and GOOS=linux; its Go build information, its Go function table and a raw byte search were read in every build. 0.8.1-r0 to 0.8.1-r6 contain go.opentelemetry.io/otel/sdk v1.40.0, inside the advisory's range, and 0.8.1-r7 and every later build contain v1.43.0 to v1.47.0, which carry the fix. In every build the function table lists (*hostIDReaderLinux).read among the go.opentelemetry.io/otel/sdk/resource functions, but no hostIDReaderBSD or hostIDReaderDarwin method and no execCommand helper, and no build contains the byte string kenv or hostIDReaderBSD, while runtime.main is in every function table. No build has resource.New, the entry point the Go vulnerability database lists for this advisory, in its function table. The kenv code path is not in any published build."
     },
     {
       "vulnerability": {
