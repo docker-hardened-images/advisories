@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-24T18:46:21Z",
-  "version": 21,
+  "last_updated": "2026-11-24T21:12:00Z",
+  "version": 23,
   "statements": [
     {
       "vulnerability": {
@@ -6343,6 +6343,22 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.1-r3?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.2-r3?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26-dev to 1.26.3-r0 or later.",
+      "status_notes": "CVE-2026-39823 (GO-2026-4982): html/template in the Go standard library escapes URLs placed in the content attribute of a <meta> tag, a protection added for CVE-2026-27142, but it only recognised the URL part when it was written exactly as \"url=\"; content that put ASCII whitespace around the \"=\" was not escaped, which could lead to cross-site scripting. The Go vulnerability database lists it for Go before 1.25.10 and Go 1.26.0 to 1.26.2, fixed in Go 1.26.3: https://pkg.go.dev/vuln/GO-2026-4982, https://go.dev/issue/78913, https://go.dev/cl/769920, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . For Go 1.26 the fix is commit c9f97f5 on release-branch.go1.26, \"html/template: fix escaping of URLs in meta content attributes\"; it names CVE-2026-39823 and outside tests it changes only src/html/template/transition.go, where tMetaContent now matches \"url\" in any letter case and skips ASCII whitespace before the \"=\" before treating what follows as a URL (tMetaContentURL's loop is only rewritten as a range loop); it is in go1.26.3 and not in go1.26.2: https://github.com/golang/go/commit/c9f97f50c4de8749924da3b0dc05f95e7bcd5520 . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/html/template that is compiled into programs built with it. We read every published golang-1.26-dev package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 15 versions, 1.26.1-r2 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version: every build before 1.26.3-r0 (1.26.1-r2 to 1.26.2-r3) packages Go 1.26.1 to 1.26.2, inside the affected range, and 1.26.3-r0 and every later build package Go 1.26.3 to 1.26.11. As a check on the boundary, on both architectures the src/html/template/transition.go in 1.26.3-r0 calls eatWhiteSpace in tMetaContent as the fix does, and the one in 1.26.2-r3 still compares the lower-cased bytes against \"url=\". The range ends at 1.26.3-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.10-r0?distro=dhi-3.23"
         },
         {
@@ -6350,9 +6366,6 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.2-r3?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.3-r0?distro=dhi-3.23"
@@ -6382,7 +6395,8 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-39823 (GO-2026-4982): html/template in the Go standard library escapes URLs placed in the content attribute of a <meta> tag, a protection added for CVE-2026-27142, but it only recognised the URL part when it was written exactly as \"url=\"; content that put ASCII whitespace around the \"=\" was not escaped, which could lead to cross-site scripting. The Go vulnerability database lists it for Go before 1.25.10 and Go 1.26.0 to 1.26.2, fixed in Go 1.26.3: https://pkg.go.dev/vuln/GO-2026-4982, https://go.dev/issue/78913, https://go.dev/cl/769920, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . For Go 1.26 the fix is commit c9f97f5 on release-branch.go1.26, \"html/template: fix escaping of URLs in meta content attributes\"; it names CVE-2026-39823 and outside tests it changes only src/html/template/transition.go, where tMetaContent now matches \"url\" in any letter case and skips ASCII whitespace before the \"=\" before treating what follows as a URL (tMetaContentURL's loop is only rewritten as a range loop); it is in go1.26.3 and not in go1.26.2: https://github.com/golang/go/commit/c9f97f50c4de8749924da3b0dc05f95e7bcd5520 . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/html/template that is compiled into programs built with it. We read every published golang-1.26-dev package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 15 versions, 1.26.1-r2 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version: every build before 1.26.3-r0 (1.26.1-r2 to 1.26.2-r3) packages Go 1.26.1 to 1.26.2, inside the affected range, and 1.26.3-r0 and every later build package Go 1.26.3 to 1.26.11. As a check on the boundary, on both architectures the src/html/template/transition.go in 1.26.3-r0 calls eatWhiteSpace in tMetaContent as the fix does, and the one in 1.26.2-r3 still compares the lower-cased bytes against \"url=\". The range ends at 1.26.3-r0."
     },
     {
       "vulnerability": {
@@ -6411,6 +6425,22 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.1-r3?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.2-r3?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26 to 1.26.3-r0 or later.",
+      "status_notes": "CVE-2026-39823 (GO-2026-4982): html/template in the Go standard library escapes URLs placed in the content attribute of a <meta> tag, a protection added for CVE-2026-27142, but it only recognised the URL part when it was written exactly as \"url=\"; content that put ASCII whitespace around the \"=\" was not escaped, which could lead to cross-site scripting. The Go vulnerability database lists it for Go before 1.25.10 and Go 1.26.0 to 1.26.2, fixed in Go 1.26.3: https://pkg.go.dev/vuln/GO-2026-4982, https://go.dev/issue/78913, https://go.dev/cl/769920, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . For Go 1.26 the fix is commit c9f97f5 on release-branch.go1.26, \"html/template: fix escaping of URLs in meta content attributes\"; it names CVE-2026-39823 and outside tests it changes only src/html/template/transition.go, where tMetaContent now matches \"url\" in any letter case and skips ASCII whitespace before the \"=\" before treating what follows as a URL (tMetaContentURL's loop is only rewritten as a range loop); it is in go1.26.3 and not in go1.26.2: https://github.com/golang/go/commit/c9f97f50c4de8749924da3b0dc05f95e7bcd5520 . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/html/template that is compiled into programs built with it. We read every published golang-1.26 package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 18 versions, 1.26.0-r0 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version: every build before 1.26.3-r0 (1.26.0-r0 to 1.26.2-r3) packages Go 1.26.0 to 1.26.2, inside the affected range, and 1.26.3-r0 and every later build package Go 1.26.3 to 1.26.11. The two Go 1.26.0 builds, 1.26.0-r0 and 1.26.0-r1, predate the meta content URL escaping altogether: their transition.go has no tMetaContent, which Go 1.26.1 added for CVE-2026-27142 (GO-2026-4603). They are covered by this range as well. As a check on the boundary, on both architectures the src/html/template/transition.go in 1.26.3-r0 calls eatWhiteSpace in tMetaContent as the fix does, and the one in 1.26.2-r3 still compares the lower-cased bytes against \"url=\". The range ends at 1.26.3-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.10-r0?distro=dhi-3.23"
         },
         {
@@ -6418,9 +6448,6 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.2-r3?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.3-r0?distro=dhi-3.23"
@@ -6450,7 +6477,8 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-39823 (GO-2026-4982): html/template in the Go standard library escapes URLs placed in the content attribute of a <meta> tag, a protection added for CVE-2026-27142, but it only recognised the URL part when it was written exactly as \"url=\"; content that put ASCII whitespace around the \"=\" was not escaped, which could lead to cross-site scripting. The Go vulnerability database lists it for Go before 1.25.10 and Go 1.26.0 to 1.26.2, fixed in Go 1.26.3: https://pkg.go.dev/vuln/GO-2026-4982, https://go.dev/issue/78913, https://go.dev/cl/769920, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . For Go 1.26 the fix is commit c9f97f5 on release-branch.go1.26, \"html/template: fix escaping of URLs in meta content attributes\"; it names CVE-2026-39823 and outside tests it changes only src/html/template/transition.go, where tMetaContent now matches \"url\" in any letter case and skips ASCII whitespace before the \"=\" before treating what follows as a URL (tMetaContentURL's loop is only rewritten as a range loop); it is in go1.26.3 and not in go1.26.2: https://github.com/golang/go/commit/c9f97f50c4de8749924da3b0dc05f95e7bcd5520 . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/html/template that is compiled into programs built with it. We read every published golang-1.26 package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 18 versions, 1.26.0-r0 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version: every build before 1.26.3-r0 (1.26.0-r0 to 1.26.2-r3) packages Go 1.26.0 to 1.26.2, inside the affected range, and 1.26.3-r0 and every later build package Go 1.26.3 to 1.26.11. The two Go 1.26.0 builds, 1.26.0-r0 and 1.26.0-r1, predate the meta content URL escaping altogether: their transition.go has no tMetaContent, which Go 1.26.1 added for CVE-2026-27142 (GO-2026-4603). They are covered by this range as well. As a check on the boundary, on both architectures the src/html/template/transition.go in 1.26.3-r0 calls eatWhiteSpace in tMetaContent as the fix does, and the one in 1.26.2-r3 still compares the lower-cased bytes against \"url=\". The range ends at 1.26.3-r0."
     },
     {
       "vulnerability": {
@@ -19674,6 +19702,4246 @@
         },
         {
           "@id": "pkg:apk/dhi/vpa-updater@1.8.1-r4?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-dev@1.19.1-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-dev@1.19.1-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-dev@1.19.1-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-dev@1.19.1-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-dev@1.19.1-9?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-fips-dev@1.19.1-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-fips-dev@1.19.1-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-fips-dev@1.19.1-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-fips-dev@1.19.1-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-fips-dev@1.19.1-9?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-fips@1.19.1-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-fips@1.19.1-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-fips@1.19.1-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-fips@1.19.1-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator-fips@1.19.1-9?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/cilium-operator@1.19.1-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator@1.19.1-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator@1.19.1-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator@1.19.1-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-operator@1.19.1-9?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.3-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.3-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.3-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.3-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.4-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.6-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.6-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.6-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.6-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.6-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.7-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.7-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.7-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.7-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.7-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.7-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.7-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.7-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.7-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.14.7-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.15.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.15.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.15.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.15.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.15.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-dev@1.15.0-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.3-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.3-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.3-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.3-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.4-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.6-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.6-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.6-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.6-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.6-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.7-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.7-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.7-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.7-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.7-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.7-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.7-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.7-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.7-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.14.7-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.15.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.15.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.15.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.15.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.15.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips-dev@1.15.0-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.3-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.3-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.3-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.3-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.4-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.6-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.6-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.6-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.6-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.6-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.7-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.7-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.7-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.7-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.7-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.7-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.7-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.7-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.7-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.14.7-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.15.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.15.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.15.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.15.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.15.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns-fips@1.15.0-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.3-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.3-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.3-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.3-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.4-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.6-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.6-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.6-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.6-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.6-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.7-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.7-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.7-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.7-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.7-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.7-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.7-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.7-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.7-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.14.7-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.15.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.15.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.15.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.15.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.15.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/coredns@1.15.0-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.0.6-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.0.6-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.0.6-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.0.6-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-10?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-11?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-12?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-13?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.3-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.4-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.4-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.0.6-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.0.6-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.0.6-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.0.6-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-10?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-11?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-12?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-13?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.3-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.4-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.4-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.0.6-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.0.6-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.0.6-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.0.6-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-10?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-11?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-12?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-13?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.3-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.4-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.4-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.0.6-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.0.6-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.0.6-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.0.6-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-10?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-11?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-12?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-13?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.3-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.4-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.4-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.17.0-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.18.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.18.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.19.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.19.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.19.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.20.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.20.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.20.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.20.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.21.0-10?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.21.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.21.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.21.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.21.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.21.0-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.21.0-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.21.0-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.21.0-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-dev@0.21.0-9?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.17.0-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.18.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.18.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.19.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.19.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.19.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.20.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.20.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.20.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.20.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.21.0-10?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.21.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.21.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.21.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.21.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.21.0-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.21.0-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.21.0-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.21.0-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips-dev@0.21.0-9?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.17.0-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.18.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.18.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.19.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.19.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.19.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.20.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.20.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.20.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.20.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.21.0-10?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.21.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.21.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.21.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.21.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.21.0-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.21.0-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.21.0-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.21.0-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller-fips@0.21.0-9?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.17.0-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.18.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.18.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.19.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.19.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.19.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.20.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.20.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.20.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.20.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.21.0-10?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.21.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.21.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.21.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.21.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.21.0-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.21.0-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.21.0-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.21.0-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kserve-controller@0.21.0-9?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-dev@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips-dev@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-fips@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips-dev@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-fips@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-dev@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips-dev@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-fips@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-dev@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips-dev@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-fips@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-dev@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips-dev@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-fips@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-init@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-dev@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips-dev@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-fips@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.15.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.15.3-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.16.3-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.16.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.16.4-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.16.4-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.16.4-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.16.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.16.4-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.16.4-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.16.4-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.16.4-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.17.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.17.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.17.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.17.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.17.2-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.17.2-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.17.2-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.17.2-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.17.2-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.17.2-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.17.2-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.18.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.18.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.18.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.18.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.18.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.18.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.18.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.18.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kyverno@1.18.1-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.90.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.91.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.91.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.91.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.91.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.91.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.92.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.92.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.92.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.92.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.93.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.93.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.93.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.93.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.93.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.93.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.93.1-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.93.1-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.94.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.94.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.94.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.94.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.94.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.94.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.94.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.94.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.95.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.95.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.95.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.95.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.95.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.95.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-dev@0.95.2-3?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.90.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.91.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.91.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.91.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.91.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.91.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.92.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.92.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.92.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.92.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.93.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.93.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.93.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.93.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.93.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.93.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.93.1-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.93.1-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.94.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.94.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.94.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.94.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.94.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.94.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.94.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.94.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.95.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.95.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.95.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.95.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.95.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.95.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips-dev@0.95.2-3?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.90.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.91.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.91.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.91.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.91.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.91.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.92.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.92.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.92.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.92.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.93.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.93.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.93.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.93.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.93.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.93.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.93.1-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.93.1-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.94.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.94.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.94.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.94.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.94.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.94.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.94.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.94.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.95.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.95.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.95.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.95.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.95.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.95.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader-fips@0.95.2-3?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uryd-icsj-hlsy-e7ip",
+        "aliases": [
+          "CVE-2026-39823"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.90.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.91.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.91.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.91.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.91.0-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.91.0-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.92.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.92.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.92.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.92.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.93.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.93.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.93.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.93.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.93.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.93.1-4?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.93.1-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.93.1-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.94.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.94.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.94.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.94.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.94.1-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.94.1-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.94.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.94.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.95.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.95.1-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.95.1-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.95.2-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.95.2-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.95.2-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/prometheus-config-reloader@0.95.2-3?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
