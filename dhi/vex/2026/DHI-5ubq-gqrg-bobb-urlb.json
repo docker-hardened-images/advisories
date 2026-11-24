@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-21T11:33:18Z",
-  "version": 1,
+  "last_updated": "2026-11-24T19:14:19Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -16,12 +17,29 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/freetype@2.13.3%2Bdfsg-1%2Bdeb13u1%2Bdhi0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/freetype@2.13.3%2Bdfsg-1%2Bdeb13u1%2Bdhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update freetype to 2.13.3+dfsg-1+deb13u1+dhi1 or later.",
+      "status_notes": "CVE-2026-95512: FreeType's CID font loader (cid_read_subrs in src/cid/cidload.c) reads and decrypts the subroutine data of each font dictionary of a CID-keyed font without limiting the total, so a crafted font whose dictionaries reference overlapping subroutine data makes it allocate and decrypt the same data again and again, using excessive memory and CPU, a denial of service. Upstream fixed it for FreeType 2.15.0 with commit f3ca71c9900fe860849b3163a6e2c1e765b291d9, which keeps a running total of the subroutine data lengths and rejects the font as an invalid file once a quarter of that total exceeds the stream size: https://gitlab.freedesktop.org/freetype/freetype/-/commit/f3ca71c9900fe860849b3163a6e2c1e765b291d9 . Debian fixed it for trixie in 2.13.3+dfsg-1+deb13u2: https://security-tracker.debian.org/tracker/CVE-2026-95512, https://bugs.debian.org/1149953 . We downloaded every package built from the freetype source in the Debian 13 index of the DHI Debian repository: libfreetype6, libfreetype6-dbgsym, libfreetype-dev, freetype2-demos and freetype2-demos-dbgsym for amd64 and arm64, and freetype2-doc for all architectures, each at 2.13.3+dfsg-1+deb13u1+dhi0, 2.13.3+dfsg-1+deb13u1+dhi1 and 2.13.3+dfsg-1+deb13u2+dhi0, 33 packages, and checked each download against the index SHA-256; no freetype package is published in the DHI Debian security repository. The CID loader is compiled into libfreetype.so.6.20.2 in /usr/lib/x86_64-linux-gnu or /usr/lib/aarch64-linux-gnu (libfreetype6) and into the type1cid.o member of the static library libfreetype.a (libfreetype-dev); each of the 12 programs in every freetype2-demos package lists libfreetype.so.6 as a needed library. The changelog shipped in the 2.13.3+dfsg-1+deb13u1+dhi1 packages starts with an entry that backports the upstream fix for CVE-2026-95512, and the 2.13.3+dfsg-1+deb13u2+dhi0 packages are built from Debian's 2.13.3+dfsg-1+deb13u2, whose changelog entry fixes CVE-2026-95512. We disassembled cid_face_open, into which the compiler inlines cid_read_subrs (the -dbgsym symbol tables have no separate cid_read_subrs), in libfreetype.so.6.20.2 for both architectures and in type1cid.o of libfreetype.a for both architectures, in every build. In 2.13.3+dfsg-1+deb13u1+dhi1 and 2.13.3+dfsg-1+deb13u2+dhi0 the function has the fix's check, a running sum shifted right by two and compared with the stream size (shrq on amd64, cmp with lsr #2 on arm64), and the cid_face_open code of libfreetype.so.6.20.2 is the same in those two builds apart from addresses; 2.13.3+dfsg-1+deb13u1+dhi0 has no such check. So 2.13.3+dfsg-1+deb13u1+dhi0 is affected, and 2.13.3+dfsg-1+deb13u1+dhi1 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-5ubq-gqrg-bobb-urlb",
+        "aliases": [
+          "CVE-2026-95512"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/freetype@2.13.3%2Bdfsg-1%2Bdeb13u1%2Bdhi1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/freetype@2.13.3%2Bdfsg-1%2Bdeb13u2%2Bdhi0?distro=dhi-13"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-95512: FreeType's CID font loader (cid_read_subrs in src/cid/cidload.c) reads and decrypts the subroutine data of each font dictionary of a CID-keyed font without limiting the total, so a crafted font whose dictionaries reference overlapping subroutine data makes it allocate and decrypt the same data again and again, using excessive memory and CPU, a denial of service. Upstream fixed it for FreeType 2.15.0 with commit f3ca71c9900fe860849b3163a6e2c1e765b291d9, which keeps a running total of the subroutine data lengths and rejects the font as an invalid file once a quarter of that total exceeds the stream size: https://gitlab.freedesktop.org/freetype/freetype/-/commit/f3ca71c9900fe860849b3163a6e2c1e765b291d9 . Debian fixed it for trixie in 2.13.3+dfsg-1+deb13u2: https://security-tracker.debian.org/tracker/CVE-2026-95512, https://bugs.debian.org/1149953 . We downloaded every package built from the freetype source in the Debian 13 index of the DHI Debian repository: libfreetype6, libfreetype6-dbgsym, libfreetype-dev, freetype2-demos and freetype2-demos-dbgsym for amd64 and arm64, and freetype2-doc for all architectures, each at 2.13.3+dfsg-1+deb13u1+dhi0, 2.13.3+dfsg-1+deb13u1+dhi1 and 2.13.3+dfsg-1+deb13u2+dhi0, 33 packages, and checked each download against the index SHA-256; no freetype package is published in the DHI Debian security repository. The CID loader is compiled into libfreetype.so.6.20.2 in /usr/lib/x86_64-linux-gnu or /usr/lib/aarch64-linux-gnu (libfreetype6) and into the type1cid.o member of the static library libfreetype.a (libfreetype-dev); each of the 12 programs in every freetype2-demos package lists libfreetype.so.6 as a needed library. The changelog shipped in the 2.13.3+dfsg-1+deb13u1+dhi1 packages starts with an entry that backports the upstream fix for CVE-2026-95512, and the 2.13.3+dfsg-1+deb13u2+dhi0 packages are built from Debian's 2.13.3+dfsg-1+deb13u2, whose changelog entry fixes CVE-2026-95512. We disassembled cid_face_open, into which the compiler inlines cid_read_subrs (the -dbgsym symbol tables have no separate cid_read_subrs), in libfreetype.so.6.20.2 for both architectures and in type1cid.o of libfreetype.a for both architectures, in every build. In 2.13.3+dfsg-1+deb13u1+dhi1 and 2.13.3+dfsg-1+deb13u2+dhi0 the function has the fix's check, a running sum shifted right by two and compared with the stream size (shrq on amd64, cmp with lsr #2 on arm64), and the cid_face_open code of libfreetype.so.6.20.2 is the same in those two builds apart from addresses; 2.13.3+dfsg-1+deb13u1+dhi0 has no such check. So 2.13.3+dfsg-1+deb13u1+dhi0 is affected, and 2.13.3+dfsg-1+deb13u1+dhi1 is the first fixed build."
     }
   ]
 }

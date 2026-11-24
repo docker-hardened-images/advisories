@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T06:15:58Z",
-  "last_updated": "2026-11-21T18:35:40Z",
-  "version": 6,
+  "last_updated": "2026-11-24T19:14:38Z",
+  "version": 7,
   "statements": [
     {
       "vulnerability": {
@@ -16,19 +16,27 @@
       },
       "products": [
         {
-          "@id": "pkg:apk/dhi/gnutls@3.8.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/gnutls@3.8.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/gnutls@3.8.13-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update gnutls to 3.8.14-r0 or later.",
+      "status_notes": "CVE-2026-127231 (GNUTLS-SA-2026-11-18-3): if reinitializing the name constraints failed on a memory allocation failure, the later cleanup of the verification context could free the same internal lists a second time and crash the application. The fix makes name_constraints_deinit and name_constraints_node_list_deinit in lib/x509/name_constraints.c clear the list pointers after freeing them. Upstream says the bug was introduced in GnuTLS 3.8.13 by commit 22cba2f35742cef9137de8f1bcbde6ef15e2e979, which reworked the name constraints lists: https://gitlab.com/gnutls/gnutls/-/commit/22cba2f35742cef9137de8f1bcbde6ef15e2e979 . GnuTLS fixed it in 3.8.14 with commit 95256a91bbf1e5f15f75bbd0454c7b05f7b4858a: https://gitlab.com/gnutls/gnutls/-/commit/95256a91bbf1e5f15f75bbd0454c7b05f7b4858a, https://gitlab.com/gnutls/gnutls/-/blob/3.8.14/NEWS . Alpine's 3.23-stable gnutls APKBUILD builds gnutls from the upstream release and lists CVE-2026-127231 under its 3.8.14-r0 security fixes: https://gitlab.alpinelinux.org/alpine/aports/-/blob/3.23-stable/main/gnutls/APKBUILD . We downloaded every package built from the gnutls source in the Alpine 3.23 index of the DHI Alpine repository: gnutls, gnutls-c++, gnutls-dbg, gnutls-dev, gnutls-doc and gnutls-utils, each at 3.8.11-r0, 3.8.12-r0, 3.8.13-r0 and 3.8.14-r0 for x86_64 and aarch64, 48 apks, and checked each download against its index checksum; no gnutls package is published in the DHI Alpine security repository. The library code is in libgnutls.so.30 in the gnutls package; gnutls-c++ ships the C++ wrapper libgnutlsxx.so.30, the seven gnutls-utils programs list libgnutls.so.30 as a needed library, gnutls-dev ships headers, pkg-config data and the libgnutls.so and libgnutlsxx.so symbolic links and no static library, and gnutls-dbg ships debug symbols. The GnuTLS version string in libgnutls.so.30 reads 3.8.11, 3.8.12, 3.8.13 and 3.8.14 in the matching builds on both architectures. The symbol tables in gnutls-dbg list name_constraints_deinit and name_constraints_node_list_deinit for 3.8.13-r0 and 3.8.14-r0 and neither for 3.8.11-r0 or 3.8.12-r0 on both architectures, while _gnutls_pcert_to_auth_info is listed in every build; the 3.8.11 and 3.8.12 sources of lib/x509/name_constraints.c have no such functions. So 3.8.11-r0 and 3.8.12-r0 do not contain the vulnerable code, 3.8.13-r0 is affected, and 3.8.14-r0 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-kxbh-fwxk-qzly-g75w",
+        "aliases": [
+          "CVE-2026-127231"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/gnutls@3.8.14-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-127231 (GNUTLS-SA-2026-11-18-3): if reinitializing the name constraints failed on a memory allocation failure, the later cleanup of the verification context could free the same internal lists a second time and crash the application. The fix makes name_constraints_deinit and name_constraints_node_list_deinit in lib/x509/name_constraints.c clear the list pointers after freeing them. Upstream says the bug was introduced in GnuTLS 3.8.13 by commit 22cba2f35742cef9137de8f1bcbde6ef15e2e979, which reworked the name constraints lists: https://gitlab.com/gnutls/gnutls/-/commit/22cba2f35742cef9137de8f1bcbde6ef15e2e979 . GnuTLS fixed it in 3.8.14 with commit 95256a91bbf1e5f15f75bbd0454c7b05f7b4858a: https://gitlab.com/gnutls/gnutls/-/commit/95256a91bbf1e5f15f75bbd0454c7b05f7b4858a, https://gitlab.com/gnutls/gnutls/-/blob/3.8.14/NEWS . Alpine's 3.23-stable gnutls APKBUILD builds gnutls from the upstream release and lists CVE-2026-127231 under its 3.8.14-r0 security fixes: https://gitlab.alpinelinux.org/alpine/aports/-/blob/3.23-stable/main/gnutls/APKBUILD . We downloaded every package built from the gnutls source in the Alpine 3.23 index of the DHI Alpine repository: gnutls, gnutls-c++, gnutls-dbg, gnutls-dev, gnutls-doc and gnutls-utils, each at 3.8.11-r0, 3.8.12-r0, 3.8.13-r0 and 3.8.14-r0 for x86_64 and aarch64, 48 apks, and checked each download against its index checksum; no gnutls package is published in the DHI Alpine security repository. The library code is in libgnutls.so.30 in the gnutls package; gnutls-c++ ships the C++ wrapper libgnutlsxx.so.30, the seven gnutls-utils programs list libgnutls.so.30 as a needed library, gnutls-dev ships headers, pkg-config data and the libgnutls.so and libgnutlsxx.so symbolic links and no static library, and gnutls-dbg ships debug symbols. The GnuTLS version string in libgnutls.so.30 reads 3.8.11, 3.8.12, 3.8.13 and 3.8.14 in the matching builds on both architectures. The symbol tables in gnutls-dbg list name_constraints_deinit and name_constraints_node_list_deinit for 3.8.13-r0 and 3.8.14-r0 and neither for 3.8.11-r0 or 3.8.12-r0 on both architectures, while _gnutls_pcert_to_auth_info is listed in every build; the 3.8.11 and 3.8.12 sources of lib/x509/name_constraints.c have no such functions. So 3.8.11-r0 and 3.8.12-r0 do not contain the vulnerable code, 3.8.13-r0 is affected, and 3.8.14-r0 is the first fixed build."
     },
     {
       "vulnerability": {
@@ -40,12 +48,26 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/gnutls@3.8.13-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update gnutls to 3.8.14-r0 or later.",
+      "status_notes": "CVE-2026-127231 (GNUTLS-SA-2026-11-18-3): if reinitializing the name constraints failed on a memory allocation failure, the later cleanup of the verification context could free the same internal lists a second time and crash the application. The fix makes name_constraints_deinit and name_constraints_node_list_deinit in lib/x509/name_constraints.c clear the list pointers after freeing them. Upstream says the bug was introduced in GnuTLS 3.8.13 by commit 22cba2f35742cef9137de8f1bcbde6ef15e2e979, which reworked the name constraints lists: https://gitlab.com/gnutls/gnutls/-/commit/22cba2f35742cef9137de8f1bcbde6ef15e2e979 . GnuTLS fixed it in 3.8.14 with commit 95256a91bbf1e5f15f75bbd0454c7b05f7b4858a: https://gitlab.com/gnutls/gnutls/-/commit/95256a91bbf1e5f15f75bbd0454c7b05f7b4858a, https://gitlab.com/gnutls/gnutls/-/blob/3.8.14/NEWS . Alpine's 3.24-stable gnutls APKBUILD builds gnutls from the upstream release and lists CVE-2026-127231 under its 3.8.14-r0 security fixes: https://gitlab.alpinelinux.org/alpine/aports/-/blob/3.24-stable/main/gnutls/APKBUILD . We downloaded every package built from the gnutls source in the Alpine 3.24 index of the DHI Alpine repository: gnutls, gnutls-c++, gnutls-dbg, gnutls-dev, gnutls-doc and gnutls-utils, each at 3.8.13-r0 and 3.8.14-r0 for x86_64 and aarch64, 24 apks, and checked each download against its index checksum; no gnutls package is published in the DHI Alpine security repository. The library code is in libgnutls.so.30 in the gnutls package; gnutls-c++ ships the C++ wrapper libgnutlsxx.so.30, the seven gnutls-utils programs list libgnutls.so.30 as a needed library, gnutls-dev ships headers, pkg-config data and the libgnutls.so and libgnutlsxx.so symbolic links and no static library, and gnutls-dbg ships debug symbols. The GnuTLS version string in libgnutls.so.30 reads 3.8.13 and 3.8.14 in the matching builds on both architectures. The symbol tables in gnutls-dbg list name_constraints_deinit and name_constraints_node_list_deinit in both builds on both architectures. So 3.8.13-r0 is affected and 3.8.14-r0 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-kxbh-fwxk-qzly-g75w",
+        "aliases": [
+          "CVE-2026-127231"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/gnutls@3.8.14-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-127231 (GNUTLS-SA-2026-11-18-3): if reinitializing the name constraints failed on a memory allocation failure, the later cleanup of the verification context could free the same internal lists a second time and crash the application. The fix makes name_constraints_deinit and name_constraints_node_list_deinit in lib/x509/name_constraints.c clear the list pointers after freeing them. Upstream says the bug was introduced in GnuTLS 3.8.13 by commit 22cba2f35742cef9137de8f1bcbde6ef15e2e979, which reworked the name constraints lists: https://gitlab.com/gnutls/gnutls/-/commit/22cba2f35742cef9137de8f1bcbde6ef15e2e979 . GnuTLS fixed it in 3.8.14 with commit 95256a91bbf1e5f15f75bbd0454c7b05f7b4858a: https://gitlab.com/gnutls/gnutls/-/commit/95256a91bbf1e5f15f75bbd0454c7b05f7b4858a, https://gitlab.com/gnutls/gnutls/-/blob/3.8.14/NEWS . Alpine's 3.24-stable gnutls APKBUILD builds gnutls from the upstream release and lists CVE-2026-127231 under its 3.8.14-r0 security fixes: https://gitlab.alpinelinux.org/alpine/aports/-/blob/3.24-stable/main/gnutls/APKBUILD . We downloaded every package built from the gnutls source in the Alpine 3.24 index of the DHI Alpine repository: gnutls, gnutls-c++, gnutls-dbg, gnutls-dev, gnutls-doc and gnutls-utils, each at 3.8.13-r0 and 3.8.14-r0 for x86_64 and aarch64, 24 apks, and checked each download against its index checksum; no gnutls package is published in the DHI Alpine security repository. The library code is in libgnutls.so.30 in the gnutls package; gnutls-c++ ships the C++ wrapper libgnutlsxx.so.30, the seven gnutls-utils programs list libgnutls.so.30 as a needed library, gnutls-dev ships headers, pkg-config data and the libgnutls.so and libgnutlsxx.so symbolic links and no static library, and gnutls-dbg ships debug symbols. The GnuTLS version string in libgnutls.so.30 reads 3.8.13 and 3.8.14 in the matching builds on both architectures. The symbol tables in gnutls-dbg list name_constraints_deinit and name_constraints_node_list_deinit in both builds on both architectures. So 3.8.13-r0 is affected and 3.8.14-r0 is the first fixed build."
     }
   ]
 }
