@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-24T14:10:41Z",
-  "version": 17,
+  "last_updated": "2026-11-24T15:37:34Z",
+  "version": 18,
   "statements": [
     {
       "vulnerability": {
@@ -1018,6 +1018,73 @@
           "@id": "pkg:apk/dhi/build-dev@2.15.0-r0?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/build-dev@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.6.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.7.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.7.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.7.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.7.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.3-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.9.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.9.1-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.9.2-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build-dev to 2.15.0-r1 or later.",
+      "status_notes": "CVE-2026-39826 (GO-2026-4980): in the Go standard library's html/template package, a <script> tag whose type attribute is empty or only ASCII whitespace was not treated as JavaScript, so data inserted into that script block was escaped incorrectly, which can lead to cross-site scripting. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4980, https://go.dev/issue/78981, https://go.dev/cl/771180, the release-branch.go1.26 backport https://github.com/golang/go/commit/9b01c04815150908b1e6768872fbcdb6cfdea698 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . We downloaded every build-dev package listed in the Alpine 3.23 index of the DHI Alpine repository, for x86_64 and aarch64: 91 versions from 2.6.4-r0 to the current 2.30.0-r0, with 2.6.4-r0 published for aarch64 only, and checked each download against the index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. No package contains a symbolic link. Each package holds one program, /usr/bin/build, a Go program built with GOOS=linux and CGO_ENABLED=0. We read the function table (pclntab) and build information of every Go program and searched the bytes of every ELF file in every build, which also finds the names of inlined functions; runtime.main is in the function table of every Go program. All Go programs in one build use the same Go release: 2.6.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The Go vulnerability database lists html/template Template.Execute, Template.ExecuteTemplate and isJSType; the function table of /usr/bin/build contains all three in every build. The status follows the Go release. The builds before 2.15.0-r1 (2.6.4-r0 to 2.15.0-r0) use Go 1.25.7, 1.25.8, 1.26.1 or 1.26.2, inside the affected range; 2.15.0-r1 and every later build use Go 1.26.3 to 1.26.11, which carry the fix, so 2.15.0-r1 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7epa-c5zw-wwzo-ea6d",
+        "aliases": [
+          "CVE-2026-39826"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/build-dev@2.15.0-r1?distro=dhi-3.23"
         },
         {
@@ -1205,63 +1272,10 @@
         },
         {
           "@id": "pkg:apk/dhi/build-dev@2.30.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.7.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.7.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.7.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.7.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.3-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.3-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.9.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.9.1-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-39826 (GO-2026-4980): in the Go standard library's html/template package, a <script> tag whose type attribute is empty or only ASCII whitespace was not treated as JavaScript, so data inserted into that script block was escaped incorrectly, which can lead to cross-site scripting. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4980, https://go.dev/issue/78981, https://go.dev/cl/771180, the release-branch.go1.26 backport https://github.com/golang/go/commit/9b01c04815150908b1e6768872fbcdb6cfdea698 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . We downloaded every build-dev package listed in the Alpine 3.23 index of the DHI Alpine repository, for x86_64 and aarch64: 91 versions from 2.6.4-r0 to the current 2.30.0-r0, with 2.6.4-r0 published for aarch64 only, and checked each download against the index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. No package contains a symbolic link. Each package holds one program, /usr/bin/build, a Go program built with GOOS=linux and CGO_ENABLED=0. We read the function table (pclntab) and build information of every Go program and searched the bytes of every ELF file in every build, which also finds the names of inlined functions; runtime.main is in the function table of every Go program. All Go programs in one build use the same Go release: 2.6.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The Go vulnerability database lists html/template Template.Execute, Template.ExecuteTemplate and isJSType; the function table of /usr/bin/build contains all three in every build. The status follows the Go release. The builds before 2.15.0-r1 (2.6.4-r0 to 2.15.0-r0) use Go 1.25.7, 1.25.8, 1.26.1 or 1.26.2, inside the affected range; 2.15.0-r1 and every later build use Go 1.26.3 to 1.26.11, which carry the fix, so 2.15.0-r1 is the first fixed build."
     },
     {
       "vulnerability": {
@@ -1301,6 +1315,73 @@
         {
           "@id": "pkg:apk/dhi/build-fips-dev@2.15.0-r0?distro=dhi-3.23"
         },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.6.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.7.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.7.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.7.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.7.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.3-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.8.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.9.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.9.1-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.9.2-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build-fips-dev to 2.15.0-r1 or later.",
+      "status_notes": "CVE-2026-39826 (GO-2026-4980): in the Go standard library's html/template package, a <script> tag whose type attribute is empty or only ASCII whitespace was not treated as JavaScript, so data inserted into that script block was escaped incorrectly, which can lead to cross-site scripting. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4980, https://go.dev/issue/78981, https://go.dev/cl/771180, the release-branch.go1.26 backport https://github.com/golang/go/commit/9b01c04815150908b1e6768872fbcdb6cfdea698 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . We downloaded every build-fips-dev package listed in the Alpine 3.23 index of the authenticated DHI Alpine security repository, where the FIPS packages are published, for x86_64 and aarch64: 91 versions from 2.6.4-r0 to the current 2.30.0-r0, with 2.6.4-r0 published for aarch64 only, and checked each download against the index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. No package contains a symbolic link. Each package holds one program, /usr/bin/build, a Go program built with GOOS=linux and CGO_ENABLED=0 and the Go Cryptographic Module (GOFIPS140=v1.0.0-c2097c7c). We read the function table (pclntab) and build information of every Go program and searched the bytes of every ELF file in every build, which also finds the names of inlined functions; runtime.main is in the function table of every Go program. All Go programs in one build use the same Go release: 2.6.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The Go vulnerability database lists html/template Template.Execute, Template.ExecuteTemplate and isJSType; the function table of /usr/bin/build contains all three in every build. The status follows the Go release. The builds before 2.15.0-r1 (2.6.4-r0 to 2.15.0-r0) use Go 1.25.7, 1.25.8, 1.26.1 or 1.26.2, inside the affected range; 2.15.0-r1 and every later build use Go 1.26.3 to 1.26.11, which carry the fix, so 2.15.0-r1 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7epa-c5zw-wwzo-ea6d",
+        "aliases": [
+          "CVE-2026-39826"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/build-fips-dev@2.15.0-r1?distro=dhi-3.23"
         },
@@ -1489,63 +1570,10 @@
         },
         {
           "@id": "pkg:apk/dhi/build-fips-dev@2.30.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.7.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.7.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.7.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.7.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.3-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.3-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.8.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.9.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.9.1-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips-dev@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-39826 (GO-2026-4980): in the Go standard library's html/template package, a <script> tag whose type attribute is empty or only ASCII whitespace was not treated as JavaScript, so data inserted into that script block was escaped incorrectly, which can lead to cross-site scripting. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4980, https://go.dev/issue/78981, https://go.dev/cl/771180, the release-branch.go1.26 backport https://github.com/golang/go/commit/9b01c04815150908b1e6768872fbcdb6cfdea698 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . We downloaded every build-fips-dev package listed in the Alpine 3.23 index of the authenticated DHI Alpine security repository, where the FIPS packages are published, for x86_64 and aarch64: 91 versions from 2.6.4-r0 to the current 2.30.0-r0, with 2.6.4-r0 published for aarch64 only, and checked each download against the index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. No package contains a symbolic link. Each package holds one program, /usr/bin/build, a Go program built with GOOS=linux and CGO_ENABLED=0 and the Go Cryptographic Module (GOFIPS140=v1.0.0-c2097c7c). We read the function table (pclntab) and build information of every Go program and searched the bytes of every ELF file in every build, which also finds the names of inlined functions; runtime.main is in the function table of every Go program. All Go programs in one build use the same Go release: 2.6.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The Go vulnerability database lists html/template Template.Execute, Template.ExecuteTemplate and isJSType; the function table of /usr/bin/build contains all three in every build. The status follows the Go release. The builds before 2.15.0-r1 (2.6.4-r0 to 2.15.0-r0) use Go 1.25.7, 1.25.8, 1.26.1 or 1.26.2, inside the affected range; 2.15.0-r1 and every later build use Go 1.26.3 to 1.26.11, which carry the fix, so 2.15.0-r1 is the first fixed build."
     },
     {
       "vulnerability": {
@@ -1585,6 +1613,73 @@
         {
           "@id": "pkg:apk/dhi/build-fips@2.15.0-r0?distro=dhi-3.23"
         },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.7.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.7.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.7.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.7.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.3-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.9.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.9.1-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.9.2-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build-fips to 2.15.0-r1 or later.",
+      "status_notes": "CVE-2026-39826 (GO-2026-4980): in the Go standard library's html/template package, a <script> tag whose type attribute is empty or only ASCII whitespace was not treated as JavaScript, so data inserted into that script block was escaped incorrectly, which can lead to cross-site scripting. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4980, https://go.dev/issue/78981, https://go.dev/cl/771180, the release-branch.go1.26 backport https://github.com/golang/go/commit/9b01c04815150908b1e6768872fbcdb6cfdea698 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . We downloaded every build-fips package listed in the Alpine 3.23 index of the authenticated DHI Alpine security repository, where the FIPS packages are published, for x86_64 and aarch64: 91 versions from 2.6.4-r0 to the current 2.30.0-r0, with 2.6.4-r0 published for aarch64 only, and checked each download against the index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. No package contains a symbolic link. The Go programs are /usr/bin/build, from 2.26.2-r1 also /opt/docker/dhi/yq, and from 2.28.0-r1 also /usr/bin/dhi-source, all built with GOOS=linux and CGO_ENABLED=0, build and dhi-source also with the Go Cryptographic Module (GOFIPS140=v1.0.0-c2097c7c); from 2.27.1-r1 the packages also carry /opt/docker/dhi/uv, an ELF program with no Go function table or Go build information. We read the function table (pclntab) and build information of every Go program and searched the bytes of every ELF file in every build, which also finds the names of inlined functions; runtime.main is in the function table of every Go program. All Go programs in one build use the same Go release: 2.6.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The Go vulnerability database lists html/template Template.Execute, Template.ExecuteTemplate and isJSType; the function table of /usr/bin/build and /usr/bin/dhi-source contains all three in every build that carries the program, while /opt/docker/dhi/yq has no html/template function. The status follows the Go release. The builds before 2.15.0-r1 (2.6.4-r0 to 2.15.0-r0) use Go 1.25.7, 1.25.8, 1.26.1 or 1.26.2, inside the affected range; 2.15.0-r1 and every later build use Go 1.26.3 to 1.26.11, which carry the fix, so 2.15.0-r1 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7epa-c5zw-wwzo-ea6d",
+        "aliases": [
+          "CVE-2026-39826"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/build-fips@2.15.0-r1?distro=dhi-3.23"
         },
@@ -1773,63 +1868,10 @@
         },
         {
           "@id": "pkg:apk/dhi/build-fips@2.30.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.7.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.7.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.7.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.7.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.3-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.3-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.9.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.9.1-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-39826 (GO-2026-4980): in the Go standard library's html/template package, a <script> tag whose type attribute is empty or only ASCII whitespace was not treated as JavaScript, so data inserted into that script block was escaped incorrectly, which can lead to cross-site scripting. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4980, https://go.dev/issue/78981, https://go.dev/cl/771180, the release-branch.go1.26 backport https://github.com/golang/go/commit/9b01c04815150908b1e6768872fbcdb6cfdea698 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . We downloaded every build-fips package listed in the Alpine 3.23 index of the authenticated DHI Alpine security repository, where the FIPS packages are published, for x86_64 and aarch64: 91 versions from 2.6.4-r0 to the current 2.30.0-r0, with 2.6.4-r0 published for aarch64 only, and checked each download against the index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. No package contains a symbolic link. The Go programs are /usr/bin/build, from 2.26.2-r1 also /opt/docker/dhi/yq, and from 2.28.0-r1 also /usr/bin/dhi-source, all built with GOOS=linux and CGO_ENABLED=0, build and dhi-source also with the Go Cryptographic Module (GOFIPS140=v1.0.0-c2097c7c); from 2.27.1-r1 the packages also carry /opt/docker/dhi/uv, an ELF program with no Go function table or Go build information. We read the function table (pclntab) and build information of every Go program and searched the bytes of every ELF file in every build, which also finds the names of inlined functions; runtime.main is in the function table of every Go program. All Go programs in one build use the same Go release: 2.6.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The Go vulnerability database lists html/template Template.Execute, Template.ExecuteTemplate and isJSType; the function table of /usr/bin/build and /usr/bin/dhi-source contains all three in every build that carries the program, while /opt/docker/dhi/yq has no html/template function. The status follows the Go release. The builds before 2.15.0-r1 (2.6.4-r0 to 2.15.0-r0) use Go 1.25.7, 1.25.8, 1.26.1 or 1.26.2, inside the affected range; 2.15.0-r1 and every later build use Go 1.26.3 to 1.26.11, which carry the fix, so 2.15.0-r1 is the first fixed build."
     },
     {
       "vulnerability": {
@@ -1869,6 +1911,76 @@
         {
           "@id": "pkg:apk/dhi/build@2.15.0-r0?distro=dhi-3.23"
         },
+        {
+          "@id": "pkg:apk/dhi/build@2.4.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.3-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.9.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.9.1-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.9.2-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build to 2.15.0-r1 or later.",
+      "status_notes": "CVE-2026-39826 (GO-2026-4980): in the Go standard library's html/template package, a <script> tag whose type attribute is empty or only ASCII whitespace was not treated as JavaScript, so data inserted into that script block was escaped incorrectly, which can lead to cross-site scripting. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4980, https://go.dev/issue/78981, https://go.dev/cl/771180, the release-branch.go1.26 backport https://github.com/golang/go/commit/9b01c04815150908b1e6768872fbcdb6cfdea698 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . We downloaded every build package listed in the Alpine 3.23 index of the DHI Alpine repository, for x86_64 and aarch64: 92 versions from 2.4.4-r0 to the current 2.30.0-r0, with 2.6.4-r0 published for aarch64 only, and checked each download against the index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. No package contains a symbolic link. The Go programs are /usr/bin/build (/opt/docker/dhi/build in 2.4.4-r0), from 2.26.2-r1 also /opt/docker/dhi/yq, and from 2.28.0-r1 also /usr/bin/dhi-source, all built with GOOS=linux and CGO_ENABLED=0; from 2.27.1-r1 the packages also carry /opt/docker/dhi/uv, an ELF program with no Go function table or Go build information. We read the function table (pclntab) and build information of every Go program and searched the bytes of every ELF file in every build, which also finds the names of inlined functions; runtime.main is in the function table of every Go program. All Go programs in one build use the same Go release: 2.4.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The Go vulnerability database lists html/template Template.Execute, Template.ExecuteTemplate and isJSType; the function table of /usr/bin/build (/opt/docker/dhi/build in 2.4.4-r0) and /usr/bin/dhi-source contains all three in every build that carries the program, while /opt/docker/dhi/yq has no html/template function. The status follows the Go release. The builds before 2.15.0-r1 (2.4.4-r0 to 2.15.0-r0) use Go 1.25.7, 1.25.8, 1.26.1 or 1.26.2, inside the affected range; 2.15.0-r1 and every later build use Go 1.26.3 to 1.26.11, which carry the fix, so 2.15.0-r1 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7epa-c5zw-wwzo-ea6d",
+        "aliases": [
+          "CVE-2026-39826"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/build@2.15.0-r1?distro=dhi-3.23"
         },
@@ -2057,66 +2169,10 @@
         },
         {
           "@id": "pkg:apk/dhi/build@2.30.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.4.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.3-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.3-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.9.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.9.1-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-39826 (GO-2026-4980): in the Go standard library's html/template package, a <script> tag whose type attribute is empty or only ASCII whitespace was not treated as JavaScript, so data inserted into that script block was escaped incorrectly, which can lead to cross-site scripting. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4980, https://go.dev/issue/78981, https://go.dev/cl/771180, the release-branch.go1.26 backport https://github.com/golang/go/commit/9b01c04815150908b1e6768872fbcdb6cfdea698 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . We downloaded every build package listed in the Alpine 3.23 index of the DHI Alpine repository, for x86_64 and aarch64: 92 versions from 2.4.4-r0 to the current 2.30.0-r0, with 2.6.4-r0 published for aarch64 only, and checked each download against the index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. No package contains a symbolic link. The Go programs are /usr/bin/build (/opt/docker/dhi/build in 2.4.4-r0), from 2.26.2-r1 also /opt/docker/dhi/yq, and from 2.28.0-r1 also /usr/bin/dhi-source, all built with GOOS=linux and CGO_ENABLED=0; from 2.27.1-r1 the packages also carry /opt/docker/dhi/uv, an ELF program with no Go function table or Go build information. We read the function table (pclntab) and build information of every Go program and searched the bytes of every ELF file in every build, which also finds the names of inlined functions; runtime.main is in the function table of every Go program. All Go programs in one build use the same Go release: 2.4.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The Go vulnerability database lists html/template Template.Execute, Template.ExecuteTemplate and isJSType; the function table of /usr/bin/build (/opt/docker/dhi/build in 2.4.4-r0) and /usr/bin/dhi-source contains all three in every build that carries the program, while /opt/docker/dhi/yq has no html/template function. The status follows the Go release. The builds before 2.15.0-r1 (2.4.4-r0 to 2.15.0-r0) use Go 1.25.7, 1.25.8, 1.26.1 or 1.26.2, inside the affected range; 2.15.0-r1 and every later build use Go 1.26.3 to 1.26.11, which carry the fix, so 2.15.0-r1 is the first fixed build."
     },
     {
       "vulnerability": {
