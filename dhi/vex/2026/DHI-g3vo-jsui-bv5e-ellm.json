@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-23T20:42:17Z",
-  "last_updated": "2026-11-24T05:12:44Z",
-  "version": 5,
+  "last_updated": "2026-11-24T06:40:08Z",
+  "version": 6,
   "statements": [
     {
       "vulnerability": {
@@ -1301,7 +1301,9 @@
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.39.1-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-42306 (GHSA-rg2x-37c3-w2rh, GO-2026-5617): during docker cp, a malicious container could replace a volume mount destination with a symlink between mountpoint creation and the mount call, so the Docker daemon bind-mounted the volume onto an arbitrary host path. The flaw is in the daemon's container filesystem setup, Daemon.openContainerFS in the daemon package of github.com/docker/docker and github.com/moby/moby (all versions) and github.com/moby/moby/v2 (before v2.0.0-beta.14). It is fixed in Docker Engine 29.5.1: https://github.com/moby/moby/security/advisories/GHSA-rg2x-37c3-w2rh, https://github.com/moby/moby/commit/bb6a9b177dc457b024300dfa87b4e51a86bf6406, https://pkg.go.dev/vuln/GO-2026-5617. This package is the Buildx CLI plugin, a client. We read every docker-cli-buildx package for Alpine 3.23 in the DHI Alpine repository, each matching its index checksum: 0.33.0-r1 to 0.39.1-r1, 29 aarch64 and 28 x86_64 builds (0.34.1-r0 is published for aarch64 only). Each holds one file, /usr/libexec/docker/cli-plugins/docker-buildx, a Go program that is dynamically linked against musl up to 0.39.0-r0 and statically linked in 0.39.1-r0 and 0.39.1-r1. Its Go build information lists github.com/docker/docker v28.5.2+incompatible, but the function table of every build (read from its Go pclntab) shows that the only package compiled in from that module is github.com/docker/docker/pkg/namesgenerator. No github.com/moby/moby/v2 package is present. The only other packages from the github.com/moby/moby repository come from its client and api modules (github.com/moby/moby/client and github.com/moby/moby/api), which send Engine API requests. No build has any function from the daemon package of github.com/docker/docker, github.com/moby/moby or github.com/moby/moby/v2, including Daemon.openContainerFS. A byte search of every build finds no daemon package path and no openContainerFS name. The same function-table reader and byte search find Daemon.openContainerFS in /usr/bin/dockerd of the DHI docker-engine 29.10.0-r1 package for Alpine 3.23, on x86_64 and aarch64. That release already carries the fix and still has the function, so it shows the search works."
     },
     {
       "vulnerability": {
@@ -1393,7 +1395,9 @@
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.39.1-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-42306 (GHSA-rg2x-37c3-w2rh, GO-2026-5617): during docker cp, a malicious container could replace a volume mount destination with a symlink between mountpoint creation and the mount call, so the Docker daemon bind-mounted the volume onto an arbitrary host path. The flaw is in the daemon's container filesystem setup, Daemon.openContainerFS in the daemon package of github.com/docker/docker and github.com/moby/moby (all versions) and github.com/moby/moby/v2 (before v2.0.0-beta.14). It is fixed in Docker Engine 29.5.1: https://github.com/moby/moby/security/advisories/GHSA-rg2x-37c3-w2rh, https://github.com/moby/moby/commit/bb6a9b177dc457b024300dfa87b4e51a86bf6406, https://pkg.go.dev/vuln/GO-2026-5617. This package is the Buildx CLI plugin, a client. We read every docker-cli-buildx package for Alpine 3.24 in the DHI Alpine repository, each matching its index checksum: 0.34.1-r0 to 0.39.1-r1, 27 builds each for aarch64 and x86_64. Each holds one file, /usr/libexec/docker/cli-plugins/docker-buildx, a Go program that is dynamically linked against musl up to 0.39.0-r0 and statically linked in 0.39.1-r0 and 0.39.1-r1. Its Go build information lists github.com/docker/docker v28.5.2+incompatible, but the function table of every build (read from its Go pclntab) shows that the only package compiled in from that module is github.com/docker/docker/pkg/namesgenerator. No github.com/moby/moby/v2 package is present. The only other packages from the github.com/moby/moby repository come from its client and api modules (github.com/moby/moby/client and github.com/moby/moby/api), which send Engine API requests. No build has any function from the daemon package of github.com/docker/docker, github.com/moby/moby or github.com/moby/moby/v2, including Daemon.openContainerFS. A byte search of every build finds no daemon package path and no openContainerFS name. The same function-table reader and byte search find Daemon.openContainerFS in /usr/bin/dockerd of the DHI docker-engine 29.10.0-r1 package for Alpine 3.23, on x86_64 and aarch64. That release already carries the fix and still has the function, so it shows the search works."
     },
     {
       "vulnerability": {
