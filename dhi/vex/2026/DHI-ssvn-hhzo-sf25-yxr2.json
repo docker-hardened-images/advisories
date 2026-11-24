@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-24T09:59:29Z",
-  "version": 16,
+  "last_updated": "2026-11-24T13:52:05Z",
+  "version": 17,
   "statements": [
     {
       "vulnerability": {
@@ -124,7 +124,9 @@
           "@id": "pkg:apk/dhi/alertmanager-fips@0.35.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-32282 (GO-2026-4864): on Linux, os.Root.Chmod in the Go standard library could change the mode of a file outside the root if its target is replaced with a symlink during the operation, because the Linux fchmodat syscall ignores the AT_SYMLINK_NOFOLLOW flag that Root.Chmod relies on. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4864, https://go.dev/issue/78293, https://go.dev/cl/763761, the release-branch.go1.26 backport https://github.com/golang/go/commit/b6176f459ad7b84ea7fb8daab983f4cef644a119 (in go1.26.2, not go1.26.1), https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU . We read every published alertmanager-fips package for Alpine 3.23 in the authenticated DHI Alpine security repository, where the FIPS packages are published: 36 builds, 0.31.1-r0 to 0.35.0-r2, x86_64 and aarch64, each download checked against the repository index checksum. Each package holds two files, /usr/bin/alertmanager and /usr/bin/amtool, Go programs built with CGO_ENABLED=0 and the Go Cryptographic Module (GOFIPS140=v1.0.0-c2097c7c) and linked with -s -w, so we read their function tables from the Go line table, which works on these stripped binaries, and found runtime.main in every one. The Go toolchain recorded in the build information, the same for both programs and both architectures, is: 0.31.1-r0 with Go 1.25.7; 0.31.1-r1 to 0.31.1-r4 with Go 1.26.1; 0.31.1-r5 to 0.32.1-r0 with Go 1.26.2; 0.32.1-r1 to 0.32.1-r2 with Go 1.26.3; 0.32.1-r3 to 0.33.1-r0 with Go 1.26.4; 0.33.1-r1 to 0.33.1-r3 with Go 1.26.5; 0.33.1-r5 to 0.34.0-r0 with Go 1.26.6; 0.34.0-r1 with Go 1.26.7; 0.34.0-r2 to 0.34.1-r1 with Go 1.26.8; 0.34.1-r2 to 0.34.1-r3 with Go 1.26.9; 0.34.1-r4 to 0.35.0-r0 with Go 1.26.10; 0.35.0-r1 to 0.35.0-r2 with Go 1.26.11. The Go vulnerability database places the vulnerable code in internal/syscall/unix.Fchmodat, which os.Root.Chmod calls. In no build does either program's function table contain internal/syscall/unix.Fchmodat, and a search of the bytes of every binary, which also finds the names of inlined functions, finds neither internal/syscall/unix.Fchmodat nor os.(*Root).Chmod. From 0.33.1-r5 on the programs do contain other os.Root methods (Close, OpenFile and ReadFile), which the fix did not change. As a positive control, the same two checks on a program we built with Go 1.26.1 for linux/amd64 and linux/arm64 that calls os.Root.Chmod find internal/syscall/unix.Fchmodat in its function table and os.(*Root).Chmod by name in its bytes. The vulnerable code is not compiled into any build of this package."
     },
     {
       "vulnerability": {
@@ -243,7 +245,9 @@
           "@id": "pkg:apk/dhi/alertmanager@0.35.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-32282 (GO-2026-4864): on Linux, os.Root.Chmod in the Go standard library could change the mode of a file outside the root if its target is replaced with a symlink during the operation, because the Linux fchmodat syscall ignores the AT_SYMLINK_NOFOLLOW flag that Root.Chmod relies on. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4864, https://go.dev/issue/78293, https://go.dev/cl/763761, the release-branch.go1.26 backport https://github.com/golang/go/commit/b6176f459ad7b84ea7fb8daab983f4cef644a119 (in go1.26.2, not go1.26.1), https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU . We read every published alertmanager package for Alpine 3.23 in the DHI Alpine repository: 36 builds, 0.31.1-r0 to 0.35.0-r2, x86_64 and aarch64, each download checked against the repository index checksum. Each package holds two files, /usr/bin/alertmanager and /usr/bin/amtool, Go programs built with CGO_ENABLED=0 and linked with -s -w, so we read their function tables from the Go line table, which works on these stripped binaries, and found runtime.main in every one. The Go toolchain recorded in the build information, the same for both programs and both architectures, is: 0.31.1-r0 with Go 1.25.7; 0.31.1-r1 to 0.31.1-r4 with Go 1.26.1; 0.31.1-r5 to 0.32.1-r0 with Go 1.26.2; 0.32.1-r1 to 0.32.1-r2 with Go 1.26.3; 0.32.1-r3 to 0.33.1-r0 with Go 1.26.4; 0.33.1-r1 to 0.33.1-r3 with Go 1.26.5; 0.33.1-r5 to 0.34.0-r0 with Go 1.26.6; 0.34.0-r1 with Go 1.26.7; 0.34.0-r2 to 0.34.1-r1 with Go 1.26.8; 0.34.1-r2 to 0.34.1-r3 with Go 1.26.9; 0.34.1-r4 to 0.35.0-r0 with Go 1.26.10; 0.35.0-r1 to 0.35.0-r2 with Go 1.26.11. The Go vulnerability database places the vulnerable code in internal/syscall/unix.Fchmodat, which os.Root.Chmod calls. In no build does either program's function table contain internal/syscall/unix.Fchmodat, and a search of the bytes of every binary, which also finds the names of inlined functions, finds neither internal/syscall/unix.Fchmodat nor os.(*Root).Chmod. From 0.33.1-r5 on the programs do contain other os.Root methods (Close, OpenFile and ReadFile), which the fix did not change. As a positive control, the same two checks on a program we built with Go 1.26.1 for linux/amd64 and linux/arm64 that calls os.Root.Chmod find internal/syscall/unix.Fchmodat in its function table and os.(*Root).Chmod by name in its bytes. The vulnerable code is not compiled into any build of this package."
     },
     {
       "vulnerability": {
