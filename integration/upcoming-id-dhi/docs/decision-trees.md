@@ -15,6 +15,10 @@ flowchart TD
 
 ## Package Advisory Routing
 
+Apply this tree to the binary identity and each explicitly associated DHI
+source/origin identity, using its own version. See the
+[matching process](package-identity-and-versioning.md#matching-process).
+
 ```mermaid
 flowchart TD
   A[Package from SBOM] --> B{PURL namespace}

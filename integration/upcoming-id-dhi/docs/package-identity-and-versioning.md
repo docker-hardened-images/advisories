@@ -29,8 +29,9 @@ Identity rules:
   `1:1.3.dfsg+really1.3.1-1+dhi1` appears as
   `@1:1.3.dfsg%2Breally1.3.1-1%2Bdhi1`. The OSV `name`, `versions`, and range
   events carry the raw values.
-- **The package name is the installed binary package name** the package manager
-  reports, such as `libc6`, not its source package.
+- **The package name can identify a source/origin package**, such as `glibc`,
+  whose installed binary is `libc6`.
+  Do not assume that every binary has a separate advisory entry.
 - **No generated DHI record carries `os_*` qualifiers.** A consumer that
   encounters one must check that it agrees with the ecosystem and reject the
   entry if it does not.
@@ -101,7 +102,10 @@ as `+dhiN`. For example:
 
 ## Matching Process
 
-For each scanner-observed OS package:
+Evaluate the installed binary identity and any explicitly associated DHI
+source/origin identity supplied by the Docker-issued SBOM. Preserve both
+identities; use each identity's own version, since source and binary versions
+can differ. Apply the following membership and matching checks to each:
 
 1. Establish DHI product membership. For an official image, confirm that the
    exact package and version appear in the Docker-issued OCI-referrer SBOM. For
@@ -121,12 +125,25 @@ For each scanner-observed OS package:
 6. Match an OSV affected package whose ecosystem equals that key and whose PURL
    has the same type, namespace, and name. Feed PURLs carry no qualifiers, so
    compare without the scanner's qualifiers.
-7. Check whether the installed version exactly equals an entry in
+7. Check whether that identity's version exactly equals an entry in
    `affected[].versions`. Independently evaluate every `ECOSYSTEM` range with
    the corresponding APK or dpkg version comparator.
 8. Report a finding when either exact-version membership or native range
    inclusion matches. If neither matches, do not report a finding for that
    advisory/package/version.
+
+For example, the Debian canary's registry SBOM contains `libc6` with
+`upstream=glibc` and a separate `glibc` identity, both at
+`2.41-12+deb13u5+dhi0`. An advisory for `pkg:deb/dhi/glibc` in
+`Docker Hardened Images:Debian:13` matches the source identity; it does not
+require a separate `libc6` entry. Keep the installed binary associated with
+the source finding, and avoid counting the same advisory/source/version
+finding twice within that image and release.
+
+An `upstream` qualifier expresses a source association. It does not establish
+DHI membership, select the upstream distro feed, or authorize arbitrary
+renaming of binary packages. If the source identity or its version cannot be
+established, do not invent it from the binary name or version.
 
 Feed PURLs and scanner-observed PURLs therefore reach the same OSV entry:
 
@@ -143,7 +160,7 @@ scanner: pkg:deb/dhi/coreutils@9.7-3%2Bdhi3?arch=arm64&distro=dhi-13
 ```
 
 The OSV package query identity is versionless. A VEX product names the exact
-installed version and the release, and matches the scanner's PURL by the
+version of that package identity and the release, and matches its PURL by the
 OpenVEX subset rule described in [VEX context](vex-context.md#vex-product-identity):
 
 ```text

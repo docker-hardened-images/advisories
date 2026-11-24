@@ -63,8 +63,8 @@ the final image OS identity, so any OS package visible in an image whose
 `pkg:deb/dhi/...`.
 
 That DHI PURL is the package identity to use for exact finding and VEX product
-matching. It is not, by itself, proof that Docker built, shipped, or assessed
-that package.
+matching. It is not, by itself, proof that Docker built or shipped that package,
+or that Docker's advisory data covers it.
 
 For a derived image, establish package membership using either of the existing
 DHI origin checks:
@@ -103,7 +103,7 @@ platform-manifest digest.
 
 An embedded language package such as `pkg:pypi/setuptools@...` can explain why
 the DHI OS package `pkg:apk/dhi/python-3.12@...` is in scope. Generated OSV and
-VEX publish the directly assessed DHI package as the product. They do not
+VEX publish the DHI package named in the advisory as the product. They do not
 publish that component provenance as OSV `database_specific.component_packages`
 or VEX `subcomponents`.
 

@@ -125,7 +125,7 @@ it is explicitly listed in `affected[].versions` or falls within any
 vulnerability; do not fall back to current-production or upstream distribution
 matching for that DHI package. Under-investigation package coverage has no
 upper bound and makes no claim that a fix exists. Resolution replaces it with
-assessed affected/fixed ranges or removes positive coverage for `not_affected`.
+affected/fixed ranges or removes positive coverage for `not_affected`.
 Exact image owners continue to use version enumeration without package ranges.
 
 > **Derived images:** Treat a package as covered by generated DHI advisory data

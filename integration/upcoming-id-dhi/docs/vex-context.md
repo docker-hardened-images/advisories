@@ -34,7 +34,7 @@ published versions and ranges as a union within its lineage and base release.
 A safe suffix can start after earlier explicitly listed versions. An entry
 without a range is valid and matches only its listed versions. An eligible range has no upper bound, so a
 new version matches even before the feed enumerates it. Resolution replaces
-this coverage with assessed affected/fixed ranges or removes it for
+this coverage with affected/fixed ranges or removes it for
 `not_affected`. VEX remains exact-product context: an unlisted version may
 match OSV without a corresponding VEX product statement.
 
@@ -49,9 +49,9 @@ OSV affected versions and ranges.
 
 | VEX status | Scanner behavior | User-facing meaning |
 | --- | --- | --- |
-| `not_affected` | No active finding: generated DHI OSV excludes the package/version. | Docker has assessed that the package/version is not affected in DHI context. |
+| `not_affected` | No active finding: generated DHI OSV excludes the package/version. | Docker identifies the package/version as not affected in DHI context. |
 | `fixed` | No active finding for the fixed package version: generated DHI OSV ends the affected range before that version. | The DHI package has remediated the issue. |
-| `affected` | Report the vulnerability and include DHI notes. | Docker has assessed the product as affected. |
+| `affected` | Report the vulnerability and include DHI notes. | Docker identifies the product as affected. |
 | `under_investigation` | Report the vulnerability from the conservative OSV affected coverage; include DHI notes when matching VEX is consumed. | Assessment is not complete or is waiting on upstream/remediation context. |
 
 If generated DHI OSV produces a finding for an exact product whose paired VEX
@@ -61,7 +61,7 @@ the VEX status to suppress the contradictory OSV finding.
 ## VEX Product Identity
 
 For cutover images, generated VEX statements for OS packages name concrete DHI
-package product PURLs. A product carries the exact installed version and exactly
+package product PURLs. A product carries that identity's exact version and exactly
 one qualifier, `distro=dhi-<release>`:
 
 ```json
@@ -76,7 +76,7 @@ one qualifier, `distro=dhi-<release>`:
     }
   ],
   "status": "affected",
-  "action_statement": "Docker has assessed this DHI package version as affected."
+  "action_statement": "Docker identifies this DHI package version as affected."
 }
 ```
 
@@ -97,6 +97,12 @@ follows [Package identity and versioning](package-identity-and-versioning.md).
 
 A statement may list more than one product for the same package version.
 Match any of them.
+
+For a source-scoped advisory, match VEX against the associated source identity
+described in [the matching process](package-identity-and-versioning.md#matching-process).
+For example, a `glibc` product matches the SBOM's `glibc` identity, while
+`libc6` remains the installed binary. The `upstream=glibc` qualifier on `libc6`
+does not make those two PURLs equal or bypass the subset rule.
 
 Do not substitute an upstream `ID_LIKE` package PURL or treat a subcomponent
 PURL as the product match key.

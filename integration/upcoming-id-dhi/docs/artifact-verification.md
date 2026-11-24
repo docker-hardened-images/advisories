@@ -30,7 +30,7 @@ dhi/osv/2026/DHI-vdvh-b7bo-zxsy-xxkb.json.sha512.asc  signature over the checksu
 
 VEX documents under `dhi/vex/` carry the same five files. Every advisory has a
 VEX document. An advisory that has never had an affected package, for example
-one assessed `not_affected` from the start, has no file under `dhi/osv/`. Once
+one marked `not_affected` from the start, has no file under `dhi/osv/`. Once
 an OSV record is published it stays: if the finding later no longer stands, the
 record is marked withdrawn rather than removed.
 
