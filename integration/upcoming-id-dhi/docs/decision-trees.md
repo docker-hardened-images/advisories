@@ -27,6 +27,7 @@ flowchart TD
   B -->|other PURL type| F[Use normal scanner matching]
   C -->|Official DHI| M{Exact package and version in attached Docker-issued SBOM?}
   C -->|Derived DHI| N{DHI origin established?}
+  C -->|Unknown image origin| J
   M -->|No| J[Normalize to upstream Alpine or Debian package identity]
   M -->|Yes| D{PURL type}
   N -->|No| J
@@ -47,6 +48,11 @@ Resolving a derived image's base SBOM requires more than its ChainID. Follow
 the shared
 [derived-image base-discovery procedure](../../derived-image-base-discovery.md)
 to obtain a candidate digest from provenance and verify the DHI rootfs prefix.
+Both documented derived-image methods require a matching chain-ID label.
+A missing label does not identify an official image or prove customer-added
+packages. If official-image identity and DHI package origin cannot be
+established, take the unknown-origin path and use upstream coverage. See
+[missing origin evidence](advisory-routing.md#missing-origin-evidence).
 
 ## VEX Context
 

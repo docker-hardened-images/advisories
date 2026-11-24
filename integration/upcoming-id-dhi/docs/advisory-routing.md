@@ -99,6 +99,27 @@ coverage. The fixture models membership comparison and layer attribution; it
 does not retrieve an OCI-referrer SBOM or verify its attachment to a
 platform-manifest digest.
 
+### Missing Origin Evidence
+
+Both derived-image methods above require a chain-ID label that matches the
+actual base-layer boundary. The verified-base-SBOM method is not a workaround
+for a missing label or rewritten base layers. See
+[missing labels or flattened images](../../derived-image-base-discovery.md#missing-labels-or-flattened-images)
+for export/import, multi-stage file copying, metadata rewriting, and squashing
+cases.
+
+If the image cannot be established as an official Docker-published image and
+the derived-image checks cannot establish a package's DHI origin, treat its
+origin as unknown. Normalize the OS package to the upstream Alpine or Debian
+identity using `ID_LIKE` and `VERSION_ID`, and use normal upstream coverage with
+native APK or dpkg version semantics. This routing choice does not prove that
+the customer added the package, nor does it reproduce Docker's assessment of
+an unverified DHI package.
+
+This fallback applies when product membership is not established. It does not
+apply when an established DHI package has no matching DHI OSV entry; that case
+remains a no-matching-vulnerability result under this model.
+
 ## Component Package Provenance
 
 An embedded language package such as `pkg:pypi/setuptools@...` can explain why
