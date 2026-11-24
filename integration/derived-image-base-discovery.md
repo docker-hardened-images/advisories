@@ -80,6 +80,64 @@ ChainID boundary and package-layer attribution remain a separate package-origin
 method defined by the model-specific guides. They do not discover the base
 manifest digest or its Docker-issued SBOM.
 
+## Missing Labels Or Flattened Images
+
+The `com.docker.dhi.chain-id` label is image configuration metadata recording
+the DHI base boundary. The ChainID is computed from the ordered uncompressed
+layer digests in `rootfs.diff_ids`. Losing the label and losing the original
+layer ancestry are separate conditions: deleting a label does not change the
+filesystem layers, and copying a label onto a rebuilt image does not restore
+its original ancestry.
+
+A normal `FROM dhi.io/...` build inherits the base labels and retains the base
+layers while appending customer layers. The following operations can change
+that evidence:
+
+| Operation | Labels | Original DHI layer ancestry |
+| --- | --- | --- |
+| Override labels or rewrite image configuration | The boundary label can be overwritten, emptied, or removed. | Can remain intact. |
+| `docker export` followed by `docker import` | Original image labels are not included in the filesystem archive; import can set new labels explicitly. | Import creates a new filesystem layer rather than preserving the original layer sequence. |
+| `COPY --from=<DHI stage>` into `FROM scratch` or another base | Copying files does not inherit the source stage's labels. | Copied files belong to the destination stage's layers, not the source stage's original layer sequence. |
+| Flatten all layers, including the DHI base, into a new layer | Depends on whether the tool preserves configuration. | The original base-layer boundary is lost, even if its label survives. |
+| Docker legacy `docker build --squash` | Does not inherently remove inherited labels. | Squashes newly built layers while retaining the base layers; it is not equivalent to flattening the entire image. |
+
+See Docker's [label inheritance](https://docs.docker.com/reference/dockerfile/#label),
+[export](https://docs.docker.com/reference/cli/docker/container/export/),
+[import](https://docs.docker.com/reference/cli/docker/image/import/),
+[multi-stage build](https://docs.docker.com/build/building/multi-stage/), and
+[legacy squash](https://docs.docker.com/reference/cli/docker/image/build/#squash-an-images-layers---squash-experimental)
+documentation. A multi-stage build whose final stage uses `FROM <DHI stage>`
+inherits that stage; the file-copy case above specifically uses a different
+final base.
+
+Files such as `/etc/os-release`, the package database, and the embedded
+`/opt/docker/sbom/` metadata can survive these operations. Their presence does
+not establish that the resulting image is an unchanged official DHI image, or
+identify which packages were inherited unchanged from DHI. A missing label
+also does not prove that packages were customer-added.
+
+For an image independently established as an official Docker-published image,
+use its exact platform-manifest digest and attached Docker-issued SBOM as
+described by the model-specific guide. Do not classify an image as official
+solely because it reports `ID=dhi` or because its chain-ID label is absent.
+
+For a derived image, the procedure above requires both the rootfs-prefix check
+and the matching chain-ID label. If the label is missing, it cannot complete,
+even when provenance supplies a candidate base and the original layers remain.
+If the original base layers were flattened or only copied into another stage,
+the prefix check cannot establish that ancestry either. A surviving label,
+provenance dependency, or matching package name and version alone does not
+replace these checks. There is no label-free or filesystem-only recovery
+procedure defined by this guide.
+
+When the required evidence is unavailable or inconsistent, DHI package origin
+is **not established**; that is different from proving customer origin. Follow
+the model-specific advisory routing rules. In the
+[upcoming `ID=dhi` model](upcoming-id-dhi/docs/advisory-routing.md#missing-origin-evidence),
+these OS packages use normal upstream coverage. Preserving the original image
+configuration, base layers, and published provenance allows the documented
+derived-image checks to remain available.
+
 ## Verified Example
 
 The upcoming guide's
