@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-09T22:26:12Z",
-  "last_updated": "2026-11-13T18:20:34Z",
-  "version": 2,
+  "last_updated": "2026-11-24T21:04:43Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -28,7 +28,9 @@
           "@id": "pkg:deb/dhi/git@1:2.47.3-0%2Bdeb13u1%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2024-52005 (GHSA-7jjc-gg6m-3329: https://github.com/git/git/security/advisories/GHSA-7jjc-gg6m-3329): Git prints the messages a remote server sends over the sideband (the \"remote:\" lines) to standard error without filtering, so a malicious server can send ANSI escape sequences that hide or misrepresent information in the user's terminal. The Debian tracker lists git as unfixed in trixie with urgency unimportant (\"Terminal emulators need to perform proper escaping\"): https://security-tracker.debian.org/tracker/CVE-2024-52005 . That is a decision not to ship a fix, not evidence that the code is absent. Upstream Git 2.55.0 now masks control characters in sideband messages by default, except ANSI color sequences (release notes: https://github.com/git/git/blob/v2.55.0/Documentation/RelNotes/2.55.0.adoc), starting with commit https://github.com/git/git/commit/04949538203ba7aeb298a607280715d4f26dbe0a , which describes this escape-sequence injection. This owner ships Git 2.47.3, whose sideband.c copies remote messages unchanged (https://github.com/git/git/blob/v2.47.3/sideband.c), and DHI does not backport the masking. We checked every ELF program in the git package of the two builds in the DHI Debian repository, on amd64 and arm64: none contains the string \"sideband.allowcontrolcharacters\", the configuration key the masking series reads, while every one contains the existing \"color.remote\" key; the same search finds that key in /usr/bin/git from Alpine's Git 2.56.1-r0 package. The sideband functions in git-dbgsym are also unchanged between the two builds. Every published build of this owner is therefore affected."
     }
   ]
 }
