@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T01:49:54Z",
-  "last_updated": "2026-11-24T12:55:10Z",
-  "version": 49,
+  "last_updated": "2026-11-24T13:50:56Z",
+  "version": 50,
   "statements": [
     {
       "vulnerability": {
@@ -58,7 +58,9 @@
           "@id": "pkg:deb/dhi/activemq-artemis@2.57.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-5928 (GLIBC-SA-2026-0010) is a buffer under-read in ungetwc in the GNU C Library (glibc) 2.43 and earlier, part of libc.so.6: the wide-character pushback code (_IO_wdefault_pbackfail in libio/wgenops.c) works on the byte-stream read pointer instead of the wide-stream one, so on a stream whose character set has overlapping single-byte and multibyte encodings it can read before a heap buffer, and where that pointer is unset it can crash the program. Debian fixed it in trixie in 2.41-12+deb13u4: https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=advisories/GLIBC-SA-2026-0010, https://sourceware.org/bugzilla/show_bug.cgi?id=33998, https://security-tracker.debian.org/tracker/CVE-2026-5928. This package does not contain glibc. Unpacked all 27 published activemq-artemis packages in the DHI Debian repository, 2.55.0-0 to the current 2.57.0-10, for amd64 and arm64 (2.57.0-0 was published for arm64 only; no debug-symbol packages are published for this source, and none is in the DHI security repository), each verified against the checksum in the package index, including every file inside the jar archives they bundle, among them those under the web console's console.war directory. It is a Java application, and every package carries the same set of native files. Six are ELF shared libraries: libartemis-native-64.so (x86-64) and libartemis-native-32.so (i386), the Artemis libaio journal binding, each shipped both under /usr/share/activemq-artemis/bin/lib and inside the activemq-artemis-native jar, which list libaio.so.1 and libc.so.6 in NEEDED, and Netty's epoll transport libraries for x86-64 and aarch64 inside the Netty jars, which list libdl.so.2, librt.so.1 and libc.so.6. None has a program interpreter. The jars also carry artemis-service.exe, the Windows service wrapper, which is a managed .NET assembly (it has a CLR header), and Netty's macOS kqueue transport library, a Mach-O file for x86_64. No package contains a static archive, or a file named like libc.so.6, the dynamic loader, libc.a, libpthread or a gconv converter module. glibc's own packages, such as libc6, provide the C library these shared libraries load at run time, and are assessed for this advisory separately."
     },
     {
       "vulnerability": {

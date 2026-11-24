@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-24T09:58:35Z",
-  "version": 15,
+  "last_updated": "2026-11-24T13:51:34Z",
+  "version": 16,
   "statements": [
     {
       "vulnerability": {
@@ -29,7 +29,20 @@
         },
         {
           "@id": "pkg:apk/dhi/alertmanager-fips@0.31.1-r4?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update alertmanager-fips to 0.31.1-r5 or later.",
+      "status_notes": "CVE-2026-32280 (GO-2026-4947): in the Go standard library's crypto/x509 package, chain building does not correctly limit its work when a large number of intermediate certificates are passed in VerifyOptions.Intermediates, a denial of service that affects direct users of crypto/x509 and users of crypto/tls. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320, the release-branch.go1.26 backport https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2 (in go1.26.2, not go1.26.1), https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU . We read every published alertmanager-fips package for Alpine 3.23 in the authenticated DHI Alpine security repository, where the FIPS packages are published: 36 builds, 0.31.1-r0 to 0.35.0-r2, x86_64 and aarch64, each download checked against the repository index checksum. Each package holds two files, /usr/bin/alertmanager and /usr/bin/amtool, Go programs built with CGO_ENABLED=0 and the Go Cryptographic Module (GOFIPS140=v1.0.0-c2097c7c) and linked with -s -w, so we read their function tables from the Go line table, which works on these stripped binaries, and found runtime.main in every one. The Go toolchain recorded in the build information, the same for both programs and both architectures, is: 0.31.1-r0 with Go 1.25.7; 0.31.1-r1 to 0.31.1-r4 with Go 1.26.1; 0.31.1-r5 to 0.32.1-r0 with Go 1.26.2; 0.32.1-r1 to 0.32.1-r2 with Go 1.26.3; 0.32.1-r3 to 0.33.1-r0 with Go 1.26.4; 0.33.1-r1 to 0.33.1-r3 with Go 1.26.5; 0.33.1-r5 to 0.34.0-r0 with Go 1.26.6; 0.34.0-r1 with Go 1.26.7; 0.34.0-r2 to 0.34.1-r1 with Go 1.26.8; 0.34.1-r2 to 0.34.1-r3 with Go 1.26.9; 0.34.1-r4 to 0.35.0-r0 with Go 1.26.10; 0.35.0-r1 to 0.35.0-r2 with Go 1.26.11. The Go vulnerability database lists crypto/x509 Certificate.Verify and Certificate.buildChains; the function tables of both programs contain both in every build, so the status follows the Go release. The builds before 0.31.1-r5 (0.31.1-r0 to 0.31.1-r4) use Go 1.25.7 or 1.26.1, inside the affected range; 0.31.1-r5 and every later build use Go 1.26.2 to 1.26.11, which carry the fix, so 0.31.1-r5 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ew7m-7gkr-vnom-vx2s",
+        "aliases": [
+          "CVE-2026-32280"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/alertmanager-fips@0.31.1-r5?distro=dhi-3.23"
         },
@@ -124,7 +137,8 @@
           "@id": "pkg:apk/dhi/alertmanager-fips@0.35.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-32280 (GO-2026-4947): in the Go standard library's crypto/x509 package, chain building does not correctly limit its work when a large number of intermediate certificates are passed in VerifyOptions.Intermediates, a denial of service that affects direct users of crypto/x509 and users of crypto/tls. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320, the release-branch.go1.26 backport https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2 (in go1.26.2, not go1.26.1), https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU . We read every published alertmanager-fips package for Alpine 3.23 in the authenticated DHI Alpine security repository, where the FIPS packages are published: 36 builds, 0.31.1-r0 to 0.35.0-r2, x86_64 and aarch64, each download checked against the repository index checksum. Each package holds two files, /usr/bin/alertmanager and /usr/bin/amtool, Go programs built with CGO_ENABLED=0 and the Go Cryptographic Module (GOFIPS140=v1.0.0-c2097c7c) and linked with -s -w, so we read their function tables from the Go line table, which works on these stripped binaries, and found runtime.main in every one. The Go toolchain recorded in the build information, the same for both programs and both architectures, is: 0.31.1-r0 with Go 1.25.7; 0.31.1-r1 to 0.31.1-r4 with Go 1.26.1; 0.31.1-r5 to 0.32.1-r0 with Go 1.26.2; 0.32.1-r1 to 0.32.1-r2 with Go 1.26.3; 0.32.1-r3 to 0.33.1-r0 with Go 1.26.4; 0.33.1-r1 to 0.33.1-r3 with Go 1.26.5; 0.33.1-r5 to 0.34.0-r0 with Go 1.26.6; 0.34.0-r1 with Go 1.26.7; 0.34.0-r2 to 0.34.1-r1 with Go 1.26.8; 0.34.1-r2 to 0.34.1-r3 with Go 1.26.9; 0.34.1-r4 to 0.35.0-r0 with Go 1.26.10; 0.35.0-r1 to 0.35.0-r2 with Go 1.26.11. The Go vulnerability database lists crypto/x509 Certificate.Verify and Certificate.buildChains; the function tables of both programs contain both in every build, so the status follows the Go release. The builds before 0.31.1-r5 (0.31.1-r0 to 0.31.1-r4) use Go 1.25.7 or 1.26.1, inside the affected range; 0.31.1-r5 and every later build use Go 1.26.2 to 1.26.11, which carry the fix, so 0.31.1-r5 is the first fixed build."
     },
     {
       "vulnerability": {
@@ -148,7 +162,20 @@
         },
         {
           "@id": "pkg:apk/dhi/alertmanager@0.31.1-r4?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update alertmanager to 0.31.1-r5 or later.",
+      "status_notes": "CVE-2026-32280 (GO-2026-4947): in the Go standard library's crypto/x509 package, chain building does not correctly limit its work when a large number of intermediate certificates are passed in VerifyOptions.Intermediates, a denial of service that affects direct users of crypto/x509 and users of crypto/tls. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320, the release-branch.go1.26 backport https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2 (in go1.26.2, not go1.26.1), https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU . We read every published alertmanager package for Alpine 3.23 in the DHI Alpine repository: 36 builds, 0.31.1-r0 to 0.35.0-r2, x86_64 and aarch64, each download checked against the repository index checksum. Each package holds two files, /usr/bin/alertmanager and /usr/bin/amtool, Go programs built with CGO_ENABLED=0 and linked with -s -w, so we read their function tables from the Go line table, which works on these stripped binaries, and found runtime.main in every one. The Go toolchain recorded in the build information, the same for both programs and both architectures, is: 0.31.1-r0 with Go 1.25.7; 0.31.1-r1 to 0.31.1-r4 with Go 1.26.1; 0.31.1-r5 to 0.32.1-r0 with Go 1.26.2; 0.32.1-r1 to 0.32.1-r2 with Go 1.26.3; 0.32.1-r3 to 0.33.1-r0 with Go 1.26.4; 0.33.1-r1 to 0.33.1-r3 with Go 1.26.5; 0.33.1-r5 to 0.34.0-r0 with Go 1.26.6; 0.34.0-r1 with Go 1.26.7; 0.34.0-r2 to 0.34.1-r1 with Go 1.26.8; 0.34.1-r2 to 0.34.1-r3 with Go 1.26.9; 0.34.1-r4 to 0.35.0-r0 with Go 1.26.10; 0.35.0-r1 to 0.35.0-r2 with Go 1.26.11. The Go vulnerability database lists crypto/x509 Certificate.Verify and Certificate.buildChains; the function tables of both programs contain both in every build, so the status follows the Go release. The builds before 0.31.1-r5 (0.31.1-r0 to 0.31.1-r4) use Go 1.25.7 or 1.26.1, inside the affected range; 0.31.1-r5 and every later build use Go 1.26.2 to 1.26.11, which carry the fix, so 0.31.1-r5 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ew7m-7gkr-vnom-vx2s",
+        "aliases": [
+          "CVE-2026-32280"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/alertmanager@0.31.1-r5?distro=dhi-3.23"
         },
@@ -243,7 +270,8 @@
           "@id": "pkg:apk/dhi/alertmanager@0.35.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-32280 (GO-2026-4947): in the Go standard library's crypto/x509 package, chain building does not correctly limit its work when a large number of intermediate certificates are passed in VerifyOptions.Intermediates, a denial of service that affects direct users of crypto/x509 and users of crypto/tls. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320, the release-branch.go1.26 backport https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2 (in go1.26.2, not go1.26.1), https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU . We read every published alertmanager package for Alpine 3.23 in the DHI Alpine repository: 36 builds, 0.31.1-r0 to 0.35.0-r2, x86_64 and aarch64, each download checked against the repository index checksum. Each package holds two files, /usr/bin/alertmanager and /usr/bin/amtool, Go programs built with CGO_ENABLED=0 and linked with -s -w, so we read their function tables from the Go line table, which works on these stripped binaries, and found runtime.main in every one. The Go toolchain recorded in the build information, the same for both programs and both architectures, is: 0.31.1-r0 with Go 1.25.7; 0.31.1-r1 to 0.31.1-r4 with Go 1.26.1; 0.31.1-r5 to 0.32.1-r0 with Go 1.26.2; 0.32.1-r1 to 0.32.1-r2 with Go 1.26.3; 0.32.1-r3 to 0.33.1-r0 with Go 1.26.4; 0.33.1-r1 to 0.33.1-r3 with Go 1.26.5; 0.33.1-r5 to 0.34.0-r0 with Go 1.26.6; 0.34.0-r1 with Go 1.26.7; 0.34.0-r2 to 0.34.1-r1 with Go 1.26.8; 0.34.1-r2 to 0.34.1-r3 with Go 1.26.9; 0.34.1-r4 to 0.35.0-r0 with Go 1.26.10; 0.35.0-r1 to 0.35.0-r2 with Go 1.26.11. The Go vulnerability database lists crypto/x509 Certificate.Verify and Certificate.buildChains; the function tables of both programs contain both in every build, so the status follows the Go release. The builds before 0.31.1-r5 (0.31.1-r0 to 0.31.1-r4) use Go 1.25.7 or 1.26.1, inside the affected range; 0.31.1-r5 and every later build use Go 1.26.2 to 1.26.11, which carry the fix, so 0.31.1-r5 is the first fixed build."
     },
     {
       "vulnerability": {

@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T00:25:32Z",
-  "last_updated": "2026-11-24T04:19:18Z",
-  "version": 6,
+  "last_updated": "2026-11-24T13:51:23Z",
+  "version": 7,
   "statements": [
     {
       "vulnerability": {
@@ -26,7 +26,20 @@
         },
         {
           "@id": "pkg:deb/dhi/airflow@3.3.0-3?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update airflow to 3.3.1-0 or later.",
+      "status_notes": "CVE-2026-68971 (GHSA-5247-m8w9-2v4m): in Apache Airflow before 3.3.1, the asset materialization endpoint (POST /api/v2/assets/{asset_id}/materialize) and the XCom result check in wait_dag_run_until_finished authorized the target Dag without its team, so in multi-team mode with a team-aware auth manager an authenticated user of one team could trigger another team's Dag runs and read its XCom values; the FAB auth manager is unaffected. Upstream fixed it in 3.3.1 with pull request 70893, backported to the 3.3 branch as commit 0940c4b66c270d929e9f59914c65e15bd4734680 (pull request 71107); it passes the Dag's team (DagModel.get_team_name) to the authorization check in airflow/api_fastapi/core_api/routes/public/assets.py and dag_run.py: https://github.com/advisories/GHSA-5247-m8w9-2v4m, https://lists.apache.org/thread/kfxqqwgojdjdnt6bxg3ord4y41y334fo, https://github.com/apache/airflow/pull/70893, https://github.com/apache/airflow/commit/0940c4b66c270d929e9f59914c65e15bd4734680, https://github.com/apache/airflow/releases/tag/3.3.1 . We unpacked every package built from the airflow source in the DHI Debian 13 repository (the airflow package), 52 versions from 3.3.0-0 to 3.4.0-11 for amd64 and arm64, and checked every download against the index SHA256. The dist-info metadata shows apache-airflow and apache-airflow-core 3.3.0 in 3.3.0-0 to 3.3.0-3 and apache-airflow and apache-airflow-core 3.3.1, 3.3.2 and 3.4.0 in every build from 3.3.1-0 on. We also searched the shipped Python sources for the fix: the team-resolving DagDetails(id=dag_id, team_name=DagModel.get_team_name(...)) call in both of those files is absent from every 3.3.0 build and present in every build from 3.3.1-0 on, on both architectures. FIXED at 3.3.1-0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-2xa5-qbgr-rthx-4jjc",
+        "aliases": [
+          "CVE-2026-68971"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/airflow@3.3.1-0?distro=dhi-13"
         },
@@ -172,7 +185,8 @@
           "@id": "pkg:deb/dhi/airflow@3.4.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-68971 (GHSA-5247-m8w9-2v4m): in Apache Airflow before 3.3.1, the asset materialization endpoint (POST /api/v2/assets/{asset_id}/materialize) and the XCom result check in wait_dag_run_until_finished authorized the target Dag without its team, so in multi-team mode with a team-aware auth manager an authenticated user of one team could trigger another team's Dag runs and read its XCom values; the FAB auth manager is unaffected. Upstream fixed it in 3.3.1 with pull request 70893, backported to the 3.3 branch as commit 0940c4b66c270d929e9f59914c65e15bd4734680 (pull request 71107); it passes the Dag's team (DagModel.get_team_name) to the authorization check in airflow/api_fastapi/core_api/routes/public/assets.py and dag_run.py: https://github.com/advisories/GHSA-5247-m8w9-2v4m, https://lists.apache.org/thread/kfxqqwgojdjdnt6bxg3ord4y41y334fo, https://github.com/apache/airflow/pull/70893, https://github.com/apache/airflow/commit/0940c4b66c270d929e9f59914c65e15bd4734680, https://github.com/apache/airflow/releases/tag/3.3.1 . We unpacked every package built from the airflow source in the DHI Debian 13 repository (the airflow package), 52 versions from 3.3.0-0 to 3.4.0-11 for amd64 and arm64, and checked every download against the index SHA256. The dist-info metadata shows apache-airflow and apache-airflow-core 3.3.0 in 3.3.0-0 to 3.3.0-3 and apache-airflow and apache-airflow-core 3.3.1, 3.3.2 and 3.4.0 in every build from 3.3.1-0 on. We also searched the shipped Python sources for the fix: the team-resolving DagDetails(id=dag_id, team_name=DagModel.get_team_name(...)) call in both of those files is absent from every 3.3.0 build and present in every build from 3.3.1-0 on, on both architectures. FIXED at 3.3.1-0."
     }
   ]
 }
