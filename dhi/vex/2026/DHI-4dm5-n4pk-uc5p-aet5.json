@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:07:35Z",
-  "version": 1,
+  "last_updated": "2026-11-24T21:14:41Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -30,7 +31,9 @@
           "@id": "pkg:deb/dhi/libzstd@1.5.7%2Bdfsg-1%2Bdhi2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-124851 is an information disclosure in Zstandard 1.5.1 through 1.5.7: crafted compressed data can expose the contents of an internal buffer (64 KiB by default), which may hold uninitialized memory or literals from earlier decompressions on the same decompression context, through the decompressed output: https://www.cve.org/CVERecord?id=CVE-2026-124851 . The fix is in Zstandard 1.6.0: https://www.openwall.com/lists/oss-security/2026/11/24/1 . The 1.6.0 release notes list it as \"streaming decompression of malformed data could expose uninitialized memory\", pull request 5023: https://github.com/meta/zstd/releases/tag/v1.6.0 . That change, commit 0c9d297, edits only lib/decompress/zstd_decompress_block.c: it zeroes the over-read padding after decoded literals and, once a full window has been decoded, limits the retained external history in ZSTD_checkContinuity(): https://github.com/meta/zstd/commit/0c9d297531a9f15a717ff24604afc0843b3b1427 . Debian lists trixie as vulnerable with no fixed version: https://security-tracker.debian.org/tracker/CVE-2026-124851 . Both DHI Debian 13 builds of libzstd in the DHI Debian repository are Zstandard 1.5.7 (1.5.7+dfsg-1) with no change for this CVE. We checked every package built from the libzstd source (libzstd1, libzstd-dev, zstd and their -dbgsym packages) for both builds on amd64 and arm64, with each download verified against the repository index checksum. The decompressor is in libzstd.so.1.5.7 (libzstd1) and the static libzstd.a (libzstd-dev), and the zstd and pzstd programs (zstd) carry their own statically linked copy: they do not link libzstd.so.1, and their debug symbols in zstd-dbgsym, matched by build ID, include ZSTD_decodeLiteralsBlock() and ZSTD_checkContinuity(). No package changelog mentions this CVE."
     }
   ]
 }
