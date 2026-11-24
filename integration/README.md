@@ -7,7 +7,20 @@ security scanners with Docker Hardened Images (DHI). This page explains how the
 current production scanner model and the upcoming `/etc/os-release` `ID=dhi`
 model coexist during the migration.
 
-> **Work in progress:** The cutover will happen gradually, image by image, not
+## Migration Status — November 23, 2026
+
+The first [**100 prioritized images**](first-100-images.md) will cut over to
+`ID=dhi` on **November 30, 2026**. We will continue migrating the catalog through
+**January 2027**.
+
+Published canary images are available now for integration testing:
+`dhi.io/osv-feed-canary:1-alpine3.24` and
+`dhi.io/osv-feed-canary:1-debian13` (both amd64 and arm64).
+The new [OSV](../dhi/osv/) and [VEX](../dhi/vex/) feeds are live, and DHI
+advisories are available on
+[osv.dev](https://osv.dev/list?ecosystem=Docker+Hardened+Images).
+
+> The cutover will happen gradually, image by image, not
 > as a single global switch. Both models will remain live during the rollout.
 > Docker will not publish a cutover image with `ID=dhi` until generated
 > advisory data is available for that image and its contents.
