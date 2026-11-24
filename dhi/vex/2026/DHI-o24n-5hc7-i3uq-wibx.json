@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:01:18Z",
-  "last_updated": "2026-11-23T09:07:48Z",
-  "version": 8,
+  "last_updated": "2026-11-24T07:31:29Z",
+  "version": 9,
   "statements": [
     {
       "vulnerability": {
@@ -472,7 +472,20 @@
         },
         {
           "@id": "pkg:apk/dhi/dotnet9-sdk@9.0.121-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update dotnet9-sdk to 9.0.122-r0 or later.",
+      "status_notes": "CVE-2026-84008 (GHSA-846f-f764-76mx): SignedCms.CheckSignature in System.Security.Cryptography.Pkcs can repeatedly reparse attacker-controlled X.509 certificate data, causing unauthenticated quadratic CPU exhaustion. Microsoft lists Windows, Linux and macOS as affected, with System.Security.Cryptography.Pkcs 9.0.0 through 9.0.20 affected and 9.0.21 fixed, and shipped the fix in .NET 9.0.21, whose SDKs are 9.0.319 and 9.0.122: https://github.com/advisories/GHSA-846f-f764-76mx, https://github.com/dotnet/announcements/issues/468, https://github.com/dotnet/core/blob/main/release-notes/9.0/9.0.21/9.0.21.md. In dotnet/runtime the fix is commit 648f10a, \"Apply Encrypted XML and Signed CMS security fixes\", which makes SignedCms parse its certificate set once and reuse it, merged into release/9.0 by 193f35e (\"Signed CMS and Signed XML fixes\"); it is in the v9.0.21 tag and not in v9.0.20: https://github.com/dotnet/runtime/commit/648f10aa857054e271c1f1bb4c7af014af1efd91, https://github.com/dotnet/runtime/commit/193f35eb00a79af7ec747450fe432a295a9f0fb1. DHI dotnet9-sdk for Alpine 3.23 builds the .NET 9 SDK for Linux from Microsoft's source release (the dotnet/dotnet repository), and each build's version is the .NET SDK version it carries. We read every package built from the dotnet9-sdk source for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 11 builds, 9.0.113-r0 to the current 9.0.124-r0 (no 9.0.120 build was published), each matching its repository index checksum. The packages are dotnet9-sdk, dotnet9-sdk-aot, dotnet9-sdk-dbg, dotnet9-templates, netstandard21-targeting-pack, dotnet-doc, dotnet-bash-completion and dotnet-zsh-completion, and we recursed into the zip and NuGet archives they hold. Every dotnet9-sdk package holds eight copies of System.Security.Cryptography.Pkcs.dll under /usr/lib/dotnet/sdk/<version>: in the SDK root, FSharp, DotnetTools/dotnet-format and DotnetTools/dotnet-watch directories, each with a Windows-specific runtimes/win copy as well. No other package built from this source holds a copy. In each build all eight copies report the same product version, the .NET runtime version the SDK ships with, together with the dotnet/dotnet release tag commit they were built from, on both architectures. Every build before 9.0.122-r0 carries 9.0.20 or earlier (9.0.121-r0 carries 9.0.20, built from the v9.0.121 tag commit f4e6976), inside the affected range. 9.0.122-r0 carries 9.0.21, built from the v9.0.122 tag commit b5d519a, and later builds carry 9.0.22 (v9.0.123) and 9.0.23 (v9.0.124). The SignedCms source in dotnet/dotnet (src/runtime) at v9.0.122, v9.0.123 and v9.0.124 has the fix's cached certificate list, and at v9.0.121 it does not: https://github.com/dotnet/dotnet/tree/v9.0.122. The range ends at 9.0.122-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-o24n-5hc7-i3uq-wibx",
+        "aliases": [
+          "CVE-2026-84008"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/dotnet9-sdk@9.0.122-r0?distro=dhi-3.23"
         },
@@ -483,7 +496,8 @@
           "@id": "pkg:apk/dhi/dotnet9-sdk@9.0.124-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-84008 (GHSA-846f-f764-76mx): SignedCms.CheckSignature in System.Security.Cryptography.Pkcs can repeatedly reparse attacker-controlled X.509 certificate data, causing unauthenticated quadratic CPU exhaustion. Microsoft lists Windows, Linux and macOS as affected, with System.Security.Cryptography.Pkcs 9.0.0 through 9.0.20 affected and 9.0.21 fixed, and shipped the fix in .NET 9.0.21, whose SDKs are 9.0.319 and 9.0.122: https://github.com/advisories/GHSA-846f-f764-76mx, https://github.com/dotnet/announcements/issues/468, https://github.com/dotnet/core/blob/main/release-notes/9.0/9.0.21/9.0.21.md. In dotnet/runtime the fix is commit 648f10a, \"Apply Encrypted XML and Signed CMS security fixes\", which makes SignedCms parse its certificate set once and reuse it, merged into release/9.0 by 193f35e (\"Signed CMS and Signed XML fixes\"); it is in the v9.0.21 tag and not in v9.0.20: https://github.com/dotnet/runtime/commit/648f10aa857054e271c1f1bb4c7af014af1efd91, https://github.com/dotnet/runtime/commit/193f35eb00a79af7ec747450fe432a295a9f0fb1. DHI dotnet9-sdk for Alpine 3.23 builds the .NET 9 SDK for Linux from Microsoft's source release (the dotnet/dotnet repository), and each build's version is the .NET SDK version it carries. We read every package built from the dotnet9-sdk source for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 11 builds, 9.0.113-r0 to the current 9.0.124-r0 (no 9.0.120 build was published), each matching its repository index checksum. The packages are dotnet9-sdk, dotnet9-sdk-aot, dotnet9-sdk-dbg, dotnet9-templates, netstandard21-targeting-pack, dotnet-doc, dotnet-bash-completion and dotnet-zsh-completion, and we recursed into the zip and NuGet archives they hold. Every dotnet9-sdk package holds eight copies of System.Security.Cryptography.Pkcs.dll under /usr/lib/dotnet/sdk/<version>: in the SDK root, FSharp, DotnetTools/dotnet-format and DotnetTools/dotnet-watch directories, each with a Windows-specific runtimes/win copy as well. No other package built from this source holds a copy. In each build all eight copies report the same product version, the .NET runtime version the SDK ships with, together with the dotnet/dotnet release tag commit they were built from, on both architectures. Every build before 9.0.122-r0 carries 9.0.20 or earlier (9.0.121-r0 carries 9.0.20, built from the v9.0.121 tag commit f4e6976), inside the affected range. 9.0.122-r0 carries 9.0.21, built from the v9.0.122 tag commit b5d519a, and later builds carry 9.0.22 (v9.0.123) and 9.0.23 (v9.0.124). The SignedCms source in dotnet/dotnet (src/runtime) at v9.0.122, v9.0.123 and v9.0.124 has the fix's cached certificate list, and at v9.0.121 it does not: https://github.com/dotnet/dotnet/tree/v9.0.122. The range ends at 9.0.122-r0."
     },
     {
       "vulnerability": {
@@ -504,7 +518,20 @@
         },
         {
           "@id": "pkg:apk/dhi/dotnet9-sdk@9.0.121-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update dotnet9-sdk to 9.0.122-r0 or later.",
+      "status_notes": "CVE-2026-84008 (GHSA-846f-f764-76mx): SignedCms.CheckSignature in System.Security.Cryptography.Pkcs can repeatedly reparse attacker-controlled X.509 certificate data, causing unauthenticated quadratic CPU exhaustion. Microsoft lists Windows, Linux and macOS as affected, with System.Security.Cryptography.Pkcs 9.0.0 through 9.0.20 affected and 9.0.21 fixed, and shipped the fix in .NET 9.0.21, whose SDKs are 9.0.319 and 9.0.122: https://github.com/advisories/GHSA-846f-f764-76mx, https://github.com/dotnet/announcements/issues/468, https://github.com/dotnet/core/blob/main/release-notes/9.0/9.0.21/9.0.21.md. In dotnet/runtime the fix is commit 648f10a, \"Apply Encrypted XML and Signed CMS security fixes\", which makes SignedCms parse its certificate set once and reuse it, merged into release/9.0 by 193f35e (\"Signed CMS and Signed XML fixes\"); it is in the v9.0.21 tag and not in v9.0.20: https://github.com/dotnet/runtime/commit/648f10aa857054e271c1f1bb4c7af014af1efd91, https://github.com/dotnet/runtime/commit/193f35eb00a79af7ec747450fe432a295a9f0fb1. DHI dotnet9-sdk for Alpine 3.24 builds the .NET 9 SDK for Linux from Microsoft's source release (the dotnet/dotnet repository), and each build's version is the .NET SDK version it carries. We read every package built from the dotnet9-sdk source for Alpine 3.24 in the DHI Alpine repository, x86_64 and aarch64: 7 builds, 9.0.117-r0 to the current 9.0.124-r0 (no 9.0.120 build was published), each matching its repository index checksum. The packages are dotnet9-sdk, dotnet9-sdk-aot, dotnet9-sdk-dbg, dotnet9-templates, netstandard21-targeting-pack, dotnet-doc, dotnet-bash-completion and dotnet-zsh-completion, and we recursed into the zip and NuGet archives they hold. Every dotnet9-sdk package holds eight copies of System.Security.Cryptography.Pkcs.dll under /usr/lib/dotnet/sdk/<version>: in the SDK root, FSharp, DotnetTools/dotnet-format and DotnetTools/dotnet-watch directories, each with a Windows-specific runtimes/win copy as well. No other package built from this source holds a copy. In each build all eight copies report the same product version, the .NET runtime version the SDK ships with, together with the dotnet/dotnet release tag commit they were built from, on both architectures. Every build before 9.0.122-r0 carries 9.0.20 or earlier (9.0.121-r0 carries 9.0.20, built from the v9.0.121 tag commit f4e6976), inside the affected range. 9.0.122-r0 carries 9.0.21, built from the v9.0.122 tag commit b5d519a, and later builds carry 9.0.22 (v9.0.123) and 9.0.23 (v9.0.124). The SignedCms source in dotnet/dotnet (src/runtime) at v9.0.122, v9.0.123 and v9.0.124 has the fix's cached certificate list, and at v9.0.121 it does not: https://github.com/dotnet/dotnet/tree/v9.0.122. The range ends at 9.0.122-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-o24n-5hc7-i3uq-wibx",
+        "aliases": [
+          "CVE-2026-84008"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/dotnet9-sdk@9.0.122-r0?distro=dhi-3.24"
         },
@@ -515,7 +542,8 @@
           "@id": "pkg:apk/dhi/dotnet9-sdk@9.0.124-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-84008 (GHSA-846f-f764-76mx): SignedCms.CheckSignature in System.Security.Cryptography.Pkcs can repeatedly reparse attacker-controlled X.509 certificate data, causing unauthenticated quadratic CPU exhaustion. Microsoft lists Windows, Linux and macOS as affected, with System.Security.Cryptography.Pkcs 9.0.0 through 9.0.20 affected and 9.0.21 fixed, and shipped the fix in .NET 9.0.21, whose SDKs are 9.0.319 and 9.0.122: https://github.com/advisories/GHSA-846f-f764-76mx, https://github.com/dotnet/announcements/issues/468, https://github.com/dotnet/core/blob/main/release-notes/9.0/9.0.21/9.0.21.md. In dotnet/runtime the fix is commit 648f10a, \"Apply Encrypted XML and Signed CMS security fixes\", which makes SignedCms parse its certificate set once and reuse it, merged into release/9.0 by 193f35e (\"Signed CMS and Signed XML fixes\"); it is in the v9.0.21 tag and not in v9.0.20: https://github.com/dotnet/runtime/commit/648f10aa857054e271c1f1bb4c7af014af1efd91, https://github.com/dotnet/runtime/commit/193f35eb00a79af7ec747450fe432a295a9f0fb1. DHI dotnet9-sdk for Alpine 3.24 builds the .NET 9 SDK for Linux from Microsoft's source release (the dotnet/dotnet repository), and each build's version is the .NET SDK version it carries. We read every package built from the dotnet9-sdk source for Alpine 3.24 in the DHI Alpine repository, x86_64 and aarch64: 7 builds, 9.0.117-r0 to the current 9.0.124-r0 (no 9.0.120 build was published), each matching its repository index checksum. The packages are dotnet9-sdk, dotnet9-sdk-aot, dotnet9-sdk-dbg, dotnet9-templates, netstandard21-targeting-pack, dotnet-doc, dotnet-bash-completion and dotnet-zsh-completion, and we recursed into the zip and NuGet archives they hold. Every dotnet9-sdk package holds eight copies of System.Security.Cryptography.Pkcs.dll under /usr/lib/dotnet/sdk/<version>: in the SDK root, FSharp, DotnetTools/dotnet-format and DotnetTools/dotnet-watch directories, each with a Windows-specific runtimes/win copy as well. No other package built from this source holds a copy. In each build all eight copies report the same product version, the .NET runtime version the SDK ships with, together with the dotnet/dotnet release tag commit they were built from, on both architectures. Every build before 9.0.122-r0 carries 9.0.20 or earlier (9.0.121-r0 carries 9.0.20, built from the v9.0.121 tag commit f4e6976), inside the affected range. 9.0.122-r0 carries 9.0.21, built from the v9.0.122 tag commit b5d519a, and later builds carry 9.0.22 (v9.0.123) and 9.0.23 (v9.0.124). The SignedCms source in dotnet/dotnet (src/runtime) at v9.0.122, v9.0.123 and v9.0.124 has the fix's cached certificate list, and at v9.0.121 it does not: https://github.com/dotnet/dotnet/tree/v9.0.122. The range ends at 9.0.122-r0."
     },
     {
       "vulnerability": {
@@ -693,7 +721,20 @@
         },
         {
           "@id": "pkg:deb/dhi/dotnet-sdk-9@9.0.318-1?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update dotnet-sdk-9 to 9.0.319-0 or later.",
+      "status_notes": "CVE-2026-84008 (GHSA-846f-f764-76mx): SignedCms.CheckSignature in System.Security.Cryptography.Pkcs can repeatedly reparse attacker-controlled X.509 certificate data, causing unauthenticated quadratic CPU exhaustion. Microsoft lists Windows, Linux and macOS as affected, with System.Security.Cryptography.Pkcs 9.0.0 through 9.0.20 affected and 9.0.21 fixed, and shipped the fix in .NET 9.0.21, whose SDKs are 9.0.319 and 9.0.122: https://github.com/advisories/GHSA-846f-f764-76mx, https://github.com/dotnet/announcements/issues/468, https://github.com/dotnet/core/blob/main/release-notes/9.0/9.0.21/9.0.21.md. In dotnet/runtime the fix is commit 648f10a, \"Apply Encrypted XML and Signed CMS security fixes\", which makes SignedCms parse its certificate set once and reuse it, merged into release/9.0 by 193f35e (\"Signed CMS and Signed XML fixes\"); it is in the v9.0.21 tag and not in v9.0.20: https://github.com/dotnet/runtime/commit/648f10aa857054e271c1f1bb4c7af014af1efd91, https://github.com/dotnet/runtime/commit/193f35eb00a79af7ec747450fe432a295a9f0fb1. DHI dotnet-sdk-9 for Debian 13 repackages Microsoft's .NET 9 SDK. We read every published package built from the dotnet-sdk-9 source in the DHI Debian repository, amd64 and arm64: dotnet-sdk-9 and dotnet-sdk-9-oci-config, 10 builds, 9.0.315-0 to the current 9.0.321-1, each matching its repository index checksum, recursing into the zip and NuGet archives they hold. No debug-symbol packages are published for this source, and dotnet-sdk-9-oci-config holds no copy of the assembly. Every dotnet-sdk-9 build carries System.Security.Cryptography.Pkcs.dll in the ASP.NET Core shared framework under /usr/lib/dotnet/shared/Microsoft.AspNetCore.App/<version> and under /usr/lib/dotnet/sdk/<version> in the SDK root, FSharp, DotnetTools/dotnet-format and DotnetTools/dotnet-watch directories, each of those four SDK directories with a Windows-specific runtimes/win copy as well. In each build every copy reports the same product version, the .NET runtime version the SDK ships with, together with the dotnet/runtime commit it was built from, on both architectures. Builds 9.0.315-0 to 9.0.318-1 carry 9.0.17 to 9.0.20 (9.0.318-0 and 9.0.318-1 carry 9.0.20, built from the v9.0.20 tag commit 3879076), inside the affected range. 9.0.319-0 carries 9.0.21, built from the v9.0.21 tag commit d280e4f, which contains the fix commit, and 9.0.320-0, 9.0.321-0 and 9.0.321-1 carry 9.0.22 and 9.0.23, built from the v9.0.22 and v9.0.23 tag commits, which also contain it. The range ends at 9.0.319-0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-o24n-5hc7-i3uq-wibx",
+        "aliases": [
+          "CVE-2026-84008"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/dotnet-sdk-9@9.0.319-0?distro=dhi-13"
         },
@@ -707,7 +748,8 @@
           "@id": "pkg:deb/dhi/dotnet-sdk-9@9.0.321-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-84008 (GHSA-846f-f764-76mx): SignedCms.CheckSignature in System.Security.Cryptography.Pkcs can repeatedly reparse attacker-controlled X.509 certificate data, causing unauthenticated quadratic CPU exhaustion. Microsoft lists Windows, Linux and macOS as affected, with System.Security.Cryptography.Pkcs 9.0.0 through 9.0.20 affected and 9.0.21 fixed, and shipped the fix in .NET 9.0.21, whose SDKs are 9.0.319 and 9.0.122: https://github.com/advisories/GHSA-846f-f764-76mx, https://github.com/dotnet/announcements/issues/468, https://github.com/dotnet/core/blob/main/release-notes/9.0/9.0.21/9.0.21.md. In dotnet/runtime the fix is commit 648f10a, \"Apply Encrypted XML and Signed CMS security fixes\", which makes SignedCms parse its certificate set once and reuse it, merged into release/9.0 by 193f35e (\"Signed CMS and Signed XML fixes\"); it is in the v9.0.21 tag and not in v9.0.20: https://github.com/dotnet/runtime/commit/648f10aa857054e271c1f1bb4c7af014af1efd91, https://github.com/dotnet/runtime/commit/193f35eb00a79af7ec747450fe432a295a9f0fb1. DHI dotnet-sdk-9 for Debian 13 repackages Microsoft's .NET 9 SDK. We read every published package built from the dotnet-sdk-9 source in the DHI Debian repository, amd64 and arm64: dotnet-sdk-9 and dotnet-sdk-9-oci-config, 10 builds, 9.0.315-0 to the current 9.0.321-1, each matching its repository index checksum, recursing into the zip and NuGet archives they hold. No debug-symbol packages are published for this source, and dotnet-sdk-9-oci-config holds no copy of the assembly. Every dotnet-sdk-9 build carries System.Security.Cryptography.Pkcs.dll in the ASP.NET Core shared framework under /usr/lib/dotnet/shared/Microsoft.AspNetCore.App/<version> and under /usr/lib/dotnet/sdk/<version> in the SDK root, FSharp, DotnetTools/dotnet-format and DotnetTools/dotnet-watch directories, each of those four SDK directories with a Windows-specific runtimes/win copy as well. In each build every copy reports the same product version, the .NET runtime version the SDK ships with, together with the dotnet/runtime commit it was built from, on both architectures. Builds 9.0.315-0 to 9.0.318-1 carry 9.0.17 to 9.0.20 (9.0.318-0 and 9.0.318-1 carry 9.0.20, built from the v9.0.20 tag commit 3879076), inside the affected range. 9.0.319-0 carries 9.0.21, built from the v9.0.21 tag commit d280e4f, which contains the fix commit, and 9.0.320-0, 9.0.321-0 and 9.0.321-1 carry 9.0.22 and 9.0.23, built from the v9.0.22 and v9.0.23 tag commits, which also contain it. The range ends at 9.0.319-0."
     }
   ]
 }
