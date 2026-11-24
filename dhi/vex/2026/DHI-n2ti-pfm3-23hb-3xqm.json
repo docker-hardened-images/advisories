@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-09T22:20:00Z",
-  "last_updated": "2026-11-13T18:20:34Z",
-  "version": 2,
+  "last_updated": "2026-11-24T21:04:21Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -28,7 +28,9 @@
           "@id": "pkg:deb/dhi/git@1:2.47.3-0%2Bdeb13u1%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2018-1000021: Git prints the progress and error messages a remote server sends over the sideband (the \"remote:\" lines) to the user's terminal without removing control characters, so a malicious server, or an attacker who can modify the traffic, can send ANSI escape sequences that alter the terminal's state or hide output; the report describes the impact: http://www.batterystapl.es/2018/01/security-implications-of-ansi-escape.html . The Debian tracker lists git as unfixed in trixie with urgency unimportant (\"Terminal emulators need to perform proper escaping\"): https://security-tracker.debian.org/tracker/CVE-2018-1000021 . That is a decision not to ship a fix, not evidence that the code is absent. Upstream Git 2.55.0 now masks control characters in sideband messages by default, except ANSI color sequences, as its release notes say: https://github.com/git/git/blob/v2.55.0/Documentation/RelNotes/2.55.0.adoc . The masking starts with commit https://github.com/git/git/commit/04949538203ba7aeb298a607280715d4f26dbe0a , which addresses this escape-sequence injection but does not name the CVE. This owner ships Git 2.47.3, whose sideband.c passes control characters in remote messages through unchanged: https://github.com/git/git/blob/v2.47.3/sideband.c . DHI does not backport the masking. We checked every ELF program in the git package of the two builds in the DHI Debian repository, on amd64 and arm64: none contains the string \"sideband.allowcontrolcharacters\", the configuration key the masking series reads, while every one contains the existing \"color.remote\" key. The same search finds that key in /usr/bin/git from Alpine's Git 2.56.1-r0 package. Every published build of this owner is therefore affected."
     }
   ]
 }
