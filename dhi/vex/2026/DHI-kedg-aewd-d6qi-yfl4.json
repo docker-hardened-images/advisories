@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-23T23:27:08Z",
-  "version": 1,
+  "last_updated": "2026-11-24T09:14:46Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,8 @@
           "@id": "pkg:deb/dhi/llvm-toolchain-19@1:19.1.7-3%2Bdeb13u0%2Bdhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-13573 is a reported stack-based buffer overflow found by fuzzing LLVM 22.1 with llvm-opt-fuzzer: AddressSanitizer flags a read in llvm::ValueSymbolTable::createValueName (an inlined StringMap insert) while the bitcode reader names values from a malformed bitcode file: https://github.com/llvm/llvm-project/issues/199187. The issue is still open and LLVM has not identified a cause or published a fix. LLVM's security policy treats its frontends, analyzers, optimizers and code generators as not security-sensitive for malicious input, naming a crafted bitcode file as an example: https://llvm.org/docs/Security.html. The CVE record lists only LLVM 22.1.0 to 22.1.6 and says the presence of the vulnerability remains uncertain: https://www.cve.org/CVERecord?id=CVE-2026-13573. The Debian security tracker lists it for llvm-toolchain-19 as unimportant and open, with no fix in Debian: https://security-tracker.debian.org/tracker/CVE-2026-13573. The DHI llvm-toolchain-19 package is built from Debian's llvm-toolchain-19 1:19.1.7-3 source and has one published build, whose libLLVM.so.19.1 in libllvm19 contains the LLVM bitcode reader and value symbol table code. Pending: a reproducer to run against this build. The reporter's proof of concept is a fuzzer-generated bitcode file attached to the issue, and both download links return 404, also to an authenticated GitHub request, so whether the LLVM 19.1.7 bitcode reader in this build has the same fault has not been tested. Upstream's dispute alone is not treated as proof that the build is unaffected."
     }
   ]
 }

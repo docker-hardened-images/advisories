@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-23T23:27:08Z",
-  "version": 1,
+  "last_updated": "2026-11-24T09:15:00Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,9 @@
           "@id": "pkg:deb/dhi/llvm-toolchain-19@1:19.1.7-3%2Bdeb13u0%2Bdhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-13574 is an out-of-bounds read in GCRelocateInst::getBasePtr() in LLVM's IR library (llvm/lib/IR/IntrinsicInst.cpp): when a gc.relocate intrinsic carries a base-pointer index outside its gc.statepoint's operand list, the verifier's diagnostic printer reads past the end of that list. It is reached by loading crafted LLVM IR or bitcode, for example with opt: https://github.com/llvm/llvm-project/issues/199191. LLVM's security policy treats its frontends, analyzers, optimizers and code generators as not security-sensitive for malicious input, naming a crafted bitcode file as an example: https://llvm.org/docs/Security.html. The Debian security tracker lists the CVE for llvm-toolchain-19 as unimportant and open, with no fix in Debian: https://security-tracker.debian.org/tracker/CVE-2026-13574. Upstream fixed the bug by adding bounds checks to getBasePtr() and getDerivedPtr() in https://github.com/llvm/llvm-project/commit/7bb9626d5ab901e5c1a8e9acbbb1684c982401b4, from https://github.com/llvm/llvm-project/pull/208278, which is on the main branch for LLVM 23 and in no LLVM 19 release. The DHI llvm-toolchain-19 package is built from Debian's llvm-toolchain-19 1:19.1.7-3 source and has one published build. The LLVM 19.1.7 source still has the unchecked getBasePtr() and getDerivedPtr(), and the upstream regression test for the fix (a gc.relocate with base index -1) reproduces the bug on this build: opt -passes=verify, run with the published DHI arm64 libllvm19 package installed, crashes with SIGSEGV in GCRelocateInst::getBasePtr() in libLLVM.so.19.1, and valgrind reports an invalid read of size 8 there. So this owner is affected, and no published build carries the fix."
     }
   ]
 }
