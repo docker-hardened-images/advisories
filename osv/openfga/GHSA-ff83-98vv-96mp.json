@@ -1,0 +1,87 @@
+{
+  "modified": "2026-11-23T17:18:43Z",
+  "published": "2026-11-23T17:18:42Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-ff83-98vv-96mp",
+  "details": "In OpenFGA, the ListUsers API could return incorrect results when it encountered exclusions.\r\n\r\n### Preconditions\r\n\r\nThis applies if your application uses ListUsers to enumerate or enforce access, and the authorization model contains a relation that (directly or through other relations) matches one of these:\r\n\r\n1. An exclusion whose subtracted side is itself an exclusion, and whose base also contains an exclusion, e.g., `(a but not b) but not (c but not d)`. This also applies when the base's exclusion is wrapped in `and` or `or`, e.g., `((a but not b) and e) but not (c but not d)`. (Over-grant)\r\n\r\n2. An exclusion whose base is a type-bound public wildcard (e.g. `user:*`), combined with `or`, with the result then combined with `and`, e.g., `(([user:*] but not b) or c) and d`. (Over-grant)\r\n\r\n3. An exclusion `a but not b`, where `b` can reach the same user in more than one way (directly, through a type-bound public wildcard such as `user:*`, or through several usersets/TTUs), and at least one of those ways goes through a userset/TTU that has its own exclusion, e.g., `b: [user, group#c]` or `b: [user:*, group#c]`, with `group.c: d but not e`. (Over-grant)\r\n\r\n4. An exclusion `a but not b`, where `a` can reach the same user in more than one way (directly, or through several usersets/TTUs), and at least one of those ways goes through a userset/TTU that has its own exclusion, e.g., `a: [user, group#c]` with `group.c: d but not e`. This also applies when `a` is used on its own, or inside `and` when it grants the user through a type-bound public wildcard, e.g., `a and f` with `a: [user:*, group#c]`, `group.c: g but not e` and `g: [user:*]`. (Under-grant)\r\n\r\n5. An exclusion whose subtracted side is an `or` where one of the branches is an exclusion whose base is a type-bound public wildcard, e.g. `everyone but not ((everyone but not member) or banned)`, `[user] but not ((everyone but not member) or banned)`, or `everyone but not ((everyone but not member) or (everyone but not banned))`, where `everyone: [user:*]`. (Under-grant)\r\n\r\n6. An exclusion `a but not b`, where the ListUsers request reaches its deadline (`--listUsers-deadline`, default 3s) and, by then, evaluating `b` either has not finished or has hit an error. (Over-grant)\r\n\r\n### Fix\r\n\r\nUpgrade to OpenFGA v1.23.0 or greater.\r\n\r\n### Acknowledgements\r\n\r\nOpenFGA would like to thank @arpitjain099, @manus-pi, @Tan-JunWei, @pb-omer for the discovery and responsible disclosure.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "openfga",
+        "purl": "pkg:dhi/openfga"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.23.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/openfga/openfga"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "openfga",
+        "purl": "pkg:dhi/openfga"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.23.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "docker",
+        "source_package": "openfga/openfga"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "openfga",
+        "purl": "pkg:dhi/openfga"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.4.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "helm-charts",
+        "source_package": "openfga/openfga"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/openfga/openfga/security/advisories/GHSA-ff83-98vv-96mp"
+    }
+  ]
+}
