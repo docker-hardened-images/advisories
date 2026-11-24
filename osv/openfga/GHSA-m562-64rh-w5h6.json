@@ -1,0 +1,87 @@
+{
+  "modified": "2026-11-23T17:18:54Z",
+  "published": "2026-11-23T17:18:53Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-m562-64rh-w5h6",
+  "details": "### Description\r\nIn OpenFGA, the Check and BatchCheck APIs, as well as ListObjects with `listObjects-pipeline-enabled=false`, could return incorrect results.\r\n\r\n### Preconditions\r\nThis applies if all of the following are present:\r\n\r\n1. The authorization model contains a relation whose type restrictions allow both a type-bound public wildcard and the same user type, with at least one of them conditional (e.g. `member: [user:*, user with cond]` or `member: [user, user:* with cond]`), and\r\n1. That relation is reached, directly or through other relations, via a userset or tuple-to-userset (e.g. `viewer: [group#member]`), and\r\n1. An object has both a `user:*` tuple and a tuple for the specific user (stored or contextual), and the condition on one of them is not met, and\r\n1. Your application uses Check, BatchCheck, or ListObjects with `listObjects-pipeline-enabled=false` to enforce access.\r\n\r\nAccess that should be granted could be denied. If the relation is on the subtracted side of an exclusion (e.g. `allowed: viewer but not blocked` with `blocked: [user:*, user with cond]`), access that should be denied could be granted.\r\n\r\n### Fix\r\nUpgrade to OpenFGA v1.23.0 or greater.\r\n\r\n### Acknowledgements\r\nOpenFGA would like to thank @KlausVii for the discovery and responsible disclosure.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "openfga",
+        "purl": "pkg:dhi/openfga"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.23.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "go",
+        "source_package": "github.com/openfga/openfga"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "openfga",
+        "purl": "pkg:dhi/openfga"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.23.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "docker",
+        "source_package": "openfga/openfga"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "openfga",
+        "purl": "pkg:dhi/openfga"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.4.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "helm-charts",
+        "source_package": "openfga/openfga"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/openfga/openfga/security/advisories/GHSA-m562-64rh-w5h6"
+    }
+  ]
+}
