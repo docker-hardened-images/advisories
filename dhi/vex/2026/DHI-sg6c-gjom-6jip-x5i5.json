@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T00:27:04Z",
-  "last_updated": "2026-11-24T04:19:35Z",
-  "version": 6,
+  "last_updated": "2026-11-24T13:36:15Z",
+  "version": 7,
   "statements": [
     {
       "vulnerability": {
@@ -26,7 +26,20 @@
         },
         {
           "@id": "pkg:deb/dhi/airflow@3.3.0-3?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update airflow to 3.3.1-0 or later.",
+      "status_notes": "CVE-2026-67587 (GHSA-2qjv-p2gc-mjg2): in Apache Airflow 3.3.0, the Task SDK rebuilt a Callback object from serialized data by re-running its constructor, which imports the module named by the stored path, so a Dag author controlling a task instance's next_kwargs could make the scheduler's awaiting_input timeout sweep import an arbitrary module; versions before 3.3.0 are not affected because that sweep did not exist. Upstream fixed it in 3.3.1 with pull request 70704, backported to the 3.3 branch as commit 2b598cb8b0570c941633be3d16a7eb912f73180c (pull request 71042); it marks deserialized callback paths with _SerializedCallbackPath in airflow/sdk/definitions/callback.py so rebuilding a Callback no longer imports them: https://github.com/advisories/GHSA-2qjv-p2gc-mjg2, https://lists.apache.org/thread/o00ww4n69qojvsckb464dtwd2nhzy6t0, https://github.com/apache/airflow/pull/70704, https://github.com/apache/airflow/commit/2b598cb8b0570c941633be3d16a7eb912f73180c, https://github.com/apache/airflow/releases/tag/3.3.1 . We unpacked every package built from the airflow source in the DHI Debian 13 repository (the airflow package), 52 versions from 3.3.0-0 to 3.4.0-11 for amd64 and arm64, and checked every download against the index SHA256. The dist-info metadata shows apache-airflow 3.3.0 with apache-airflow-task-sdk 1.3.0 in 3.3.0-0 to 3.3.0-3 and apache-airflow 3.3.1, 3.3.2 and 3.4.0 with apache-airflow-task-sdk 1.3.1, 1.3.2 and 1.4.0 in every build from 3.3.1-0 on. We also searched the shipped Python sources for the fix: class _SerializedCallbackPath and its use in Callback.deserialize in callback.py is absent from every 3.3.0 build and present in every build from 3.3.1-0 on, on both architectures. The 3.3.x builds also ship a compiled callback.cpython-313.pyc; in 3.3.0-3 and 3.3.1-0 on both architectures its header records the same source size and modification time as the shipped source, so it was compiled from that source. FIXED at 3.3.1-0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-sg6c-gjom-6jip-x5i5",
+        "aliases": [
+          "CVE-2026-67587"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/airflow@3.3.1-0?distro=dhi-13"
         },
@@ -172,7 +185,8 @@
           "@id": "pkg:deb/dhi/airflow@3.4.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-67587 (GHSA-2qjv-p2gc-mjg2): in Apache Airflow 3.3.0, the Task SDK rebuilt a Callback object from serialized data by re-running its constructor, which imports the module named by the stored path, so a Dag author controlling a task instance's next_kwargs could make the scheduler's awaiting_input timeout sweep import an arbitrary module; versions before 3.3.0 are not affected because that sweep did not exist. Upstream fixed it in 3.3.1 with pull request 70704, backported to the 3.3 branch as commit 2b598cb8b0570c941633be3d16a7eb912f73180c (pull request 71042); it marks deserialized callback paths with _SerializedCallbackPath in airflow/sdk/definitions/callback.py so rebuilding a Callback no longer imports them: https://github.com/advisories/GHSA-2qjv-p2gc-mjg2, https://lists.apache.org/thread/o00ww4n69qojvsckb464dtwd2nhzy6t0, https://github.com/apache/airflow/pull/70704, https://github.com/apache/airflow/commit/2b598cb8b0570c941633be3d16a7eb912f73180c, https://github.com/apache/airflow/releases/tag/3.3.1 . We unpacked every package built from the airflow source in the DHI Debian 13 repository (the airflow package), 52 versions from 3.3.0-0 to 3.4.0-11 for amd64 and arm64, and checked every download against the index SHA256. The dist-info metadata shows apache-airflow 3.3.0 with apache-airflow-task-sdk 1.3.0 in 3.3.0-0 to 3.3.0-3 and apache-airflow 3.3.1, 3.3.2 and 3.4.0 with apache-airflow-task-sdk 1.3.1, 1.3.2 and 1.4.0 in every build from 3.3.1-0 on. We also searched the shipped Python sources for the fix: class _SerializedCallbackPath and its use in Callback.deserialize in callback.py is absent from every 3.3.0 build and present in every build from 3.3.1-0 on, on both architectures. The 3.3.x builds also ship a compiled callback.cpython-313.pyc; in 3.3.0-3 and 3.3.1-0 on both architectures its header records the same source size and modification time as the shipped source, so it was compiled from that source. FIXED at 3.3.1-0."
     }
   ]
 }

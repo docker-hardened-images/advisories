@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:12:35Z",
-  "last_updated": "2026-11-22T23:21:18Z",
-  "version": 5,
+  "last_updated": "2026-11-24T13:36:05Z",
+  "version": 6,
   "statements": [
     {
       "vulnerability": {
@@ -20,7 +20,20 @@
         },
         {
           "@id": "pkg:deb/dhi/activemq-artemis@2.55.0-1?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update activemq-artemis to 2.56.0-0 or later.",
+      "status_notes": "CVE-2026-50734 (GHSA-7259-vf48-52q3): in Apache ActiveMQ Client before 5.19.8 (and 6.x before 6.2.7), the size values in a WireFormatInfo frame are not validated, so an unauthenticated network client can send a crafted frame during OpenWire wire format negotiation that makes the broker allocate memory until it runs out and crashes: https://github.com/advisories/GHSA-7259-vf48-52q3, https://www.openwall.com/lists/oss-security/2026/06/29/10. On the 5.19 line it is fixed in 5.19.8 by https://github.com/apache/activemq/commit/42e2be75eddcece3cddacf8a73e6cad7db5aa626 on the activemq-5.19.x branch, pull request 2082, a backport of https://github.com/apache/activemq/pull/2080. It limits the WireFormatInfo property map to 64 entries and 512-byte values (MAX_PROPERTY_BUFFER_SIZE) and adds a nesting-depth check (validateDepth) to org.apache.activemq.util.MarshallingSupport. We unpacked all 27 published activemq-artemis packages in the DHI Debian repository, 2.55.0-0 to the current 2.57.0-10, for amd64 and arm64 (2.57.0-0 was published for arm64 only; no debug-symbol packages are published for this source, and none is in the DHI security repository), each checked against the repository index checksum, including the jar archives they bundle and the jars nested inside them. Each package carries ActiveMQ Classic's client library twice, under /usr/share/activemq-artemis: as lib/activemq-client-<version>.jar and nested inside lib/artemis-openwire-protocol-<version>.jar, the Artemis OpenWire protocol module. 2.55.0-0 and 2.55.0-1 carry activemq-client 5.19.7; 2.56.0-0 and every later build carry activemq-client 5.19.10. In every copy, WireFormatInfo.class in 5.19.10 contains MAX_PROPERTY_BUFFER_SIZE and MarshallingSupport.class contains validateDepth, and the copies in 5.19.7 contain neither. FIXED is set at 2.56.0-0, the first build that ships the fixed client library; 2.55.0-0 and 2.55.0-1 are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-sr56-tii6-rlko-ozl2",
+        "aliases": [
+          "CVE-2026-50734"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/activemq-artemis@2.56.0-0?distro=dhi-13"
         },
@@ -58,7 +71,8 @@
           "@id": "pkg:deb/dhi/activemq-artemis@2.57.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-50734 (GHSA-7259-vf48-52q3): in Apache ActiveMQ Client before 5.19.8 (and 6.x before 6.2.7), the size values in a WireFormatInfo frame are not validated, so an unauthenticated network client can send a crafted frame during OpenWire wire format negotiation that makes the broker allocate memory until it runs out and crashes: https://github.com/advisories/GHSA-7259-vf48-52q3, https://www.openwall.com/lists/oss-security/2026/06/29/10. On the 5.19 line it is fixed in 5.19.8 by https://github.com/apache/activemq/commit/42e2be75eddcece3cddacf8a73e6cad7db5aa626 on the activemq-5.19.x branch, pull request 2082, a backport of https://github.com/apache/activemq/pull/2080. It limits the WireFormatInfo property map to 64 entries and 512-byte values (MAX_PROPERTY_BUFFER_SIZE) and adds a nesting-depth check (validateDepth) to org.apache.activemq.util.MarshallingSupport. We unpacked all 27 published activemq-artemis packages in the DHI Debian repository, 2.55.0-0 to the current 2.57.0-10, for amd64 and arm64 (2.57.0-0 was published for arm64 only; no debug-symbol packages are published for this source, and none is in the DHI security repository), each checked against the repository index checksum, including the jar archives they bundle and the jars nested inside them. Each package carries ActiveMQ Classic's client library twice, under /usr/share/activemq-artemis: as lib/activemq-client-<version>.jar and nested inside lib/artemis-openwire-protocol-<version>.jar, the Artemis OpenWire protocol module. 2.55.0-0 and 2.55.0-1 carry activemq-client 5.19.7; 2.56.0-0 and every later build carry activemq-client 5.19.10. In every copy, WireFormatInfo.class in 5.19.10 contains MAX_PROPERTY_BUFFER_SIZE and MarshallingSupport.class contains validateDepth, and the copies in 5.19.7 contain neither. FIXED is set at 2.56.0-0, the first build that ships the fixed client library; 2.55.0-0 and 2.55.0-1 are affected."
     }
   ]
 }

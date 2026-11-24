@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T00:27:04Z",
-  "last_updated": "2026-11-24T04:19:18Z",
-  "version": 6,
+  "last_updated": "2026-11-24T13:36:10Z",
+  "version": 7,
   "statements": [
     {
       "vulnerability": {
@@ -26,7 +26,20 @@
         },
         {
           "@id": "pkg:deb/dhi/airflow@3.3.0-3?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update airflow to 3.3.1-0 or later.",
+      "status_notes": "CVE-2026-67260 (GHSA-q4c3-7575-55j2): in Apache Airflow 3.3.0, the scheduler's awaiting_input sweep for human-in-the-loop tasks deserialized a task instance's next_kwargs without an allow-list, so a Dag author could cause an arbitrary module import and object instantiation in the scheduler, or stop the scheduler job; versions before 3.3.0 are not affected because those tasks deferred onto the triggerer. Upstream fixed it in 3.3.1 with pull request 70685, backported to the 3.3 branch as commit 18b622920cf0f486155075125ecdcabc752b1eca (pull request 71183); it moves decoding of the stored next_kwargs in handle_event_submit (airflow/models/trigger.py) into _decode_next_kwargs, which tries the serde deserializer first and requires a dict, fails the task instance through _fail_unresumable_task_instance when the payload cannot be decoded, and makes the awaiting_input sweep in airflow/jobs/scheduler_job_runner.py count such task instances separately: https://github.com/advisories/GHSA-q4c3-7575-55j2, https://lists.apache.org/thread/vygr0fh82cjzjp5k4vtfmboxryvm3lyn, https://github.com/apache/airflow/pull/70685, https://github.com/apache/airflow/commit/18b622920cf0f486155075125ecdcabc752b1eca, https://github.com/apache/airflow/releases/tag/3.3.1 . We unpacked every package built from the airflow source in the DHI Debian 13 repository (the airflow package), 52 versions from 3.3.0-0 to 3.4.0-11 for amd64 and arm64, and checked every download against the index SHA256. The dist-info metadata shows apache-airflow and apache-airflow-core 3.3.0 in 3.3.0-0 to 3.3.0-3 and apache-airflow and apache-airflow-core 3.3.1, 3.3.2 and 3.4.0 in every build from 3.3.1-0 on. We also searched the shipped Python sources for the fix: _fail_unresumable_task_instance in trigger.py and the num_unresumable count in scheduler_job_runner.py is absent from every 3.3.0 build and present in every build from 3.3.1-0 on, on both architectures. FIXED at 3.3.1-0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-mjmw-7kjw-fiu5-xidi",
+        "aliases": [
+          "CVE-2026-67260"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/airflow@3.3.1-0?distro=dhi-13"
         },
@@ -172,7 +185,8 @@
           "@id": "pkg:deb/dhi/airflow@3.4.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-67260 (GHSA-q4c3-7575-55j2): in Apache Airflow 3.3.0, the scheduler's awaiting_input sweep for human-in-the-loop tasks deserialized a task instance's next_kwargs without an allow-list, so a Dag author could cause an arbitrary module import and object instantiation in the scheduler, or stop the scheduler job; versions before 3.3.0 are not affected because those tasks deferred onto the triggerer. Upstream fixed it in 3.3.1 with pull request 70685, backported to the 3.3 branch as commit 18b622920cf0f486155075125ecdcabc752b1eca (pull request 71183); it moves decoding of the stored next_kwargs in handle_event_submit (airflow/models/trigger.py) into _decode_next_kwargs, which tries the serde deserializer first and requires a dict, fails the task instance through _fail_unresumable_task_instance when the payload cannot be decoded, and makes the awaiting_input sweep in airflow/jobs/scheduler_job_runner.py count such task instances separately: https://github.com/advisories/GHSA-q4c3-7575-55j2, https://lists.apache.org/thread/vygr0fh82cjzjp5k4vtfmboxryvm3lyn, https://github.com/apache/airflow/pull/70685, https://github.com/apache/airflow/commit/18b622920cf0f486155075125ecdcabc752b1eca, https://github.com/apache/airflow/releases/tag/3.3.1 . We unpacked every package built from the airflow source in the DHI Debian 13 repository (the airflow package), 52 versions from 3.3.0-0 to 3.4.0-11 for amd64 and arm64, and checked every download against the index SHA256. The dist-info metadata shows apache-airflow and apache-airflow-core 3.3.0 in 3.3.0-0 to 3.3.0-3 and apache-airflow and apache-airflow-core 3.3.1, 3.3.2 and 3.4.0 in every build from 3.3.1-0 on. We also searched the shipped Python sources for the fix: _fail_unresumable_task_instance in trigger.py and the num_unresumable count in scheduler_job_runner.py is absent from every 3.3.0 build and present in every build from 3.3.1-0 on, on both architectures. FIXED at 3.3.1-0."
     }
   ]
 }
