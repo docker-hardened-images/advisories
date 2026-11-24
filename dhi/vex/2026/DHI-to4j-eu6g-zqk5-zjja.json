@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T03:15:30Z",
-  "version": 1,
+  "last_updated": "2026-11-24T20:54:24Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -18,7 +19,30 @@
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update mariadb to 1:11.8.6-0+deb13u1+dhi1 or later.",
+      "status_notes": "CVE-2026-107815 is MariaDB advisory GHSA-4wgx-ffg9-jrwq: https://github.com/MariaDB/server/security/advisories/GHSA-4wgx-ffg9-jrwq . In the CONNECT storage engine's DOS table type, TYPVAL<double>::SetValue_char in storage/connect/value.cpp capped the number of bytes it copied into a stack buffer at 31, but wrote the terminating NUL byte at the uncapped length, a one-byte write beyond the copied data at an offset the input controls. MariaDB fixed it in 11.8.9 (and 10.6.28, 10.11.19, 11.4.13, 12.3.3 and 13.0.2) with commit https://github.com/MariaDB/server/commit/b369925f6855d3e1f0ebcf453492724b99fda6f8 (MDEV-40637), which assigns the capped length back to the length variable, so the terminator is written inside the copied range. Debian's mariadb 1:11.8.6-0+deb13u1 does not include it. DHI backports that change unmodified, and the fixed version is the first build that carries it. We compared all four published builds of 1:11.8.6-0+deb13u1 on amd64 and arm64, reading function symbols from the matching -dbgsym packages. In ha_connect.so from the mariadb-plugin-connect package, the disassembly of TYPVAL<double>::SetValue_char in the fixed build uses the capped length as the index of the terminating NUL, while in the build before it only the memcpy length is capped. The two later builds ship the same ha_connect.so as the fixed build (identical build ID) on both architectures. The fixed build's mariadb-test-data package also carries the upstream MDEV-40637 regression test, and its changelog lists this CVE."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-to4j-eu6g-zqk5-zjja",
+        "aliases": [
+          "CVE-2026-107815"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi3?distro=dhi-13"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-107815 is MariaDB advisory GHSA-4wgx-ffg9-jrwq: https://github.com/MariaDB/server/security/advisories/GHSA-4wgx-ffg9-jrwq . In the CONNECT storage engine's DOS table type, TYPVAL<double>::SetValue_char in storage/connect/value.cpp capped the number of bytes it copied into a stack buffer at 31, but wrote the terminating NUL byte at the uncapped length, a one-byte write beyond the copied data at an offset the input controls. MariaDB fixed it in 11.8.9 (and 10.6.28, 10.11.19, 11.4.13, 12.3.3 and 13.0.2) with commit https://github.com/MariaDB/server/commit/b369925f6855d3e1f0ebcf453492724b99fda6f8 (MDEV-40637), which assigns the capped length back to the length variable, so the terminator is written inside the copied range. Debian's mariadb 1:11.8.6-0+deb13u1 does not include it. DHI backports that change unmodified, and the fixed version is the first build that carries it. We compared all four published builds of 1:11.8.6-0+deb13u1 on amd64 and arm64, reading function symbols from the matching -dbgsym packages. In ha_connect.so from the mariadb-plugin-connect package, the disassembly of TYPVAL<double>::SetValue_char in the fixed build uses the capped length as the index of the terminating NUL, while in the build before it only the memcpy length is capped. The two later builds ship the same ha_connect.so as the fixed build (identical build ID) on both architectures. The fixed build's mariadb-test-data package also carries the upstream MDEV-40637 regression test, and its changelog lists this CVE."
     }
   ]
 }

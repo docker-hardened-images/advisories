@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-18T22:06:25Z",
-  "last_updated": "2026-11-24T18:51:44Z",
-  "version": 3,
+  "last_updated": "2026-11-24T20:54:39Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -31,6 +31,22 @@
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdeb13u0%2Bdhi6?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/busybox@1:1.37.0-6dhi0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update busybox to 1:1.37.0-6+deb13u0+dhi7 or later.",
+      "status_notes": "CVE-2026-124740 is a use-after-free in BusyBox's DHCPv6 client, udhcpc6: requested_ipv6 points into a heap copy of the IA_NA option that is freed when the next Reply arrives, so a malicious DHCPv6 server on the link can make the client read 16 bytes of stale heap and send them in the next Discover, or crash it under a hardened allocator: https://bugzilla.redhat.com/show_bug.cgi?id=2571616 . Debian lists trixie's 1:1.37.0-6 as vulnerable with urgency unimportant and no fix: https://security-tracker.debian.org/tracker/CVE-2026-124740 . BusyBox upstream fixed it by making requested_ipv6 point at its own copy of the address, in commits 41d60c3 and 0eba907 (\"udhcpc6: make requested IP a copy, not a pointer\"), which do not name the CVE: https://github.com/mirror/busybox/commit/41d60c3429ca1dd533ad141cc512a51a926bfe61 and https://github.com/mirror/busybox/commit/0eba9072d84be88c91b62da5e443529bf31e0613 . DHI backports that change to its BusyBox 1.37.0 build, copying the address from the IAADDR option into a local buffer in udhcpc6_main() instead of keeping a pointer into the IA_NA copy; the fixed version is the first DHI build that carries it. udhcpc6 is compiled into both /usr/bin/busybox in the busybox package and /usr/bin/busybox in busybox-static (the udhcpc package holds no program of its own: it ships a link to /usr/bin/busybox and a default script). We checked all five builds of 1:1.37.0-6+deb13u0 in the DHI Debian repository on amd64 and arm64, using the symbol tables in busybox-dbgsym and busybox-static-dbgsym matched by build ID: udhcpc6_main() grows in the fixed build (2774 to 2822 bytes on amd64, 2748 to 2772 on arm64) in both programs, while it has the same size in the four earlier builds and the neighbouring udhcpc_main(), d6_run_script() and d6_recv_raw_packet() are unchanged."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-jb2a-bg2o-ovo7-hoff",
+        "aliases": [
+          "CVE-2026-124740"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdeb13u0%2Bdhi7?distro=dhi-13"
         },
         {
@@ -44,12 +60,10 @@
         },
         {
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdhi3?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/busybox@1:1.37.0-6dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-124740 is a use-after-free in BusyBox's DHCPv6 client, udhcpc6: requested_ipv6 points into a heap copy of the IA_NA option that is freed when the next Reply arrives, so a malicious DHCPv6 server on the link can make the client read 16 bytes of stale heap and send them in the next Discover, or crash it under a hardened allocator: https://bugzilla.redhat.com/show_bug.cgi?id=2571616 . Debian lists trixie's 1:1.37.0-6 as vulnerable with urgency unimportant and no fix: https://security-tracker.debian.org/tracker/CVE-2026-124740 . BusyBox upstream fixed it by making requested_ipv6 point at its own copy of the address, in commits 41d60c3 and 0eba907 (\"udhcpc6: make requested IP a copy, not a pointer\"), which do not name the CVE: https://github.com/mirror/busybox/commit/41d60c3429ca1dd533ad141cc512a51a926bfe61 and https://github.com/mirror/busybox/commit/0eba9072d84be88c91b62da5e443529bf31e0613 . DHI backports that change to its BusyBox 1.37.0 build, copying the address from the IAADDR option into a local buffer in udhcpc6_main() instead of keeping a pointer into the IA_NA copy; the fixed version is the first DHI build that carries it. udhcpc6 is compiled into both /usr/bin/busybox in the busybox package and /usr/bin/busybox in busybox-static (the udhcpc package holds no program of its own: it ships a link to /usr/bin/busybox and a default script). We checked all five builds of 1:1.37.0-6+deb13u0 in the DHI Debian repository on amd64 and arm64, using the symbol tables in busybox-dbgsym and busybox-static-dbgsym matched by build ID: udhcpc6_main() grows in the fixed build (2774 to 2822 bytes on amd64, 2748 to 2772 on arm64) in both programs, while it has the same size in the four earlier builds and the neighbouring udhcpc_main(), d6_run_script() and d6_recv_raw_packet() are unchanged."
     }
   ]
 }

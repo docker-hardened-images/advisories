@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-09T20:59:56Z",
-  "last_updated": "2026-11-24T18:51:11Z",
-  "version": 4,
+  "last_updated": "2026-11-24T20:54:28Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -49,7 +49,8 @@
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2018-1000500: busybox wget can download over HTTPS without validating the server's certificate. The Debian tracker lists busybox as unfixed in trixie with urgency unimportant and calls the behaviour an intentional design decision: https://security-tracker.debian.org/tracker/CVE-2018-1000500 . BusyBox's own wget.c documents that its built-in TLS code does not validate certificates, and upstream later added certificate verification only for the path that runs the openssl program: https://github.com/mirror/busybox/commit/45fa3f18adf5 . In the BusyBox 1.37.0 source this owner builds, with Debian's configuration (FEATURE_WGET_OPENSSL and FEATURE_WGET_HTTPS both enabled), an https:// download first runs openssl s_client with -verify_return_error and -verify_hostname, unless --no-check-certificate is given. If the openssl program cannot be run, wget falls back to the built-in TLS code, which does not validate the certificate and prints \"note: TLS certificate validation not implemented\"; ftps:// downloads always use the built-in code. We checked /usr/bin/busybox in the busybox and busybox-static packages of all five published builds of 1:1.37.0-6+deb13u0, on amd64 and arm64: every one contains both the openssl verification arguments and that note, so the unverified path ships in every build. Whether this owner is affected therefore depends on whether an image that uses it provides the openssl program to busybox wget. Pending a decision on whether to disable or harden the unverified built-in TLS fallback in busybox wget, or to rate the owner affected for images that ship busybox without openssl."
     }
   ]
 }

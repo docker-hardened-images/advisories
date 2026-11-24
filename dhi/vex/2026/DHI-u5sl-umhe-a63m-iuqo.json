@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-21T06:34:03Z",
-  "version": 1,
+  "last_updated": "2026-11-24T20:54:20Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -15,7 +16,35 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/zlib@1:1.3.dfsg%2Breally1.3.1-1%2Bb1dhi0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/zlib@1:1.3.dfsg%2Breally1.3.1-1dhi0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update zlib to 1:1.3.dfsg+really1.3.1-1+deb13u0+dhi4 or later.",
+      "status_notes": "CVE-2026-27171: zlib before 1.3.2 can loop without end in crc32_combine64() and crc32_combine_gen64() when they are given a negative length, because x2nmodp() keeps right-shifting a negative value: https://github.com/madler/zlib/issues/904 . Upstream fixed it in zlib 1.3.2 with commit ba829a4, which makes both functions return 0 for a negative length: https://github.com/madler/zlib/commit/ba829a458576d1ff0f26fc7230c6de816d1f6a77 . Debian fixed trixie in 1:1.3.dfsg+really1.3.1-1+deb13u1 (DSA-6613-1): https://security-tracker.debian.org/tracker/CVE-2026-27171 . DHI applied that upstream commit to every DHI Debian 13 zlib build, before Debian's update, so every build already carries the fix, and the fixed version is the earlier of the two builds now in the DHI Debian repository. We checked every package built from the zlib source in both builds in the DHI Debian repository, 1:1.3.dfsg+really1.3.1-1+deb13u0 and 1:1.3.dfsg+really1.3.1-1+deb13u1, on amd64 and arm64. The functions' code is only in libz.so.1.3.1 (zlib1g) and the static libz.a (zlib1g-dev); zlib1g-dbgsym carries only their debug symbols, and the minizip packages contain neither function. In every copy, crc32_combine64() and crc32_combine_gen64() begin by testing the length's sign and returning 0 when it is negative, and the zlib.h in zlib1g-dev carries the fix's \"otherwise zero is returned\" wording. On arm64 we also called both functions in the shared library, and crc32_combine64() in a program linked against the static library, with a length of -1: each returned 0 at once, and a normal combine gave the correct CRC."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-u5sl-umhe-a63m-iuqo",
+        "aliases": [
+          "CVE-2026-27171"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/zlib@1:1.3.dfsg%2Breally1.3.1-1%2Bdeb13u0%2Bdhi4?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/zlib@1:1.3.dfsg%2Breally1.3.1-1%2Bdeb13u1%2Bdhi0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/zlib@1:1.3.dfsg%2Breally1.3.1-1%2Bdhi0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/zlib@1:1.3.dfsg%2Breally1.3.1-1%2Bdhi1?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/zlib@1:1.3.dfsg%2Breally1.3.1-1%2Bdhi2?distro=dhi-13"
@@ -27,7 +56,8 @@
           "@id": "pkg:deb/dhi/zlib@1:1.3.dfsg%2Breally1.3.1-1%2Bdhi4?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-27171: zlib before 1.3.2 can loop without end in crc32_combine64() and crc32_combine_gen64() when they are given a negative length, because x2nmodp() keeps right-shifting a negative value: https://github.com/madler/zlib/issues/904 . Upstream fixed it in zlib 1.3.2 with commit ba829a4, which makes both functions return 0 for a negative length: https://github.com/madler/zlib/commit/ba829a458576d1ff0f26fc7230c6de816d1f6a77 . Debian fixed trixie in 1:1.3.dfsg+really1.3.1-1+deb13u1 (DSA-6613-1): https://security-tracker.debian.org/tracker/CVE-2026-27171 . DHI applied that upstream commit to every DHI Debian 13 zlib build, before Debian's update, so every build already carries the fix, and the fixed version is the earlier of the two builds now in the DHI Debian repository. We checked every package built from the zlib source in both builds in the DHI Debian repository, 1:1.3.dfsg+really1.3.1-1+deb13u0 and 1:1.3.dfsg+really1.3.1-1+deb13u1, on amd64 and arm64. The functions' code is only in libz.so.1.3.1 (zlib1g) and the static libz.a (zlib1g-dev); zlib1g-dbgsym carries only their debug symbols, and the minizip packages contain neither function. In every copy, crc32_combine64() and crc32_combine_gen64() begin by testing the length's sign and returning 0 when it is negative, and the zlib.h in zlib1g-dev carries the fix's \"otherwise zero is returned\" wording. On arm64 we also called both functions in the shared library, and crc32_combine64() in a program linked against the static library, with a length of -1: each returned 0 at once, and a normal combine gave the correct CRC."
     }
   ]
 }
