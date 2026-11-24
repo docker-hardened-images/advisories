@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-23T20:48:33Z",
-  "last_updated": "2026-11-24T05:50:48Z",
-  "version": 4,
+  "last_updated": "2026-11-24T06:04:39Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -9725,15 +9725,6 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.1-r3?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.10-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r1?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.2-r3?distro=dhi-3.23"
         },
         {
@@ -9747,6 +9738,28 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.5-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26-dev to 1.26.6-r0 or later.",
+      "status_notes": "CVE-2026-56864 (GO-2026-6180): a malicious GOSUMDB could serve module content not contained in the transparency log, so a coordinating GOPROXY and GOSUMDB could serve a client malicious module content that evaluating the log would not detect; the fix makes Lookup cache only the authenticated record text. The Go vulnerability database lists the go command (cmd/go) in Go toolchains before 1.25.13 and Go 1.26 before 1.26.6, and Client.Lookup in golang.org/x/mod/sumdb before v0.40.0: https://pkg.go.dev/vuln/GO-2026-6180, https://go.dev/issue/80745, https://groups.google.com/g/golang-announce/c/94pEornpRlI. The x/mod fix is CL 815000: https://go.dev/cl/815000. For Go 1.26 it was applied to the copy of golang.org/x/mod vendored into the go command by CL 814801 on release-branch.go1.26, \"cmd/vendor: fix CVE-2026-56864 in x/mod\", which changes src/cmd/vendor/golang.org/x/mod/sumdb/client.go and is in go1.26.6 and not in go1.26.5: https://go.dev/cl/814801. This package is the Go 1.26 toolchain. We read every published golang-1.26-dev package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 15 versions, 1.26.1-r2 to 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version, and a Go function-table (pclntab) reader finds (*Client).Lookup from the vendored golang.org/x/mod in it, so the vulnerable code is linked into the go command. Every build from 1.26.6-r0 on reports go1.26.6 or later and ships the fixed client.go (Lookup returns cached{text, nil}, the line that change introduces) under /usr/lib/go/src/cmd/vendor/golang.org/x/mod; every earlier build (1.26.1-r2 to 1.26.5-r0) reports a Go release before 1.26.6 and ships the unfixed file. The range ends at 1.26.6-r0. The vendored module list names golang.org/x/mod v0.30.1-0.20251115032019-269c237cf350 in every build up to and including the go1.26.6 builds (where the fix is applied directly to the vendored files), then v0.30.1-0.20260813213631-9239cba97fbe and, in the newest builds, v0.40.0. The other golang.org/x/mod versions reported against this package (v0.14.0, v0.19.0, v0.20.0, v0.29.0) are checksum lines in go.sum files of the assembly generators under /usr/lib/go/src/crypto (the _asm directories, checked in the current build), not code the go command uses."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-dgio-lu5f-u3m3-h3k6",
+        "aliases": [
+          "CVE-2026-56864"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.10-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r1?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.6-r0?distro=dhi-3.23"
@@ -9764,7 +9777,33 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56864 (GO-2026-6180): a malicious GOSUMDB could serve module content not contained in the transparency log, so a coordinating GOPROXY and GOSUMDB could serve a client malicious module content that evaluating the log would not detect; the fix makes Lookup cache only the authenticated record text. The Go vulnerability database lists the go command (cmd/go) in Go toolchains before 1.25.13 and Go 1.26 before 1.26.6, and Client.Lookup in golang.org/x/mod/sumdb before v0.40.0: https://pkg.go.dev/vuln/GO-2026-6180, https://go.dev/issue/80745, https://groups.google.com/g/golang-announce/c/94pEornpRlI. The x/mod fix is CL 815000: https://go.dev/cl/815000. For Go 1.26 it was applied to the copy of golang.org/x/mod vendored into the go command by CL 814801 on release-branch.go1.26, \"cmd/vendor: fix CVE-2026-56864 in x/mod\", which changes src/cmd/vendor/golang.org/x/mod/sumdb/client.go and is in go1.26.6 and not in go1.26.5: https://go.dev/cl/814801. This package is the Go 1.26 toolchain. We read every published golang-1.26-dev package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 15 versions, 1.26.1-r2 to 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version, and a Go function-table (pclntab) reader finds (*Client).Lookup from the vendored golang.org/x/mod in it, so the vulnerable code is linked into the go command. Every build from 1.26.6-r0 on reports go1.26.6 or later and ships the fixed client.go (Lookup returns cached{text, nil}, the line that change introduces) under /usr/lib/go/src/cmd/vendor/golang.org/x/mod; every earlier build (1.26.1-r2 to 1.26.5-r0) reports a Go release before 1.26.6 and ships the unfixed file. The range ends at 1.26.6-r0. The vendored module list names golang.org/x/mod v0.30.1-0.20251115032019-269c237cf350 in every build up to and including the go1.26.6 builds (where the fix is applied directly to the vendored files), then v0.30.1-0.20260813213631-9239cba97fbe and, in the newest builds, v0.40.0. The other golang.org/x/mod versions reported against this package (v0.14.0, v0.19.0, v0.20.0, v0.29.0) are checksum lines in go.sum files of the assembly generators under /usr/lib/go/src/crypto (the _asm directories, checked in the current build), not code the go command uses."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-dgio-lu5f-u3m3-h3k6",
+        "aliases": [
+          "CVE-2026-56864"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.3-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.4-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.4-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.5-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26-dev to 1.26.6-r0 or later.",
+      "status_notes": "CVE-2026-56864 (GO-2026-6180): a malicious GOSUMDB could serve module content not contained in the transparency log, so a coordinating GOPROXY and GOSUMDB could serve a client malicious module content that evaluating the log would not detect; the fix makes Lookup cache only the authenticated record text. The Go vulnerability database lists the go command (cmd/go) in Go toolchains before 1.25.13 and Go 1.26 before 1.26.6, and Client.Lookup in golang.org/x/mod/sumdb before v0.40.0: https://pkg.go.dev/vuln/GO-2026-6180, https://go.dev/issue/80745, https://groups.google.com/g/golang-announce/c/94pEornpRlI. The x/mod fix is CL 815000: https://go.dev/cl/815000. For Go 1.26 it was applied to the copy of golang.org/x/mod vendored into the go command by CL 814801 on release-branch.go1.26, \"cmd/vendor: fix CVE-2026-56864 in x/mod\", which changes src/cmd/vendor/golang.org/x/mod/sumdb/client.go and is in go1.26.6 and not in go1.26.5: https://go.dev/cl/814801. This package is the Go 1.26 toolchain. We read every published golang-1.26-dev package for Alpine 3.24 in the DHI Alpine repository, x86_64 and aarch64: 12 versions, 1.26.3-r0 to 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version, and a Go function-table (pclntab) reader finds (*Client).Lookup from the vendored golang.org/x/mod in it, so the vulnerable code is linked into the go command. Every build from 1.26.6-r0 on reports go1.26.6 or later and ships the fixed client.go (Lookup returns cached{text, nil}, the line that change introduces) under /usr/lib/go/src/cmd/vendor/golang.org/x/mod; every earlier build (1.26.3-r0 to 1.26.5-r0) reports a Go release before 1.26.6 and ships the unfixed file. The range ends at 1.26.6-r0. The vendored module list names golang.org/x/mod v0.30.1-0.20251115032019-269c237cf350 in every build up to and including the go1.26.6 builds (where the fix is applied directly to the vendored files), then v0.30.1-0.20260813213631-9239cba97fbe and, in the newest builds, v0.40.0. The other golang.org/x/mod versions reported against this package (v0.14.0, v0.19.0, v0.20.0, v0.29.0) are checksum lines in go.sum files of the assembly generators under /usr/lib/go/src/crypto (the _asm directories, checked in the current build), not code the go command uses."
     },
     {
       "vulnerability": {
@@ -9784,18 +9823,6 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r1?distro=dhi-3.24"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.3-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.4-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.4-r1?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.5-r0?distro=dhi-3.24"
-        },
-        {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.6-r0?distro=dhi-3.24"
         },
         {
@@ -9811,7 +9838,8 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.9-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56864 (GO-2026-6180): a malicious GOSUMDB could serve module content not contained in the transparency log, so a coordinating GOPROXY and GOSUMDB could serve a client malicious module content that evaluating the log would not detect; the fix makes Lookup cache only the authenticated record text. The Go vulnerability database lists the go command (cmd/go) in Go toolchains before 1.25.13 and Go 1.26 before 1.26.6, and Client.Lookup in golang.org/x/mod/sumdb before v0.40.0: https://pkg.go.dev/vuln/GO-2026-6180, https://go.dev/issue/80745, https://groups.google.com/g/golang-announce/c/94pEornpRlI. The x/mod fix is CL 815000: https://go.dev/cl/815000. For Go 1.26 it was applied to the copy of golang.org/x/mod vendored into the go command by CL 814801 on release-branch.go1.26, \"cmd/vendor: fix CVE-2026-56864 in x/mod\", which changes src/cmd/vendor/golang.org/x/mod/sumdb/client.go and is in go1.26.6 and not in go1.26.5: https://go.dev/cl/814801. This package is the Go 1.26 toolchain. We read every published golang-1.26-dev package for Alpine 3.24 in the DHI Alpine repository, x86_64 and aarch64: 12 versions, 1.26.3-r0 to 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version, and a Go function-table (pclntab) reader finds (*Client).Lookup from the vendored golang.org/x/mod in it, so the vulnerable code is linked into the go command. Every build from 1.26.6-r0 on reports go1.26.6 or later and ships the fixed client.go (Lookup returns cached{text, nil}, the line that change introduces) under /usr/lib/go/src/cmd/vendor/golang.org/x/mod; every earlier build (1.26.3-r0 to 1.26.5-r0) reports a Go release before 1.26.6 and ships the unfixed file. The range ends at 1.26.6-r0. The vendored module list names golang.org/x/mod v0.30.1-0.20251115032019-269c237cf350 in every build up to and including the go1.26.6 builds (where the fix is applied directly to the vendored files), then v0.30.1-0.20260813213631-9239cba97fbe and, in the newest builds, v0.40.0. The other golang.org/x/mod versions reported against this package (v0.14.0, v0.19.0, v0.20.0, v0.29.0) are checksum lines in go.sum files of the assembly generators under /usr/lib/go/src/crypto (the _asm directories, checked in the current build), not code the go command uses."
     },
     {
       "vulnerability": {
@@ -9840,15 +9868,6 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.1-r3?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.10-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r1?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.2-r3?distro=dhi-3.23"
         },
         {
@@ -9862,6 +9881,28 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.5-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26 to 1.26.6-r0 or later.",
+      "status_notes": "CVE-2026-56864 (GO-2026-6180): a malicious GOSUMDB could serve module content not contained in the transparency log, so a coordinating GOPROXY and GOSUMDB could serve a client malicious module content that evaluating the log would not detect; the fix makes Lookup cache only the authenticated record text. The Go vulnerability database lists the go command (cmd/go) in Go toolchains before 1.25.13 and Go 1.26 before 1.26.6, and Client.Lookup in golang.org/x/mod/sumdb before v0.40.0: https://pkg.go.dev/vuln/GO-2026-6180, https://go.dev/issue/80745, https://groups.google.com/g/golang-announce/c/94pEornpRlI. The x/mod fix is CL 815000: https://go.dev/cl/815000. For Go 1.26 it was applied to the copy of golang.org/x/mod vendored into the go command by CL 814801 on release-branch.go1.26, \"cmd/vendor: fix CVE-2026-56864 in x/mod\", which changes src/cmd/vendor/golang.org/x/mod/sumdb/client.go and is in go1.26.6 and not in go1.26.5: https://go.dev/cl/814801. This package is the Go 1.26 toolchain. We read every published golang-1.26 package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 18 versions, 1.26.0-r0 to 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version, and a Go function-table (pclntab) reader finds (*Client).Lookup from the vendored golang.org/x/mod in it, so the vulnerable code is linked into the go command. Every build from 1.26.6-r0 on reports go1.26.6 or later and ships the fixed client.go (Lookup returns cached{text, nil}, the line that change introduces) under /usr/lib/go/src/cmd/vendor/golang.org/x/mod; every earlier build (1.26.0-r0 to 1.26.5-r0) reports a Go release before 1.26.6 and ships the unfixed file. The range ends at 1.26.6-r0. The vendored module list names golang.org/x/mod v0.30.1-0.20251115032019-269c237cf350 in every build up to and including the go1.26.6 builds (where the fix is applied directly to the vendored files), then v0.30.1-0.20260813213631-9239cba97fbe and, in the newest builds, v0.40.0. The other golang.org/x/mod versions reported against this package (v0.14.0, v0.19.0, v0.20.0, v0.29.0) are checksum lines in go.sum files of the assembly generators under /usr/lib/go/src/crypto (the _asm directories, checked in the current build), not code the go command uses."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-dgio-lu5f-u3m3-h3k6",
+        "aliases": [
+          "CVE-2026-56864"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.10-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r1?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.6-r0?distro=dhi-3.23"
@@ -9879,7 +9920,33 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56864 (GO-2026-6180): a malicious GOSUMDB could serve module content not contained in the transparency log, so a coordinating GOPROXY and GOSUMDB could serve a client malicious module content that evaluating the log would not detect; the fix makes Lookup cache only the authenticated record text. The Go vulnerability database lists the go command (cmd/go) in Go toolchains before 1.25.13 and Go 1.26 before 1.26.6, and Client.Lookup in golang.org/x/mod/sumdb before v0.40.0: https://pkg.go.dev/vuln/GO-2026-6180, https://go.dev/issue/80745, https://groups.google.com/g/golang-announce/c/94pEornpRlI. The x/mod fix is CL 815000: https://go.dev/cl/815000. For Go 1.26 it was applied to the copy of golang.org/x/mod vendored into the go command by CL 814801 on release-branch.go1.26, \"cmd/vendor: fix CVE-2026-56864 in x/mod\", which changes src/cmd/vendor/golang.org/x/mod/sumdb/client.go and is in go1.26.6 and not in go1.26.5: https://go.dev/cl/814801. This package is the Go 1.26 toolchain. We read every published golang-1.26 package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 18 versions, 1.26.0-r0 to 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version, and a Go function-table (pclntab) reader finds (*Client).Lookup from the vendored golang.org/x/mod in it, so the vulnerable code is linked into the go command. Every build from 1.26.6-r0 on reports go1.26.6 or later and ships the fixed client.go (Lookup returns cached{text, nil}, the line that change introduces) under /usr/lib/go/src/cmd/vendor/golang.org/x/mod; every earlier build (1.26.0-r0 to 1.26.5-r0) reports a Go release before 1.26.6 and ships the unfixed file. The range ends at 1.26.6-r0. The vendored module list names golang.org/x/mod v0.30.1-0.20251115032019-269c237cf350 in every build up to and including the go1.26.6 builds (where the fix is applied directly to the vendored files), then v0.30.1-0.20260813213631-9239cba97fbe and, in the newest builds, v0.40.0. The other golang.org/x/mod versions reported against this package (v0.14.0, v0.19.0, v0.20.0, v0.29.0) are checksum lines in go.sum files of the assembly generators under /usr/lib/go/src/crypto (the _asm directories, checked in the current build), not code the go command uses."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-dgio-lu5f-u3m3-h3k6",
+        "aliases": [
+          "CVE-2026-56864"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.3-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.4-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.4-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.5-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26 to 1.26.6-r0 or later.",
+      "status_notes": "CVE-2026-56864 (GO-2026-6180): a malicious GOSUMDB could serve module content not contained in the transparency log, so a coordinating GOPROXY and GOSUMDB could serve a client malicious module content that evaluating the log would not detect; the fix makes Lookup cache only the authenticated record text. The Go vulnerability database lists the go command (cmd/go) in Go toolchains before 1.25.13 and Go 1.26 before 1.26.6, and Client.Lookup in golang.org/x/mod/sumdb before v0.40.0: https://pkg.go.dev/vuln/GO-2026-6180, https://go.dev/issue/80745, https://groups.google.com/g/golang-announce/c/94pEornpRlI. The x/mod fix is CL 815000: https://go.dev/cl/815000. For Go 1.26 it was applied to the copy of golang.org/x/mod vendored into the go command by CL 814801 on release-branch.go1.26, \"cmd/vendor: fix CVE-2026-56864 in x/mod\", which changes src/cmd/vendor/golang.org/x/mod/sumdb/client.go and is in go1.26.6 and not in go1.26.5: https://go.dev/cl/814801. This package is the Go 1.26 toolchain. We read every published golang-1.26 package for Alpine 3.24 in the DHI Alpine repository, x86_64 and aarch64: 12 versions, 1.26.3-r0 to 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version, and a Go function-table (pclntab) reader finds (*Client).Lookup from the vendored golang.org/x/mod in it, so the vulnerable code is linked into the go command. Every build from 1.26.6-r0 on reports go1.26.6 or later and ships the fixed client.go (Lookup returns cached{text, nil}, the line that change introduces) under /usr/lib/go/src/cmd/vendor/golang.org/x/mod; every earlier build (1.26.3-r0 to 1.26.5-r0) reports a Go release before 1.26.6 and ships the unfixed file. The range ends at 1.26.6-r0. The vendored module list names golang.org/x/mod v0.30.1-0.20251115032019-269c237cf350 in every build up to and including the go1.26.6 builds (where the fix is applied directly to the vendored files), then v0.30.1-0.20260813213631-9239cba97fbe and, in the newest builds, v0.40.0. The other golang.org/x/mod versions reported against this package (v0.14.0, v0.19.0, v0.20.0, v0.29.0) are checksum lines in go.sum files of the assembly generators under /usr/lib/go/src/crypto (the _asm directories, checked in the current build), not code the go command uses."
     },
     {
       "vulnerability": {
@@ -9899,18 +9966,6 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r1?distro=dhi-3.24"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.3-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.4-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.4-r1?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.5-r0?distro=dhi-3.24"
-        },
-        {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.6-r0?distro=dhi-3.24"
         },
         {
@@ -9926,7 +9981,8 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.9-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56864 (GO-2026-6180): a malicious GOSUMDB could serve module content not contained in the transparency log, so a coordinating GOPROXY and GOSUMDB could serve a client malicious module content that evaluating the log would not detect; the fix makes Lookup cache only the authenticated record text. The Go vulnerability database lists the go command (cmd/go) in Go toolchains before 1.25.13 and Go 1.26 before 1.26.6, and Client.Lookup in golang.org/x/mod/sumdb before v0.40.0: https://pkg.go.dev/vuln/GO-2026-6180, https://go.dev/issue/80745, https://groups.google.com/g/golang-announce/c/94pEornpRlI. The x/mod fix is CL 815000: https://go.dev/cl/815000. For Go 1.26 it was applied to the copy of golang.org/x/mod vendored into the go command by CL 814801 on release-branch.go1.26, \"cmd/vendor: fix CVE-2026-56864 in x/mod\", which changes src/cmd/vendor/golang.org/x/mod/sumdb/client.go and is in go1.26.6 and not in go1.26.5: https://go.dev/cl/814801. This package is the Go 1.26 toolchain. We read every published golang-1.26 package for Alpine 3.24 in the DHI Alpine repository, x86_64 and aarch64: 12 versions, 1.26.3-r0 to 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version, and a Go function-table (pclntab) reader finds (*Client).Lookup from the vendored golang.org/x/mod in it, so the vulnerable code is linked into the go command. Every build from 1.26.6-r0 on reports go1.26.6 or later and ships the fixed client.go (Lookup returns cached{text, nil}, the line that change introduces) under /usr/lib/go/src/cmd/vendor/golang.org/x/mod; every earlier build (1.26.3-r0 to 1.26.5-r0) reports a Go release before 1.26.6 and ships the unfixed file. The range ends at 1.26.6-r0. The vendored module list names golang.org/x/mod v0.30.1-0.20251115032019-269c237cf350 in every build up to and including the go1.26.6 builds (where the fix is applied directly to the vendored files), then v0.30.1-0.20260813213631-9239cba97fbe and, in the newest builds, v0.40.0. The other golang.org/x/mod versions reported against this package (v0.14.0, v0.19.0, v0.20.0, v0.29.0) are checksum lines in go.sum files of the assembly generators under /usr/lib/go/src/crypto (the _asm directories, checked in the current build), not code the go command uses."
     },
     {
       "vulnerability": {
@@ -32570,6 +32626,25 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.5-0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26-dev to 1.26.6-0 or later.",
+      "status_notes": "CVE-2026-56864 (GO-2026-6180): a malicious GOSUMDB could serve module content not contained in the transparency log, so a coordinating GOPROXY and GOSUMDB could serve a client malicious module content that evaluating the log would not detect; the fix makes Lookup cache only the authenticated record text. The Go vulnerability database lists the go command (cmd/go) in Go toolchains before 1.25.13 and Go 1.26 before 1.26.6, and Client.Lookup in golang.org/x/mod/sumdb before v0.40.0: https://pkg.go.dev/vuln/GO-2026-6180, https://go.dev/issue/80745, https://groups.google.com/g/golang-announce/c/94pEornpRlI. The x/mod fix is CL 815000: https://go.dev/cl/815000. For Go 1.26 it was applied to the copy of golang.org/x/mod vendored into the go command by CL 814801 on release-branch.go1.26, \"cmd/vendor: fix CVE-2026-56864 in x/mod\", which changes src/cmd/vendor/golang.org/x/mod/sumdb/client.go and is in go1.26.6 and not in go1.26.5: https://go.dev/cl/814801. This package is the Go 1.26 toolchain. We read every published golang-1.26-dev package for Debian 13 in the DHI Debian repository, amd64 and arm64: 28 versions, 1.26.4-0 to 1.26.11-18, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version, and a Go function-table (pclntab) reader finds (*Client).Lookup from the vendored golang.org/x/mod in it, so the vulnerable code is linked into the go command. Every build from 1.26.6-0 on reports go1.26.6 or later and ships the fixed client.go (Lookup returns cached{text, nil}, the line that change introduces) under /usr/lib/go/src/cmd/vendor/golang.org/x/mod; every earlier build (1.26.4-0 to 1.26.5-0) reports a Go release before 1.26.6 and ships the unfixed file. The range ends at 1.26.6-0. The vendored module list names golang.org/x/mod v0.30.1-0.20251115032019-269c237cf350 in every build up to and including the go1.26.6 builds (where the fix is applied directly to the vendored files), then v0.30.1-0.20260813213631-9239cba97fbe and, in the newest builds, v0.40.0. The other golang.org/x/mod versions reported against this package (v0.14.0, v0.19.0, v0.20.0, v0.29.0) are checksum lines in go.sum files of the assembly generators under /usr/lib/go/src/crypto (the _asm directories, checked in the current build), not code the go command uses."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-dgio-lu5f-u3m3-h3k6",
+        "aliases": [
+          "CVE-2026-56864"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.10-0?distro=dhi-13"
         },
         {
@@ -32630,12 +32705,6 @@
           "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.11-9?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.4-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.5-0?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.6-0?distro=dhi-13"
         },
         {
@@ -32654,7 +32723,27 @@
           "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.9-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56864 (GO-2026-6180): a malicious GOSUMDB could serve module content not contained in the transparency log, so a coordinating GOPROXY and GOSUMDB could serve a client malicious module content that evaluating the log would not detect; the fix makes Lookup cache only the authenticated record text. The Go vulnerability database lists the go command (cmd/go) in Go toolchains before 1.25.13 and Go 1.26 before 1.26.6, and Client.Lookup in golang.org/x/mod/sumdb before v0.40.0: https://pkg.go.dev/vuln/GO-2026-6180, https://go.dev/issue/80745, https://groups.google.com/g/golang-announce/c/94pEornpRlI. The x/mod fix is CL 815000: https://go.dev/cl/815000. For Go 1.26 it was applied to the copy of golang.org/x/mod vendored into the go command by CL 814801 on release-branch.go1.26, \"cmd/vendor: fix CVE-2026-56864 in x/mod\", which changes src/cmd/vendor/golang.org/x/mod/sumdb/client.go and is in go1.26.6 and not in go1.26.5: https://go.dev/cl/814801. This package is the Go 1.26 toolchain. We read every published golang-1.26-dev package for Debian 13 in the DHI Debian repository, amd64 and arm64: 28 versions, 1.26.4-0 to 1.26.11-18, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version, and a Go function-table (pclntab) reader finds (*Client).Lookup from the vendored golang.org/x/mod in it, so the vulnerable code is linked into the go command. Every build from 1.26.6-0 on reports go1.26.6 or later and ships the fixed client.go (Lookup returns cached{text, nil}, the line that change introduces) under /usr/lib/go/src/cmd/vendor/golang.org/x/mod; every earlier build (1.26.4-0 to 1.26.5-0) reports a Go release before 1.26.6 and ships the unfixed file. The range ends at 1.26.6-0. The vendored module list names golang.org/x/mod v0.30.1-0.20251115032019-269c237cf350 in every build up to and including the go1.26.6 builds (where the fix is applied directly to the vendored files), then v0.30.1-0.20260813213631-9239cba97fbe and, in the newest builds, v0.40.0. The other golang.org/x/mod versions reported against this package (v0.14.0, v0.19.0, v0.20.0, v0.29.0) are checksum lines in go.sum files of the assembly generators under /usr/lib/go/src/crypto (the _asm directories, checked in the current build), not code the go command uses."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-dgio-lu5f-u3m3-h3k6",
+        "aliases": [
+          "CVE-2026-56864"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/golang-1.26@1.26.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26@1.26.5-0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26 to 1.26.6-0 or later.",
+      "status_notes": "CVE-2026-56864 (GO-2026-6180): a malicious GOSUMDB could serve module content not contained in the transparency log, so a coordinating GOPROXY and GOSUMDB could serve a client malicious module content that evaluating the log would not detect; the fix makes Lookup cache only the authenticated record text. The Go vulnerability database lists the go command (cmd/go) in Go toolchains before 1.25.13 and Go 1.26 before 1.26.6, and Client.Lookup in golang.org/x/mod/sumdb before v0.40.0: https://pkg.go.dev/vuln/GO-2026-6180, https://go.dev/issue/80745, https://groups.google.com/g/golang-announce/c/94pEornpRlI. The x/mod fix is CL 815000: https://go.dev/cl/815000. For Go 1.26 it was applied to the copy of golang.org/x/mod vendored into the go command by CL 814801 on release-branch.go1.26, \"cmd/vendor: fix CVE-2026-56864 in x/mod\", which changes src/cmd/vendor/golang.org/x/mod/sumdb/client.go and is in go1.26.6 and not in go1.26.5: https://go.dev/cl/814801. This package is the Go 1.26 toolchain. We read every published golang-1.26 package for Debian 13 in the DHI Debian repository, amd64 and arm64: 28 versions, 1.26.4-0 to 1.26.11-18, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version, and a Go function-table (pclntab) reader finds (*Client).Lookup from the vendored golang.org/x/mod in it, so the vulnerable code is linked into the go command. Every build from 1.26.6-0 on reports go1.26.6 or later and ships the fixed client.go (Lookup returns cached{text, nil}, the line that change introduces) under /usr/lib/go/src/cmd/vendor/golang.org/x/mod; every earlier build (1.26.4-0 to 1.26.5-0) reports a Go release before 1.26.6 and ships the unfixed file. The range ends at 1.26.6-0. The vendored module list names golang.org/x/mod v0.30.1-0.20251115032019-269c237cf350 in every build up to and including the go1.26.6 builds (where the fix is applied directly to the vendored files), then v0.30.1-0.20260813213631-9239cba97fbe and, in the newest builds, v0.40.0. The other golang.org/x/mod versions reported against this package (v0.14.0, v0.19.0, v0.20.0, v0.29.0) are checksum lines in go.sum files of the assembly generators under /usr/lib/go/src/crypto (the _asm directories, checked in the current build), not code the go command uses."
     },
     {
       "vulnerability": {
@@ -32725,12 +32814,6 @@
           "@id": "pkg:deb/dhi/golang-1.26@1.26.11-9?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/golang-1.26@1.26.4-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26@1.26.5-0?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/golang-1.26@1.26.6-0?distro=dhi-13"
         },
         {
@@ -32749,7 +32832,8 @@
           "@id": "pkg:deb/dhi/golang-1.26@1.26.9-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56864 (GO-2026-6180): a malicious GOSUMDB could serve module content not contained in the transparency log, so a coordinating GOPROXY and GOSUMDB could serve a client malicious module content that evaluating the log would not detect; the fix makes Lookup cache only the authenticated record text. The Go vulnerability database lists the go command (cmd/go) in Go toolchains before 1.25.13 and Go 1.26 before 1.26.6, and Client.Lookup in golang.org/x/mod/sumdb before v0.40.0: https://pkg.go.dev/vuln/GO-2026-6180, https://go.dev/issue/80745, https://groups.google.com/g/golang-announce/c/94pEornpRlI. The x/mod fix is CL 815000: https://go.dev/cl/815000. For Go 1.26 it was applied to the copy of golang.org/x/mod vendored into the go command by CL 814801 on release-branch.go1.26, \"cmd/vendor: fix CVE-2026-56864 in x/mod\", which changes src/cmd/vendor/golang.org/x/mod/sumdb/client.go and is in go1.26.6 and not in go1.26.5: https://go.dev/cl/814801. This package is the Go 1.26 toolchain. We read every published golang-1.26 package for Debian 13 in the DHI Debian repository, amd64 and arm64: 28 versions, 1.26.4-0 to 1.26.11-18, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version, and a Go function-table (pclntab) reader finds (*Client).Lookup from the vendored golang.org/x/mod in it, so the vulnerable code is linked into the go command. Every build from 1.26.6-0 on reports go1.26.6 or later and ships the fixed client.go (Lookup returns cached{text, nil}, the line that change introduces) under /usr/lib/go/src/cmd/vendor/golang.org/x/mod; every earlier build (1.26.4-0 to 1.26.5-0) reports a Go release before 1.26.6 and ships the unfixed file. The range ends at 1.26.6-0. The vendored module list names golang.org/x/mod v0.30.1-0.20251115032019-269c237cf350 in every build up to and including the go1.26.6 builds (where the fix is applied directly to the vendored files), then v0.30.1-0.20260813213631-9239cba97fbe and, in the newest builds, v0.40.0. The other golang.org/x/mod versions reported against this package (v0.14.0, v0.19.0, v0.20.0, v0.29.0) are checksum lines in go.sum files of the assembly generators under /usr/lib/go/src/crypto (the _asm directories, checked in the current build), not code the go command uses."
     },
     {
       "vulnerability": {
