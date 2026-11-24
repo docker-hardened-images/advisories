@@ -1,7 +1,7 @@
 {
   "schema_version": "1.8.0",
   "id": "DHI-mcq2-slto-zpkj-svoh",
-  "modified": "2026-11-24T21:14:12Z",
+  "modified": "2026-11-24T21:43:41Z",
   "published": "2026-11-13T17:02:28Z",
   "upstream": [
     "RUSTSEC-2026-0253"
@@ -9,6 +9,66 @@
   "summary": "`LruCache::pop()` in `lru` was not panic-safe. If the `Drop` implementation of a stored key panics during `pop()`…",
   "details": "`LruCache::pop()` in `lru` was not panic-safe. If the `Drop` implementation of a stored key panics during `pop()`, `self.detach()` is never called, leaving dangling pointers in the internal doubly-linked list.\n\nA subsequent cache operation that triggers eviction can then dereference these dangling pointers:\n- The node is freed from the map, but remains linked in the LRU list due to the skipped `detach()` call\n- When a new insertion causes eviction, the LRU traversal encounters the dangling pointer\n- This results in a write to already-freed memory during the eviction process\n\n## Impact\n\n- **CWE-416 (Use-After-Free):** memory corruption when subsequent cache operations access freed node pointers in the linked list\n- **CWE-415 (Double Free):** potential heap corruption when the same memory is freed multiple times\n\nBoth types of undefined behavior can be invoked in safe Rust, but only if unwinding panics are enabled and `std::panic::catch_unwind` is used with key types that have potentially-panicking `Drop` implementations.\n\n## Fix\n\nFixed in `lru` 0.18.2 by detaching the node from the linked list before freeing it and dropping the key ([lru-rs#238](https://github.com/jeromefroe/lru-rs/pull/238)).",
   "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "datadog-agent-jmxfetch-7",
+        "purl": "pkg:apk/dhi/datadog-agent-jmxfetch-7"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0.52.0-r0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "0.52.0-r0",
+        "0.52.0-r1",
+        "0.52.0-r2",
+        "0.52.0-r3",
+        "0.52.0-r4",
+        "0.52.0-r5",
+        "0.52.0-r6",
+        "0.52.0-r7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "datadog-agent-jmxfetch-7",
+        "purl": "pkg:apk/dhi/datadog-agent-jmxfetch-7"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0.52.0-r0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "0.52.0-r0",
+        "0.52.0-r1",
+        "0.52.0-r2",
+        "0.52.0-r3",
+        "0.52.0-r4",
+        "0.52.0-r5",
+        "0.52.0-r6",
+        "0.52.0-r7"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
     {
       "package": {
         "ecosystem": "Docker Hardened Images:Alpine:3.23",
