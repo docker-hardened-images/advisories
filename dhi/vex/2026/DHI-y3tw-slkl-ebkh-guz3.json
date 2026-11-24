@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:10:41Z",
-  "last_updated": "2026-11-24T09:59:52Z",
-  "version": 16,
+  "last_updated": "2026-11-24T13:52:40Z",
+  "version": 17,
   "statements": [
     {
       "vulnerability": {
@@ -124,7 +124,9 @@
           "@id": "pkg:apk/dhi/alertmanager-fips@0.35.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-32288 (GO-2026-4869): in the Go standard library's archive/tar package, tar.Reader can allocate an unbounded amount of memory reading a crafted archive with a very large number of sparse regions in the old GNU sparse map format. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4869, https://go.dev/issue/78301, https://go.dev/cl/763766, the release-branch.go1.26 backport https://github.com/golang/go/commit/a34b5e4d55e39efc9af0d803969e9399a553acf3 (in go1.26.2, not go1.26.1), https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU . We read every published alertmanager-fips package for Alpine 3.23 in the authenticated DHI Alpine security repository, where the FIPS packages are published: 36 builds, 0.31.1-r0 to 0.35.0-r2, x86_64 and aarch64, each download checked against the repository index checksum. Each package holds two files, /usr/bin/alertmanager and /usr/bin/amtool, Go programs built with CGO_ENABLED=0 and the Go Cryptographic Module (GOFIPS140=v1.0.0-c2097c7c) and linked with -s -w, so we read their function tables from the Go line table, which works on these stripped binaries, and found runtime.main in every one. The Go toolchain recorded in the build information, the same for both programs and both architectures, is: 0.31.1-r0 with Go 1.25.7; 0.31.1-r1 to 0.31.1-r4 with Go 1.26.1; 0.31.1-r5 to 0.32.1-r0 with Go 1.26.2; 0.32.1-r1 to 0.32.1-r2 with Go 1.26.3; 0.32.1-r3 to 0.33.1-r0 with Go 1.26.4; 0.33.1-r1 to 0.33.1-r3 with Go 1.26.5; 0.33.1-r5 to 0.34.0-r0 with Go 1.26.6; 0.34.0-r1 with Go 1.26.7; 0.34.0-r2 to 0.34.1-r1 with Go 1.26.8; 0.34.1-r2 to 0.34.1-r3 with Go 1.26.9; 0.34.1-r4 to 0.35.0-r0 with Go 1.26.10; 0.35.0-r1 to 0.35.0-r2 with Go 1.26.11. The vulnerable code is in the archive/tar package (Reader.Next, Reader.readOldGNUSparseMap and readGNUSparseMap1x0). In no build does either program's function table contain any archive/tar function, and a search of the bytes of every binary, which also finds the names of inlined functions, finds no archive/tar. name (the form in which Go records that package's functions and methods). As a positive control, the same two checks on a program we built with Go 1.26.1 for linux/amd64 and linux/arm64 that reads a tar archive find Reader.Next, Reader.readOldGNUSparseMap and readGNUSparseMap1x0 in its function table and archive/tar. names in its bytes. The vulnerable code is not compiled into any build of this package."
     },
     {
       "vulnerability": {
@@ -243,7 +245,9 @@
           "@id": "pkg:apk/dhi/alertmanager@0.35.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-32288 (GO-2026-4869): in the Go standard library's archive/tar package, tar.Reader can allocate an unbounded amount of memory reading a crafted archive with a very large number of sparse regions in the old GNU sparse map format. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4869, https://go.dev/issue/78301, https://go.dev/cl/763766, the release-branch.go1.26 backport https://github.com/golang/go/commit/a34b5e4d55e39efc9af0d803969e9399a553acf3 (in go1.26.2, not go1.26.1), https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU . We read every published alertmanager package for Alpine 3.23 in the DHI Alpine repository: 36 builds, 0.31.1-r0 to 0.35.0-r2, x86_64 and aarch64, each download checked against the repository index checksum. Each package holds two files, /usr/bin/alertmanager and /usr/bin/amtool, Go programs built with CGO_ENABLED=0 and linked with -s -w, so we read their function tables from the Go line table, which works on these stripped binaries, and found runtime.main in every one. The Go toolchain recorded in the build information, the same for both programs and both architectures, is: 0.31.1-r0 with Go 1.25.7; 0.31.1-r1 to 0.31.1-r4 with Go 1.26.1; 0.31.1-r5 to 0.32.1-r0 with Go 1.26.2; 0.32.1-r1 to 0.32.1-r2 with Go 1.26.3; 0.32.1-r3 to 0.33.1-r0 with Go 1.26.4; 0.33.1-r1 to 0.33.1-r3 with Go 1.26.5; 0.33.1-r5 to 0.34.0-r0 with Go 1.26.6; 0.34.0-r1 with Go 1.26.7; 0.34.0-r2 to 0.34.1-r1 with Go 1.26.8; 0.34.1-r2 to 0.34.1-r3 with Go 1.26.9; 0.34.1-r4 to 0.35.0-r0 with Go 1.26.10; 0.35.0-r1 to 0.35.0-r2 with Go 1.26.11. The vulnerable code is in the archive/tar package (Reader.Next, Reader.readOldGNUSparseMap and readGNUSparseMap1x0). In no build does either program's function table contain any archive/tar function, and a search of the bytes of every binary, which also finds the names of inlined functions, finds no archive/tar. name (the form in which Go records that package's functions and methods). As a positive control, the same two checks on a program we built with Go 1.26.1 for linux/amd64 and linux/arm64 that reads a tar archive find Reader.Next, Reader.readOldGNUSparseMap and readGNUSparseMap1x0 in its function table and archive/tar. names in its bytes. The vulnerable code is not compiled into any build of this package."
     },
     {
       "vulnerability": {
