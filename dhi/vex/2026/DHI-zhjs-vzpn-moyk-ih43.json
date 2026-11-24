@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T15:57:18Z",
-  "last_updated": "2026-11-24T07:22:11Z",
-  "version": 50,
+  "last_updated": "2026-11-24T11:37:58Z",
+  "version": 51,
   "statements": [
     {
       "vulnerability": {
@@ -1661,12 +1661,26 @@
         },
         {
           "@id": "pkg:deb/dhi/nifi@2.12.0-8?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nifi to 2.12.0-9 or later.",
+      "status_notes": "CVE-2026-59171 (GHSA-ghc9-756g-vrcv): in JSON-java (org.json:json) 20150729 to 20260522, JSONTokener collects a numeric token of unbounded length and JSONObject.stringToNumber converts it to BigInteger or BigDecimal without a length limit, so parsing attacker-controlled JSON or XML through JSONObject, JSONArray or XML.toJSONObject can take super-linear CPU time. It is fixed in 20260719, which limits the length of numbers it converts: https://github.com/stleary/JSON-java/security/advisories/GHSA-ghc9-756g-vrcv, https://github.com/stleary/JSON-java/commit/ab92bb9088a37f9e346cd1dda66f6a3c40a201e0, https://github.com/stleary/JSON-java/releases/tag/20260719. We read every published nifi package for Debian 13 in the DHI Debian repository, 2.12.0-1 to 2.12.0-9 for amd64 and arm64 (no debug-symbol packages are published, and none is in the DHI security repository), each checked against its index SHA256, and opened every NAR, JAR, WAR and ZIP in them, including the JARs bundled inside each NAR, looking for org.json classes, relocated or not, and Maven metadata. Every build has three sets of classes in the org.json package or a relocated copy of it. The Hazelcast 5.7.0 JAR in the nifi-hazelcast-services NAR embeds JSON-java relocated under com.hazelcast.shaded.org.json: in 2.12.0-1 to 2.12.0-8 its Maven metadata names JSON-java 20250107, inside the affected range, and in the builds whose classes we compared (2.12.0-6 to 2.12.0-8) its relocated JSONObject class is identical in every build and lacks the number-length limit (maxNumberLength) that 20260719 adds; in 2.12.0-9, on both architectures, the relocated copy is JSON-java 20260719 and its JSONObject class carries that limit, as does the unrelocated 20260719 JSONObject class in the nifi-redis-service-api NAR. The nifi-redis-service-api NAR bundles JSON-java 20260719, which carries the fix, in every build. The nifi-gcp NAR bundles com.tdunning:json 1.8, a separate Apache-licensed reimplementation of the org.json API whose JSONObject and JSONTokener classes reference neither BigInteger nor BigDecimal, so it does not contain this code. In the amd64 2.12.0-9 package we also checked every other class named JSONObject or JSONTokener, in any package, and every class carrying JSON-java's \"A JSONObject text must begin with\" parse error: the others belong to json-smart, json-simple, jose4j, ClassGraph and Spring Data Commons, and none of them carries that JSON-java message or references BigInteger. 2.12.0-9 is the first fixed build for this owner."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-zhjs-vzpn-moyk-ih43",
+        "aliases": [
+          "CVE-2026-59171"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/nifi@2.12.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-59171 (GHSA-ghc9-756g-vrcv): in JSON-java (org.json:json) 20150729 to 20260522, JSONTokener collects a numeric token of unbounded length and JSONObject.stringToNumber converts it to BigInteger or BigDecimal without a length limit, so parsing attacker-controlled JSON or XML through JSONObject, JSONArray or XML.toJSONObject can take super-linear CPU time. It is fixed in 20260719, which limits the length of numbers it converts: https://github.com/stleary/JSON-java/security/advisories/GHSA-ghc9-756g-vrcv, https://github.com/stleary/JSON-java/commit/ab92bb9088a37f9e346cd1dda66f6a3c40a201e0, https://github.com/stleary/JSON-java/releases/tag/20260719. We read every published nifi package for Debian 13 in the DHI Debian repository, 2.12.0-1 to 2.12.0-9 for amd64 and arm64 (no debug-symbol packages are published, and none is in the DHI security repository), each checked against its index SHA256, and opened every NAR, JAR, WAR and ZIP in them, including the JARs bundled inside each NAR, looking for org.json classes, relocated or not, and Maven metadata. Every build has three sets of classes in the org.json package or a relocated copy of it. The Hazelcast 5.7.0 JAR in the nifi-hazelcast-services NAR embeds JSON-java relocated under com.hazelcast.shaded.org.json: in 2.12.0-1 to 2.12.0-8 its Maven metadata names JSON-java 20250107, inside the affected range, and in the builds whose classes we compared (2.12.0-6 to 2.12.0-8) its relocated JSONObject class is identical in every build and lacks the number-length limit (maxNumberLength) that 20260719 adds; in 2.12.0-9, on both architectures, the relocated copy is JSON-java 20260719 and its JSONObject class carries that limit, as does the unrelocated 20260719 JSONObject class in the nifi-redis-service-api NAR. The nifi-redis-service-api NAR bundles JSON-java 20260719, which carries the fix, in every build. The nifi-gcp NAR bundles com.tdunning:json 1.8, a separate Apache-licensed reimplementation of the org.json API whose JSONObject and JSONTokener classes reference neither BigInteger nor BigDecimal, so it does not contain this code. In the amd64 2.12.0-9 package we also checked every other class named JSONObject or JSONTokener, in any package, and every class carrying JSON-java's \"A JSONObject text must begin with\" parse error: the others belong to json-smart, json-simple, jose4j, ClassGraph and Spring Data Commons, and none of them carries that JSON-java message or references BigInteger. 2.12.0-9 is the first fixed build for this owner."
     },
     {
       "vulnerability": {
