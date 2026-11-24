@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:07:35Z",
-  "version": 1,
+  "last_updated": "2026-11-24T21:14:52Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -90,7 +91,9 @@
           "@id": "pkg:deb/dhi/openssl@3.5.9-1~deb13u1%2Bfips%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-84785 (\"Unbounded Out-of-Order Fragment Reassembly in QUIC Streams\", Low) affects OpenSSL 3.5, and OpenSSL says 3.5 users should upgrade to OpenSSL 3.5.10, which is not released yet: https://openssl-library.org/news/secadv/20261124.txt . The fix on the openssl-3.5 branch is commit 7a14b6e, which limits the number of out-of-order ranges buffered per QUIC stream to 1024 and closes the connection with a FLOW_CONTROL_ERROR (\"too many gaps in stream data\") when a STREAM frame would create more; it is not in the openssl-3.5.9 tag: https://github.com/openssl/openssl/commit/7a14b6e410c881365881596231ea6f88e7d27c6e . Debian lists trixie as vulnerable with no fixed version: https://security-tracker.debian.org/tracker/CVE-2026-84785 . No DHI Debian 13 openssl build carries the fix. We checked every published build of the openssl source in the DHI Debian repository, 25 versions from 3.5.5-1~deb13u2 to 3.5.9-1~deb13u1 including the FIPS builds, on amd64 and arm64, with each download verified against the repository index checksum. In every build, libssl.so.3 in libssl3t64 exports the QUIC client and server methods (OSSL_QUIC_client_method, OSSL_QUIC_server_method, SSL_new_listener), and the libssl3t64-dbgsym symbols and the static libssl.a in libssl-dev contain the QUIC stream reassembly insert function (ossl_sframe_list_insert in 3.5.7-1~deb13u2 and earlier, ossl_sframe_set_insert from 3.5.7-1~deb13u3 on). Neither libssl.so.3 nor libssl.a contains the fix's \"too many gaps in stream data\" error string in any build, while both contain another QUIC protocol error string from libssl (\"zero length connection id in use\"), and no package changelog mentions this CVE. The advisory lists all of OpenSSL 3.5 as vulnerable. It states that only applications that accept incoming QUIC streams are exposed, because the default policy rejects peer-initiated streams, and that the FIPS module is not affected because the code is outside its boundary; the FIPS builds' libssl.so.3 and libssl.a contain the same unfixed QUIC code."
     }
   ]
 }
