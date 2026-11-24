@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T04:04:50Z",
-  "version": 1,
+  "last_updated": "2026-11-24T20:39:31Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -16,9 +17,32 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update mariadb to 1:11.8.6-0+deb13u1+dhi3 or later.",
+      "status_notes": "CVE-2026-102523 is MariaDB advisory GHSA-h4vr-wpff-jfx4: https://github.com/MariaDB/server/security/advisories/GHSA-h4vr-wpff-jfx4 . MariaDB tracks it as MDEV-40413: https://jira.mariadb.org/browse/MDEV-40413 . ALTER TABLE ... CONVERT ... PARTITION built file paths from the user-specified partition name without the filename encoding the server applies to on-disk names, so an authenticated user could use a partition name that needs escaping to make the conversion operate on table files they are not authorized to access. MariaDB fixed it in 11.8.9 (and 10.11.19, 11.4.13, 12.3.3 and 13.0.2) with commit https://github.com/MariaDB/server/commit/98437c30ae52ed709f266e5f8095d779261a5879 , which makes alter_partition_convert_out in sql/sql_partition.cc and alter_partition_convert_in in sql/sql_partition_admin.cc call create_partition_name() with translate set to TRUE, so the name is encoded. Debian's mariadb 1:11.8.6-0+deb13u1 does not include it. DHI backports the commit's sql_partition.cc and sql_partition_admin.cc changes unmodified (two test hunks for an upgrade case absent from the 11.8.6 tree are not carried), and the fixed version is the first build that carries them. We compared all four published builds of 1:11.8.6-0+deb13u1 on amd64 and arm64, reading function symbols from the matching -dbgsym packages. In /usr/sbin/mariadbd from the mariadb-server-core package, the translate argument of the create_partition_name() call in alter_partition_convert_in, and of the call in alter_partition_convert_out (inlined into fast_alter_partition_table), is 0 in the three builds before the fix and 1 in the fixed build, on both architectures. The fixed build's mariadb-test-data package also carries the upstream MDEV-40413 regression test, and its changelog lists this CVE."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-53p5-cug2-3olj-ejck",
+        "aliases": [
+          "CVE-2026-102523"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi3?distro=dhi-13"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-102523 is MariaDB advisory GHSA-h4vr-wpff-jfx4: https://github.com/MariaDB/server/security/advisories/GHSA-h4vr-wpff-jfx4 . MariaDB tracks it as MDEV-40413: https://jira.mariadb.org/browse/MDEV-40413 . ALTER TABLE ... CONVERT ... PARTITION built file paths from the user-specified partition name without the filename encoding the server applies to on-disk names, so an authenticated user could use a partition name that needs escaping to make the conversion operate on table files they are not authorized to access. MariaDB fixed it in 11.8.9 (and 10.11.19, 11.4.13, 12.3.3 and 13.0.2) with commit https://github.com/MariaDB/server/commit/98437c30ae52ed709f266e5f8095d779261a5879 , which makes alter_partition_convert_out in sql/sql_partition.cc and alter_partition_convert_in in sql/sql_partition_admin.cc call create_partition_name() with translate set to TRUE, so the name is encoded. Debian's mariadb 1:11.8.6-0+deb13u1 does not include it. DHI backports the commit's sql_partition.cc and sql_partition_admin.cc changes unmodified (two test hunks for an upgrade case absent from the 11.8.6 tree are not carried), and the fixed version is the first build that carries them. We compared all four published builds of 1:11.8.6-0+deb13u1 on amd64 and arm64, reading function symbols from the matching -dbgsym packages. In /usr/sbin/mariadbd from the mariadb-server-core package, the translate argument of the create_partition_name() call in alter_partition_convert_in, and of the call in alter_partition_convert_out (inlined into fast_alter_partition_table), is 0 in the three builds before the fix and 1 in the fixed build, on both architectures. The fixed build's mariadb-test-data package also carries the upstream MDEV-40413 regression test, and its changelog lists this CVE."
     }
   ]
 }

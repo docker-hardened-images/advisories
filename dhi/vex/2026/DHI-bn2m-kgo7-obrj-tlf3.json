@@ -4,9 +4,28 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:10Z",
-  "last_updated": "2026-11-24T00:04:08Z",
-  "version": 4,
+  "last_updated": "2026-11-24T20:39:21Z",
+  "version": 5,
   "statements": [
+    {
+      "vulnerability": {
+        "name": "DHI-bn2m-kgo7-obrj-tlf3",
+        "aliases": [
+          "CVE-2018-5709"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/krb5@1.21.3-5dhi0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/krb5@1.21.3-5dhi1?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update krb5 to 1.21.3-5+deb13u1+dhi0 or later.",
+      "status_notes": "CVE-2018-5709 reports that the dump loader of kdb5_util in MIT Kerberos 5 through 1.16 (kadmin/dbutil/dump.c) stores a 32-bit value read from a database dump file, u4, in the 16-bit dbentry->n_key_data field: https://security-tracker.debian.org/tracker/CVE-2018-5709 . Debian rates it unimportant and lists no fixed version, because the loader only reads dump files supplied by the KDC administrator: https://bugs.debian.org/889684 . Upstream MIT krb5 commit d15930b, \"Add more dump.c bounds checks\" (krb5 ticket 9022, first released in krb5 1.20), adds a check to process_k5beta7_princ() that rejects the record with the message \"invalid key_data size\" when u4 is larger than INT16_MAX, before the assignment the CVE describes: https://github.com/krb5/krb5/commit/d15930bec22781473c2eaf72c08a145508b373ba . The commit does not name the CVE, but it closes exactly this truncation: n_key_data is a krb5_int16 in kdb.h, and that assignment is the only place the loader sets it. Every DHI Debian 13 krb5 build is krb5 1.21.3, which contains the commit. We checked every non-debug package built from the krb5 source in the four builds now in the DHI Debian repository (the second to fourth DHI builds of 1.21.3-5+deb13u1 and the first DHI build of 1.21.3-5+deb13u2), on amd64 and arm64. In each, /usr/sbin/kdb5_util in krb5-kdc is the only ELF file that contains the loader's \"cannot match size tokens\" message, and it also contains the check's \"invalid key_data size\" message. The fixed version is the first DHI build of 1.21.3-5+deb13u1, which is built from the same krb5 1.21.3 source; it is no longer in the repository, so we did not scan it."
+    },
     {
       "vulnerability": {
         "name": "DHI-bn2m-kgo7-obrj-tlf3",
@@ -35,16 +54,10 @@
         },
         {
           "@id": "pkg:deb/dhi/krb5@1.21.3-5%2Bdhi2?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/krb5@1.21.3-5dhi0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/krb5@1.21.3-5dhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation",
-      "status_notes": "CVE-2018-5709 reports that kadmin/dbutil/dump.c in MIT Kerberos 5 stores a 32-bit value read from a database dump file into the 16-bit n_key_data field: https://security-tracker.debian.org/tracker/CVE-2018-5709. That code is the dump loader of kdb5_util, which reads a dump file supplied by the KDC administrator. A developer on the MIT Kerberos team closed the Debian report because this code path only runs on trusted input, so the potential integer overflow is a non-issue (https://bugs.debian.org/889684), and Red Hat does not consider it a security flaw (https://access.redhat.com/security/cve/CVE-2018-5709). Pending: the CVE record is not tagged disputed and NVD rates it High, so publishing this owner as NOT_AFFECTED on upstream's trust-boundary ruling needs a recorded maintainer decision."
+      "status": "fixed",
+      "status_notes": "CVE-2018-5709 reports that the dump loader of kdb5_util in MIT Kerberos 5 through 1.16 (kadmin/dbutil/dump.c) stores a 32-bit value read from a database dump file, u4, in the 16-bit dbentry->n_key_data field: https://security-tracker.debian.org/tracker/CVE-2018-5709 . Debian rates it unimportant and lists no fixed version, because the loader only reads dump files supplied by the KDC administrator: https://bugs.debian.org/889684 . Upstream MIT krb5 commit d15930b, \"Add more dump.c bounds checks\" (krb5 ticket 9022, first released in krb5 1.20), adds a check to process_k5beta7_princ() that rejects the record with the message \"invalid key_data size\" when u4 is larger than INT16_MAX, before the assignment the CVE describes: https://github.com/krb5/krb5/commit/d15930bec22781473c2eaf72c08a145508b373ba . The commit does not name the CVE, but it closes exactly this truncation: n_key_data is a krb5_int16 in kdb.h, and that assignment is the only place the loader sets it. Every DHI Debian 13 krb5 build is krb5 1.21.3, which contains the commit. We checked every non-debug package built from the krb5 source in the four builds now in the DHI Debian repository (the second to fourth DHI builds of 1.21.3-5+deb13u1 and the first DHI build of 1.21.3-5+deb13u2), on amd64 and arm64. In each, /usr/sbin/kdb5_util in krb5-kdc is the only ELF file that contains the loader's \"cannot match size tokens\" message, and it also contains the check's \"invalid key_data size\" message. The fixed version is the first DHI build of 1.21.3-5+deb13u1, which is built from the same krb5 1.21.3 source; it is no longer in the repository, so we did not scan it."
     }
   ]
 }
