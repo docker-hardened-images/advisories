@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T05:50:05Z",
-  "last_updated": "2026-11-23T20:50:39Z",
-  "version": 4,
+  "last_updated": "2026-11-24T00:43:39Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -28,7 +28,9 @@
           "@id": "pkg:apk/dhi/openssh@10.2_p1-r3?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-106584: before OpenSSH 10.6, ssh-keygen could give certificates the wrong expiry time, because the shared date parser parse_absolute_time() in misc.c passed a struct tm to mktime() without setting tm_isdst, so local-time validity dates could be off by an hour around Daylight Saving Time changes (two hours in the Antarctica/Troll time zone). OpenSSH fixed it in 10.6 as bz4004, release notes: https://www.openssh.org/releasenotes.html#10.6, with commit https://github.com/openssh/openssh-portable/commit/aef20dfe30e68a469911a229b9117e7134766311, which sets tm_isdst to -1 before mktime(). The DHI Alpine 3.23 repository publishes openssh 10.2_p1-r0, 10.2_p1-r1, 10.2_p1-r2 and 10.2_p1-r3, all OpenSSH 10.2p1, and neither the Alpine package nor DHI's own patches to it carry this change. We unpacked every package built from openssh for each of those builds on x86_64 and aarch64, checked against the index checksum, and located parse_absolute_time() through the openssh-dbg symbols in the 22 programs that contain it, including ssh-keygen in openssh-keygen. In none of them does the function set tm_isdst before calling mktime(). The same check finds that store in the fixed DHI Debian 13 openssh builds. Every published build is affected, and no fixed build is published for Alpine 3.23 yet."
     },
     {
       "vulnerability": {
@@ -48,16 +50,30 @@
           "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4%2Bdhi1?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4dhi0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update openssh to 1:10.0p1-7+deb13u4+dhi2 or later.",
+      "status_notes": "CVE-2026-106584: before OpenSSH 10.6, ssh-keygen could give certificates the wrong expiry time, because the shared date parser parse_absolute_time() in misc.c passed a struct tm to mktime() without setting tm_isdst, so local-time validity dates could be off by an hour around Daylight Saving Time changes (two hours in the Antarctica/Troll time zone). OpenSSH fixed it in 10.6 as bz4004, release notes: https://www.openssh.org/releasenotes.html#10.6, with commit https://github.com/openssh/openssh-portable/commit/aef20dfe30e68a469911a229b9117e7134766311, which sets tm_isdst to -1 before mktime(). Debian lists trixie's openssh 1:10.0p1-7+deb13u4 as vulnerable and treats the issue as minor, see https://security-tracker.debian.org/tracker/CVE-2026-106584. The DHI Debian repository publishes three rebuilds of Debian's 1:10.0p1-7+deb13u4 for amd64 and arm64. DHI backported the upstream change into the second, whose changelog records it, and the third keeps it. We unpacked openssh-client, openssh-server, openssh-sftp-server, openssh-tests and their debug-symbol packages for all three builds on both architectures, checked against the index checksum, and disassembled parse_absolute_time() in each of the 29 programs that contain it, among them ssh-keygen, ssh, sshd, sshd-session and sftp-server. In the first rebuild none of them sets tm_isdst before calling mktime(); in the second and third all of them store -1 into tm_isdst just before the call. The range ends at the second rebuild, the first build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-uadp-lfg2-emd2-i6gk",
+        "aliases": [
+          "CVE-2026-106584"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4%2Bdhi2?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4%2Bdhi3?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-106584: before OpenSSH 10.6, ssh-keygen could give certificates the wrong expiry time, because the shared date parser parse_absolute_time() in misc.c passed a struct tm to mktime() without setting tm_isdst, so local-time validity dates could be off by an hour around Daylight Saving Time changes (two hours in the Antarctica/Troll time zone). OpenSSH fixed it in 10.6 as bz4004, release notes: https://www.openssh.org/releasenotes.html#10.6, with commit https://github.com/openssh/openssh-portable/commit/aef20dfe30e68a469911a229b9117e7134766311, which sets tm_isdst to -1 before mktime(). Debian lists trixie's openssh 1:10.0p1-7+deb13u4 as vulnerable and treats the issue as minor, see https://security-tracker.debian.org/tracker/CVE-2026-106584. The DHI Debian repository publishes three rebuilds of Debian's 1:10.0p1-7+deb13u4 for amd64 and arm64. DHI backported the upstream change into the second, whose changelog records it, and the third keeps it. We unpacked openssh-client, openssh-server, openssh-sftp-server, openssh-tests and their debug-symbol packages for all three builds on both architectures, checked against the index checksum, and disassembled parse_absolute_time() in each of the 29 programs that contain it, among them ssh-keygen, ssh, sshd, sshd-session and sftp-server. In the first rebuild none of them sets tm_isdst before calling mktime(); in the second and third all of them store -1 into tm_isdst just before the call. The range ends at the second rebuild, the first build with the fix."
     }
   ]
 }
