@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T01:49:34Z",
-  "last_updated": "2026-11-24T06:03:59Z",
-  "version": 20,
+  "last_updated": "2026-11-24T06:55:31Z",
+  "version": 21,
   "statements": [
     {
       "vulnerability": {
@@ -1175,7 +1175,20 @@
         },
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-8-jdk@8.504.01-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update eclipse-temurin-8-jdk to 8.504.01-r1 or later.",
+      "status_notes": "CVE-2026-13506 (GHSA-qp49-qgx5-5m26): in Bouncy Castle, forcing a lazily parsed ASN.1 sequence (LazyEncodedSequence) resets the guard that limits how deeply nested input is parsed, so crafted deeply nested DER input can exhaust the stack. For Bouncy Castle for Java FIPS, bc-fips 2.1.x before 2.1.3 is affected and 2.1.3 carries the fix: https://github.com/advisories/GHSA-qp49-qgx5-5m26, https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013506. The fix is https://github.com/bcgit/bc-java/commit/77454da9b3dcaaa2991412d1c3c1a6e1a338ff84, which changes ASN1InputStream, LazyConstructionEnumeration and LazyEncodedSequence so that a lazily captured sequence keeps the remaining depth budget. The DHI eclipse-temurin-8-jdk packages for Alpine 3.23 ship Bouncy Castle only in their eclipse-temurin-8-jdk-fips subpackage, as five jars in /usr/lib/bouncycastle: bc-fips-<version>.jar, which holds the ASN.1 parser, and the bcpkix-fips, bctls-fips, bcutil-fips and bc-rng-jent jars (builds from 8.504.01-r2 on also add symlinks to them under /usr/lib/bouncycastle/current/, such as bc-fips.jar). We read every package built from the eclipse-temurin-8-jdk source for Alpine 3.23, each matching its repository index checksum and recursing into every jar: eclipse-temurin-8-jdk and eclipse-temurin-8-jdk-oci-config in the DHI Alpine repository, and eclipse-temurin-8-jdk-fips and eclipse-temurin-8-jdk-fips-oci-config in the authenticated DHI Alpine security repository (16 versions, 8.482.08-r0 to 8.512.09-r1, for x86_64; for aarch64 only the oci-config and -fips packages are published, 8.482.08-r0 to 8.492.09-r6). Only the eclipse-temurin-8-jdk-fips packages contain Bouncy Castle classes. The bc-fips jar is 2.1.2 in 8.482.08-r0 to 8.504.01-r0 and 2.1.3 in 8.504.01-r1 and every later build. In the Maven Central bc-fips 2.1.3 jar, LazyEncodedSequence (and its Java 9 multi-release copy) has the contentsDepth field that carries the nesting depth into the lazy parse; the 2.1.2 jar lacks it. The bc-fips jars in the eclipse-temurin-8-jdk-fips 8.504.01-r0 and 8.504.01-r1 packages are byte-identical to those Maven Central jars. The other four jars in every build (bcpkix-fips 2.1.10 to 2.1.13, bctls-fips 2.1.22 to 2.1.25, bcutil-fips 2.1.5 to 2.1.8 and bc-rng-jent 1.3.6, each byte-identical to its Maven Central release) contain no ASN1InputStream, LazyEncodedSequence or LazyConstructionEnumeration class and no class that names LazyEncodedSequence; the same search finds all three classes in both bc-fips jars, so the lazy-parse code ships only in bc-fips. The range ends at 8.504.01-r1, the first build with bc-fips 2.1.3."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-fk7z-lskg-4g4r-zd5h",
+        "aliases": [
+          "CVE-2026-13506"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-8-jdk@8.504.01-r1?distro=dhi-3.23"
         },
@@ -1192,7 +1205,8 @@
           "@id": "pkg:apk/dhi/eclipse-temurin-8-jdk@8.512.09-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-13506 (GHSA-qp49-qgx5-5m26): in Bouncy Castle, forcing a lazily parsed ASN.1 sequence (LazyEncodedSequence) resets the guard that limits how deeply nested input is parsed, so crafted deeply nested DER input can exhaust the stack. For Bouncy Castle for Java FIPS, bc-fips 2.1.x before 2.1.3 is affected and 2.1.3 carries the fix: https://github.com/advisories/GHSA-qp49-qgx5-5m26, https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013506. The fix is https://github.com/bcgit/bc-java/commit/77454da9b3dcaaa2991412d1c3c1a6e1a338ff84, which changes ASN1InputStream, LazyConstructionEnumeration and LazyEncodedSequence so that a lazily captured sequence keeps the remaining depth budget. The DHI eclipse-temurin-8-jdk packages for Alpine 3.23 ship Bouncy Castle only in their eclipse-temurin-8-jdk-fips subpackage, as five jars in /usr/lib/bouncycastle: bc-fips-<version>.jar, which holds the ASN.1 parser, and the bcpkix-fips, bctls-fips, bcutil-fips and bc-rng-jent jars (builds from 8.504.01-r2 on also add symlinks to them under /usr/lib/bouncycastle/current/, such as bc-fips.jar). We read every package built from the eclipse-temurin-8-jdk source for Alpine 3.23, each matching its repository index checksum and recursing into every jar: eclipse-temurin-8-jdk and eclipse-temurin-8-jdk-oci-config in the DHI Alpine repository, and eclipse-temurin-8-jdk-fips and eclipse-temurin-8-jdk-fips-oci-config in the authenticated DHI Alpine security repository (16 versions, 8.482.08-r0 to 8.512.09-r1, for x86_64; for aarch64 only the oci-config and -fips packages are published, 8.482.08-r0 to 8.492.09-r6). Only the eclipse-temurin-8-jdk-fips packages contain Bouncy Castle classes. The bc-fips jar is 2.1.2 in 8.482.08-r0 to 8.504.01-r0 and 2.1.3 in 8.504.01-r1 and every later build. In the Maven Central bc-fips 2.1.3 jar, LazyEncodedSequence (and its Java 9 multi-release copy) has the contentsDepth field that carries the nesting depth into the lazy parse; the 2.1.2 jar lacks it. The bc-fips jars in the eclipse-temurin-8-jdk-fips 8.504.01-r0 and 8.504.01-r1 packages are byte-identical to those Maven Central jars. The other four jars in every build (bcpkix-fips 2.1.10 to 2.1.13, bctls-fips 2.1.22 to 2.1.25, bcutil-fips 2.1.5 to 2.1.8 and bc-rng-jent 1.3.6, each byte-identical to its Maven Central release) contain no ASN1InputStream, LazyEncodedSequence or LazyConstructionEnumeration class and no class that names LazyEncodedSequence; the same search finds all three classes in both bc-fips jars, so the lazy-parse code ships only in bc-fips. The range ends at 8.504.01-r1, the first build with bc-fips 2.1.3."
     },
     {
       "vulnerability": {
@@ -1213,7 +1227,20 @@
         },
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-8-jdk@8.504.01-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update eclipse-temurin-8-jdk to 8.504.01-r1 or later.",
+      "status_notes": "CVE-2026-13506 (GHSA-qp49-qgx5-5m26): in Bouncy Castle, forcing a lazily parsed ASN.1 sequence (LazyEncodedSequence) resets the guard that limits how deeply nested input is parsed, so crafted deeply nested DER input can exhaust the stack. For Bouncy Castle for Java FIPS, bc-fips 2.1.x before 2.1.3 is affected and 2.1.3 carries the fix: https://github.com/advisories/GHSA-qp49-qgx5-5m26, https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013506. The fix is https://github.com/bcgit/bc-java/commit/77454da9b3dcaaa2991412d1c3c1a6e1a338ff84, which changes ASN1InputStream, LazyConstructionEnumeration and LazyEncodedSequence so that a lazily captured sequence keeps the remaining depth budget. The DHI eclipse-temurin-8-jdk packages for Alpine 3.24 ship Bouncy Castle only in their eclipse-temurin-8-jdk-fips subpackage, as five jars in /usr/lib/bouncycastle: bc-fips-<version>.jar, which holds the ASN.1 parser, and the bcpkix-fips, bctls-fips, bcutil-fips and bc-rng-jent jars (builds from 8.504.01-r2 on also add symlinks to them under /usr/lib/bouncycastle/current/, such as bc-fips.jar). We read every package built from the eclipse-temurin-8-jdk source for Alpine 3.24, each matching its repository index checksum and recursing into every jar: eclipse-temurin-8-jdk and eclipse-temurin-8-jdk-oci-config in the DHI Alpine repository, and eclipse-temurin-8-jdk-fips and eclipse-temurin-8-jdk-fips-oci-config in the authenticated DHI Alpine security repository (9 versions, 8.492.09-r6 to 8.512.09-r1, for x86_64; for aarch64 only the oci-config and -fips packages are published, 8.492.09-r6 only). Only the eclipse-temurin-8-jdk-fips packages contain Bouncy Castle classes. The bc-fips jar is 2.1.2 in 8.492.09-r6 to 8.504.01-r0 and 2.1.3 in 8.504.01-r1 and every later build. In the Maven Central bc-fips 2.1.3 jar, LazyEncodedSequence (and its Java 9 multi-release copy) has the contentsDepth field that carries the nesting depth into the lazy parse; the 2.1.2 jar lacks it. The bc-fips jars in the eclipse-temurin-8-jdk-fips 8.504.01-r0 and 8.504.01-r1 packages are byte-identical to those Maven Central jars. The other four jars in every build (bcpkix-fips 2.1.11 to 2.1.13, bctls-fips 2.1.23 to 2.1.25, bcutil-fips 2.1.6 to 2.1.8 and bc-rng-jent 1.3.6, each byte-identical to its Maven Central release) contain no ASN1InputStream, LazyEncodedSequence or LazyConstructionEnumeration class and no class that names LazyEncodedSequence; the same search finds all three classes in both bc-fips jars, so the lazy-parse code ships only in bc-fips. The range ends at 8.504.01-r1, the first build with bc-fips 2.1.3."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-fk7z-lskg-4g4r-zd5h",
+        "aliases": [
+          "CVE-2026-13506"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-8-jdk@8.504.01-r1?distro=dhi-3.24"
         },
@@ -1230,7 +1257,8 @@
           "@id": "pkg:apk/dhi/eclipse-temurin-8-jdk@8.512.09-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-13506 (GHSA-qp49-qgx5-5m26): in Bouncy Castle, forcing a lazily parsed ASN.1 sequence (LazyEncodedSequence) resets the guard that limits how deeply nested input is parsed, so crafted deeply nested DER input can exhaust the stack. For Bouncy Castle for Java FIPS, bc-fips 2.1.x before 2.1.3 is affected and 2.1.3 carries the fix: https://github.com/advisories/GHSA-qp49-qgx5-5m26, https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013506. The fix is https://github.com/bcgit/bc-java/commit/77454da9b3dcaaa2991412d1c3c1a6e1a338ff84, which changes ASN1InputStream, LazyConstructionEnumeration and LazyEncodedSequence so that a lazily captured sequence keeps the remaining depth budget. The DHI eclipse-temurin-8-jdk packages for Alpine 3.24 ship Bouncy Castle only in their eclipse-temurin-8-jdk-fips subpackage, as five jars in /usr/lib/bouncycastle: bc-fips-<version>.jar, which holds the ASN.1 parser, and the bcpkix-fips, bctls-fips, bcutil-fips and bc-rng-jent jars (builds from 8.504.01-r2 on also add symlinks to them under /usr/lib/bouncycastle/current/, such as bc-fips.jar). We read every package built from the eclipse-temurin-8-jdk source for Alpine 3.24, each matching its repository index checksum and recursing into every jar: eclipse-temurin-8-jdk and eclipse-temurin-8-jdk-oci-config in the DHI Alpine repository, and eclipse-temurin-8-jdk-fips and eclipse-temurin-8-jdk-fips-oci-config in the authenticated DHI Alpine security repository (9 versions, 8.492.09-r6 to 8.512.09-r1, for x86_64; for aarch64 only the oci-config and -fips packages are published, 8.492.09-r6 only). Only the eclipse-temurin-8-jdk-fips packages contain Bouncy Castle classes. The bc-fips jar is 2.1.2 in 8.492.09-r6 to 8.504.01-r0 and 2.1.3 in 8.504.01-r1 and every later build. In the Maven Central bc-fips 2.1.3 jar, LazyEncodedSequence (and its Java 9 multi-release copy) has the contentsDepth field that carries the nesting depth into the lazy parse; the 2.1.2 jar lacks it. The bc-fips jars in the eclipse-temurin-8-jdk-fips 8.504.01-r0 and 8.504.01-r1 packages are byte-identical to those Maven Central jars. The other four jars in every build (bcpkix-fips 2.1.11 to 2.1.13, bctls-fips 2.1.23 to 2.1.25, bcutil-fips 2.1.6 to 2.1.8 and bc-rng-jent 1.3.6, each byte-identical to its Maven Central release) contain no ASN1InputStream, LazyEncodedSequence or LazyConstructionEnumeration class and no class that names LazyEncodedSequence; the same search finds all three classes in both bc-fips jars, so the lazy-parse code ships only in bc-fips. The range ends at 8.504.01-r1, the first build with bc-fips 2.1.3."
     },
     {
       "vulnerability": {
@@ -2901,6 +2929,34 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/eclipse-temurin-8-jdk@8.492.09-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/eclipse-temurin-8-jdk@8.492.09-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/eclipse-temurin-8-jdk@8.492.09-3?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/eclipse-temurin-8-jdk@8.502.07-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/eclipse-temurin-8-jdk@8.504.01-0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update eclipse-temurin-8-jdk to 8.504.01-1 or later.",
+      "status_notes": "CVE-2026-13506 (GHSA-qp49-qgx5-5m26): in Bouncy Castle, forcing a lazily parsed ASN.1 sequence (LazyEncodedSequence) resets the guard that limits how deeply nested input is parsed, so crafted deeply nested DER input can exhaust the stack. For Bouncy Castle for Java FIPS, bc-fips 2.1.x before 2.1.3 is affected and 2.1.3 carries the fix: https://github.com/advisories/GHSA-qp49-qgx5-5m26, https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013506. The fix is https://github.com/bcgit/bc-java/commit/77454da9b3dcaaa2991412d1c3c1a6e1a338ff84, which changes ASN1InputStream, LazyConstructionEnumeration and LazyEncodedSequence so that a lazily captured sequence keeps the remaining depth budget. The DHI eclipse-temurin-8-jdk packages for Debian 13 ship Bouncy Castle only in their eclipse-temurin-8-jdk-fips subpackage, as five jars in /usr/lib/bouncycastle: bc-fips-<version>.jar, which holds the ASN.1 parser, and the bcpkix-fips, bctls-fips, bcutil-fips and bc-rng-jent jars (builds from 1:8.504+01-3 on also add symlinks to them under /usr/lib/bouncycastle/current/, such as bc-fips.jar). We read every package built from the eclipse-temurin-8-jdk source for Debian 13, each matching its repository index checksum and recursing into every jar: eclipse-temurin-8-jdk and eclipse-temurin-8-jdk-oci-config in the DHI Debian repository, and eclipse-temurin-8-jdk-fips and eclipse-temurin-8-jdk-fips-oci-config in the authenticated DHI Debian security repository (13 versions, 8.492.09-0 to 1:8.512+09-0, amd64 and arm64; the -fips package is architecture-independent). Only the eclipse-temurin-8-jdk-fips packages contain Bouncy Castle classes. The bc-fips jar is 2.1.2 in 8.492.09-0 to 8.504.01-0 and 2.1.3 in 8.504.01-1 and every later build, including the 1:8.504+01-2 to 1:8.512+09-0 builds, which sort above it. In the Maven Central bc-fips 2.1.3 jar, LazyEncodedSequence (and its Java 9 multi-release copy) has the contentsDepth field that carries the nesting depth into the lazy parse; the 2.1.2 jar lacks it. The bc-fips jars in the eclipse-temurin-8-jdk-fips 8.504.01-0 and 8.504.01-1 packages are byte-identical to those Maven Central jars. The other four jars in every build (bcpkix-fips 2.1.11 to 2.1.13, bctls-fips 2.1.23 to 2.1.25, bcutil-fips 2.1.6 to 2.1.8 and bc-rng-jent 1.3.6, each byte-identical to its Maven Central release) contain no ASN1InputStream, LazyEncodedSequence or LazyConstructionEnumeration class and no class that names LazyEncodedSequence; the same search finds all three classes in both bc-fips jars, so the lazy-parse code ships only in bc-fips. The range ends at 8.504.01-1, the first build with bc-fips 2.1.3."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-fk7z-lskg-4g4r-zd5h",
+        "aliases": [
+          "CVE-2026-13506"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/eclipse-temurin-8-jdk@1:8.504%2B01-2?distro=dhi-13"
         },
         {
@@ -2922,25 +2978,11 @@
           "@id": "pkg:deb/dhi/eclipse-temurin-8-jdk@1:8.512%2B09-0?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/eclipse-temurin-8-jdk@8.492.09-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/eclipse-temurin-8-jdk@8.492.09-1?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/eclipse-temurin-8-jdk@8.492.09-3?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/eclipse-temurin-8-jdk@8.502.07-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/eclipse-temurin-8-jdk@8.504.01-0?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/eclipse-temurin-8-jdk@8.504.01-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-13506 (GHSA-qp49-qgx5-5m26): in Bouncy Castle, forcing a lazily parsed ASN.1 sequence (LazyEncodedSequence) resets the guard that limits how deeply nested input is parsed, so crafted deeply nested DER input can exhaust the stack. For Bouncy Castle for Java FIPS, bc-fips 2.1.x before 2.1.3 is affected and 2.1.3 carries the fix: https://github.com/advisories/GHSA-qp49-qgx5-5m26, https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013506. The fix is https://github.com/bcgit/bc-java/commit/77454da9b3dcaaa2991412d1c3c1a6e1a338ff84, which changes ASN1InputStream, LazyConstructionEnumeration and LazyEncodedSequence so that a lazily captured sequence keeps the remaining depth budget. The DHI eclipse-temurin-8-jdk packages for Debian 13 ship Bouncy Castle only in their eclipse-temurin-8-jdk-fips subpackage, as five jars in /usr/lib/bouncycastle: bc-fips-<version>.jar, which holds the ASN.1 parser, and the bcpkix-fips, bctls-fips, bcutil-fips and bc-rng-jent jars (builds from 1:8.504+01-3 on also add symlinks to them under /usr/lib/bouncycastle/current/, such as bc-fips.jar). We read every package built from the eclipse-temurin-8-jdk source for Debian 13, each matching its repository index checksum and recursing into every jar: eclipse-temurin-8-jdk and eclipse-temurin-8-jdk-oci-config in the DHI Debian repository, and eclipse-temurin-8-jdk-fips and eclipse-temurin-8-jdk-fips-oci-config in the authenticated DHI Debian security repository (13 versions, 8.492.09-0 to 1:8.512+09-0, amd64 and arm64; the -fips package is architecture-independent). Only the eclipse-temurin-8-jdk-fips packages contain Bouncy Castle classes. The bc-fips jar is 2.1.2 in 8.492.09-0 to 8.504.01-0 and 2.1.3 in 8.504.01-1 and every later build, including the 1:8.504+01-2 to 1:8.512+09-0 builds, which sort above it. In the Maven Central bc-fips 2.1.3 jar, LazyEncodedSequence (and its Java 9 multi-release copy) has the contentsDepth field that carries the nesting depth into the lazy parse; the 2.1.2 jar lacks it. The bc-fips jars in the eclipse-temurin-8-jdk-fips 8.504.01-0 and 8.504.01-1 packages are byte-identical to those Maven Central jars. The other four jars in every build (bcpkix-fips 2.1.11 to 2.1.13, bctls-fips 2.1.23 to 2.1.25, bcutil-fips 2.1.6 to 2.1.8 and bc-rng-jent 1.3.6, each byte-identical to its Maven Central release) contain no ASN1InputStream, LazyEncodedSequence or LazyConstructionEnumeration class and no class that names LazyEncodedSequence; the same search finds all three classes in both bc-fips jars, so the lazy-parse code ships only in bc-fips. The range ends at 8.504.01-1, the first build with bc-fips 2.1.3."
     },
     {
       "vulnerability": {
