@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:12:35Z",
-  "last_updated": "2026-11-22T23:21:07Z",
-  "version": 5,
+  "last_updated": "2026-11-24T13:50:31Z",
+  "version": 6,
   "statements": [
     {
       "vulnerability": {
@@ -20,7 +20,20 @@
         },
         {
           "@id": "pkg:deb/dhi/activemq-artemis@2.55.0-1?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update activemq-artemis to 2.56.0-0 or later.",
+      "status_notes": "CVE-2026-53917 (GHSA-f77w-px59-cqf5): in Apache ActiveMQ Client before 5.19.8 (and 6.x before 6.2.7), OpenWire message property maps are unmarshalled without validating the encoded size, so an authenticated client can send a crafted OpenWire message with a large encoded map size that makes the broker allocate memory until it runs out and crashes: https://github.com/advisories/GHSA-f77w-px59-cqf5, https://www.openwall.com/lists/oss-security/2026/06/29/14. On the 5.19 line it is fixed in 5.19.8 by https://github.com/apache/activemq/commit/78bb8dcdc32e80c8b8813b57f89147572d16a2b9 on the activemq-5.19.x branch, pull request 2145, a backport of https://github.com/apache/activemq/pull/2136. In org.apache.activemq.util.MarshallingSupport, the class that unmarshals message properties, it moves the map-size check into a new validatePropertySize method, makes validateBufferSize also reject a size larger than the data left in the stream, and caps the initial capacity of the maps and lists it allocates; the same commit also changes how the ActiveMQ Classic broker handles corrupted messages. We unpacked all 27 published activemq-artemis packages in the DHI Debian repository, 2.55.0-0 to the current 2.57.0-10, for amd64 and arm64 (2.57.0-0 was published for arm64 only; no debug-symbol packages are published for this source, and none is in the DHI security repository), each checked against the repository index checksum, including the jar archives they bundle and the jars nested inside them. Each package carries ActiveMQ Classic's client library twice, under /usr/share/activemq-artemis: as lib/activemq-client-<version>.jar and nested inside lib/artemis-openwire-protocol-<version>.jar, the Artemis OpenWire protocol module. 2.55.0-0 and 2.55.0-1 carry activemq-client 5.19.7; 2.56.0-0 and every later build carry activemq-client 5.19.10. In every copy, MarshallingSupport.class in 5.19.10 contains validatePropertySize, the method this fix adds, and no copy in 5.19.7 contains it. FIXED is set at 2.56.0-0, the first build that ships the fixed client library; 2.55.0-0 and 2.55.0-1 are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-o7rq-xvdv-eqns-vhyx",
+        "aliases": [
+          "CVE-2026-53917"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/activemq-artemis@2.56.0-0?distro=dhi-13"
         },
@@ -58,7 +71,8 @@
           "@id": "pkg:deb/dhi/activemq-artemis@2.57.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-53917 (GHSA-f77w-px59-cqf5): in Apache ActiveMQ Client before 5.19.8 (and 6.x before 6.2.7), OpenWire message property maps are unmarshalled without validating the encoded size, so an authenticated client can send a crafted OpenWire message with a large encoded map size that makes the broker allocate memory until it runs out and crashes: https://github.com/advisories/GHSA-f77w-px59-cqf5, https://www.openwall.com/lists/oss-security/2026/06/29/14. On the 5.19 line it is fixed in 5.19.8 by https://github.com/apache/activemq/commit/78bb8dcdc32e80c8b8813b57f89147572d16a2b9 on the activemq-5.19.x branch, pull request 2145, a backport of https://github.com/apache/activemq/pull/2136. In org.apache.activemq.util.MarshallingSupport, the class that unmarshals message properties, it moves the map-size check into a new validatePropertySize method, makes validateBufferSize also reject a size larger than the data left in the stream, and caps the initial capacity of the maps and lists it allocates; the same commit also changes how the ActiveMQ Classic broker handles corrupted messages. We unpacked all 27 published activemq-artemis packages in the DHI Debian repository, 2.55.0-0 to the current 2.57.0-10, for amd64 and arm64 (2.57.0-0 was published for arm64 only; no debug-symbol packages are published for this source, and none is in the DHI security repository), each checked against the repository index checksum, including the jar archives they bundle and the jars nested inside them. Each package carries ActiveMQ Classic's client library twice, under /usr/share/activemq-artemis: as lib/activemq-client-<version>.jar and nested inside lib/artemis-openwire-protocol-<version>.jar, the Artemis OpenWire protocol module. 2.55.0-0 and 2.55.0-1 carry activemq-client 5.19.7; 2.56.0-0 and every later build carry activemq-client 5.19.10. In every copy, MarshallingSupport.class in 5.19.10 contains validatePropertySize, the method this fix adds, and no copy in 5.19.7 contains it. FIXED is set at 2.56.0-0, the first build that ships the fixed client library; 2.55.0-0 and 2.55.0-1 are affected."
     }
   ]
 }
