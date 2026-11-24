@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-18T22:06:25Z",
-  "last_updated": "2026-11-24T18:52:03Z",
-  "version": 3,
+  "last_updated": "2026-11-24T21:04:48Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -31,6 +31,22 @@
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdeb13u0%2Bdhi6?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/busybox@1:1.37.0-6dhi0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update busybox to 1:1.37.0-6+deb13u0+dhi7 or later.",
+      "status_notes": "CVE-2026-124743 (Red Hat bug https://bugzilla.redhat.com/show_bug.cgi?id=2571624): the volume_id HFS+ prober used by blkid, findfs and mount LABEL=/UUID= took the block size and catalog start block from the volume header, and the node size, leaf offsets and label length from the catalog, without validating them, so a crafted image could cause a divide-by-zero or a heap out-of-bounds read. The Debian tracker lists busybox as unfixed in trixie with urgency unimportant: https://security-tracker.debian.org/tracker/CVE-2026-124743 . Upstream fixed it with commit https://github.com/vda-linux/busybox_mirror/commit/f783338e5eabe206c9803b5f55a9769358bdf372 , which validates those values in util-linux/volume_id/hfs.c using a new good_blocksize_512() helper in util.c. DHI backports that commit, and the fixed version is the first build that carries it. We compared /usr/bin/busybox from the busybox and busybox-static packages of all five published builds of 1:1.37.0-6+deb13u0, on amd64 and arm64, using the symbol tables in the -dbgsym packages: only the fixed build defines good_blocksize_512, and in it volume_id_probe_hfs_hfsplus grows (from 517 to 628 bytes in busybox on amd64 and from 636 to 736 bytes on arm64), while the four earlier builds have the same size as each other."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wmse-md2w-cmib-ymp3",
+        "aliases": [
+          "CVE-2026-124743"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdeb13u0%2Bdhi7?distro=dhi-13"
         },
         {
@@ -44,12 +60,10 @@
         },
         {
           "@id": "pkg:deb/dhi/busybox@1:1.37.0-6%2Bdhi3?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/busybox@1:1.37.0-6dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-124743 (Red Hat bug https://bugzilla.redhat.com/show_bug.cgi?id=2571624): the volume_id HFS+ prober used by blkid, findfs and mount LABEL=/UUID= took the block size and catalog start block from the volume header, and the node size, leaf offsets and label length from the catalog, without validating them, so a crafted image could cause a divide-by-zero or a heap out-of-bounds read. The Debian tracker lists busybox as unfixed in trixie with urgency unimportant: https://security-tracker.debian.org/tracker/CVE-2026-124743 . Upstream fixed it with commit https://github.com/vda-linux/busybox_mirror/commit/f783338e5eabe206c9803b5f55a9769358bdf372 , which validates those values in util-linux/volume_id/hfs.c using a new good_blocksize_512() helper in util.c. DHI backports that commit, and the fixed version is the first build that carries it. We compared /usr/bin/busybox from the busybox and busybox-static packages of all five published builds of 1:1.37.0-6+deb13u0, on amd64 and arm64, using the symbol tables in the -dbgsym packages: only the fixed build defines good_blocksize_512, and in it volume_id_probe_hfs_hfsplus grows (from 517 to 628 bytes in busybox on amd64 and from 636 to 736 bytes on arm64), while the four earlier builds have the same size as each other."
     }
   ]
 }
