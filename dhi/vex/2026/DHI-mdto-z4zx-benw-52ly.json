@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T04:19:04Z",
-  "last_updated": "2026-11-24T02:50:28Z",
-  "version": 15,
+  "last_updated": "2026-11-24T09:50:07Z",
+  "version": 16,
   "statements": [
     {
       "vulnerability": {
@@ -47,7 +47,20 @@
         },
         {
           "@id": "pkg:apk/dhi/gradle-8@8.14.5-r9?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update gradle-8 to 8.14.6-r0 or later.",
+      "status_notes": "CVE-2026-75140 (GHSA-65r4-943x-97jj): jsoup's XmlTreeBuilder copied the whole in-scope XML namespace map on every start tag, so a deeply nested document with many namespace declarations took quadratic time and memory and could exhaust the JVM heap. The advisory lists jsoup before 1.23.2 as affected; the fix is commit https://github.com/jhy/jsoup/commit/862ba2f1d48ee95609183dbcfc848c9fd7afc76a from pull request https://github.com/jhy/jsoup/pull/2556, which replaces the per-element map copies with a single NamespaceBindings scope and is part of the jsoup 1.23.2 release. Sources: https://github.com/advisories/GHSA-65r4-943x-97jj, https://github.com/jhy/jsoup/releases/tag/jsoup-1.23.2. The DHI gradle-8 package bundles jsoup as a jar in /usr/share/java/gradle/lib. We read every jar in every published gradle-8 package for Alpine 3.23 in the DHI Alpine repository (16 versions, 8.14.4-r0 to 8.14.8-r0, each published for x86_64 and aarch64 except 8.14.5-r4 (x86_64 only); the aarch64 package of each version has the same index checksum as the x86_64 one), recursing into nested archives, and took each library version from the jar's Maven pom.properties. The jsoup jar is 1.15.3 in 8.14.4-r0 to 8.14.5-r7, 1.23.1 in 8.14.5-r8 to 8.14.5-r9, and 1.23.2 in 8.14.6-r0 to 8.14.8-r0. No other jar in these packages, nested jars included, carries org.jsoup classes under any package prefix. In jsoup 1.23.1 the shipped org/jsoup/parser/XmlTreeBuilder.class has the namespacesStack field and processNamespaces method that copy the namespace map per element, and in 1.23.2 it uses NamespaceBindings instead. jsoup 1.15.3 does the same per-element namespace-map copy in a different class: its XmlTreeBuilder has no namespace handling, but its W3CDom builder, which converts a parsed document to a W3C DOM, pushes a full copy of the inherited namespace map for every node, as its source at https://github.com/jhy/jsoup/blob/jsoup-1.15.3/src/main/java/org/jsoup/helper/W3CDom.java shows, and the shipped 1.15.3 org/jsoup/helper/W3CDom$W3CBuilder.class has that namespacesStack field. jsoup moved this tracking into XmlTreeBuilder in 1.20.1: https://github.com/jhy/jsoup/blob/jsoup-1.20.1/src/main/java/org/jsoup/parser/XmlTreeBuilder.java. In the shipped 1.23.2 jar both XmlTreeBuilder and the W3CDom builder use NamespaceBindings scopes instead of per-element copies. So the advisory's full range applies to every build below 8.14.6-r0, and 8.14.6-r0 and every later build carry the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-mdto-z4zx-benw-52ly",
+        "aliases": [
+          "CVE-2026-75140"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/gradle-8@8.14.6-r0?distro=dhi-3.23"
         },
@@ -64,7 +77,8 @@
           "@id": "pkg:apk/dhi/gradle-8@8.14.8-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-75140 (GHSA-65r4-943x-97jj): jsoup's XmlTreeBuilder copied the whole in-scope XML namespace map on every start tag, so a deeply nested document with many namespace declarations took quadratic time and memory and could exhaust the JVM heap. The advisory lists jsoup before 1.23.2 as affected; the fix is commit https://github.com/jhy/jsoup/commit/862ba2f1d48ee95609183dbcfc848c9fd7afc76a from pull request https://github.com/jhy/jsoup/pull/2556, which replaces the per-element map copies with a single NamespaceBindings scope and is part of the jsoup 1.23.2 release. Sources: https://github.com/advisories/GHSA-65r4-943x-97jj, https://github.com/jhy/jsoup/releases/tag/jsoup-1.23.2. The DHI gradle-8 package bundles jsoup as a jar in /usr/share/java/gradle/lib. We read every jar in every published gradle-8 package for Alpine 3.23 in the DHI Alpine repository (16 versions, 8.14.4-r0 to 8.14.8-r0, each published for x86_64 and aarch64 except 8.14.5-r4 (x86_64 only); the aarch64 package of each version has the same index checksum as the x86_64 one), recursing into nested archives, and took each library version from the jar's Maven pom.properties. The jsoup jar is 1.15.3 in 8.14.4-r0 to 8.14.5-r7, 1.23.1 in 8.14.5-r8 to 8.14.5-r9, and 1.23.2 in 8.14.6-r0 to 8.14.8-r0. No other jar in these packages, nested jars included, carries org.jsoup classes under any package prefix. In jsoup 1.23.1 the shipped org/jsoup/parser/XmlTreeBuilder.class has the namespacesStack field and processNamespaces method that copy the namespace map per element, and in 1.23.2 it uses NamespaceBindings instead. jsoup 1.15.3 does the same per-element namespace-map copy in a different class: its XmlTreeBuilder has no namespace handling, but its W3CDom builder, which converts a parsed document to a W3C DOM, pushes a full copy of the inherited namespace map for every node, as its source at https://github.com/jhy/jsoup/blob/jsoup-1.15.3/src/main/java/org/jsoup/helper/W3CDom.java shows, and the shipped 1.15.3 org/jsoup/helper/W3CDom$W3CBuilder.class has that namespacesStack field. jsoup moved this tracking into XmlTreeBuilder in 1.20.1: https://github.com/jhy/jsoup/blob/jsoup-1.20.1/src/main/java/org/jsoup/parser/XmlTreeBuilder.java. In the shipped 1.23.2 jar both XmlTreeBuilder and the W3CDom builder use NamespaceBindings scopes instead of per-element copies. So the advisory's full range applies to every build below 8.14.6-r0, and 8.14.6-r0 and every later build carry the fix."
     },
     {
       "vulnerability": {
@@ -91,7 +105,20 @@
         },
         {
           "@id": "pkg:apk/dhi/gradle-8@8.14.5-r8?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update gradle-8 to 8.14.6-r0 or later.",
+      "status_notes": "CVE-2026-75140 (GHSA-65r4-943x-97jj): jsoup's XmlTreeBuilder copied the whole in-scope XML namespace map on every start tag, so a deeply nested document with many namespace declarations took quadratic time and memory and could exhaust the JVM heap. The advisory lists jsoup before 1.23.2 as affected; the fix is commit https://github.com/jhy/jsoup/commit/862ba2f1d48ee95609183dbcfc848c9fd7afc76a from pull request https://github.com/jhy/jsoup/pull/2556, which replaces the per-element map copies with a single NamespaceBindings scope and is part of the jsoup 1.23.2 release. Sources: https://github.com/advisories/GHSA-65r4-943x-97jj, https://github.com/jhy/jsoup/releases/tag/jsoup-1.23.2. The DHI gradle-8 package bundles jsoup as a jar in /usr/share/java/gradle/lib. We read every jar in every published gradle-8 package for Alpine 3.24 in the DHI Alpine repository (10 versions, 8.14.5-r3 to 8.14.8-r0, each published for x86_64 and aarch64 except 8.14.5-r4 (x86_64 only); the aarch64 package of each version has the same index checksum as the x86_64 one), recursing into nested archives, and took each library version from the jar's Maven pom.properties. The jsoup jar is 1.15.3 in 8.14.5-r3 to 8.14.5-r6, 1.23.1 in 8.14.5-r7 to 8.14.5-r8, and 1.23.2 in 8.14.6-r0 to 8.14.8-r0. No other jar in these packages, nested jars included, carries org.jsoup classes under any package prefix. In jsoup 1.23.1 the shipped org/jsoup/parser/XmlTreeBuilder.class has the namespacesStack field and processNamespaces method that copy the namespace map per element, and in 1.23.2 it uses NamespaceBindings instead. jsoup 1.15.3 does the same per-element namespace-map copy in a different class: its XmlTreeBuilder has no namespace handling, but its W3CDom builder, which converts a parsed document to a W3C DOM, pushes a full copy of the inherited namespace map for every node, as its source at https://github.com/jhy/jsoup/blob/jsoup-1.15.3/src/main/java/org/jsoup/helper/W3CDom.java shows, and the shipped 1.15.3 org/jsoup/helper/W3CDom$W3CBuilder.class has that namespacesStack field. jsoup moved this tracking into XmlTreeBuilder in 1.20.1: https://github.com/jhy/jsoup/blob/jsoup-1.20.1/src/main/java/org/jsoup/parser/XmlTreeBuilder.java. In the shipped 1.23.2 jar both XmlTreeBuilder and the W3CDom builder use NamespaceBindings scopes instead of per-element copies. So the advisory's full range applies to every build below 8.14.6-r0, and 8.14.6-r0 and every later build carry the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-mdto-z4zx-benw-52ly",
+        "aliases": [
+          "CVE-2026-75140"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/gradle-8@8.14.6-r0?distro=dhi-3.24"
         },
@@ -105,7 +132,8 @@
           "@id": "pkg:apk/dhi/gradle-8@8.14.8-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-75140 (GHSA-65r4-943x-97jj): jsoup's XmlTreeBuilder copied the whole in-scope XML namespace map on every start tag, so a deeply nested document with many namespace declarations took quadratic time and memory and could exhaust the JVM heap. The advisory lists jsoup before 1.23.2 as affected; the fix is commit https://github.com/jhy/jsoup/commit/862ba2f1d48ee95609183dbcfc848c9fd7afc76a from pull request https://github.com/jhy/jsoup/pull/2556, which replaces the per-element map copies with a single NamespaceBindings scope and is part of the jsoup 1.23.2 release. Sources: https://github.com/advisories/GHSA-65r4-943x-97jj, https://github.com/jhy/jsoup/releases/tag/jsoup-1.23.2. The DHI gradle-8 package bundles jsoup as a jar in /usr/share/java/gradle/lib. We read every jar in every published gradle-8 package for Alpine 3.24 in the DHI Alpine repository (10 versions, 8.14.5-r3 to 8.14.8-r0, each published for x86_64 and aarch64 except 8.14.5-r4 (x86_64 only); the aarch64 package of each version has the same index checksum as the x86_64 one), recursing into nested archives, and took each library version from the jar's Maven pom.properties. The jsoup jar is 1.15.3 in 8.14.5-r3 to 8.14.5-r6, 1.23.1 in 8.14.5-r7 to 8.14.5-r8, and 1.23.2 in 8.14.6-r0 to 8.14.8-r0. No other jar in these packages, nested jars included, carries org.jsoup classes under any package prefix. In jsoup 1.23.1 the shipped org/jsoup/parser/XmlTreeBuilder.class has the namespacesStack field and processNamespaces method that copy the namespace map per element, and in 1.23.2 it uses NamespaceBindings instead. jsoup 1.15.3 does the same per-element namespace-map copy in a different class: its XmlTreeBuilder has no namespace handling, but its W3CDom builder, which converts a parsed document to a W3C DOM, pushes a full copy of the inherited namespace map for every node, as its source at https://github.com/jhy/jsoup/blob/jsoup-1.15.3/src/main/java/org/jsoup/helper/W3CDom.java shows, and the shipped 1.15.3 org/jsoup/helper/W3CDom$W3CBuilder.class has that namespacesStack field. jsoup moved this tracking into XmlTreeBuilder in 1.20.1: https://github.com/jhy/jsoup/blob/jsoup-1.20.1/src/main/java/org/jsoup/parser/XmlTreeBuilder.java. In the shipped 1.23.2 jar both XmlTreeBuilder and the W3CDom builder use NamespaceBindings scopes instead of per-element copies. So the advisory's full range applies to every build below 8.14.6-r0, and 8.14.6-r0 and every later build carry the fix."
     },
     {
       "vulnerability": {
