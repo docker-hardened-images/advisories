@@ -4,9 +4,25 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T02:54:06Z",
-  "last_updated": "2026-11-21T08:28:38Z",
-  "version": 2,
+  "last_updated": "2026-11-24T18:26:06Z",
+  "version": 3,
   "statements": [
+    {
+      "vulnerability": {
+        "name": "DHI-k4bq-jg3u-mze2-63vu",
+        "aliases": [
+          "CVE-2026-132138"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/cyrus-sasl2@2.1.28%2Bdfsg1-9%2Bdeb13u0%2Bdhi2?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update cyrus-sasl2 to 2.1.28+dfsg1-9+dhi0 or later.",
+      "status_notes": "CVE-2026-132138: the cyrus-sasl SCRAM server plugin dereferences a NULL channel-binding pointer in scram_server_mech_step2 when a client sends channel-binding data that the server application did not register, crashing the server (https://access.redhat.com/security/cve/CVE-2026-132138, https://bugzilla.redhat.com/show_bug.cgi?id=2576234). The fix is upstream commit 45d66335a4a6a59ef07b6fe8f94ac843c1fd3b86 (https://github.com/cyrusimap/cyrus-sasl/commit/45d66335a4a6a59ef07b6fe8f94ac843c1fd3b86), which adds a \"sparams->cbinding == NULL\" check that fails with \"Server does not support channel binding type received in %s\" before the strcmp. That commit is on the master branch; the identical change was also committed to the release branch as d0f9021eccb9dc2f49006d3d3dffe9aaab44dd05 (https://github.com/cyrusimap/cyrus-sasl/commit/d0f9021eccb9dc2f49006d3d3dffe9aaab44dd05), which is in the history of the cyrus-sasl-2.1.28 tag. So cyrus-sasl 2.1.28 carries the check in plugins/scram.c (https://github.com/cyrusimap/cyrus-sasl/blob/cyrus-sasl-2.1.28/plugins/scram.c#L1284) and 2.1.27 does not, and in 2.1.28 every server-side dereference of sparams->cbinding comes after it. Red Hat's tracking bug also states the fix was released in cyrus-sasl 2.1.28. Every published cyrus-sasl2 build for Debian 13 in the DHI Debian repository is one of three rebuilds of Debian 2.1.28+dfsg1-9, and none of that version's Debian patches changes plugins/scram.c. Checked all 17 binary packages of each build, including the -dbgsym packages, on amd64 and arm64, each verified against the index checksum. The SCRAM server code ships in two places: the plugin libscram.so.2.0.25 in libsasl2-modules, and the scram.o member of the static library libsasl2.a in libsasl2-dev. In every build on both architectures, both files contain the \"Server does not support channel binding type received\" error string, which only the added check emits. The Debian security tracker still lists trixie as vulnerable without a fixed version. Every published build carries the fix, so the range ends at the lowest published build; a reassessment follows when the package moves to the current DHI Debian version scheme."
+    },
     {
       "vulnerability": {
         "name": "DHI-k4bq-jg3u-mze2-63vu",
