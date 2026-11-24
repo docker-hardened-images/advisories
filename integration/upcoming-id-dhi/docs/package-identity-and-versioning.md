@@ -29,8 +29,8 @@ Identity rules:
   `1:1.3.dfsg+really1.3.1-1+dhi1` appears as
   `@1:1.3.dfsg%2Breally1.3.1-1%2Bdhi1`. The OSV `name`, `versions`, and range
   events carry the raw values.
-- **The package name identifies the assessed DHI package.** It can name a
-  source/origin package such as `glibc`, whose installed binary is `libc6`.
+- **The package name can identify a source/origin package**, such as `glibc`,
+  whose installed binary is `libc6`.
   Do not assume that every binary has a separate advisory entry.
 - **No generated DHI record carries `os_*` qualifiers.** A consumer that
   encounters one must check that it agrees with the ecosystem and reject the
@@ -160,7 +160,7 @@ scanner: pkg:deb/dhi/coreutils@9.7-3%2Bdhi3?arch=arm64&distro=dhi-13
 ```
 
 The OSV package query identity is versionless. A VEX product names the exact
-version of the assessed identity and the release, and matches its PURL by the
+version of that package identity and the release, and matches its PURL by the
 OpenVEX subset rule described in [VEX context](vex-context.md#vex-product-identity):
 
 ```text

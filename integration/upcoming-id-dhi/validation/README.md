@@ -121,7 +121,7 @@ Embedded language package PURLs, such as `pkg:pypi/...` or `pkg:npm/...`, are
 provenance in fixture metadata and the example SBOM parent-child relationship.
 Component advisory range matching happens before DHI feed generation, when
 the pipeline identifies affected DHI packages from package-component
-associations. Generated OSV and VEX publish the directly assessed DHI package,
+associations. Generated OSV and VEX publish the DHI package named in the advisory,
 without OSV `database_specific.component_packages` or VEX `subcomponents`.
 The harness checks this separation and the SBOM relationship; it does not
 evaluate component ecosystem version ranges.
