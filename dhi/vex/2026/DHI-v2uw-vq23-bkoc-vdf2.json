@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-18T20:32:32Z",
-  "last_updated": "2026-11-23T21:20:26Z",
-  "version": 4,
+  "last_updated": "2026-11-24T02:16:08Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -64,7 +64,8 @@
           "@id": "pkg:apk/dhi/nginx-mainline@1.29.8-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-123640 lets a crafted TLS ClientHello forge the variables set by nginx's ngx_stream_ssl_preread_module, which can change virtual server selection and routing decisions based on them. nginx.org lists 1.15.2 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163935 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/63d74d545295faa3d147ef704d740da4805f13f4 , 'Stream ssl_preread: forbid trailing data in extensions', with https://github.com/nginx/nginx/commit/1e668b7e856198f89a2eec0b94b54b826eb5c4f7 , 'Stream ssl_preread: forbid duplicate SNI and ALPN'. Every nginx-mainline package published for Alpine 3.23 in the DHI repository (1.28.2-r0 and 1.29.5-r0 to 1.29.8-r9 on x86_64 and aarch64, and 1.29.4-r0 on aarch64) contains no files and only depends on the nginx package of the same version, so it carries no nginx code of its own. Of those nginx packages, 1.29.8-r9 carries the fix and the earlier ones do not. Pending: whether this owner should be recorded as not containing the component, or should follow the nginx package it depends on, which would make it fixed from 1.29.8-r9."
     },
     {
       "vulnerability": {
@@ -112,7 +113,20 @@
         },
         {
           "@id": "pkg:apk/dhi/nginx-mainline@1.31.8-r5?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nginx-mainline to 1.31.9-r5 or later.",
+      "status_notes": "CVE-2026-123640 lets a crafted TLS ClientHello forge the variables set by nginx's ngx_stream_ssl_preread_module, which can change virtual server selection and routing decisions based on them. nginx.org lists 1.15.2 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163935 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/63d74d545295faa3d147ef704d740da4805f13f4 , 'Stream ssl_preread: forbid trailing data in extensions', with https://github.com/nginx/nginx/commit/1e668b7e856198f89a2eec0b94b54b826eb5c4f7 , 'Stream ssl_preread: forbid duplicate SNI and ALPN'. For Alpine 3.24, 1.31.9-r5 and 1.31.9-r6 are the nginx-mainline builds of 1.31.9 in the DHI repository, and their nginx binary reports nginx/1.31.9 on x86_64 and aarch64. The builds 1.31.2-r2 to 1.31.8-r5 ship nginx 1.31.2 to 1.31.8, in the vulnerable range with no backport of the fix, and their nginx binary is configured with --with-stream=dynamic and --with-stream_ssl_preread_module; the earlier 1.29.8-r0, 1.29.8-r1, 1.31.2-r0 and 1.31.2-r1 packages contain no files and depend on the vulnerable nginx package of the same version. We checked these packages against their index checksums. In ngx_stream_module.so from nginx-mainline-mod-stream, the ClientHello parser (the function that checks for record type 0x16 and extension types 16 and 43) grows from 1444 bytes in 1.31.8-r5 to 1542 bytes in 1.31.9-r5 and 1.31.9-r6 on x86_64, and from 1396 to 1484 bytes on aarch64. The 1.31.2 to 1.31.8 builds sort above the 1.30.7 stable fix but are still vulnerable, so the range ends at 1.31.9-r5."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-v2uw-vq23-bkoc-vdf2",
+        "aliases": [
+          "CVE-2026-123640"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/nginx-mainline@1.31.9-r5?distro=dhi-3.24"
         },
@@ -120,7 +134,8 @@
           "@id": "pkg:apk/dhi/nginx-mainline@1.31.9-r6?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-123640 lets a crafted TLS ClientHello forge the variables set by nginx's ngx_stream_ssl_preread_module, which can change virtual server selection and routing decisions based on them. nginx.org lists 1.15.2 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163935 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/63d74d545295faa3d147ef704d740da4805f13f4 , 'Stream ssl_preread: forbid trailing data in extensions', with https://github.com/nginx/nginx/commit/1e668b7e856198f89a2eec0b94b54b826eb5c4f7 , 'Stream ssl_preread: forbid duplicate SNI and ALPN'. For Alpine 3.24, 1.31.9-r5 and 1.31.9-r6 are the nginx-mainline builds of 1.31.9 in the DHI repository, and their nginx binary reports nginx/1.31.9 on x86_64 and aarch64. The builds 1.31.2-r2 to 1.31.8-r5 ship nginx 1.31.2 to 1.31.8, in the vulnerable range with no backport of the fix, and their nginx binary is configured with --with-stream=dynamic and --with-stream_ssl_preread_module; the earlier 1.29.8-r0, 1.29.8-r1, 1.31.2-r0 and 1.31.2-r1 packages contain no files and depend on the vulnerable nginx package of the same version. We checked these packages against their index checksums. In ngx_stream_module.so from nginx-mainline-mod-stream, the ClientHello parser (the function that checks for record type 0x16 and extension types 16 and 43) grows from 1444 bytes in 1.31.8-r5 to 1542 bytes in 1.31.9-r5 and 1.31.9-r6 on x86_64, and from 1396 to 1484 bytes on aarch64. The 1.31.2 to 1.31.8 builds sort above the 1.30.7 stable fix but are still vulnerable, so the range ends at 1.31.9-r5."
     },
     {
       "vulnerability": {
@@ -246,9 +261,6 @@
           "@id": "pkg:apk/dhi/nginx@1.28.3-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/nginx@1.28.3-r11?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/nginx@1.28.3-r1?distro=dhi-3.23"
         },
         {
@@ -313,12 +325,29 @@
         },
         {
           "@id": "pkg:apk/dhi/nginx@1.29.8-r7?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nginx to 1.29.8-r9 or later.",
+      "status_notes": "CVE-2026-123640 lets a crafted TLS ClientHello forge the variables set by nginx's ngx_stream_ssl_preread_module, which can change virtual server selection and routing decisions based on them. nginx.org lists 1.15.2 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163935 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/63d74d545295faa3d147ef704d740da4805f13f4 , 'Stream ssl_preread: forbid trailing data in extensions', with https://github.com/nginx/nginx/commit/1e668b7e856198f89a2eec0b94b54b826eb5c4f7 , 'Stream ssl_preread: forbid duplicate SNI and ALPN'. For Alpine 3.23 the DHI repository publishes nginx 1.28.0-r8 to 1.28.3-r11 and 1.29.4-r0 to 1.29.8-r9, with 1.28.1-r0 and 1.29.4-r0 on aarch64 only. All are upstream releases in the vulnerable range, and the nginx binary of each is configured with --with-stream=dynamic and --with-stream_ssl_preread_module. 1.28.3-r11 and 1.29.8-r9, built on 2026-11-23, are the first builds made from the Alpine 3.23 nginx recipe at its 1.28.3-r9 revision, which carries Alpine's backport of this fix; Alpine lists it under 1.28.3-r8: https://gitlab.alpinelinux.org/alpine/aports/-/raw/a14af845e951fd77441e9b05abe617f58088f4f6/main/nginx/APKBUILD . We checked the nginx package of every build and the nginx-mod-stream packages of 1.28.3-r9, 1.28.3-r11, 1.29.8-r7 and 1.29.8-r9 on x86_64 and aarch64, each against its index checksum. In ngx_stream_module.so from the nginx-mod-stream packages of the same versions, the ClientHello parser (the function that checks for record type 0x16 and extension types 16 and 43) grows from 1444 to 1542 bytes on x86_64 and from 1396 to 1484 bytes on aarch64 compared with the 1.28.3-r9 and 1.29.8-r7 modules, the same sizes as in the upstream 1.31.9 build. The 1.29 builds sort above 1.28.3-r11 and the 1.29 builds before 1.29.8-r9 lack the fix, so the range reopens at 1.29.4-r0, the first 1.29 build, and closes again at 1.29.8-r9."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-v2uw-vq23-bkoc-vdf2",
+        "aliases": [
+          "CVE-2026-123640"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/nginx@1.28.3-r11?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/nginx@1.29.8-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-123640 lets a crafted TLS ClientHello forge the variables set by nginx's ngx_stream_ssl_preread_module, which can change virtual server selection and routing decisions based on them. nginx.org lists 1.15.2 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163935 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/63d74d545295faa3d147ef704d740da4805f13f4 , 'Stream ssl_preread: forbid trailing data in extensions', with https://github.com/nginx/nginx/commit/1e668b7e856198f89a2eec0b94b54b826eb5c4f7 , 'Stream ssl_preread: forbid duplicate SNI and ALPN'. For Alpine 3.23 the DHI repository publishes nginx 1.28.0-r8 to 1.28.3-r11 and 1.29.4-r0 to 1.29.8-r9, with 1.28.1-r0 and 1.29.4-r0 on aarch64 only. All are upstream releases in the vulnerable range, and the nginx binary of each is configured with --with-stream=dynamic and --with-stream_ssl_preread_module. 1.28.3-r11 and 1.29.8-r9, built on 2026-11-23, are the first builds made from the Alpine 3.23 nginx recipe at its 1.28.3-r9 revision, which carries Alpine's backport of this fix; Alpine lists it under 1.28.3-r8: https://gitlab.alpinelinux.org/alpine/aports/-/raw/a14af845e951fd77441e9b05abe617f58088f4f6/main/nginx/APKBUILD . We checked the nginx package of every build and the nginx-mod-stream packages of 1.28.3-r9, 1.28.3-r11, 1.29.8-r7 and 1.29.8-r9 on x86_64 and aarch64, each against its index checksum. In ngx_stream_module.so from the nginx-mod-stream packages of the same versions, the ClientHello parser (the function that checks for record type 0x16 and extension types 16 and 43) grows from 1444 to 1542 bytes on x86_64 and from 1396 to 1484 bytes on aarch64 compared with the 1.28.3-r9 and 1.29.8-r7 modules, the same sizes as in the upstream 1.31.9 build. The 1.29 builds sort above 1.28.3-r11 and the 1.29 builds before 1.29.8-r9 lack the fix, so the range reopens at 1.29.4-r0, the first 1.29 build, and closes again at 1.29.8-r9."
     },
     {
       "vulnerability": {
@@ -380,7 +409,9 @@
           "@id": "pkg:apk/dhi/nginx@1.31.6-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-123640 lets a crafted TLS ClientHello forge the variables set by nginx's ngx_stream_ssl_preread_module, which can change virtual server selection and routing decisions based on them. nginx.org lists 1.15.2 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163935 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/63d74d545295faa3d147ef704d740da4805f13f4 , 'Stream ssl_preread: forbid trailing data in extensions', with https://github.com/nginx/nginx/commit/1e668b7e856198f89a2eec0b94b54b826eb5c4f7 , 'Stream ssl_preread: forbid duplicate SNI and ALPN'. For Alpine 3.24 the DHI repository publishes nginx 1.28.3-r1, 1.29.8-r0, 1.29.8-r1, 1.30.3-r1, 1.30.3-r2, 1.31.2-r0 and 1.31.2-r1 on x86_64 and aarch64, plus 1.28.3-r0 on aarch64, all built on or before 2026-06-23. Each is an upstream release in the vulnerable range with no backport of the fix, and the nginx binary of each is configured with --with-stream=dynamic and --with-stream_ssl_preread_module. The 1.31.2 builds sort above the 1.30.7 stable fix but are still vulnerable. No fixed build is published under this package name for Alpine 3.24; the fixed upstream releases 1.30.7 and 1.31.9 are published there under the package names nginx-stable and nginx-mainline."
     },
     {
       "vulnerability": {
@@ -392,9 +423,6 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/nginx@1.26.3-3%2Bdeb13u10%2Bdhi0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/nginx@1.26.3-3%2Bdeb13u11%2Bdhi0?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/nginx@1.26.3-3%2Bdeb13u2dhi0?distro=dhi-13"
@@ -427,7 +455,24 @@
           "@id": "pkg:deb/dhi/nginx@1.26.3-3%2Bdeb13u9%2Bdhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update nginx to 1.26.3-3+deb13u11+dhi0 or later.",
+      "status_notes": "CVE-2026-123640 lets a crafted TLS ClientHello forge the variables set by nginx's ngx_stream_ssl_preread_module, which can change virtual server selection and routing decisions based on them. nginx.org lists 1.15.2 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163935 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/63d74d545295faa3d147ef704d740da4805f13f4 , 'Stream ssl_preread: forbid trailing data in extensions', with https://github.com/nginx/nginx/commit/1e668b7e856198f89a2eec0b94b54b826eb5c4f7 , 'Stream ssl_preread: forbid duplicate SNI and ALPN'. Debian fixes it for trixie in 1.26.3-3+deb13u11, DSA-6642-1: https://security-tracker.debian.org/tracker/CVE-2026-123640 . The fixed version in this range is the DHI rebuild of 1.26.3-3+deb13u11, the first nginx build in the DHI Debian repository made from that revision; the earlier builds there are rebuilds of 1.26.3-3+deb13u9 and 1.26.3-3+deb13u10 and lack the fix. We checked the libnginx-mod-stream and libnginx-mod-stream-dbgsym packages of this build and of the 1.26.3-3+deb13u10 rebuild on amd64 and arm64, each against its index checksum. The Debian changelog shipped in the fixed build lists the CVE-2026-123640 backport from 1.30.7, 'validate ClientHello extensions in ngx_stream_ssl_preread_module'. In ngx_stream_module.so, read through the debug symbols with the matching build ID, ngx_stream_ssl_preread_handler, into which the ClientHello parser is inlined, grows from 2734 to 3102 bytes on amd64 and from 2536 to 2752 bytes on arm64."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-v2uw-vq23-bkoc-vdf2",
+        "aliases": [
+          "CVE-2026-123640"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/nginx@1.26.3-3%2Bdeb13u11%2Bdhi0?distro=dhi-13"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-123640 lets a crafted TLS ClientHello forge the variables set by nginx's ngx_stream_ssl_preread_module, which can change virtual server selection and routing decisions based on them. nginx.org lists 1.15.2 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163935 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/63d74d545295faa3d147ef704d740da4805f13f4 , 'Stream ssl_preread: forbid trailing data in extensions', with https://github.com/nginx/nginx/commit/1e668b7e856198f89a2eec0b94b54b826eb5c4f7 , 'Stream ssl_preread: forbid duplicate SNI and ALPN'. Debian fixes it for trixie in 1.26.3-3+deb13u11, DSA-6642-1: https://security-tracker.debian.org/tracker/CVE-2026-123640 . The fixed version in this range is the DHI rebuild of 1.26.3-3+deb13u11, the first nginx build in the DHI Debian repository made from that revision; the earlier builds there are rebuilds of 1.26.3-3+deb13u9 and 1.26.3-3+deb13u10 and lack the fix. We checked the libnginx-mod-stream and libnginx-mod-stream-dbgsym packages of this build and of the 1.26.3-3+deb13u10 rebuild on amd64 and arm64, each against its index checksum. The Debian changelog shipped in the fixed build lists the CVE-2026-123640 backport from 1.30.7, 'validate ClientHello extensions in ngx_stream_ssl_preread_module'. In ngx_stream_module.so, read through the debug symbols with the matching build ID, ngx_stream_ssl_preread_handler, into which the ClientHello parser is inlined, grows from 2734 to 3102 bytes on amd64 and from 2536 to 2752 bytes on arm64."
     }
   ]
 }

@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-18T19:55:06Z",
-  "last_updated": "2026-11-23T21:20:26Z",
-  "version": 5,
+  "last_updated": "2026-11-24T02:15:55Z",
+  "version": 6,
   "statements": [
     {
       "vulnerability": {
@@ -64,7 +64,8 @@
           "@id": "pkg:apk/dhi/nginx-mainline@1.29.8-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-123007 is a flaw in nginx's HTTP/2 flow control: the connection's send window can grow past its allowed maximum, which can lead to a heap buffer overflow and a crash of the worker process. nginx.org lists 1.9.5 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163926 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/b89c4100bf6762a45e4a6463eaf4b70368277c94 , 'HTTP/2: account for queued frames when validating WINDOW_UPDATE'. Every nginx-mainline package published for Alpine 3.23 in the DHI repository (1.28.2-r0 and 1.29.5-r0 to 1.29.8-r9 on x86_64 and aarch64, and 1.29.4-r0 on aarch64) contains no files and only depends on the nginx package of the same version, so it carries no nginx code of its own. Of those nginx packages, 1.29.8-r9 carries the fix and the earlier ones do not. Pending: whether this owner should be recorded as not containing the component, or should follow the nginx package it depends on, which would make it fixed from 1.29.8-r9."
     },
     {
       "vulnerability": {
@@ -112,7 +113,20 @@
         },
         {
           "@id": "pkg:apk/dhi/nginx-mainline@1.31.8-r5?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nginx-mainline to 1.31.9-r5 or later.",
+      "status_notes": "CVE-2026-123007 is a flaw in nginx's HTTP/2 flow control: the connection's send window can grow past its allowed maximum, which can lead to a heap buffer overflow and a crash of the worker process. nginx.org lists 1.9.5 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163926 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/b89c4100bf6762a45e4a6463eaf4b70368277c94 , 'HTTP/2: account for queued frames when validating WINDOW_UPDATE'. For Alpine 3.24, 1.31.9-r5 and 1.31.9-r6 are the nginx-mainline builds of 1.31.9 in the DHI repository, and their nginx binary reports nginx/1.31.9 on x86_64 and aarch64. The builds 1.31.2-r2 to 1.31.8-r5 ship nginx 1.31.2 to 1.31.8, in the vulnerable range with no backport of the fix, and their nginx binary is configured with --with-http_v2_module; the earlier 1.29.8-r0, 1.29.8-r1, 1.31.2-r0 and 1.31.2-r1 packages contain no files and depend on the vulnerable nginx package of the same version. We checked these packages against their index checksums. In the nginx binary, the function that logs the 'client violated connection flow control' WINDOW_UPDATE error grows from 576 to 589 bytes on x86_64 and from 656 to 660 bytes on aarch64 between 1.31.8-r5 and 1.31.9-r5, and 1.31.9-r6 matches 1.31.9-r5. The 1.31.2 to 1.31.8 builds sort above the 1.30.7 stable fix but are still vulnerable, so the range ends at 1.31.9-r5."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-mt6r-ntv3-txgy-p2bz",
+        "aliases": [
+          "CVE-2026-123007"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/nginx-mainline@1.31.9-r5?distro=dhi-3.24"
         },
@@ -120,7 +134,8 @@
           "@id": "pkg:apk/dhi/nginx-mainline@1.31.9-r6?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-123007 is a flaw in nginx's HTTP/2 flow control: the connection's send window can grow past its allowed maximum, which can lead to a heap buffer overflow and a crash of the worker process. nginx.org lists 1.9.5 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163926 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/b89c4100bf6762a45e4a6463eaf4b70368277c94 , 'HTTP/2: account for queued frames when validating WINDOW_UPDATE'. For Alpine 3.24, 1.31.9-r5 and 1.31.9-r6 are the nginx-mainline builds of 1.31.9 in the DHI repository, and their nginx binary reports nginx/1.31.9 on x86_64 and aarch64. The builds 1.31.2-r2 to 1.31.8-r5 ship nginx 1.31.2 to 1.31.8, in the vulnerable range with no backport of the fix, and their nginx binary is configured with --with-http_v2_module; the earlier 1.29.8-r0, 1.29.8-r1, 1.31.2-r0 and 1.31.2-r1 packages contain no files and depend on the vulnerable nginx package of the same version. We checked these packages against their index checksums. In the nginx binary, the function that logs the 'client violated connection flow control' WINDOW_UPDATE error grows from 576 to 589 bytes on x86_64 and from 656 to 660 bytes on aarch64 between 1.31.8-r5 and 1.31.9-r5, and 1.31.9-r6 matches 1.31.9-r5. The 1.31.2 to 1.31.8 builds sort above the 1.30.7 stable fix but are still vulnerable, so the range ends at 1.31.9-r5."
     },
     {
       "vulnerability": {
@@ -246,9 +261,6 @@
           "@id": "pkg:apk/dhi/nginx@1.28.3-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/nginx@1.28.3-r11?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/nginx@1.28.3-r1?distro=dhi-3.23"
         },
         {
@@ -313,12 +325,29 @@
         },
         {
           "@id": "pkg:apk/dhi/nginx@1.29.8-r7?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nginx to 1.29.8-r9 or later.",
+      "status_notes": "CVE-2026-123007 is a flaw in nginx's HTTP/2 flow control: the connection's send window can grow past its allowed maximum, which can lead to a heap buffer overflow and a crash of the worker process. nginx.org lists 1.9.5 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163926 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/b89c4100bf6762a45e4a6463eaf4b70368277c94 , 'HTTP/2: account for queued frames when validating WINDOW_UPDATE'. For Alpine 3.23 the DHI repository publishes nginx 1.28.0-r8 to 1.28.3-r11 and 1.29.4-r0 to 1.29.8-r9, with 1.28.1-r0 and 1.29.4-r0 on aarch64 only. All are upstream releases in the vulnerable range, and the nginx binary of each is configured with --with-http_v2_module. 1.28.3-r11 and 1.29.8-r9, built on 2026-11-23, are the first builds made from the Alpine 3.23 nginx recipe at its 1.28.3-r9 revision, which carries Alpine's backport of this fix; Alpine lists it under 1.28.3-r8: https://gitlab.alpinelinux.org/alpine/aports/-/raw/a14af845e951fd77441e9b05abe617f58088f4f6/main/nginx/APKBUILD . We checked the nginx package of every build on x86_64 and aarch64, each against its index checksum. In the nginx binary, the function that logs the 'client violated connection flow control' WINDOW_UPDATE error grows from 576 to 586 bytes on x86_64 and from 656 to 664 bytes on aarch64 compared with every earlier build, as it grows between the upstream 1.31.8 and 1.31.9 builds (576 to 589 and 656 to 660 bytes). The 1.29 builds sort above 1.28.3-r11 and the 1.29 builds before 1.29.8-r9 lack the fix, so the range reopens at 1.29.4-r0, the first 1.29 build, and closes again at 1.29.8-r9."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-mt6r-ntv3-txgy-p2bz",
+        "aliases": [
+          "CVE-2026-123007"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/nginx@1.28.3-r11?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/nginx@1.29.8-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-123007 is a flaw in nginx's HTTP/2 flow control: the connection's send window can grow past its allowed maximum, which can lead to a heap buffer overflow and a crash of the worker process. nginx.org lists 1.9.5 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163926 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/b89c4100bf6762a45e4a6463eaf4b70368277c94 , 'HTTP/2: account for queued frames when validating WINDOW_UPDATE'. For Alpine 3.23 the DHI repository publishes nginx 1.28.0-r8 to 1.28.3-r11 and 1.29.4-r0 to 1.29.8-r9, with 1.28.1-r0 and 1.29.4-r0 on aarch64 only. All are upstream releases in the vulnerable range, and the nginx binary of each is configured with --with-http_v2_module. 1.28.3-r11 and 1.29.8-r9, built on 2026-11-23, are the first builds made from the Alpine 3.23 nginx recipe at its 1.28.3-r9 revision, which carries Alpine's backport of this fix; Alpine lists it under 1.28.3-r8: https://gitlab.alpinelinux.org/alpine/aports/-/raw/a14af845e951fd77441e9b05abe617f58088f4f6/main/nginx/APKBUILD . We checked the nginx package of every build on x86_64 and aarch64, each against its index checksum. In the nginx binary, the function that logs the 'client violated connection flow control' WINDOW_UPDATE error grows from 576 to 586 bytes on x86_64 and from 656 to 664 bytes on aarch64 compared with every earlier build, as it grows between the upstream 1.31.8 and 1.31.9 builds (576 to 589 and 656 to 660 bytes). The 1.29 builds sort above 1.28.3-r11 and the 1.29 builds before 1.29.8-r9 lack the fix, so the range reopens at 1.29.4-r0, the first 1.29 build, and closes again at 1.29.8-r9."
     },
     {
       "vulnerability": {
@@ -380,7 +409,9 @@
           "@id": "pkg:apk/dhi/nginx@1.31.6-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-123007 is a flaw in nginx's HTTP/2 flow control: the connection's send window can grow past its allowed maximum, which can lead to a heap buffer overflow and a crash of the worker process. nginx.org lists 1.9.5 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163926 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/b89c4100bf6762a45e4a6463eaf4b70368277c94 , 'HTTP/2: account for queued frames when validating WINDOW_UPDATE'. For Alpine 3.24 the DHI repository publishes nginx 1.28.3-r1, 1.29.8-r0, 1.29.8-r1, 1.30.3-r1, 1.30.3-r2, 1.31.2-r0 and 1.31.2-r1 on x86_64 and aarch64, plus 1.28.3-r0 on aarch64, all built on or before 2026-06-23. Each is an upstream release in the vulnerable range with no backport of the fix, and the nginx binary of each is configured with --with-http_v2_module. We checked every one on x86_64 and aarch64 against its index checksum: the function in the nginx binary that logs the 'client violated connection flow control' WINDOW_UPDATE error is 576 bytes on x86_64 and 656 bytes on aarch64, unchanged from the older releases. The 1.31.2 builds sort above the 1.30.7 stable fix but are still vulnerable. No fixed build is published under this package name for Alpine 3.24; the fixed upstream releases 1.30.7 and 1.31.9 are published there under the package names nginx-stable and nginx-mainline."
     },
     {
       "vulnerability": {
@@ -392,9 +423,6 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/nginx@1.26.3-3%2Bdeb13u10%2Bdhi0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/nginx@1.26.3-3%2Bdeb13u11%2Bdhi0?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/nginx@1.26.3-3%2Bdeb13u2dhi0?distro=dhi-13"
@@ -427,7 +455,24 @@
           "@id": "pkg:deb/dhi/nginx@1.26.3-3%2Bdeb13u9%2Bdhi1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update nginx to 1.26.3-3+deb13u11+dhi0 or later.",
+      "status_notes": "CVE-2026-123007 is a flaw in nginx's HTTP/2 flow control: the connection's send window can grow past its allowed maximum, which can lead to a heap buffer overflow and a crash of the worker process. nginx.org lists 1.9.5 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163926 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/b89c4100bf6762a45e4a6463eaf4b70368277c94 , 'HTTP/2: account for queued frames when validating WINDOW_UPDATE'. Debian fixes it for trixie in 1.26.3-3+deb13u11, DSA-6642-1: https://security-tracker.debian.org/tracker/CVE-2026-123007 . The fixed version in this range is the DHI rebuild of 1.26.3-3+deb13u11, the first nginx build in the DHI Debian repository made from that revision; the earlier builds there are rebuilds of 1.26.3-3+deb13u9 and 1.26.3-3+deb13u10 and lack the fix. We checked the nginx and nginx-dbgsym packages of this build and of the 1.26.3-3+deb13u10 rebuild on amd64 and arm64, each against its index checksum. The Debian changelog shipped in the fixed build lists the CVE-2026-123007 backport from 1.30.7, 'include queued DATA in HTTP/2 flow control checks, preserving nginx-dev ABI compatibility'. Debian's backport keeps the nginx-dev ABI, so the change is in the HTTP/2 output filter: in /usr/sbin/nginx, read through the debug symbols with the matching build ID, ngx_http_v2_filter_cleanup grows from 397 to 433 bytes on amd64 and from 532 to 568 bytes on arm64, and ngx_http_v2_send_chain changes from 3595 to 3532 bytes on amd64 and from 3568 to 3584 bytes on arm64."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-mt6r-ntv3-txgy-p2bz",
+        "aliases": [
+          "CVE-2026-123007"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/nginx@1.26.3-3%2Bdeb13u11%2Bdhi0?distro=dhi-13"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-123007 is a flaw in nginx's HTTP/2 flow control: the connection's send window can grow past its allowed maximum, which can lead to a heap buffer overflow and a crash of the worker process. nginx.org lists 1.9.5 to 1.31.8 as vulnerable and fixes it in 1.30.7 and 1.31.9: https://nginx.org/en/security_advisories.html and https://my.f5.com/manage/s/article/K000163926 . The fix, on the stable-1.30 branch and released in 1.30.7, is https://github.com/nginx/nginx/commit/b89c4100bf6762a45e4a6463eaf4b70368277c94 , 'HTTP/2: account for queued frames when validating WINDOW_UPDATE'. Debian fixes it for trixie in 1.26.3-3+deb13u11, DSA-6642-1: https://security-tracker.debian.org/tracker/CVE-2026-123007 . The fixed version in this range is the DHI rebuild of 1.26.3-3+deb13u11, the first nginx build in the DHI Debian repository made from that revision; the earlier builds there are rebuilds of 1.26.3-3+deb13u9 and 1.26.3-3+deb13u10 and lack the fix. We checked the nginx and nginx-dbgsym packages of this build and of the 1.26.3-3+deb13u10 rebuild on amd64 and arm64, each against its index checksum. The Debian changelog shipped in the fixed build lists the CVE-2026-123007 backport from 1.30.7, 'include queued DATA in HTTP/2 flow control checks, preserving nginx-dev ABI compatibility'. Debian's backport keeps the nginx-dev ABI, so the change is in the HTTP/2 output filter: in /usr/sbin/nginx, read through the debug symbols with the matching build ID, ngx_http_v2_filter_cleanup grows from 397 to 433 bytes on amd64 and from 532 to 568 bytes on arm64, and ngx_http_v2_send_chain changes from 3595 to 3532 bytes on amd64 and from 3568 to 3584 bytes on arm64."
     }
   ]
 }
