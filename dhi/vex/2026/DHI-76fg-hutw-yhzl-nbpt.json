@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:55:48Z",
-  "last_updated": "2026-11-24T04:13:37Z",
-  "version": 13,
+  "last_updated": "2026-11-24T10:24:07Z",
+  "version": 14,
   "statements": [
     {
       "vulnerability": {
@@ -603,7 +603,8 @@
           "@id": "pkg:deb/dhi/airflow@3.4.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-59890 (GHSA-h35f-9h28-mq5c): setuptools' sdist command could pack files that MANIFEST.in excludes when their names collide under Unicode NFC/NFD normalization on macOS APFS or HFS+ file systems, because FileList in setuptools/command/egg_info.py matched patterns against raw file names. It affects setuptools before 83.0.0 and is fixed in 83.0.0 by commit dd9f436: https://github.com/pypa/setuptools/security/advisories/GHSA-h35f-9h28-mq5c, https://github.com/pypa/setuptools/commit/dd9f436a36486b4cb8a4c70a2321548b0be09b8f. We read every published package built from the airflow source in the DHI Debian repository: 52 airflow builds, 3.3.0-0 to the current 3.4.0-11, for amd64 and arm64, each matching its index checksum (no debug-symbol packages are published for this source). We listed every file and symlink in each package and inside the wheel, zip, jar and tar.gz archives it carries, and read the version from every setuptools dist-info METADATA file; both architectures agree in every build. Builds 3.3.0-0 to 3.4.0-0 contain no setuptools, pkg_resources or _distutils_hack files at all. Builds 3.4.0-1 to 3.4.0-11 contain setuptools 84.2.1 in two places: installed under /usr/lib/airflow/lib/python3.13/site-packages, and as the setuptools-84.2.1 wheel that virtualenv embeds for new environments; in 3.4.0-1 and 3.4.0-11 both copies of setuptools/command/egg_info.py carry the fix's Unicode normalization of MANIFEST.in matching. These builds also embed the virtualenv pip 26.2.2 wheel, whose pip/_vendor/vendor.txt lists setuptools==70.3.0: pip vendors only pkg_resources/__init__.py (and its LICENSE) from that release, which has no FileList class, no MANIFEST.in handling and no sdist command, so it does not contain the vulnerable code. No build contains a setuptools distribution older than 83.0.0, so every published build is on the fixed side and the range ends at the first published build, 3.3.0-0."
     },
     {
       "vulnerability": {
