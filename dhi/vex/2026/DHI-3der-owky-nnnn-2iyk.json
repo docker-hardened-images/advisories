@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:20Z",
-  "last_updated": "2026-11-24T15:51:15Z",
-  "version": 18,
+  "last_updated": "2026-11-24T18:27:52Z",
+  "version": 19,
   "statements": [
     {
       "vulnerability": {
@@ -5597,6 +5597,25 @@
           "@id": "pkg:apk/dhi/external-dns-dev@0.21.0-r0?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/external-dns-dev@0.21.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/external-dns-dev@0.21.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update external-dns-dev to 0.21.0-r3 or later.",
+      "status_notes": "CVE-2026-42499 (GO-2026-4977): in the Go standard library's net/mail package, consumePhrase joins consecutive RFC 2047 encoded words of an address's display name by repeated string concatenation, so an address with very many encoded words takes quadratic time to parse, a denial of service. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4977, https://go.dev/issue/78987, https://go.dev/cl/771520, the release-branch.go1.26 backport https://github.com/golang/go/commit/0bec63330d73d022d8b44b229f33b99639d16654 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . The master commit https://github.com/golang/go/commit/2c59389fcc5194aeae742fb413e55b656c22343f is in go1.27.0, so every Go 1.27 release carries the fix. We downloaded every external-dns-dev package listed in the Alpine 3.23 index of the DHI Alpine repository, for x86_64 and aarch64: 33 versions from 0.20.0-r0 to the current 0.24.0-r5, each published for both architectures, and checked each download against the index checksum. Each package holds one file, /usr/bin/external-dns, a Go program built with GOOS=linux and CGO_ENABLED=0, plus directories; no package contains a symbolic link. We read the function table (pclntab) and build information of the program in every build and searched its bytes, which also finds the names of inlined functions; runtime.main is in the function table of every build. The Go release by build: 0.20.0-r0 Go 1.25.7; 0.20.0-r1 to 0.21.0-r0 Go 1.26.1; 0.21.0-r1 to 0.21.0-r2 Go 1.26.2; 0.21.0-r3 to 0.21.0-r5 Go 1.26.3; 0.21.0-r6 to 0.21.0-r7 Go 1.26.4; 0.21.0-r8 to 0.21.0-r11 Go 1.26.5; 0.21.0-r12 Go 1.26.6; 0.21.0-r13 to 0.22.0-r0 Go 1.26.7; 0.22.0-r1 to 0.22.0-r3 Go 1.26.8; 0.23.0-r1 to 0.23.0-r2 Go 1.27.1; 0.23.0-r3 Go 1.27.2; 0.23.0-r4 to 0.24.0-r2 Go 1.27.3; 0.24.0-r3 to 0.24.0-r5 Go 1.27.4. The Go vulnerability database lists net/mail ParseAddress, ParseAddressList, AddressParser.Parse, AddressParser.ParseList, Header.AddressList and addrParser.consumePhrase. In the builds before 0.22.0-r0 (0.20.0-r0 to 0.21.0-r13) the program's function table has no net/mail function and its bytes contain neither net/mail. nor consumePhrase. From 0.22.0-r0 on, net/mail.(*addrParser).consumePhrase is in the function table of every build, and those builds use Go 1.26.7 or later. The status follows the Go release. The builds before 0.21.0-r3 (0.20.0-r0 to 0.21.0-r2) use Go 1.25.7, 1.26.1 or 1.26.2, inside the affected range, although none of them contains the net/mail code; 0.21.0-r3 and every later build use Go 1.26.3 to 1.26.8 or 1.27.1 to 1.27.4, which carry the fix, so 0.21.0-r3 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-3der-owky-nnnn-2iyk",
+        "aliases": [
+          "CVE-2026-42499"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/external-dns-dev@0.21.0-r10?distro=dhi-3.23"
         },
         {
@@ -5607,12 +5626,6 @@
         },
         {
           "@id": "pkg:apk/dhi/external-dns-dev@0.21.0-r13?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/external-dns-dev@0.21.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/external-dns-dev@0.21.0-r2?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/external-dns-dev@0.21.0-r3?distro=dhi-3.23"
@@ -5678,7 +5691,8 @@
           "@id": "pkg:apk/dhi/external-dns-dev@0.24.0-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-42499 (GO-2026-4977): in the Go standard library's net/mail package, consumePhrase joins consecutive RFC 2047 encoded words of an address's display name by repeated string concatenation, so an address with very many encoded words takes quadratic time to parse, a denial of service. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4977, https://go.dev/issue/78987, https://go.dev/cl/771520, the release-branch.go1.26 backport https://github.com/golang/go/commit/0bec63330d73d022d8b44b229f33b99639d16654 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . The master commit https://github.com/golang/go/commit/2c59389fcc5194aeae742fb413e55b656c22343f is in go1.27.0, so every Go 1.27 release carries the fix. We downloaded every external-dns-dev package listed in the Alpine 3.23 index of the DHI Alpine repository, for x86_64 and aarch64: 33 versions from 0.20.0-r0 to the current 0.24.0-r5, each published for both architectures, and checked each download against the index checksum. Each package holds one file, /usr/bin/external-dns, a Go program built with GOOS=linux and CGO_ENABLED=0, plus directories; no package contains a symbolic link. We read the function table (pclntab) and build information of the program in every build and searched its bytes, which also finds the names of inlined functions; runtime.main is in the function table of every build. The Go release by build: 0.20.0-r0 Go 1.25.7; 0.20.0-r1 to 0.21.0-r0 Go 1.26.1; 0.21.0-r1 to 0.21.0-r2 Go 1.26.2; 0.21.0-r3 to 0.21.0-r5 Go 1.26.3; 0.21.0-r6 to 0.21.0-r7 Go 1.26.4; 0.21.0-r8 to 0.21.0-r11 Go 1.26.5; 0.21.0-r12 Go 1.26.6; 0.21.0-r13 to 0.22.0-r0 Go 1.26.7; 0.22.0-r1 to 0.22.0-r3 Go 1.26.8; 0.23.0-r1 to 0.23.0-r2 Go 1.27.1; 0.23.0-r3 Go 1.27.2; 0.23.0-r4 to 0.24.0-r2 Go 1.27.3; 0.24.0-r3 to 0.24.0-r5 Go 1.27.4. The Go vulnerability database lists net/mail ParseAddress, ParseAddressList, AddressParser.Parse, AddressParser.ParseList, Header.AddressList and addrParser.consumePhrase. In the builds before 0.22.0-r0 (0.20.0-r0 to 0.21.0-r13) the program's function table has no net/mail function and its bytes contain neither net/mail. nor consumePhrase. From 0.22.0-r0 on, net/mail.(*addrParser).consumePhrase is in the function table of every build, and those builds use Go 1.26.7 or later. The status follows the Go release. The builds before 0.21.0-r3 (0.20.0-r0 to 0.21.0-r2) use Go 1.25.7, 1.26.1 or 1.26.2, inside the affected range, although none of them contains the net/mail code; 0.21.0-r3 and every later build use Go 1.26.3 to 1.26.8 or 1.27.1 to 1.27.4, which carry the fix, so 0.21.0-r3 is the first fixed build."
     },
     {
       "vulnerability": {
@@ -5707,6 +5721,25 @@
           "@id": "pkg:apk/dhi/external-dns-fips-dev@0.21.0-r0?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/external-dns-fips-dev@0.21.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/external-dns-fips-dev@0.21.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update external-dns-fips-dev to 0.21.0-r3 or later.",
+      "status_notes": "CVE-2026-42499 (GO-2026-4977): in the Go standard library's net/mail package, consumePhrase joins consecutive RFC 2047 encoded words of an address's display name by repeated string concatenation, so an address with very many encoded words takes quadratic time to parse, a denial of service. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4977, https://go.dev/issue/78987, https://go.dev/cl/771520, the release-branch.go1.26 backport https://github.com/golang/go/commit/0bec63330d73d022d8b44b229f33b99639d16654 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . The master commit https://github.com/golang/go/commit/2c59389fcc5194aeae742fb413e55b656c22343f is in go1.27.0, so every Go 1.27 release carries the fix. We downloaded every external-dns-fips-dev package listed in the Alpine 3.23 index of the authenticated DHI Alpine security repository, where the FIPS packages are published, for x86_64 and aarch64: 33 versions from 0.20.0-r0 to the current 0.24.0-r5, each published for both architectures, and checked each download against the index checksum. Each package holds one file, /usr/bin/external-dns, a Go program built with GOOS=linux, CGO_ENABLED=0 and the Go Cryptographic Module (GOFIPS140=v1.0.0-c2097c7c), plus directories; no package contains a symbolic link. We read the function table (pclntab) and build information of the program in every build and searched its bytes, which also finds the names of inlined functions; runtime.main is in the function table of every build. The Go release by build: 0.20.0-r0 Go 1.25.7; 0.20.0-r1 to 0.21.0-r0 Go 1.26.1; 0.21.0-r1 to 0.21.0-r2 Go 1.26.2; 0.21.0-r3 to 0.21.0-r5 Go 1.26.3; 0.21.0-r6 to 0.21.0-r7 Go 1.26.4; 0.21.0-r8 to 0.21.0-r11 Go 1.26.5; 0.21.0-r12 Go 1.26.6; 0.21.0-r13 to 0.22.0-r0 Go 1.26.7; 0.22.0-r1 to 0.22.0-r3 Go 1.26.8; 0.23.0-r1 to 0.23.0-r2 Go 1.27.1; 0.23.0-r3 Go 1.27.2; 0.23.0-r4 to 0.24.0-r2 Go 1.27.3; 0.24.0-r3 to 0.24.0-r5 Go 1.27.4. The Go vulnerability database lists net/mail ParseAddress, ParseAddressList, AddressParser.Parse, AddressParser.ParseList, Header.AddressList and addrParser.consumePhrase. In the builds before 0.22.0-r0 (0.20.0-r0 to 0.21.0-r13) the program's function table has no net/mail function and its bytes contain neither net/mail. nor consumePhrase. From 0.22.0-r0 on, net/mail.(*addrParser).consumePhrase is in the function table of every build, and those builds use Go 1.26.7 or later. The status follows the Go release. The builds before 0.21.0-r3 (0.20.0-r0 to 0.21.0-r2) use Go 1.25.7, 1.26.1 or 1.26.2, inside the affected range, although none of them contains the net/mail code; 0.21.0-r3 and every later build use Go 1.26.3 to 1.26.8 or 1.27.1 to 1.27.4, which carry the fix, so 0.21.0-r3 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-3der-owky-nnnn-2iyk",
+        "aliases": [
+          "CVE-2026-42499"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/external-dns-fips-dev@0.21.0-r10?distro=dhi-3.23"
         },
         {
@@ -5717,12 +5750,6 @@
         },
         {
           "@id": "pkg:apk/dhi/external-dns-fips-dev@0.21.0-r13?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/external-dns-fips-dev@0.21.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/external-dns-fips-dev@0.21.0-r2?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/external-dns-fips-dev@0.21.0-r3?distro=dhi-3.23"
@@ -5788,7 +5815,8 @@
           "@id": "pkg:apk/dhi/external-dns-fips-dev@0.24.0-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-42499 (GO-2026-4977): in the Go standard library's net/mail package, consumePhrase joins consecutive RFC 2047 encoded words of an address's display name by repeated string concatenation, so an address with very many encoded words takes quadratic time to parse, a denial of service. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4977, https://go.dev/issue/78987, https://go.dev/cl/771520, the release-branch.go1.26 backport https://github.com/golang/go/commit/0bec63330d73d022d8b44b229f33b99639d16654 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . The master commit https://github.com/golang/go/commit/2c59389fcc5194aeae742fb413e55b656c22343f is in go1.27.0, so every Go 1.27 release carries the fix. We downloaded every external-dns-fips-dev package listed in the Alpine 3.23 index of the authenticated DHI Alpine security repository, where the FIPS packages are published, for x86_64 and aarch64: 33 versions from 0.20.0-r0 to the current 0.24.0-r5, each published for both architectures, and checked each download against the index checksum. Each package holds one file, /usr/bin/external-dns, a Go program built with GOOS=linux, CGO_ENABLED=0 and the Go Cryptographic Module (GOFIPS140=v1.0.0-c2097c7c), plus directories; no package contains a symbolic link. We read the function table (pclntab) and build information of the program in every build and searched its bytes, which also finds the names of inlined functions; runtime.main is in the function table of every build. The Go release by build: 0.20.0-r0 Go 1.25.7; 0.20.0-r1 to 0.21.0-r0 Go 1.26.1; 0.21.0-r1 to 0.21.0-r2 Go 1.26.2; 0.21.0-r3 to 0.21.0-r5 Go 1.26.3; 0.21.0-r6 to 0.21.0-r7 Go 1.26.4; 0.21.0-r8 to 0.21.0-r11 Go 1.26.5; 0.21.0-r12 Go 1.26.6; 0.21.0-r13 to 0.22.0-r0 Go 1.26.7; 0.22.0-r1 to 0.22.0-r3 Go 1.26.8; 0.23.0-r1 to 0.23.0-r2 Go 1.27.1; 0.23.0-r3 Go 1.27.2; 0.23.0-r4 to 0.24.0-r2 Go 1.27.3; 0.24.0-r3 to 0.24.0-r5 Go 1.27.4. The Go vulnerability database lists net/mail ParseAddress, ParseAddressList, AddressParser.Parse, AddressParser.ParseList, Header.AddressList and addrParser.consumePhrase. In the builds before 0.22.0-r0 (0.20.0-r0 to 0.21.0-r13) the program's function table has no net/mail function and its bytes contain neither net/mail. nor consumePhrase. From 0.22.0-r0 on, net/mail.(*addrParser).consumePhrase is in the function table of every build, and those builds use Go 1.26.7 or later. The status follows the Go release. The builds before 0.21.0-r3 (0.20.0-r0 to 0.21.0-r2) use Go 1.25.7, 1.26.1 or 1.26.2, inside the affected range, although none of them contains the net/mail code; 0.21.0-r3 and every later build use Go 1.26.3 to 1.26.8 or 1.27.1 to 1.27.4, which carry the fix, so 0.21.0-r3 is the first fixed build."
     },
     {
       "vulnerability": {
@@ -5817,6 +5845,25 @@
           "@id": "pkg:apk/dhi/external-dns-fips@0.21.0-r0?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/external-dns-fips@0.21.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/external-dns-fips@0.21.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update external-dns-fips to 0.21.0-r3 or later.",
+      "status_notes": "CVE-2026-42499 (GO-2026-4977): in the Go standard library's net/mail package, consumePhrase joins consecutive RFC 2047 encoded words of an address's display name by repeated string concatenation, so an address with very many encoded words takes quadratic time to parse, a denial of service. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4977, https://go.dev/issue/78987, https://go.dev/cl/771520, the release-branch.go1.26 backport https://github.com/golang/go/commit/0bec63330d73d022d8b44b229f33b99639d16654 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . The master commit https://github.com/golang/go/commit/2c59389fcc5194aeae742fb413e55b656c22343f is in go1.27.0, so every Go 1.27 release carries the fix. We downloaded every external-dns-fips package listed in the Alpine 3.23 index of the authenticated DHI Alpine security repository, where the FIPS packages are published, for x86_64 and aarch64: 33 versions from 0.20.0-r0 to the current 0.24.0-r5, each published for both architectures, and checked each download against the index checksum. Each package holds one file, /usr/bin/external-dns, a Go program built with GOOS=linux, CGO_ENABLED=0 and the Go Cryptographic Module (GOFIPS140=v1.0.0-c2097c7c), plus directories; no package contains a symbolic link. We read the function table (pclntab) and build information of the program in every build and searched its bytes, which also finds the names of inlined functions; runtime.main is in the function table of every build. The Go release by build: 0.20.0-r0 Go 1.25.7; 0.20.0-r1 to 0.21.0-r0 Go 1.26.1; 0.21.0-r1 to 0.21.0-r2 Go 1.26.2; 0.21.0-r3 to 0.21.0-r5 Go 1.26.3; 0.21.0-r6 to 0.21.0-r7 Go 1.26.4; 0.21.0-r8 to 0.21.0-r11 Go 1.26.5; 0.21.0-r12 Go 1.26.6; 0.21.0-r13 to 0.22.0-r0 Go 1.26.7; 0.22.0-r1 to 0.22.0-r3 Go 1.26.8; 0.23.0-r1 to 0.23.0-r2 Go 1.27.1; 0.23.0-r3 Go 1.27.2; 0.23.0-r4 to 0.24.0-r2 Go 1.27.3; 0.24.0-r3 to 0.24.0-r5 Go 1.27.4. The Go vulnerability database lists net/mail ParseAddress, ParseAddressList, AddressParser.Parse, AddressParser.ParseList, Header.AddressList and addrParser.consumePhrase. In the builds before 0.22.0-r0 (0.20.0-r0 to 0.21.0-r13) the program's function table has no net/mail function and its bytes contain neither net/mail. nor consumePhrase. From 0.22.0-r0 on, net/mail.(*addrParser).consumePhrase is in the function table of every build, and those builds use Go 1.26.7 or later. The status follows the Go release. The builds before 0.21.0-r3 (0.20.0-r0 to 0.21.0-r2) use Go 1.25.7, 1.26.1 or 1.26.2, inside the affected range, although none of them contains the net/mail code; 0.21.0-r3 and every later build use Go 1.26.3 to 1.26.8 or 1.27.1 to 1.27.4, which carry the fix, so 0.21.0-r3 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-3der-owky-nnnn-2iyk",
+        "aliases": [
+          "CVE-2026-42499"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/external-dns-fips@0.21.0-r10?distro=dhi-3.23"
         },
         {
@@ -5827,12 +5874,6 @@
         },
         {
           "@id": "pkg:apk/dhi/external-dns-fips@0.21.0-r13?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/external-dns-fips@0.21.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/external-dns-fips@0.21.0-r2?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/external-dns-fips@0.21.0-r3?distro=dhi-3.23"
@@ -5898,7 +5939,8 @@
           "@id": "pkg:apk/dhi/external-dns-fips@0.24.0-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-42499 (GO-2026-4977): in the Go standard library's net/mail package, consumePhrase joins consecutive RFC 2047 encoded words of an address's display name by repeated string concatenation, so an address with very many encoded words takes quadratic time to parse, a denial of service. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4977, https://go.dev/issue/78987, https://go.dev/cl/771520, the release-branch.go1.26 backport https://github.com/golang/go/commit/0bec63330d73d022d8b44b229f33b99639d16654 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . The master commit https://github.com/golang/go/commit/2c59389fcc5194aeae742fb413e55b656c22343f is in go1.27.0, so every Go 1.27 release carries the fix. We downloaded every external-dns-fips package listed in the Alpine 3.23 index of the authenticated DHI Alpine security repository, where the FIPS packages are published, for x86_64 and aarch64: 33 versions from 0.20.0-r0 to the current 0.24.0-r5, each published for both architectures, and checked each download against the index checksum. Each package holds one file, /usr/bin/external-dns, a Go program built with GOOS=linux, CGO_ENABLED=0 and the Go Cryptographic Module (GOFIPS140=v1.0.0-c2097c7c), plus directories; no package contains a symbolic link. We read the function table (pclntab) and build information of the program in every build and searched its bytes, which also finds the names of inlined functions; runtime.main is in the function table of every build. The Go release by build: 0.20.0-r0 Go 1.25.7; 0.20.0-r1 to 0.21.0-r0 Go 1.26.1; 0.21.0-r1 to 0.21.0-r2 Go 1.26.2; 0.21.0-r3 to 0.21.0-r5 Go 1.26.3; 0.21.0-r6 to 0.21.0-r7 Go 1.26.4; 0.21.0-r8 to 0.21.0-r11 Go 1.26.5; 0.21.0-r12 Go 1.26.6; 0.21.0-r13 to 0.22.0-r0 Go 1.26.7; 0.22.0-r1 to 0.22.0-r3 Go 1.26.8; 0.23.0-r1 to 0.23.0-r2 Go 1.27.1; 0.23.0-r3 Go 1.27.2; 0.23.0-r4 to 0.24.0-r2 Go 1.27.3; 0.24.0-r3 to 0.24.0-r5 Go 1.27.4. The Go vulnerability database lists net/mail ParseAddress, ParseAddressList, AddressParser.Parse, AddressParser.ParseList, Header.AddressList and addrParser.consumePhrase. In the builds before 0.22.0-r0 (0.20.0-r0 to 0.21.0-r13) the program's function table has no net/mail function and its bytes contain neither net/mail. nor consumePhrase. From 0.22.0-r0 on, net/mail.(*addrParser).consumePhrase is in the function table of every build, and those builds use Go 1.26.7 or later. The status follows the Go release. The builds before 0.21.0-r3 (0.20.0-r0 to 0.21.0-r2) use Go 1.25.7, 1.26.1 or 1.26.2, inside the affected range, although none of them contains the net/mail code; 0.21.0-r3 and every later build use Go 1.26.3 to 1.26.8 or 1.27.1 to 1.27.4, which carry the fix, so 0.21.0-r3 is the first fixed build."
     },
     {
       "vulnerability": {
@@ -5927,6 +5969,25 @@
           "@id": "pkg:apk/dhi/external-dns@0.21.0-r0?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/external-dns@0.21.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/external-dns@0.21.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update external-dns to 0.21.0-r3 or later.",
+      "status_notes": "CVE-2026-42499 (GO-2026-4977): in the Go standard library's net/mail package, consumePhrase joins consecutive RFC 2047 encoded words of an address's display name by repeated string concatenation, so an address with very many encoded words takes quadratic time to parse, a denial of service. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4977, https://go.dev/issue/78987, https://go.dev/cl/771520, the release-branch.go1.26 backport https://github.com/golang/go/commit/0bec63330d73d022d8b44b229f33b99639d16654 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . The master commit https://github.com/golang/go/commit/2c59389fcc5194aeae742fb413e55b656c22343f is in go1.27.0, so every Go 1.27 release carries the fix. We downloaded every external-dns package listed in the Alpine 3.23 index of the DHI Alpine repository, for x86_64 and aarch64: 33 versions from 0.20.0-r0 to the current 0.24.0-r5, each published for both architectures, and checked each download against the index checksum. Each package holds one file, /usr/bin/external-dns, a Go program built with GOOS=linux and CGO_ENABLED=0, plus directories; no package contains a symbolic link. We read the function table (pclntab) and build information of the program in every build and searched its bytes, which also finds the names of inlined functions; runtime.main is in the function table of every build. The Go release by build: 0.20.0-r0 Go 1.25.7; 0.20.0-r1 to 0.21.0-r0 Go 1.26.1; 0.21.0-r1 to 0.21.0-r2 Go 1.26.2; 0.21.0-r3 to 0.21.0-r5 Go 1.26.3; 0.21.0-r6 to 0.21.0-r7 Go 1.26.4; 0.21.0-r8 to 0.21.0-r11 Go 1.26.5; 0.21.0-r12 Go 1.26.6; 0.21.0-r13 to 0.22.0-r0 Go 1.26.7; 0.22.0-r1 to 0.22.0-r3 Go 1.26.8; 0.23.0-r1 to 0.23.0-r2 Go 1.27.1; 0.23.0-r3 Go 1.27.2; 0.23.0-r4 to 0.24.0-r2 Go 1.27.3; 0.24.0-r3 to 0.24.0-r5 Go 1.27.4. The Go vulnerability database lists net/mail ParseAddress, ParseAddressList, AddressParser.Parse, AddressParser.ParseList, Header.AddressList and addrParser.consumePhrase. In the builds before 0.22.0-r0 (0.20.0-r0 to 0.21.0-r13) the program's function table has no net/mail function and its bytes contain neither net/mail. nor consumePhrase. From 0.22.0-r0 on, net/mail.(*addrParser).consumePhrase is in the function table of every build, and those builds use Go 1.26.7 or later. The status follows the Go release. The builds before 0.21.0-r3 (0.20.0-r0 to 0.21.0-r2) use Go 1.25.7, 1.26.1 or 1.26.2, inside the affected range, although none of them contains the net/mail code; 0.21.0-r3 and every later build use Go 1.26.3 to 1.26.8 or 1.27.1 to 1.27.4, which carry the fix, so 0.21.0-r3 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-3der-owky-nnnn-2iyk",
+        "aliases": [
+          "CVE-2026-42499"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/external-dns@0.21.0-r10?distro=dhi-3.23"
         },
         {
@@ -5937,12 +5998,6 @@
         },
         {
           "@id": "pkg:apk/dhi/external-dns@0.21.0-r13?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/external-dns@0.21.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/external-dns@0.21.0-r2?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/external-dns@0.21.0-r3?distro=dhi-3.23"
@@ -6008,7 +6063,8 @@
           "@id": "pkg:apk/dhi/external-dns@0.24.0-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-42499 (GO-2026-4977): in the Go standard library's net/mail package, consumePhrase joins consecutive RFC 2047 encoded words of an address's display name by repeated string concatenation, so an address with very many encoded words takes quadratic time to parse, a denial of service. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4977, https://go.dev/issue/78987, https://go.dev/cl/771520, the release-branch.go1.26 backport https://github.com/golang/go/commit/0bec63330d73d022d8b44b229f33b99639d16654 (in go1.26.3, not go1.26.2), https://groups.google.com/g/golang-announce/c/qcCIEXso47M . The master commit https://github.com/golang/go/commit/2c59389fcc5194aeae742fb413e55b656c22343f is in go1.27.0, so every Go 1.27 release carries the fix. We downloaded every external-dns package listed in the Alpine 3.23 index of the DHI Alpine repository, for x86_64 and aarch64: 33 versions from 0.20.0-r0 to the current 0.24.0-r5, each published for both architectures, and checked each download against the index checksum. Each package holds one file, /usr/bin/external-dns, a Go program built with GOOS=linux and CGO_ENABLED=0, plus directories; no package contains a symbolic link. We read the function table (pclntab) and build information of the program in every build and searched its bytes, which also finds the names of inlined functions; runtime.main is in the function table of every build. The Go release by build: 0.20.0-r0 Go 1.25.7; 0.20.0-r1 to 0.21.0-r0 Go 1.26.1; 0.21.0-r1 to 0.21.0-r2 Go 1.26.2; 0.21.0-r3 to 0.21.0-r5 Go 1.26.3; 0.21.0-r6 to 0.21.0-r7 Go 1.26.4; 0.21.0-r8 to 0.21.0-r11 Go 1.26.5; 0.21.0-r12 Go 1.26.6; 0.21.0-r13 to 0.22.0-r0 Go 1.26.7; 0.22.0-r1 to 0.22.0-r3 Go 1.26.8; 0.23.0-r1 to 0.23.0-r2 Go 1.27.1; 0.23.0-r3 Go 1.27.2; 0.23.0-r4 to 0.24.0-r2 Go 1.27.3; 0.24.0-r3 to 0.24.0-r5 Go 1.27.4. The Go vulnerability database lists net/mail ParseAddress, ParseAddressList, AddressParser.Parse, AddressParser.ParseList, Header.AddressList and addrParser.consumePhrase. In the builds before 0.22.0-r0 (0.20.0-r0 to 0.21.0-r13) the program's function table has no net/mail function and its bytes contain neither net/mail. nor consumePhrase. From 0.22.0-r0 on, net/mail.(*addrParser).consumePhrase is in the function table of every build, and those builds use Go 1.26.7 or later. The status follows the Go release. The builds before 0.21.0-r3 (0.20.0-r0 to 0.21.0-r2) use Go 1.25.7, 1.26.1 or 1.26.2, inside the affected range, although none of them contains the net/mail code; 0.21.0-r3 and every later build use Go 1.26.3 to 1.26.8 or 1.27.1 to 1.27.4, which carry the fix, so 0.21.0-r3 is the first fixed build."
     },
     {
       "vulnerability": {
