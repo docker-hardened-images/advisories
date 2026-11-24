@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T16:04:58Z",
-  "version": 1,
+  "last_updated": "2026-11-24T16:46:48Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -27,6 +28,22 @@
           "@id": "pkg:deb/dhi/cups@2.4.10-3%2Bdeb13u2%2Bdhi4?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/cups@2.4.10-3%2Bdeb13u2dhi0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update cups to 2.4.10-3+deb13u2+dhi5 or later.",
+      "status_notes": "CVE-2026-41079 (GHSA-6wpw-g8g6-wvrv): before CUPS 2.4.17, the SNMP code in libcups (cups/snmp.c) stores the encoded length of an SNMP string as its byte count even when the string was truncated to the 1024-byte buffer, so the SNMP backend can read up to 176 bytes past the buffer and expose them as printer supply descriptions. The upstream fix enlarges the buffer by one byte and caps the byte count at the copied length: https://github.com/OpenPrinting/cups/security/advisories/GHSA-6wpw-g8g6-wvrv and commit b7c2525a885f528d243c3a92197ca99609b3f080 on the 2.4.x branch, first released in 2.4.17: https://github.com/OpenPrinting/cups/commit/b7c2525a885f528d243c3a92197ca99609b3f080. We downloaded every package built from the cups source in the DHI Debian repository for trixie, amd64 and arm64, including the -dbgsym packages: 22 binary packages in each of the four published DHI builds of 2.4.10-3+deb13u2, the fifth to the eighth (176 debs), each checked against its index checksum; the earlier DHI builds are no longer published. Debian lists the CVE as open for trixie, with no fixed version, at https://security-tracker.debian.org/tracker/CVE-2026-41079, so its own 2.4.10-3+deb13u2 packages serve as the unfixed comparison. We disassembled _cupsSNMPRead() in libcups.so.2 (libcups2t64), into which the compiler inlines the SNMP decoder, in the DHI builds and in Debian's packages, using the symbol tables in the -dbgsym packages. In Debian's build the string decoder copies into a 1024-byte (0x400) buffer and stores the encoded length unchanged. In every published DHI build, on both architectures, it copies into a 1025-byte (0x401) buffer and then compares the length with 1024 and stores at most 1024, which is the upstream fix backported to 2.4.10. The lowest published DHI build, the fifth, already carries it, so every published build is fixed."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-543a-vps3-wx22-qwre",
+        "aliases": [
+          "CVE-2026-41079"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/cups@2.4.10-3%2Bdeb13u2%2Bdhi5?distro=dhi-13"
         },
         {
@@ -37,12 +54,10 @@
         },
         {
           "@id": "pkg:deb/dhi/cups@2.4.10-3%2Bdeb13u2%2Bdhi8?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/cups@2.4.10-3%2Bdeb13u2dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-41079 (GHSA-6wpw-g8g6-wvrv): before CUPS 2.4.17, the SNMP code in libcups (cups/snmp.c) stores the encoded length of an SNMP string as its byte count even when the string was truncated to the 1024-byte buffer, so the SNMP backend can read up to 176 bytes past the buffer and expose them as printer supply descriptions. The upstream fix enlarges the buffer by one byte and caps the byte count at the copied length: https://github.com/OpenPrinting/cups/security/advisories/GHSA-6wpw-g8g6-wvrv and commit b7c2525a885f528d243c3a92197ca99609b3f080 on the 2.4.x branch, first released in 2.4.17: https://github.com/OpenPrinting/cups/commit/b7c2525a885f528d243c3a92197ca99609b3f080. We downloaded every package built from the cups source in the DHI Debian repository for trixie, amd64 and arm64, including the -dbgsym packages: 22 binary packages in each of the four published DHI builds of 2.4.10-3+deb13u2, the fifth to the eighth (176 debs), each checked against its index checksum; the earlier DHI builds are no longer published. Debian lists the CVE as open for trixie, with no fixed version, at https://security-tracker.debian.org/tracker/CVE-2026-41079, so its own 2.4.10-3+deb13u2 packages serve as the unfixed comparison. We disassembled _cupsSNMPRead() in libcups.so.2 (libcups2t64), into which the compiler inlines the SNMP decoder, in the DHI builds and in Debian's packages, using the symbol tables in the -dbgsym packages. In Debian's build the string decoder copies into a 1024-byte (0x400) buffer and stores the encoded length unchanged. In every published DHI build, on both architectures, it copies into a 1025-byte (0x401) buffer and then compares the length with 1024 and stores at most 1024, which is the upstream fix backported to 2.4.10. The lowest published DHI build, the fifth, already carries it, so every published build is fixed."
     }
   ]
 }

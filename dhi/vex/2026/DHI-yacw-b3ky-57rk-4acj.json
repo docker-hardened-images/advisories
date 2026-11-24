@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:56:08Z",
-  "last_updated": "2026-11-20T04:20:49Z",
-  "version": 4,
+  "last_updated": "2026-11-24T16:47:05Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -15,12 +15,6 @@
         ]
       },
       "products": [
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
-        },
         {
           "@id": "pkg:apk/dhi/docker@29.5.2-r0?distro=dhi-3.24"
         },
@@ -71,6 +65,25 @@
         },
         {
           "@id": "pkg:apk/dhi/docker@29.8.1-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker to 29.8.2-r0 or later.",
+      "status_notes": "CVE-2026-92543 (GHSA-7cfq-22r6-qp73): Docker Engine treats a registry as insecure when any one of the addresses its host name resolves to falls inside an insecure-registry range, and it adds 127.0.0.0/8 and ::1/128 to that list by default; because the connection then dials the host name again rather than the matching address, a DNS answer that pairs one loopback address with an attacker's address can turn off certificate verification and allow plain-HTTP fallback for that registry. It is fixed in Docker Engine 29.8.2: https://github.com/moby/moby/security/advisories/GHSA-7cfq-22r6-qp73 . The fix on the docker-29.x branch is commit https://github.com/moby/moby/commit/fa42933fd5c2eda65cedbdf84657e77fa860530b (in docker-v29.8.2, not docker-v29.8.1), a cherry-pick of https://github.com/moby/moby/commit/db9f143dae0692f11ee7a2d32cdc9066049a673b . Outside tests it changes daemon/pkg/registry/config.go so that isCIDRMatch requires every resolved address to match, moving the per-address check into a new matchesCIDR function. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages. We covered every subpackage of every build in the DHI Alpine 3.24 repository, 32 versions from 29.5.2-r0 to 29.10.0-r1, for x86_64 and aarch64, with each package scan matched to the index checksum. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. We read the function table of every Go program in every build from its Go line table, with runtime.main as a control. dockerd contains the registry package's isCIDRMatch and serviceConfig.loadInsecureRegistries in every build; the new matchesCIDR function is absent from dockerd in every build up to 29.8.1-r0 and present in every build from 29.8.2-r0, on both architectures. docker-proxy does not contain isCIDRMatch. The docker program in docker-cli carries its own copy of the registry code, github.com/docker/cli/internal/registry, whose isCIDRMatch keeps the any-address match in every build (docker/cli v29.4.0 to v29.10.0), but the CLI gives it a list of ranges only when a registry is passed as insecure (docker manifest --insecure), and it then finds that registry's own entry before trying the range match, so the range match never decides whether a registry is treated as secure: https://github.com/docker/cli/blob/v29.10.0/internal/registry/config.go . FIXED at 29.8.2-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-yacw-b3ky-57rk-4acj",
+        "aliases": [
+          "CVE-2026-92543"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/docker@29.8.2-r0?distro=dhi-3.24"
@@ -112,7 +125,8 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-92543 (GHSA-7cfq-22r6-qp73): Docker Engine treats a registry as insecure when any one of the addresses its host name resolves to falls inside an insecure-registry range, and it adds 127.0.0.0/8 and ::1/128 to that list by default; because the connection then dials the host name again rather than the matching address, a DNS answer that pairs one loopback address with an attacker's address can turn off certificate verification and allow plain-HTTP fallback for that registry. It is fixed in Docker Engine 29.8.2: https://github.com/moby/moby/security/advisories/GHSA-7cfq-22r6-qp73 . The fix on the docker-29.x branch is commit https://github.com/moby/moby/commit/fa42933fd5c2eda65cedbdf84657e77fa860530b (in docker-v29.8.2, not docker-v29.8.1), a cherry-pick of https://github.com/moby/moby/commit/db9f143dae0692f11ee7a2d32cdc9066049a673b . Outside tests it changes daemon/pkg/registry/config.go so that isCIDRMatch requires every resolved address to match, moving the per-address check into a new matchesCIDR function. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages. We covered every subpackage of every build in the DHI Alpine 3.24 repository, 32 versions from 29.5.2-r0 to 29.10.0-r1, for x86_64 and aarch64, with each package scan matched to the index checksum. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. We read the function table of every Go program in every build from its Go line table, with runtime.main as a control. dockerd contains the registry package's isCIDRMatch and serviceConfig.loadInsecureRegistries in every build; the new matchesCIDR function is absent from dockerd in every build up to 29.8.1-r0 and present in every build from 29.8.2-r0, on both architectures. docker-proxy does not contain isCIDRMatch. The docker program in docker-cli carries its own copy of the registry code, github.com/docker/cli/internal/registry, whose isCIDRMatch keeps the any-address match in every build (docker/cli v29.4.0 to v29.10.0), but the CLI gives it a list of ranges only when a registry is passed as insecure (docker manifest --insecure), and it then finds that registry's own entry before trying the range match, so the range match never decides whether a registry is treated as secure: https://github.com/docker/cli/blob/v29.10.0/internal/registry/config.go . FIXED at 29.8.2-r0."
     }
   ]
 }
