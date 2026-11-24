@@ -9,8 +9,8 @@ model coexist during the migration.
 
 ## Migration Status — November 23, 2026
 
-The first **100 images** will cut over to `ID=dhi` on **November 30, 2026**
-(image list: **link to follow**). We will continue migrating the catalog through
+The first [**100 prioritized images**](first-100-images.md) will cut over to
+`ID=dhi` on **November 30, 2026**. We will continue migrating the catalog through
 **January 2027**.
 
 Published canary images are available now for integration testing:
