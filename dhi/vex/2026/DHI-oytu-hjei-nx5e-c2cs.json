@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-24T18:45:43Z",
-  "version": 19,
+  "last_updated": "2026-11-24T19:42:13Z",
+  "version": 20,
   "statements": [
     {
       "vulnerability": {
@@ -6183,6 +6183,22 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.1-r3?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.2-r3?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26-dev to 1.26.3-r0 or later.",
+      "status_notes": "CVE-2026-33811 (GO-2026-4981): when a Go program uses the cgo DNS resolver, LookupCNAME (and Resolver.LookupCNAME) on a very long CNAME response could free the same C buffer twice in cgoResSearch in the net package and crash the program. The Go vulnerability database lists it for Go before 1.25.10 and Go 1.26.0 to 1.26.2, fixed in Go 1.26.3: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . For Go 1.26 the fix is commit e0f5c05 on release-branch.go1.26, \"net: avoid double-free of cgo pointer when handling large DNS response\"; it names CVE-2026-33811 and its only change is to src/net/cgo_unix.go, where cgoResSearch now frees the buffer in a deferred closure, so a buffer reallocated for a larger response is the one freed; it is in go1.26.3 and not in go1.26.2: https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92 . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/net that is compiled into programs built with it. Programs built with it that enable cgo and use the cgo resolver run this code, so the status follows the Go release. We read every published golang-1.26-dev package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 15 versions, 1.26.1-r2 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version: every build before 1.26.3-r0 (1.26.1-r2 to 1.26.2-r3) packages Go 1.26.1 to 1.26.2, inside the affected range, and 1.26.3-r0 and every later build package Go 1.26.3 to 1.26.11. As a check on the boundary, on both architectures the src/net/cgo_unix.go in 1.26.3-r0 frees the buffer in the deferred closure the fix adds (its comment about picking up a reallocated buffer is present and the plain defer _C_free(unsafe.Pointer(buf)) is gone), and the one in 1.26.2-r3 still has the plain deferred free. The range ends at 1.26.3-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-oytu-hjei-nx5e-c2cs",
+        "aliases": [
+          "CVE-2026-33811"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.10-r0?distro=dhi-3.23"
         },
         {
@@ -6190,9 +6206,6 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.2-r3?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.3-r0?distro=dhi-3.23"
@@ -6222,7 +6235,8 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-33811 (GO-2026-4981): when a Go program uses the cgo DNS resolver, LookupCNAME (and Resolver.LookupCNAME) on a very long CNAME response could free the same C buffer twice in cgoResSearch in the net package and crash the program. The Go vulnerability database lists it for Go before 1.25.10 and Go 1.26.0 to 1.26.2, fixed in Go 1.26.3: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . For Go 1.26 the fix is commit e0f5c05 on release-branch.go1.26, \"net: avoid double-free of cgo pointer when handling large DNS response\"; it names CVE-2026-33811 and its only change is to src/net/cgo_unix.go, where cgoResSearch now frees the buffer in a deferred closure, so a buffer reallocated for a larger response is the one freed; it is in go1.26.3 and not in go1.26.2: https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92 . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/net that is compiled into programs built with it. Programs built with it that enable cgo and use the cgo resolver run this code, so the status follows the Go release. We read every published golang-1.26-dev package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 15 versions, 1.26.1-r2 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version: every build before 1.26.3-r0 (1.26.1-r2 to 1.26.2-r3) packages Go 1.26.1 to 1.26.2, inside the affected range, and 1.26.3-r0 and every later build package Go 1.26.3 to 1.26.11. As a check on the boundary, on both architectures the src/net/cgo_unix.go in 1.26.3-r0 frees the buffer in the deferred closure the fix adds (its comment about picking up a reallocated buffer is present and the plain defer _C_free(unsafe.Pointer(buf)) is gone), and the one in 1.26.2-r3 still has the plain deferred free. The range ends at 1.26.3-r0."
     },
     {
       "vulnerability": {
@@ -6251,6 +6265,22 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.1-r3?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.2-r3?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26 to 1.26.3-r0 or later.",
+      "status_notes": "CVE-2026-33811 (GO-2026-4981): when a Go program uses the cgo DNS resolver, LookupCNAME (and Resolver.LookupCNAME) on a very long CNAME response could free the same C buffer twice in cgoResSearch in the net package and crash the program. The Go vulnerability database lists it for Go before 1.25.10 and Go 1.26.0 to 1.26.2, fixed in Go 1.26.3: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . For Go 1.26 the fix is commit e0f5c05 on release-branch.go1.26, \"net: avoid double-free of cgo pointer when handling large DNS response\"; it names CVE-2026-33811 and its only change is to src/net/cgo_unix.go, where cgoResSearch now frees the buffer in a deferred closure, so a buffer reallocated for a larger response is the one freed; it is in go1.26.3 and not in go1.26.2: https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92 . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/net that is compiled into programs built with it. Programs built with it that enable cgo and use the cgo resolver run this code, so the status follows the Go release. We read every published golang-1.26 package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 18 versions, 1.26.0-r0 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version: every build before 1.26.3-r0 (1.26.0-r0 to 1.26.2-r3) packages Go 1.26.0 to 1.26.2, inside the affected range, and 1.26.3-r0 and every later build package Go 1.26.3 to 1.26.11. As a check on the boundary, on both architectures the src/net/cgo_unix.go in 1.26.3-r0 frees the buffer in the deferred closure the fix adds (its comment about picking up a reallocated buffer is present and the plain defer _C_free(unsafe.Pointer(buf)) is gone), and the one in 1.26.2-r3 still has the plain deferred free. The range ends at 1.26.3-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-oytu-hjei-nx5e-c2cs",
+        "aliases": [
+          "CVE-2026-33811"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.10-r0?distro=dhi-3.23"
         },
         {
@@ -6258,9 +6288,6 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.2-r3?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.3-r0?distro=dhi-3.23"
@@ -6290,7 +6317,8 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-33811 (GO-2026-4981): when a Go program uses the cgo DNS resolver, LookupCNAME (and Resolver.LookupCNAME) on a very long CNAME response could free the same C buffer twice in cgoResSearch in the net package and crash the program. The Go vulnerability database lists it for Go before 1.25.10 and Go 1.26.0 to 1.26.2, fixed in Go 1.26.3: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . For Go 1.26 the fix is commit e0f5c05 on release-branch.go1.26, \"net: avoid double-free of cgo pointer when handling large DNS response\"; it names CVE-2026-33811 and its only change is to src/net/cgo_unix.go, where cgoResSearch now frees the buffer in a deferred closure, so a buffer reallocated for a larger response is the one freed; it is in go1.26.3 and not in go1.26.2: https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92 . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/net that is compiled into programs built with it. Programs built with it that enable cgo and use the cgo resolver run this code, so the status follows the Go release. We read every published golang-1.26 package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 18 versions, 1.26.0-r0 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) reports the Go release in the package version: every build before 1.26.3-r0 (1.26.0-r0 to 1.26.2-r3) packages Go 1.26.0 to 1.26.2, inside the affected range, and 1.26.3-r0 and every later build package Go 1.26.3 to 1.26.11. As a check on the boundary, on both architectures the src/net/cgo_unix.go in 1.26.3-r0 frees the buffer in the deferred closure the fix adds (its comment about picking up a reallocated buffer is present and the plain defer _C_free(unsafe.Pointer(buf)) is gone), and the one in 1.26.2-r3 still has the plain deferred free. The range ends at 1.26.3-r0."
     },
     {
       "vulnerability": {
