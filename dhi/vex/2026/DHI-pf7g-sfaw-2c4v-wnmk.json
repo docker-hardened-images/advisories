@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T01:49:54Z",
-  "last_updated": "2026-11-24T14:55:37Z",
-  "version": 51,
+  "last_updated": "2026-11-24T15:02:47Z",
+  "version": 52,
   "statements": [
     {
       "vulnerability": {
@@ -1866,7 +1866,9 @@
           "@id": "pkg:deb/dhi/azure-functions-python@4.1056.200-3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-5928 is a flaw in the GNU C Library (glibc), version 2.43 and earlier: the wide-character pushback code behind ungetwc (_IO_wdefault_pbackfail in libio/wgenops.c) worked on the stream's byte read buffer instead of its wide-character buffer, so on a stream using a character set whose single-byte and multibyte encodings overlap, ungetwc could read before the start of a heap buffer and disclose neighboring data, or crash when that pointer was unset. Sources: https://sourceware.org/git/?p=glibc.git;a=blob;f=advisories/GLIBC-SA-2026-0010, https://sourceware.org/bugzilla/show_bug.cgi?id=33998, https://security-tracker.debian.org/tracker/CVE-2026-5928. This package does not contain glibc. We unpacked all 78 azure-functions-python packages published in the DHI Debian repository, 4.1053.100-1 to 4.1056.200-3 (including the current file of 4.1056.200-3, which was republished under the same version), each checked against its index SHA256; they are published for amd64 only, and no arm64 build and no debug-symbol packages are published for this source. The scan covers the Azure Functions extension bundle each one carries; none of them contains a zip, wheel, jar or NuGet archive. None of them contains libc.so.6, the dynamic loader, a static C library, a gconv converter module or the glibc version banner, and none ships a static archive (.a) or a symbolic link. The package is the .NET-based Azure Functions host with its Python language workers. Each package has 45 to 48 ELF files (the .NET runtime and its host programs, the Python workers' extension modules, and the extension bundle's Linux native libraries, including librdkafka and libmsalruntime); none of them is statically linked, and every one lists the system libc.so.6 as a dynamic dependency except the two copies of alpine-librdkafka.so in the extension bundle, which are built for Alpine Linux and link musl's libc.musl-x86_64.so.1 instead. Most of its other binary content is managed .NET assemblies (845 to 854 PE files with a CLR header per package, which the bundled .NET runtime loads); the extension bundle also carries 38 native Windows libraries (PE files without a CLR header, such as the Windows builds of librdkafka, libcurl, OpenSSL and the Visual C++ runtime) and four native macOS libraries (Mach-O builds of librdkafka and the MSAL runtime), none of which is glibc. glibc, including ungetwc, is shipped in glibc's own packages, such as libc6."
     },
     {
       "vulnerability": {

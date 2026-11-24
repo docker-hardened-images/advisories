@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-24T09:58:52Z",
-  "version": 15,
+  "last_updated": "2026-11-24T15:03:41Z",
+  "version": 16,
   "statements": [
     {
       "vulnerability": {
@@ -502,6 +502,31 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/build-fips@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.6-r1?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build-fips to 2.7.0-r1 or later.",
+      "status_notes": "CVE-2026-27142 (GO-2026-4603): html/template did not escape URLs inserted by actions into the content attribute of an HTML meta tag, which allows cross-site scripting when the tag also has http-equiv=\"refresh\". It is fixed in Go 1.25.8 and 1.26.1: https://pkg.go.dev/vuln/GO-2026-4603, https://go.dev/issue/77954, https://go.dev/cl/752081, https://groups.google.com/g/golang-announce/c/EdhZqrQ98hk. Go 1.25.8 carries it as https://github.com/golang/go/commit/a9db31e6d9f280418ce441067f3f9dc0a036e770 on release-branch.go1.25, which names CVE-2026-27142. We read the Go build information and the Go function table (pclntab) of every Go program in every published build-fips package in the authenticated DHI Alpine 3.23 security repository, where the FIPS packages are published, x86_64 and aarch64: 91 versions from 2.6.4-r0 to 2.30.0-r0, with 2.6.4-r0 published for aarch64 only, each package verified against the index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. The Go programs are /usr/bin/build, from 2.26.2-r1 also /opt/docker/dhi/yq, and from 2.28.0-r1 also /usr/bin/dhi-source; from 2.27.1-r1 the packages also carry /opt/docker/dhi/uv, a Rust program with no Go function table. No package contains a symbolic link. In every build, /usr/bin/build and, where present, /usr/bin/dhi-source contain all four of the advisory's html/template functions, (*Template).Execute, (*Template).ExecuteTemplate, (*escaper).escapeAction and tTag, so the vulnerable code is present; /opt/docker/dhi/yq contains no html/template function. All Go programs in one build are compiled with the same Go release: 2.6.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The 4 builds before 2.7.0-r1 use Go 1.25.7, which lacks the fix; 2.7.0-r1 and every later build use a Go release that carries it, so 2.7.0-r1 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-l6ep-3fvl-pdy7-7pfd",
+        "aliases": [
+          "CVE-2026-27142"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/build-fips@2.10.0-r0?distro=dhi-3.23"
         },
         {
@@ -721,18 +746,6 @@
           "@id": "pkg:apk/dhi/build-fips@2.30.0-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/build-fips@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/build-fips@2.7.0-r1?distro=dhi-3.23"
         },
         {
@@ -775,7 +788,36 @@
           "@id": "pkg:apk/dhi/build-fips@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-27142 (GO-2026-4603): html/template did not escape URLs inserted by actions into the content attribute of an HTML meta tag, which allows cross-site scripting when the tag also has http-equiv=\"refresh\". It is fixed in Go 1.25.8 and 1.26.1: https://pkg.go.dev/vuln/GO-2026-4603, https://go.dev/issue/77954, https://go.dev/cl/752081, https://groups.google.com/g/golang-announce/c/EdhZqrQ98hk. Go 1.25.8 carries it as https://github.com/golang/go/commit/a9db31e6d9f280418ce441067f3f9dc0a036e770 on release-branch.go1.25, which names CVE-2026-27142. We read the Go build information and the Go function table (pclntab) of every Go program in every published build-fips package in the authenticated DHI Alpine 3.23 security repository, where the FIPS packages are published, x86_64 and aarch64: 91 versions from 2.6.4-r0 to 2.30.0-r0, with 2.6.4-r0 published for aarch64 only, each package verified against the index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. The Go programs are /usr/bin/build, from 2.26.2-r1 also /opt/docker/dhi/yq, and from 2.28.0-r1 also /usr/bin/dhi-source; from 2.27.1-r1 the packages also carry /opt/docker/dhi/uv, a Rust program with no Go function table. No package contains a symbolic link. In every build, /usr/bin/build and, where present, /usr/bin/dhi-source contain all four of the advisory's html/template functions, (*Template).Execute, (*Template).ExecuteTemplate, (*escaper).escapeAction and tTag, so the vulnerable code is present; /opt/docker/dhi/yq contains no html/template function. All Go programs in one build are compiled with the same Go release: 2.6.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The 4 builds before 2.7.0-r1 use Go 1.25.7, which lacks the fix; 2.7.0-r1 and every later build use a Go release that carries it, so 2.7.0-r1 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-l6ep-3fvl-pdy7-7pfd",
+        "aliases": [
+          "CVE-2026-27142"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/build@2.4.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.6-r1?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build to 2.7.0-r1 or later.",
+      "status_notes": "CVE-2026-27142 (GO-2026-4603): html/template did not escape URLs inserted by actions into the content attribute of an HTML meta tag, which allows cross-site scripting when the tag also has http-equiv=\"refresh\". It is fixed in Go 1.25.8 and 1.26.1: https://pkg.go.dev/vuln/GO-2026-4603, https://go.dev/issue/77954, https://go.dev/cl/752081, https://groups.google.com/g/golang-announce/c/EdhZqrQ98hk. Go 1.25.8 carries it as https://github.com/golang/go/commit/a9db31e6d9f280418ce441067f3f9dc0a036e770 on release-branch.go1.25, which names CVE-2026-27142. We read the Go build information and the Go function table (pclntab) of every Go program in every published build package in the DHI Alpine 3.23 package repository, x86_64 and aarch64: 92 versions from 2.4.4-r0 to 2.30.0-r0, with 2.6.4-r0 published for aarch64 only, each package verified against the index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. The Go programs are /usr/bin/build (/opt/docker/dhi/build in 2.4.4-r0), from 2.26.2-r1 also /opt/docker/dhi/yq, and from 2.28.0-r1 also /usr/bin/dhi-source; from 2.27.1-r1 the packages also carry /opt/docker/dhi/uv, a Rust program with no Go function table. No package contains a symbolic link. In every build, /usr/bin/build (/opt/docker/dhi/build in 2.4.4-r0) and, where present, /usr/bin/dhi-source contain all four of the advisory's html/template functions, (*Template).Execute, (*Template).ExecuteTemplate, (*escaper).escapeAction and tTag, so the vulnerable code is present; /opt/docker/dhi/yq contains no html/template function. All Go programs in one build are compiled with the same Go release: 2.4.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The 5 builds before 2.7.0-r1 use Go 1.25.7, which lacks the fix; 2.7.0-r1 and every later build use a Go release that carries it, so 2.7.0-r1 is the first fixed build."
     },
     {
       "vulnerability": {
@@ -1005,21 +1047,6 @@
           "@id": "pkg:apk/dhi/build@2.30.0-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/build@2.4.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/build@2.7.0-r1?distro=dhi-3.23"
         },
         {
@@ -1062,7 +1089,8 @@
           "@id": "pkg:apk/dhi/build@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-27142 (GO-2026-4603): html/template did not escape URLs inserted by actions into the content attribute of an HTML meta tag, which allows cross-site scripting when the tag also has http-equiv=\"refresh\". It is fixed in Go 1.25.8 and 1.26.1: https://pkg.go.dev/vuln/GO-2026-4603, https://go.dev/issue/77954, https://go.dev/cl/752081, https://groups.google.com/g/golang-announce/c/EdhZqrQ98hk. Go 1.25.8 carries it as https://github.com/golang/go/commit/a9db31e6d9f280418ce441067f3f9dc0a036e770 on release-branch.go1.25, which names CVE-2026-27142. We read the Go build information and the Go function table (pclntab) of every Go program in every published build package in the DHI Alpine 3.23 package repository, x86_64 and aarch64: 92 versions from 2.4.4-r0 to 2.30.0-r0, with 2.6.4-r0 published for aarch64 only, each package verified against the index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. The Go programs are /usr/bin/build (/opt/docker/dhi/build in 2.4.4-r0), from 2.26.2-r1 also /opt/docker/dhi/yq, and from 2.28.0-r1 also /usr/bin/dhi-source; from 2.27.1-r1 the packages also carry /opt/docker/dhi/uv, a Rust program with no Go function table. No package contains a symbolic link. In every build, /usr/bin/build (/opt/docker/dhi/build in 2.4.4-r0) and, where present, /usr/bin/dhi-source contain all four of the advisory's html/template functions, (*Template).Execute, (*Template).ExecuteTemplate, (*escaper).escapeAction and tTag, so the vulnerable code is present; /opt/docker/dhi/yq contains no html/template function. All Go programs in one build are compiled with the same Go release: 2.4.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The 5 builds before 2.7.0-r1 use Go 1.25.7, which lacks the fix; 2.7.0-r1 and every later build use a Go release that carries it, so 2.7.0-r1 is the first fixed build."
     },
     {
       "vulnerability": {
