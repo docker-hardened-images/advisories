@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-21T06:39:20Z",
-  "last_updated": "2026-11-24T09:01:04Z",
-  "version": 10,
+  "last_updated": "2026-11-24T09:17:13Z",
+  "version": 11,
   "statements": [
     {
       "vulnerability": {
@@ -1301,7 +1301,9 @@
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.39.1-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-34040 (GHSA-x744-4wpc-v9h2, GO-2026-4887): with a specially crafted API request, an attacker could make the Docker daemon forward a request to an authorization (AuthZ) plugin without its body, so a plugin that inspects request bodies could allow a request it would otherwise deny. It is an incomplete fix for CVE-2024-41110. The flaw is in the daemon's AuthZ plugin support, Ctx.AuthZRequest, drainBody and isChunked in the pkg/authorization package of github.com/docker/docker and github.com/moby/moby (every version in GO-2026-4887; GHSA-x744-4wpc-v9h2 lists github.com/moby/moby before 29.3.1) and github.com/moby/moby/v2 (before v2.0.0-beta.8). Docker Engine 29.3.1 fixes it: https://github.com/moby/moby/security/advisories/GHSA-x744-4wpc-v9h2, https://github.com/moby/moby/releases/tag/docker-v29.3.1, https://pkg.go.dev/vuln/GO-2026-4887. The fix on the master branch is https://github.com/moby/moby/commit/e89edb19ad7de0407a5d31e3111cb01aa10b5a38 and rejects request bodies over 4 MiB. This package is the Buildx CLI plugin, a client. We read every docker-cli-buildx package for Alpine 3.23 in the DHI Alpine main and security repositories (no other package is built from the docker-cli-buildx source, and the security repository has none), each matching its index checksum: 0.33.0-r1 to 0.39.1-r1, 29 aarch64 and 28 x86_64 builds (0.34.1-r0 is published for aarch64 only). Each holds one file, /usr/libexec/docker/cli-plugins/docker-buildx, a Go program that is dynamically linked against musl up to 0.39.0-r0 and statically linked in 0.39.1-r0 and 0.39.1-r1. Its Go build information lists github.com/docker/docker v28.5.2+incompatible, but the function table of every build (read from its Go pclntab) shows that the only package compiled in from that module is github.com/docker/docker/pkg/namesgenerator. No github.com/moby/moby/v2 package is present. The only other packages from the github.com/moby/moby repository come from its client and api modules (github.com/moby/moby/client and github.com/moby/moby/api), which send Engine API requests. No build has any function from the pkg/authorization package of github.com/docker/docker, github.com/moby/moby or github.com/moby/moby/v2. A byte search of every build finds no pkg/authorization package path and no AuthZRequest name. As a check, the same function-table reader and byte search find the github.com/docker/docker/pkg/authorization package and the AuthZRequest name in a test program we built for linux/amd64 and linux/arm64 against the vulnerable github.com/docker/docker v28.5.2+incompatible that calls (*Ctx).AuthZRequest, and find github.com/moby/moby/v2/pkg/authorization and the AuthZRequest name in /usr/bin/dockerd of the DHI docker-engine 29.10.0-r1 package for Alpine 3.23 on x86_64 and aarch64, which shows the search works."
     },
     {
       "vulnerability": {
@@ -1393,7 +1395,9 @@
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.39.1-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-34040 (GHSA-x744-4wpc-v9h2, GO-2026-4887): with a specially crafted API request, an attacker could make the Docker daemon forward a request to an authorization (AuthZ) plugin without its body, so a plugin that inspects request bodies could allow a request it would otherwise deny. It is an incomplete fix for CVE-2024-41110. The flaw is in the daemon's AuthZ plugin support, Ctx.AuthZRequest, drainBody and isChunked in the pkg/authorization package of github.com/docker/docker and github.com/moby/moby (every version in GO-2026-4887; GHSA-x744-4wpc-v9h2 lists github.com/moby/moby before 29.3.1) and github.com/moby/moby/v2 (before v2.0.0-beta.8). Docker Engine 29.3.1 fixes it: https://github.com/moby/moby/security/advisories/GHSA-x744-4wpc-v9h2, https://github.com/moby/moby/releases/tag/docker-v29.3.1, https://pkg.go.dev/vuln/GO-2026-4887. The fix on the master branch is https://github.com/moby/moby/commit/e89edb19ad7de0407a5d31e3111cb01aa10b5a38 and rejects request bodies over 4 MiB. This package is the Buildx CLI plugin, a client. We read every docker-cli-buildx package for Alpine 3.24 in the DHI Alpine main and security repositories (no other package is built from the docker-cli-buildx source, and the security repository has none), each matching its index checksum: 0.34.1-r0 to 0.39.1-r1, 27 builds each for aarch64 and x86_64. Each holds one file, /usr/libexec/docker/cli-plugins/docker-buildx, a Go program that is dynamically linked against musl up to 0.39.0-r0 and statically linked in 0.39.1-r0 and 0.39.1-r1. Its Go build information lists github.com/docker/docker v28.5.2+incompatible, but the function table of every build (read from its Go pclntab) shows that the only package compiled in from that module is github.com/docker/docker/pkg/namesgenerator. No github.com/moby/moby/v2 package is present. The only other packages from the github.com/moby/moby repository come from its client and api modules (github.com/moby/moby/client and github.com/moby/moby/api), which send Engine API requests. No build has any function from the pkg/authorization package of github.com/docker/docker, github.com/moby/moby or github.com/moby/moby/v2. A byte search of every build finds no pkg/authorization package path and no AuthZRequest name. As a check, the same function-table reader and byte search find the github.com/docker/docker/pkg/authorization package and the AuthZRequest name in a test program we built for linux/amd64 and linux/arm64 against the vulnerable github.com/docker/docker v28.5.2+incompatible that calls (*Ctx).AuthZRequest, and find github.com/moby/moby/v2/pkg/authorization and the AuthZRequest name in /usr/bin/dockerd of the DHI docker-engine 29.10.0-r1 package for Alpine 3.23 on x86_64 and aarch64, which shows the search works."
     },
     {
       "vulnerability": {
