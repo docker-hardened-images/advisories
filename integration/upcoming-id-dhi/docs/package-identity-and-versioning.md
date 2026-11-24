@@ -294,5 +294,9 @@ must not narrow coverage or manufacture a fix. Where evidence is absent, broad
 coverage is preferred to a scanning blind spot.
 
 Comparator-equivalent spellings use a deterministic lexical tie-break.
-Versions rejected by the native parser fail publication rather than silently
-falling back to `0` or inventing a boundary.
+Exact version strings pass through unchanged to OSV `versions[]` and VEX
+products, including spellings the native comparator cannot order. Native ordering
+is required to derive or compare range boundaries. When a new safe suffix cannot
+be derived, the producer publishes exact versions only, without inventing a
+boundary. Passing through an exact version does not alter an already justified
+range or another package's coverage.
