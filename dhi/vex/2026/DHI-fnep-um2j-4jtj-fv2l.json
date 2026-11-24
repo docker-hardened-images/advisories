@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:26Z",
-  "last_updated": "2026-11-23T07:23:51Z",
-  "version": 22,
+  "last_updated": "2026-11-24T12:49:41Z",
+  "version": 23,
   "statements": [
     {
       "vulnerability": {
@@ -230,6 +230,9 @@
         },
         {
           "@id": "pkg:apk/dhi/build-dev@2.29.1-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.30.0-r0?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/build-dev@2.6.4-r0?distro=dhi-3.23"
@@ -515,6 +518,9 @@
           "@id": "pkg:apk/dhi/build-fips-dev@2.29.1-r2?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.30.0-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/build-fips-dev@2.6.4-r0?distro=dhi-3.23"
         },
         {
@@ -798,6 +804,9 @@
           "@id": "pkg:apk/dhi/build-fips@2.29.1-r2?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/build-fips@2.30.0-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/build-fips@2.6.4-r0?distro=dhi-3.23"
         },
         {
@@ -1079,6 +1088,9 @@
         },
         {
           "@id": "pkg:apk/dhi/build@2.29.1-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.30.0-r0?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/build@2.4.4-r0?distro=dhi-3.23"
@@ -8251,6 +8263,9 @@
         },
         {
           "@id": "pkg:apk/dhi/openshift-console-dev@4.22.22-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/openshift-console-dev@4.22.22-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -8322,6 +8337,9 @@
         },
         {
           "@id": "pkg:apk/dhi/openshift-console-fips-dev@4.22.22-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/openshift-console-fips-dev@4.22.22-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -8393,6 +8411,9 @@
         },
         {
           "@id": "pkg:apk/dhi/openshift-console-fips@4.22.22-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/openshift-console-fips@4.22.22-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -8464,6 +8485,9 @@
         },
         {
           "@id": "pkg:apk/dhi/openshift-console@4.22.22-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/openshift-console@4.22.22-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -10635,15 +10659,6 @@
           "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r10?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r11?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r12?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r1?distro=dhi-3.23"
         },
         {
@@ -10654,6 +10669,28 @@
         },
         {
           "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r4?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update trivy-dev to 0.74.0-r5 or later.",
+      "status_notes": "CVE-2026-95838 (GHSA-rp3h-jf77-q9p4, GO-2026-6796): containerd's layer unpacker, applyNaive in the archive package, walked a directory again for every opaque whiteout entry in it, so a crafted image layer that interleaves files and opaque whiteouts makes unpacking take superlinear time and CPU. It is fixed in containerd 2.3.5, 2.2.8, 2.0.12 and 1.7.35: https://github.com/containerd/containerd/security/advisories/GHSA-rp3h-jf77-q9p4 and https://pkg.go.dev/vuln/GO-2026-6796. On the release/2.3 branch the fix is commit https://github.com/containerd/containerd/commit/c535779652bc8d541328a36ba598088c09819b97 (archive: skip redundant opaque whiteout walks), which changes pkg/archive/tar.go and its test, and is in v2.3.5 but not v2.3.4. We read every published trivy-dev package for Alpine 3.23 in the DHI Alpine repository: 38 builds, 0.69.1-r0 to the current 0.74.0-r12, each for x86_64 and aarch64, each package checked against the index checksum. Each package installs one file, /usr/bin/trivy, a Go program built with CGO_ENABLED=0 that keeps its Go symbol table; we read its Go build information, its function table (which lists runtime.main in every build) and its raw bytes. trivy links containerd's unpacker: github.com/containerd/containerd/v2/pkg/archive.Apply, applyNaive and its closures are in the function table of every build. The build information lists github.com/containerd/containerd/v2 v2.2.0 to v2.2.4 in 0.69.1-r0 to 0.70.0-r6, v2.3.1 to v2.3.3 in 0.71.0-r0 to 0.74.0-r4, which the advisory lists as affected, and v2.3.5 or later from 0.74.0-r5, with no replace directive for it; the source paths in each binary name the same version for pkg/archive/tar.go, v2.3.3 in 0.74.0-r4 and v2.3.5 in 0.74.0-r5. Builds 0.69.1-r0 to 0.70.0-r6 also list the older github.com/containerd/containerd module (1.7.29 to 1.7.32), but no function or source path from its archive package is in them. 0.74.0-r5 is the first build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-fnep-um2j-4jtj-fv2l",
+        "aliases": [
+          "CVE-2026-95838"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r10?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r11?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r12?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r5?distro=dhi-3.23"
@@ -10671,7 +10708,8 @@
           "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-95838 (GHSA-rp3h-jf77-q9p4, GO-2026-6796): containerd's layer unpacker, applyNaive in the archive package, walked a directory again for every opaque whiteout entry in it, so a crafted image layer that interleaves files and opaque whiteouts makes unpacking take superlinear time and CPU. It is fixed in containerd 2.3.5, 2.2.8, 2.0.12 and 1.7.35: https://github.com/containerd/containerd/security/advisories/GHSA-rp3h-jf77-q9p4 and https://pkg.go.dev/vuln/GO-2026-6796. On the release/2.3 branch the fix is commit https://github.com/containerd/containerd/commit/c535779652bc8d541328a36ba598088c09819b97 (archive: skip redundant opaque whiteout walks), which changes pkg/archive/tar.go and its test, and is in v2.3.5 but not v2.3.4. We read every published trivy-dev package for Alpine 3.23 in the DHI Alpine repository: 38 builds, 0.69.1-r0 to the current 0.74.0-r12, each for x86_64 and aarch64, each package checked against the index checksum. Each package installs one file, /usr/bin/trivy, a Go program built with CGO_ENABLED=0 that keeps its Go symbol table; we read its Go build information, its function table (which lists runtime.main in every build) and its raw bytes. trivy links containerd's unpacker: github.com/containerd/containerd/v2/pkg/archive.Apply, applyNaive and its closures are in the function table of every build. The build information lists github.com/containerd/containerd/v2 v2.2.0 to v2.2.4 in 0.69.1-r0 to 0.70.0-r6, v2.3.1 to v2.3.3 in 0.71.0-r0 to 0.74.0-r4, which the advisory lists as affected, and v2.3.5 or later from 0.74.0-r5, with no replace directive for it; the source paths in each binary name the same version for pkg/archive/tar.go, v2.3.3 in 0.74.0-r4 and v2.3.5 in 0.74.0-r5. Builds 0.69.1-r0 to 0.70.0-r6 also list the older github.com/containerd/containerd module (1.7.29 to 1.7.32), but no function or source path from its archive package is in them. 0.74.0-r5 is the first build that carries the fix."
     },
     {
       "vulnerability": {
@@ -10760,15 +10798,6 @@
           "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r10?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r11?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r12?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r1?distro=dhi-3.23"
         },
         {
@@ -10779,6 +10808,28 @@
         },
         {
           "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r4?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update trivy-fips-dev to 0.74.0-r5 or later.",
+      "status_notes": "CVE-2026-95838 (GHSA-rp3h-jf77-q9p4, GO-2026-6796): containerd's layer unpacker, applyNaive in the archive package, walked a directory again for every opaque whiteout entry in it, so a crafted image layer that interleaves files and opaque whiteouts makes unpacking take superlinear time and CPU. It is fixed in containerd 2.3.5, 2.2.8, 2.0.12 and 1.7.35: https://github.com/containerd/containerd/security/advisories/GHSA-rp3h-jf77-q9p4 and https://pkg.go.dev/vuln/GO-2026-6796. On the release/2.3 branch the fix is commit https://github.com/containerd/containerd/commit/c535779652bc8d541328a36ba598088c09819b97 (archive: skip redundant opaque whiteout walks), which changes pkg/archive/tar.go and its test, and is in v2.3.5 but not v2.3.4. We read every published trivy-fips-dev package for Alpine 3.23 in the DHI Alpine security repository, where the FIPS packages are published: 38 builds, 0.69.1-r0 to the current 0.74.0-r12, each for x86_64 and aarch64, each package checked against the index checksum. Each package installs one file, /usr/bin/trivy, a Go program built with CGO_ENABLED=0 that keeps its Go symbol table; we read its Go build information, its function table (which lists runtime.main in every build) and its raw bytes. trivy links containerd's unpacker: github.com/containerd/containerd/v2/pkg/archive.Apply, applyNaive and its closures are in the function table of every build. The build information lists github.com/containerd/containerd/v2 v2.2.0 to v2.2.4 in 0.69.1-r0 to 0.70.0-r6, v2.3.1 to v2.3.3 in 0.71.0-r0 to 0.74.0-r4, which the advisory lists as affected, and v2.3.5 or later from 0.74.0-r5, with no replace directive for it; the source paths in each binary name the same version for pkg/archive/tar.go, v2.3.3 in 0.74.0-r4 and v2.3.5 in 0.74.0-r5. Builds 0.69.1-r0 to 0.70.0-r6 also list the older github.com/containerd/containerd module (1.7.29 to 1.7.32), but no function or source path from its archive package is in them. 0.74.0-r5 is the first build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-fnep-um2j-4jtj-fv2l",
+        "aliases": [
+          "CVE-2026-95838"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r10?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r11?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r12?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r5?distro=dhi-3.23"
@@ -10796,7 +10847,8 @@
           "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-95838 (GHSA-rp3h-jf77-q9p4, GO-2026-6796): containerd's layer unpacker, applyNaive in the archive package, walked a directory again for every opaque whiteout entry in it, so a crafted image layer that interleaves files and opaque whiteouts makes unpacking take superlinear time and CPU. It is fixed in containerd 2.3.5, 2.2.8, 2.0.12 and 1.7.35: https://github.com/containerd/containerd/security/advisories/GHSA-rp3h-jf77-q9p4 and https://pkg.go.dev/vuln/GO-2026-6796. On the release/2.3 branch the fix is commit https://github.com/containerd/containerd/commit/c535779652bc8d541328a36ba598088c09819b97 (archive: skip redundant opaque whiteout walks), which changes pkg/archive/tar.go and its test, and is in v2.3.5 but not v2.3.4. We read every published trivy-fips-dev package for Alpine 3.23 in the DHI Alpine security repository, where the FIPS packages are published: 38 builds, 0.69.1-r0 to the current 0.74.0-r12, each for x86_64 and aarch64, each package checked against the index checksum. Each package installs one file, /usr/bin/trivy, a Go program built with CGO_ENABLED=0 that keeps its Go symbol table; we read its Go build information, its function table (which lists runtime.main in every build) and its raw bytes. trivy links containerd's unpacker: github.com/containerd/containerd/v2/pkg/archive.Apply, applyNaive and its closures are in the function table of every build. The build information lists github.com/containerd/containerd/v2 v2.2.0 to v2.2.4 in 0.69.1-r0 to 0.70.0-r6, v2.3.1 to v2.3.3 in 0.71.0-r0 to 0.74.0-r4, which the advisory lists as affected, and v2.3.5 or later from 0.74.0-r5, with no replace directive for it; the source paths in each binary name the same version for pkg/archive/tar.go, v2.3.3 in 0.74.0-r4 and v2.3.5 in 0.74.0-r5. Builds 0.69.1-r0 to 0.70.0-r6 also list the older github.com/containerd/containerd module (1.7.29 to 1.7.32), but no function or source path from its archive package is in them. 0.74.0-r5 is the first build that carries the fix."
     },
     {
       "vulnerability": {
@@ -10885,15 +10937,6 @@
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r10?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r11?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r12?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r1?distro=dhi-3.23"
         },
         {
@@ -10904,6 +10947,28 @@
         },
         {
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r4?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update trivy-fips to 0.74.0-r5 or later.",
+      "status_notes": "CVE-2026-95838 (GHSA-rp3h-jf77-q9p4, GO-2026-6796): containerd's layer unpacker, applyNaive in the archive package, walked a directory again for every opaque whiteout entry in it, so a crafted image layer that interleaves files and opaque whiteouts makes unpacking take superlinear time and CPU. It is fixed in containerd 2.3.5, 2.2.8, 2.0.12 and 1.7.35: https://github.com/containerd/containerd/security/advisories/GHSA-rp3h-jf77-q9p4 and https://pkg.go.dev/vuln/GO-2026-6796. On the release/2.3 branch the fix is commit https://github.com/containerd/containerd/commit/c535779652bc8d541328a36ba598088c09819b97 (archive: skip redundant opaque whiteout walks), which changes pkg/archive/tar.go and its test, and is in v2.3.5 but not v2.3.4. We read every published trivy-fips package for Alpine 3.23 in the DHI Alpine security repository, where the FIPS packages are published: 38 builds, 0.69.1-r0 to the current 0.74.0-r12, each for x86_64 and aarch64, each package checked against the index checksum. Each package installs one file, /usr/bin/trivy, a Go program built with CGO_ENABLED=0 that keeps its Go symbol table; we read its Go build information, its function table (which lists runtime.main in every build) and its raw bytes. trivy links containerd's unpacker: github.com/containerd/containerd/v2/pkg/archive.Apply, applyNaive and its closures are in the function table of every build. The build information lists github.com/containerd/containerd/v2 v2.2.0 to v2.2.4 in 0.69.1-r0 to 0.70.0-r6, v2.3.1 to v2.3.3 in 0.71.0-r0 to 0.74.0-r4, which the advisory lists as affected, and v2.3.5 or later from 0.74.0-r5, with no replace directive for it; the source paths in each binary name the same version for pkg/archive/tar.go, v2.3.3 in 0.74.0-r4 and v2.3.5 in 0.74.0-r5. Builds 0.69.1-r0 to 0.70.0-r6 also list the older github.com/containerd/containerd module (1.7.29 to 1.7.32), but no function or source path from its archive package is in them. 0.74.0-r5 is the first build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-fnep-um2j-4jtj-fv2l",
+        "aliases": [
+          "CVE-2026-95838"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r10?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r11?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r12?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r5?distro=dhi-3.23"
@@ -10921,7 +10986,8 @@
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-95838 (GHSA-rp3h-jf77-q9p4, GO-2026-6796): containerd's layer unpacker, applyNaive in the archive package, walked a directory again for every opaque whiteout entry in it, so a crafted image layer that interleaves files and opaque whiteouts makes unpacking take superlinear time and CPU. It is fixed in containerd 2.3.5, 2.2.8, 2.0.12 and 1.7.35: https://github.com/containerd/containerd/security/advisories/GHSA-rp3h-jf77-q9p4 and https://pkg.go.dev/vuln/GO-2026-6796. On the release/2.3 branch the fix is commit https://github.com/containerd/containerd/commit/c535779652bc8d541328a36ba598088c09819b97 (archive: skip redundant opaque whiteout walks), which changes pkg/archive/tar.go and its test, and is in v2.3.5 but not v2.3.4. We read every published trivy-fips package for Alpine 3.23 in the DHI Alpine security repository, where the FIPS packages are published: 38 builds, 0.69.1-r0 to the current 0.74.0-r12, each for x86_64 and aarch64, each package checked against the index checksum. Each package installs one file, /usr/bin/trivy, a Go program built with CGO_ENABLED=0 that keeps its Go symbol table; we read its Go build information, its function table (which lists runtime.main in every build) and its raw bytes. trivy links containerd's unpacker: github.com/containerd/containerd/v2/pkg/archive.Apply, applyNaive and its closures are in the function table of every build. The build information lists github.com/containerd/containerd/v2 v2.2.0 to v2.2.4 in 0.69.1-r0 to 0.70.0-r6, v2.3.1 to v2.3.3 in 0.71.0-r0 to 0.74.0-r4, which the advisory lists as affected, and v2.3.5 or later from 0.74.0-r5, with no replace directive for it; the source paths in each binary name the same version for pkg/archive/tar.go, v2.3.3 in 0.74.0-r4 and v2.3.5 in 0.74.0-r5. Builds 0.69.1-r0 to 0.70.0-r6 also list the older github.com/containerd/containerd module (1.7.29 to 1.7.32), but no function or source path from its archive package is in them. 0.74.0-r5 is the first build that carries the fix."
     },
     {
       "vulnerability": {
@@ -11246,15 +11312,6 @@
           "@id": "pkg:apk/dhi/trivy@0.74.0-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/trivy@0.74.0-r10?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/trivy@0.74.0-r11?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/trivy@0.74.0-r12?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/trivy@0.74.0-r1?distro=dhi-3.23"
         },
         {
@@ -11265,6 +11322,28 @@
         },
         {
           "@id": "pkg:apk/dhi/trivy@0.74.0-r4?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update trivy to 0.74.0-r5 or later.",
+      "status_notes": "CVE-2026-95838 (GHSA-rp3h-jf77-q9p4, GO-2026-6796): containerd's layer unpacker, applyNaive in the archive package, walked a directory again for every opaque whiteout entry in it, so a crafted image layer that interleaves files and opaque whiteouts makes unpacking take superlinear time and CPU. It is fixed in containerd 2.3.5, 2.2.8, 2.0.12 and 1.7.35: https://github.com/containerd/containerd/security/advisories/GHSA-rp3h-jf77-q9p4 and https://pkg.go.dev/vuln/GO-2026-6796. On the release/2.3 branch the fix is commit https://github.com/containerd/containerd/commit/c535779652bc8d541328a36ba598088c09819b97 (archive: skip redundant opaque whiteout walks), which changes pkg/archive/tar.go and its test, and is in v2.3.5 but not v2.3.4. We read every published trivy package for Alpine 3.23 in the DHI Alpine repository: 38 builds, 0.69.1-r0 to the current 0.74.0-r12, each for x86_64 and aarch64, each package checked against the index checksum. Each package installs one file, /usr/bin/trivy, a Go program built with CGO_ENABLED=0 that keeps its Go symbol table; we read its Go build information, its function table (which lists runtime.main in every build) and its raw bytes. trivy links containerd's unpacker: github.com/containerd/containerd/v2/pkg/archive.Apply, applyNaive and its closures are in the function table of every build. The build information lists github.com/containerd/containerd/v2 v2.2.0 to v2.2.4 in 0.69.1-r0 to 0.70.0-r6, v2.3.1 to v2.3.3 in 0.71.0-r0 to 0.74.0-r4, which the advisory lists as affected, and v2.3.5 or later from 0.74.0-r5, with no replace directive for it; the source paths in each binary name the same version for pkg/archive/tar.go, v2.3.3 in 0.74.0-r4 and v2.3.5 in 0.74.0-r5. Builds 0.69.1-r0 to 0.70.0-r6 also list the older github.com/containerd/containerd module (1.7.29 to 1.7.32), but no function or source path from its archive package is in them. 0.74.0-r5 is the first build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-fnep-um2j-4jtj-fv2l",
+        "aliases": [
+          "CVE-2026-95838"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/trivy@0.74.0-r10?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/trivy@0.74.0-r11?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/trivy@0.74.0-r12?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/trivy@0.74.0-r5?distro=dhi-3.23"
@@ -11282,7 +11361,8 @@
           "@id": "pkg:apk/dhi/trivy@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-95838 (GHSA-rp3h-jf77-q9p4, GO-2026-6796): containerd's layer unpacker, applyNaive in the archive package, walked a directory again for every opaque whiteout entry in it, so a crafted image layer that interleaves files and opaque whiteouts makes unpacking take superlinear time and CPU. It is fixed in containerd 2.3.5, 2.2.8, 2.0.12 and 1.7.35: https://github.com/containerd/containerd/security/advisories/GHSA-rp3h-jf77-q9p4 and https://pkg.go.dev/vuln/GO-2026-6796. On the release/2.3 branch the fix is commit https://github.com/containerd/containerd/commit/c535779652bc8d541328a36ba598088c09819b97 (archive: skip redundant opaque whiteout walks), which changes pkg/archive/tar.go and its test, and is in v2.3.5 but not v2.3.4. We read every published trivy package for Alpine 3.23 in the DHI Alpine repository: 38 builds, 0.69.1-r0 to the current 0.74.0-r12, each for x86_64 and aarch64, each package checked against the index checksum. Each package installs one file, /usr/bin/trivy, a Go program built with CGO_ENABLED=0 that keeps its Go symbol table; we read its Go build information, its function table (which lists runtime.main in every build) and its raw bytes. trivy links containerd's unpacker: github.com/containerd/containerd/v2/pkg/archive.Apply, applyNaive and its closures are in the function table of every build. The build information lists github.com/containerd/containerd/v2 v2.2.0 to v2.2.4 in 0.69.1-r0 to 0.70.0-r6, v2.3.1 to v2.3.3 in 0.71.0-r0 to 0.74.0-r4, which the advisory lists as affected, and v2.3.5 or later from 0.74.0-r5, with no replace directive for it; the source paths in each binary name the same version for pkg/archive/tar.go, v2.3.3 in 0.74.0-r4 and v2.3.5 in 0.74.0-r5. Builds 0.69.1-r0 to 0.70.0-r6 also list the older github.com/containerd/containerd module (1.7.29 to 1.7.32), but no function or source path from its archive package is in them. 0.74.0-r5 is the first build that carries the fix."
     },
     {
       "vulnerability": {
@@ -11773,6 +11853,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-dev@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-dev@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11826,6 +11909,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-fips-dev@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-fips-dev@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11879,6 +11965,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-fips@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-fips@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11914,6 +12003,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-ui-dev@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-ui-dev@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11949,6 +12041,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-ui-fips-dev@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-ui-fips-dev@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11984,6 +12079,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-ui-fips@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-ui-fips@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -12019,6 +12117,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-ui@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-ui@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -12072,6 +12173,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"

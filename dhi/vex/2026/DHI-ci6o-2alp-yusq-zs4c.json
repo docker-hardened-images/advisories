@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:20Z",
-  "last_updated": "2026-11-23T07:23:51Z",
-  "version": 22,
+  "last_updated": "2026-11-24T04:53:49Z",
+  "version": 23,
   "statements": [
     {
       "vulnerability": {
@@ -230,6 +230,9 @@
         },
         {
           "@id": "pkg:apk/dhi/build-dev@2.29.1-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.30.0-r0?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/build-dev@2.6.4-r0?distro=dhi-3.23"
@@ -515,6 +518,9 @@
           "@id": "pkg:apk/dhi/build-fips-dev@2.29.1-r2?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.30.0-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/build-fips-dev@2.6.4-r0?distro=dhi-3.23"
         },
         {
@@ -798,6 +804,9 @@
           "@id": "pkg:apk/dhi/build-fips@2.29.1-r2?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/build-fips@2.30.0-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/build-fips@2.6.4-r0?distro=dhi-3.23"
         },
         {
@@ -1079,6 +1088,9 @@
         },
         {
           "@id": "pkg:apk/dhi/build@2.29.1-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.30.0-r0?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/build@2.4.4-r0?distro=dhi-3.23"
@@ -3292,7 +3304,9 @@
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.39.1-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-53495 (GHSA-7jxh-36q5-gcqv, GO-2026-6444): in containerd on Linux with the CRI plugin enabled, the CRI ExecSync stdio drain (drainExecSyncIO in internal/cri/server/container_execsync.go) had no timeout and ignored request cancellation, so exec probes that left background processes holding the pipes leaked goroutines and memory in the containerd daemon. It is fixed in containerd 2.3.5, 2.2.8, 2.0.12 and 1.7.35; on the release/2.3 branch the fix is commit 9ec55f0, which changes only internal/cri/server/container_execsync.go and its test: https://github.com/containerd/containerd/security/advisories/GHSA-7jxh-36q5-gcqv, https://github.com/containerd/containerd/commit/9ec55f024041d0641f6d79841e45c8781141ddaa, https://github.com/containerd/containerd/releases/tag/v2.3.5. The vulnerable code is not in this package, which is the Buildx CLI plugin, not the containerd daemon. Read every published docker-cli-buildx package for Alpine 3.23 in the DHI Alpine repository: 0.33.0-r1 to the current 0.39.1-r1, 29 builds for aarch64 and 28 for x86_64 (0.34.1-r0 was published for aarch64 only), each verified against the checksum in the package index. Each package installs one file, /usr/libexec/docker/cli-plugins/docker-buildx, a Go program: up to 0.39.0-r0 it is an executable dynamically linked against musl (its interpreter is /lib/ld-musl-x86_64.so.1 or /lib/ld-musl-aarch64.so.1 and its only needed library is the matching libc.musl shared object), and in 0.39.1-r0 and 0.39.1-r1 it is a statically linked executable built with CGO_ENABLED=0. Its Go build information records github.com/containerd/containerd/v2 v2.2.2 to v2.4.2, but Go's internal/ rule stops a program outside containerd from importing internal/cri. Listing the Go functions in each binary from its function table (pclntab), which lists runtime.main in every binary, shows that the github.com/containerd/containerd/v2 packages present are client-side image and content code (core/content, core/images, core/remotes, plugins/content/local, plugins/services/content/contentserver, version, and helper packages under pkg/ and internal/), and the only other containerd code is the content service API package from the separate github.com/containerd/containerd/api module; no binary has a function under internal/cri, and a raw byte search finds the path \"containerd/v2/internal/cri/\" in none of them, so the CRI plugin, which is the containerd daemon's Kubernetes runtime service, is not in any build. As a positive control, the same function-table reader finds internal/cri/server.(*criService).ExecSync and drainExecSyncIO, and the same byte search finds the internal/cri path, in /usr/bin/containerd of the DHI containerd 2.4.2-r5 package for Alpine 3.23 on x86_64 and aarch64."
     },
     {
       "vulnerability": {
@@ -3384,7 +3398,9 @@
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.39.1-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-53495 (GHSA-7jxh-36q5-gcqv, GO-2026-6444): in containerd on Linux with the CRI plugin enabled, the CRI ExecSync stdio drain (drainExecSyncIO in internal/cri/server/container_execsync.go) had no timeout and ignored request cancellation, so exec probes that left background processes holding the pipes leaked goroutines and memory in the containerd daemon. It is fixed in containerd 2.3.5, 2.2.8, 2.0.12 and 1.7.35; on the release/2.3 branch the fix is commit 9ec55f0, which changes only internal/cri/server/container_execsync.go and its test: https://github.com/containerd/containerd/security/advisories/GHSA-7jxh-36q5-gcqv, https://github.com/containerd/containerd/commit/9ec55f024041d0641f6d79841e45c8781141ddaa, https://github.com/containerd/containerd/releases/tag/v2.3.5. The vulnerable code is not in this package, which is the Buildx CLI plugin, not the containerd daemon. Read every published docker-cli-buildx package for Alpine 3.24 in the DHI Alpine repository: 0.34.1-r0 to the current 0.39.1-r1, 27 builds each for x86_64 and aarch64, each verified against the checksum in the package index. Each package installs one file, /usr/libexec/docker/cli-plugins/docker-buildx, a Go program: up to 0.39.0-r0 it is an executable dynamically linked against musl (its interpreter is /lib/ld-musl-x86_64.so.1 or /lib/ld-musl-aarch64.so.1 and its only needed library is the matching libc.musl shared object), and in 0.39.1-r0 and 0.39.1-r1 it is a statically linked executable built with CGO_ENABLED=0. Its Go build information records github.com/containerd/containerd/v2 v2.2.3 to v2.4.2, but Go's internal/ rule stops a program outside containerd from importing internal/cri. Listing the Go functions in each binary from its function table (pclntab), which lists runtime.main in every binary, shows that the github.com/containerd/containerd/v2 packages present are client-side image and content code (core/content, core/images, core/remotes, plugins/content/local, plugins/services/content/contentserver, version, and helper packages under pkg/ and internal/), and the only other containerd code is the content service API package from the separate github.com/containerd/containerd/api module; no binary has a function under internal/cri, and a raw byte search finds the path \"containerd/v2/internal/cri/\" in none of them, so the CRI plugin, which is the containerd daemon's Kubernetes runtime service, is not in any build. As a positive control, the same function-table reader finds internal/cri/server.(*criService).ExecSync and drainExecSyncIO, and the same byte search finds the internal/cri path, in /usr/bin/containerd of the DHI containerd 2.4.2-r5 package for Alpine 3.23 on x86_64 and aarch64."
     },
     {
       "vulnerability": {
@@ -3512,7 +3528,9 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-53495 (GHSA-7jxh-36q5-gcqv, GO-2026-6444): in containerd before 1.7.35, 2.0.12, 2.2.8 and 2.3.5, the CRI plugin's ExecSync handler (drainExecSyncIO in internal/cri/server/container_execsync.go) can block forever draining the output of exec probes that leave background processes holding the pipes, so repeated ExecSync calls leak goroutines and memory until containerd is killed. The advisory states that users not using containerd's CRI implementation are not affected. OSV lists no affected symbols; the fix, commit be419b070c178548c8e384d8bc3c8fe0ad6f154a on release/2.3 (in v2.3.5), changes only drainExecSyncIO in internal/cri/server/container_execsync.go: https://github.com/containerd/containerd/security/advisories/GHSA-7jxh-36q5-gcqv, https://pkg.go.dev/vuln/GO-2026-6444, https://github.com/containerd/containerd/commit/be419b070c178548c8e384d8bc3c8fe0ad6f154a, https://github.com/containerd/containerd/releases/tag/v2.3.5 . This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages. Unpacked every subpackage of every build published in the DHI Alpine 3.23 repository, 39 versions from 29.4.0-r1 to 29.10.0-r1, for x86_64 and aarch64 (29.4.3-r0 has no x86_64 docker-engine package), every download checked against the index checksum, read the Go build information and function table (read from the Go line table, which also works on stripped binaries) of every ELF file, and searched the raw bytes of each ELF file for containerd CRI package names and drainExecSyncIO, which would also catch inlined functions. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. The other subpackages contain no ELF files. runtime.main is found in the function table of every one of these programs, so the tables were read. /usr/bin/docker is built from the docker/cli vendor tree; only the 29.10.0-r1 builds record module versions in its build information. dockerd lists github.com/containerd/containerd/v2 (v2.2.2 to v2.4.2 across the builds) but does not link containerd's CRI server: in every build, no function of containerd's internal/cri packages, including drainExecSyncIO, is in its function table, the byte search finds no containerd CRI package name and no drainExecSyncIO, and no build contains the containerd 1.x module. The same searches find containerd's image handler core/images.Dispatch in every dockerd. docker-proxy and /usr/bin/docker do not contain containerd: no containerd function is in either function table, the byte search finds no github.com/containerd/containerd name in either program, and the containerd/v2 module is absent from the build information of docker-proxy and of the 29.10.0-r1 /usr/bin/docker. As a positive control, the same function-table reader and byte search find internal/cri/server functions, including drainExecSyncIO and (*criService).execInternal, in containerd v2.2.7 (a vulnerable release) built from source for linux/amd64 and linux/arm64. The vulnerable code is not present in this package, so the containerd version recorded in its build information does not make it affected."
     },
     {
       "vulnerability": {
@@ -3619,7 +3637,9 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-53495 (GHSA-7jxh-36q5-gcqv, GO-2026-6444): in containerd before 1.7.35, 2.0.12, 2.2.8 and 2.3.5, the CRI plugin's ExecSync handler (drainExecSyncIO in internal/cri/server/container_execsync.go) can block forever draining the output of exec probes that leave background processes holding the pipes, so repeated ExecSync calls leak goroutines and memory until containerd is killed. The advisory states that users not using containerd's CRI implementation are not affected. OSV lists no affected symbols; the fix, commit be419b070c178548c8e384d8bc3c8fe0ad6f154a on release/2.3 (in v2.3.5), changes only drainExecSyncIO in internal/cri/server/container_execsync.go: https://github.com/containerd/containerd/security/advisories/GHSA-7jxh-36q5-gcqv, https://pkg.go.dev/vuln/GO-2026-6444, https://github.com/containerd/containerd/commit/be419b070c178548c8e384d8bc3c8fe0ad6f154a, https://github.com/containerd/containerd/releases/tag/v2.3.5 . This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages. Unpacked every subpackage of every build published in the DHI Alpine 3.24 repository, 32 versions from 29.5.2-r0 to 29.10.0-r1, for x86_64 and aarch64, every download checked against the index checksum, read the Go build information and function table (read from the Go line table, which also works on stripped binaries) of every ELF file, and searched the raw bytes of each ELF file for containerd CRI package names and drainExecSyncIO, which would also catch inlined functions. The only ELF files are three Go programs: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli. The other subpackages contain no ELF files. runtime.main is found in the function table of every one of these programs, so the tables were read. /usr/bin/docker is built from the docker/cli vendor tree; only the 29.10.0-r1 builds record module versions in its build information. dockerd lists github.com/containerd/containerd/v2 (v2.2.3 to v2.4.2 across the builds) but does not link containerd's CRI server: in every build, no function of containerd's internal/cri packages, including drainExecSyncIO, is in its function table, the byte search finds no containerd CRI package name and no drainExecSyncIO, and no build contains the containerd 1.x module. The same searches find containerd's image handler core/images.Dispatch in every dockerd. docker-proxy and /usr/bin/docker do not contain containerd: no containerd function is in either function table, the byte search finds no github.com/containerd/containerd name in either program, and the containerd/v2 module is absent from the build information of docker-proxy and of the 29.10.0-r1 /usr/bin/docker. As a positive control, the same function-table reader and byte search find internal/cri/server functions, including drainExecSyncIO and (*criService).execInternal, in containerd v2.2.7 (a vulnerable release) built from source for linux/amd64 and linux/arm64. The vulnerable code is not present in this package, so the containerd version recorded in its build information does not make it affected."
     },
     {
       "vulnerability": {
@@ -8251,6 +8271,9 @@
         },
         {
           "@id": "pkg:apk/dhi/openshift-console-dev@4.22.22-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/openshift-console-dev@4.22.22-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -8322,6 +8345,9 @@
         },
         {
           "@id": "pkg:apk/dhi/openshift-console-fips-dev@4.22.22-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/openshift-console-fips-dev@4.22.22-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -8393,6 +8419,9 @@
         },
         {
           "@id": "pkg:apk/dhi/openshift-console-fips@4.22.22-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/openshift-console-fips@4.22.22-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -8464,6 +8493,9 @@
         },
         {
           "@id": "pkg:apk/dhi/openshift-console@4.22.22-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/openshift-console@4.22.22-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11773,6 +11805,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-dev@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-dev@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11826,6 +11861,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-fips-dev@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-fips-dev@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11879,6 +11917,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-fips@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-fips@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11914,6 +11955,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-ui-dev@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-ui-dev@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11949,6 +11993,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-ui-fips-dev@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-ui-fips-dev@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11984,6 +12031,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-ui-fips@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-ui-fips@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -12019,6 +12069,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-ui@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-ui@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -12072,6 +12125,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -12468,7 +12524,9 @@
           "@id": "pkg:deb/dhi/docker-buildx-plugin@0.39.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-53495 (GHSA-7jxh-36q5-gcqv, GO-2026-6444): in containerd before 1.7.35, 2.0.12, 2.2.8 and 2.3.5, the CRI plugin's ExecSync handler (drainExecSyncIO in internal/cri/server/container_execsync.go) can block forever draining the output of exec probes that leave background processes holding the pipes, so repeated ExecSync calls leak goroutines and memory until containerd is killed. The advisory states that users not using containerd's CRI implementation are not affected. OSV lists no affected symbols; the fix, commit be419b070c178548c8e384d8bc3c8fe0ad6f154a on release/2.3 (in v2.3.5), changes only drainExecSyncIO in internal/cri/server/container_execsync.go: https://github.com/containerd/containerd/security/advisories/GHSA-7jxh-36q5-gcqv, https://pkg.go.dev/vuln/GO-2026-6444, https://github.com/containerd/containerd/commit/be419b070c178548c8e384d8bc3c8fe0ad6f154a, https://github.com/containerd/containerd/releases/tag/v2.3.5 . Read /usr/libexec/docker/cli-plugins/docker-buildx, the only file in the package, in every docker-buildx-plugin package published in the DHI Debian repository for trixie: 45 builds from 0.35.0-2 to 0.39.1-2, for amd64 and arm64, every download checked against the index checksum. No debug-symbol packages are published for this source. For each build, read the Go build information and function table (read from the Go line table, which also works on stripped binaries) of every ELF file, and searched the raw bytes of each ELF file for containerd CRI package names and drainExecSyncIO, which would also catch inlined functions. runtime.main is found in the function table of every build, so the tables were read. The program lists github.com/containerd/containerd/v2 (v2.2.6 to v2.4.2 across the builds) but does not link containerd's CRI server: in every build, no function of containerd's internal/cri packages, including drainExecSyncIO, is in its function table, the byte search finds no containerd CRI package name and no drainExecSyncIO, and no build contains the containerd 1.x module. The same searches find containerd's image handler core/images.Dispatch in every build. As a positive control, the same function-table reader and byte search find internal/cri/server functions, including drainExecSyncIO and (*criService).execInternal, in containerd v2.2.7 (a vulnerable release) built from source for linux/amd64 and linux/arm64. The vulnerable code is not present in this package, so the containerd version recorded in its build information does not make it affected."
     },
     {
       "vulnerability": {
@@ -12608,7 +12666,9 @@
           "@id": "pkg:deb/dhi/docker-compose-plugin@5.8.0-6?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-53495 (GHSA-7jxh-36q5-gcqv, GO-2026-6444): in containerd before 1.7.35, 2.0.12, 2.2.8 and 2.3.5, the CRI plugin's ExecSync handler (drainExecSyncIO in internal/cri/server/container_execsync.go) can block forever draining the output of exec probes that leave background processes holding the pipes, so repeated ExecSync calls leak goroutines and memory until containerd is killed. The advisory states that users not using containerd's CRI implementation are not affected. OSV lists no affected symbols; the fix, commit be419b070c178548c8e384d8bc3c8fe0ad6f154a on release/2.3 (in v2.3.5), changes only drainExecSyncIO in internal/cri/server/container_execsync.go: https://github.com/containerd/containerd/security/advisories/GHSA-7jxh-36q5-gcqv, https://pkg.go.dev/vuln/GO-2026-6444, https://github.com/containerd/containerd/commit/be419b070c178548c8e384d8bc3c8fe0ad6f154a, https://github.com/containerd/containerd/releases/tag/v2.3.5 . Read /usr/libexec/docker/cli-plugins/docker-compose, the only file in the package, in every docker-compose-plugin package published in the DHI Debian repository for trixie: 41 builds from 5.3.1-2 to 5.8.0-6, for amd64 and arm64, every download checked against the index checksum. No debug-symbol packages are published for this source. For each build, read the Go build information and function table (read from the Go line table, which also works on stripped binaries) of every ELF file, and searched the raw bytes of each ELF file for containerd CRI package names and drainExecSyncIO, which would also catch inlined functions. runtime.main is found in the function table of every build, so the tables were read. The program lists github.com/containerd/containerd/v2 (v2.2.5 to v2.4.2 across the builds) but does not link containerd's CRI server: in every build, no function of containerd's internal/cri packages, including drainExecSyncIO, is in its function table, the byte search finds no containerd CRI package name and no drainExecSyncIO, and no build contains the containerd 1.x module. The same searches find containerd's image handler core/images.Dispatch in every build. As a positive control, the same function-table reader and byte search find internal/cri/server functions, including drainExecSyncIO and (*criService).execInternal, in containerd v2.2.7 (a vulnerable release) built from source for linux/amd64 and linux/arm64. The vulnerable code is not present in this package, so the containerd version recorded in its build information does not make it affected."
     },
     {
       "vulnerability": {

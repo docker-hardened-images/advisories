@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:20Z",
-  "last_updated": "2026-11-23T07:24:20Z",
-  "version": 22,
+  "last_updated": "2026-11-24T04:53:45Z",
+  "version": 23,
   "statements": [
     {
       "vulnerability": {
@@ -232,6 +232,9 @@
           "@id": "pkg:apk/dhi/build-dev@2.29.1-r2?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/build-dev@2.30.0-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/build-dev@2.6.4-r0?distro=dhi-3.23"
         },
         {
@@ -286,7 +289,9 @@
           "@id": "pkg:apk/dhi/build-dev@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-53493 (GO-2026-6597, GHSA-pg57-6jwg-q645): containerd's image pull handlers walked the descriptors of an OCI image index without depth, breadth or deduplication limits, so pulling a crafted image can consume unbounded CPU and memory. OSV lists no affected symbols; the two fix commits the advisory names, 4f5f326 (Walk) and 94e83c1 (Dispatch) on the main branch, change only Walk and Dispatch in containerd's core/images package (handlers.go) and its test; on the release/2.3 branch the same changes are 03fbef3 and bfe1672, first released in v2.3.6. The fix ships in containerd 2.4.1, 2.3.6, 2.2.9, 2.0.13 and 1.7.36: https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://pkg.go.dev/vuln/GO-2026-6597, https://github.com/containerd/containerd/commit/4f5f32636d47f051751065cf824a10da70c619fe, https://github.com/containerd/containerd/commit/94e83c14c8aac963e24e28105dab9c9af812a2a8, https://github.com/containerd/containerd/commit/03fbef37dad145d03299b31a742023a7025e1c8a, https://github.com/containerd/containerd/commit/bfe167214b9c17d48949aab74f213544a17464da . Read the Go build information and function table of every Go program in every build-dev package published in the DHI Alpine 3.23 repository: 91 builds, 2.6.4-r0 through the current 2.30.0-r0, each for x86_64 and aarch64 except 2.6.4-r0 (aarch64 only), every download checked against the index checksum. Version 2.19.1-r1 is listed three times in each index; the copy the repository serves, which matches one of those entries' checksum, was read. The only file in each package, and its only Go program, is the frontend program /usr/bin/build. It embeds github.com/containerd/containerd/v2 v2.2.0 to v2.3.7, but the only containerd packages in their function tables (read from the Go line table, which also works on stripped binaries) are core/remotes/docker, core/remotes/docker/auth, core/remotes/errors, internal/lazyregexp, pkg/identifiers, pkg/reference and version (all under github.com/containerd/containerd/v2), and no build contains the containerd 1.x module. In every build, no core/images function, including Walk and Dispatch, is in any function table, and a byte search of each Go program, which would also catch inlined functions, finds no github.com/containerd/containerd/v2/core/images name, while the same searches find core/remotes/docker in every frontend program and runtime.main in every Go program. As a positive control, the same function-table reader and byte search find core/images.Walk and core/images.Dispatch in containerd v2.2.7 (a vulnerable release) built from source for linux/amd64 and linux/arm64. The vulnerable code is not present in this package, so the containerd version recorded in its build information does not make it affected."
     },
     {
       "vulnerability": {
@@ -513,6 +518,9 @@
           "@id": "pkg:apk/dhi/build-fips-dev@2.29.1-r2?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/build-fips-dev@2.30.0-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/build-fips-dev@2.6.4-r0?distro=dhi-3.23"
         },
         {
@@ -567,7 +575,9 @@
           "@id": "pkg:apk/dhi/build-fips-dev@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-53493 (GO-2026-6597, GHSA-pg57-6jwg-q645): containerd's image pull handlers walked the descriptors of an OCI image index without depth, breadth or deduplication limits, so pulling a crafted image can consume unbounded CPU and memory. OSV lists no affected symbols; the two fix commits the advisory names, 4f5f326 (Walk) and 94e83c1 (Dispatch) on the main branch, change only Walk and Dispatch in containerd's core/images package (handlers.go) and its test; on the release/2.3 branch the same changes are 03fbef3 and bfe1672, first released in v2.3.6. The fix ships in containerd 2.4.1, 2.3.6, 2.2.9, 2.0.13 and 1.7.36: https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://pkg.go.dev/vuln/GO-2026-6597, https://github.com/containerd/containerd/commit/4f5f32636d47f051751065cf824a10da70c619fe, https://github.com/containerd/containerd/commit/94e83c14c8aac963e24e28105dab9c9af812a2a8, https://github.com/containerd/containerd/commit/03fbef37dad145d03299b31a742023a7025e1c8a, https://github.com/containerd/containerd/commit/bfe167214b9c17d48949aab74f213544a17464da . Read the Go build information and function table of every Go program in every build-fips-dev package published in the DHI Alpine 3.23 security repository, where the FIPS packages are published and which requires authentication: 91 builds, 2.6.4-r0 through the current 2.30.0-r0, each for x86_64 and aarch64 except 2.6.4-r0 (aarch64 only), every download checked against the index checksum. Version 2.19.1-r1 is listed three times in each index; the copy the repository serves, which matches one of those entries' checksum, was read. The only file in each package, and its only Go program, is the frontend program /usr/bin/build. It embeds github.com/containerd/containerd/v2 v2.2.0 to v2.3.7, but the only containerd packages in their function tables (read from the Go line table, which also works on stripped binaries) are core/remotes/docker, core/remotes/docker/auth, core/remotes/errors, internal/lazyregexp, pkg/identifiers, pkg/reference and version (all under github.com/containerd/containerd/v2), and no build contains the containerd 1.x module. In every build, no core/images function, including Walk and Dispatch, is in any function table, and a byte search of each Go program, which would also catch inlined functions, finds no github.com/containerd/containerd/v2/core/images name, while the same searches find core/remotes/docker in every frontend program and runtime.main in every Go program. As a positive control, the same function-table reader and byte search find core/images.Walk and core/images.Dispatch in containerd v2.2.7 (a vulnerable release) built from source for linux/amd64 and linux/arm64. The vulnerable code is not present in this package, so the containerd version recorded in its build information does not make it affected."
     },
     {
       "vulnerability": {
@@ -794,6 +804,9 @@
           "@id": "pkg:apk/dhi/build-fips@2.29.1-r2?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/build-fips@2.30.0-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/build-fips@2.6.4-r0?distro=dhi-3.23"
         },
         {
@@ -848,7 +861,9 @@
           "@id": "pkg:apk/dhi/build-fips@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-53493 (GO-2026-6597, GHSA-pg57-6jwg-q645): containerd's image pull handlers walked the descriptors of an OCI image index without depth, breadth or deduplication limits, so pulling a crafted image can consume unbounded CPU and memory. OSV lists no affected symbols; the two fix commits the advisory names, 4f5f326 (Walk) and 94e83c1 (Dispatch) on the main branch, change only Walk and Dispatch in containerd's core/images package (handlers.go) and its test; on the release/2.3 branch the same changes are 03fbef3 and bfe1672, first released in v2.3.6. The fix ships in containerd 2.4.1, 2.3.6, 2.2.9, 2.0.13 and 1.7.36: https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://pkg.go.dev/vuln/GO-2026-6597, https://github.com/containerd/containerd/commit/4f5f32636d47f051751065cf824a10da70c619fe, https://github.com/containerd/containerd/commit/94e83c14c8aac963e24e28105dab9c9af812a2a8, https://github.com/containerd/containerd/commit/03fbef37dad145d03299b31a742023a7025e1c8a, https://github.com/containerd/containerd/commit/bfe167214b9c17d48949aab74f213544a17464da . Read the Go build information and function table of every Go program in every build-fips package published in the DHI Alpine 3.23 security repository, where the FIPS packages are published and which requires authentication: 91 builds, 2.6.4-r0 through the current 2.30.0-r0, each for x86_64 and aarch64 except 2.6.4-r0 (aarch64 only), every download checked against the index checksum. Version 2.19.1-r1 is listed three times in each index; the copy the repository serves, which matches one of those entries' checksum, was read. The Go programs are the frontend program, /usr/bin/build, in every build, /usr/bin/dhi-source from 2.28.0-r1 on and the bundled yq (/opt/docker/dhi/yq) from 2.26.2-r1 on. /opt/docker/dhi/uv, shipped from 2.27.1-r1 on, is not a Go program: it has no Go line table or build information, and the byte search finds no containerd name in it. Besides these programs and the apk metadata, the packages hold only the SPDX documents of the bundled tools, /opt/docker/sbom/uv/.spdx.uv.json and /opt/docker/sbom/yq/.spdx.yq.json. The frontend program and /usr/bin/dhi-source embed github.com/containerd/containerd/v2 v2.2.0 to v2.3.7, but the only containerd packages in their function tables (read from the Go line table, which also works on stripped binaries) are core/remotes/docker, core/remotes/docker/auth, core/remotes/errors, internal/lazyregexp, pkg/identifiers, pkg/reference and version (all under github.com/containerd/containerd/v2), and no build contains the containerd 1.x module. In every build, no core/images function, including Walk and Dispatch, is in any function table, and a byte search of each Go program, which would also catch inlined functions, finds no github.com/containerd/containerd/v2/core/images name, while the same searches find core/remotes/docker in every frontend program and runtime.main in every Go program. The bundled yq contains no containerd code: no containerd function or name is found in it. As a positive control, the same function-table reader and byte search find core/images.Walk and core/images.Dispatch in containerd v2.2.7 (a vulnerable release) built from source for linux/amd64 and linux/arm64. The vulnerable code is not present in this package, so the containerd version recorded in its build information does not make it affected."
     },
     {
       "vulnerability": {
@@ -1075,6 +1090,9 @@
           "@id": "pkg:apk/dhi/build@2.29.1-r2?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/build@2.30.0-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/build@2.4.4-r0?distro=dhi-3.23"
         },
         {
@@ -1132,7 +1150,9 @@
           "@id": "pkg:apk/dhi/build@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-53493 (GO-2026-6597, GHSA-pg57-6jwg-q645): containerd's image pull handlers walked the descriptors of an OCI image index without depth, breadth or deduplication limits, so pulling a crafted image can consume unbounded CPU and memory. OSV lists no affected symbols; the two fix commits the advisory names, 4f5f326 (Walk) and 94e83c1 (Dispatch) on the main branch, change only Walk and Dispatch in containerd's core/images package (handlers.go) and its test; on the release/2.3 branch the same changes are 03fbef3 and bfe1672, first released in v2.3.6. The fix ships in containerd 2.4.1, 2.3.6, 2.2.9, 2.0.13 and 1.7.36: https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://pkg.go.dev/vuln/GO-2026-6597, https://github.com/containerd/containerd/commit/4f5f32636d47f051751065cf824a10da70c619fe, https://github.com/containerd/containerd/commit/94e83c14c8aac963e24e28105dab9c9af812a2a8, https://github.com/containerd/containerd/commit/03fbef37dad145d03299b31a742023a7025e1c8a, https://github.com/containerd/containerd/commit/bfe167214b9c17d48949aab74f213544a17464da . Read the Go build information and function table of every Go program in every build package published in the DHI Alpine 3.23 repository: 92 builds, 2.4.4-r0 through the current 2.30.0-r0, each for x86_64 and aarch64 except 2.6.4-r0 (aarch64 only), every download checked against the index checksum. Version 2.19.1-r1 is listed three times in each index; the copy the repository serves, which matches one of those entries' checksum, was read. The Go programs are the frontend program, installed as /opt/docker/dhi/build in 2.4.4-r0 and as /usr/bin/build from 2.6.4-r0 on, /usr/bin/dhi-source from 2.28.0-r1 on and the bundled yq (/opt/docker/dhi/yq) from 2.26.2-r1 on. /opt/docker/dhi/uv, shipped from 2.27.1-r1 on, is not a Go program: it has no Go line table or build information, and the byte search finds no containerd name in it. Besides these programs and the apk metadata, the packages hold only the SPDX documents of the bundled tools, /opt/docker/sbom/uv/.spdx.uv.json and /opt/docker/sbom/yq/.spdx.yq.json. The frontend program and /usr/bin/dhi-source embed github.com/containerd/containerd/v2 v2.2.0 to v2.3.7, but the only containerd packages in their function tables (read from the Go line table, which also works on stripped binaries) are core/remotes/docker, core/remotes/docker/auth, core/remotes/errors, internal/lazyregexp, pkg/identifiers, pkg/reference and version (all under github.com/containerd/containerd/v2), and no build contains the containerd 1.x module. In every build, no core/images function, including Walk and Dispatch, is in any function table, and a byte search of each Go program, which would also catch inlined functions, finds no github.com/containerd/containerd/v2/core/images name, while the same searches find core/remotes/docker in every frontend program and runtime.main in every Go program. The bundled yq contains no containerd code: no containerd function or name is found in it. As a positive control, the same function-table reader and byte search find core/images.Walk and core/images.Dispatch in containerd v2.2.7 (a vulnerable release) built from source for linux/amd64 and linux/arm64. The vulnerable code is not present in this package, so the containerd version recorded in its build information does not make it affected."
     },
     {
       "vulnerability": {
@@ -3246,7 +3266,20 @@
         },
         {
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.37.1-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker-cli-buildx to 0.37.2-r0 or later.",
+      "status_notes": "CVE-2026-53493 (GHSA-pg57-6jwg-q645, GO-2026-6597): containerd's image handlers walked a crafted OCI image index graph without depth, breadth or deduplication limits, so pulling a malicious image could consume unbounded CPU and memory. github.com/containerd/containerd/v2 is affected in 2.0.0 to 2.0.12, 2.1.0 to 2.2.8, 2.3.0 to 2.3.5 and 2.4.0, and fixed in 2.0.13, 2.2.9, 2.3.6 and 2.4.1. The fix bounds the traversal in core/images/handlers.go, in the Dispatch and Walk functions; on the release/2.3 branch these are commits bfe1672 (Dispatch) and 03fbef3 (Walk), first released in v2.3.6: https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://github.com/containerd/containerd/commit/bfe167214b9c17d48949aab74f213544a17464da, https://github.com/containerd/containerd/commit/03fbef37dad145d03299b31a742023a7025e1c8a, https://github.com/containerd/containerd/releases/tag/v2.3.6, https://github.com/containerd/containerd/releases/tag/v2.4.1. Read every published docker-cli-buildx package for Alpine 3.23 in the DHI Alpine repository: 0.33.0-r1 to the current 0.39.1-r1, 29 builds for aarch64 and 28 for x86_64 (0.34.1-r0 was published for aarch64 only), each verified against the checksum in the package index. Each package installs one file, /usr/libexec/docker/cli-plugins/docker-buildx, a Go program: up to 0.39.0-r0 it is an executable dynamically linked against musl (its interpreter is /lib/ld-musl-x86_64.so.1 or /lib/ld-musl-aarch64.so.1 and its only needed library is the matching libc.musl shared object), and in 0.39.1-r0 and 0.39.1-r1 it is a statically linked executable built with CGO_ENABLED=0. Its Go build information shows that builds before 0.37.2-r0 embed github.com/containerd/containerd/v2 v2.2.2 to v2.3.4, inside the affected range, and that 0.37.2-r0 and every later build embed v2.3.6, v2.4.1 or v2.4.2; no build embeds v2.3.5 or v2.4.0. The Go function table (pclntab) of every build before 0.37.2-r0 contains github.com/containerd/containerd/v2/core/images.Dispatch and core/images.Walk, so the vulnerable functions are in the program. 0.37.2-r0 is the first fixed build for this owner."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-zyez-rpwn-7cnp-4qoq",
+        "aliases": [
+          "CVE-2026-53493"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.37.2-r0?distro=dhi-3.23"
         },
@@ -3284,7 +3317,8 @@
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.39.1-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-53493 (GHSA-pg57-6jwg-q645, GO-2026-6597): containerd's image handlers walked a crafted OCI image index graph without depth, breadth or deduplication limits, so pulling a malicious image could consume unbounded CPU and memory. github.com/containerd/containerd/v2 is affected in 2.0.0 to 2.0.12, 2.1.0 to 2.2.8, 2.3.0 to 2.3.5 and 2.4.0, and fixed in 2.0.13, 2.2.9, 2.3.6 and 2.4.1. The fix bounds the traversal in core/images/handlers.go, in the Dispatch and Walk functions; on the release/2.3 branch these are commits bfe1672 (Dispatch) and 03fbef3 (Walk), first released in v2.3.6: https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://github.com/containerd/containerd/commit/bfe167214b9c17d48949aab74f213544a17464da, https://github.com/containerd/containerd/commit/03fbef37dad145d03299b31a742023a7025e1c8a, https://github.com/containerd/containerd/releases/tag/v2.3.6, https://github.com/containerd/containerd/releases/tag/v2.4.1. Read every published docker-cli-buildx package for Alpine 3.23 in the DHI Alpine repository: 0.33.0-r1 to the current 0.39.1-r1, 29 builds for aarch64 and 28 for x86_64 (0.34.1-r0 was published for aarch64 only), each verified against the checksum in the package index. Each package installs one file, /usr/libexec/docker/cli-plugins/docker-buildx, a Go program: up to 0.39.0-r0 it is an executable dynamically linked against musl (its interpreter is /lib/ld-musl-x86_64.so.1 or /lib/ld-musl-aarch64.so.1 and its only needed library is the matching libc.musl shared object), and in 0.39.1-r0 and 0.39.1-r1 it is a statically linked executable built with CGO_ENABLED=0. Its Go build information shows that builds before 0.37.2-r0 embed github.com/containerd/containerd/v2 v2.2.2 to v2.3.4, inside the affected range, and that 0.37.2-r0 and every later build embed v2.3.6, v2.4.1 or v2.4.2; no build embeds v2.3.5 or v2.4.0. The Go function table (pclntab) of every build before 0.37.2-r0 contains github.com/containerd/containerd/v2/core/images.Dispatch and core/images.Walk, so the vulnerable functions are in the program. 0.37.2-r0 is the first fixed build for this owner."
     },
     {
       "vulnerability": {
@@ -3338,7 +3372,20 @@
         },
         {
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.37.1-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker-cli-buildx to 0.37.2-r0 or later.",
+      "status_notes": "CVE-2026-53493 (GHSA-pg57-6jwg-q645, GO-2026-6597): containerd's image handlers walked a crafted OCI image index graph without depth, breadth or deduplication limits, so pulling a malicious image could consume unbounded CPU and memory. github.com/containerd/containerd/v2 is affected in 2.0.0 to 2.0.12, 2.1.0 to 2.2.8, 2.3.0 to 2.3.5 and 2.4.0, and fixed in 2.0.13, 2.2.9, 2.3.6 and 2.4.1. The fix bounds the traversal in core/images/handlers.go, in the Dispatch and Walk functions; on the release/2.3 branch these are commits bfe1672 (Dispatch) and 03fbef3 (Walk), first released in v2.3.6: https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://github.com/containerd/containerd/commit/bfe167214b9c17d48949aab74f213544a17464da, https://github.com/containerd/containerd/commit/03fbef37dad145d03299b31a742023a7025e1c8a, https://github.com/containerd/containerd/releases/tag/v2.3.6, https://github.com/containerd/containerd/releases/tag/v2.4.1. Read every published docker-cli-buildx package for Alpine 3.24 in the DHI Alpine repository: 0.34.1-r0 to the current 0.39.1-r1, 27 builds each for x86_64 and aarch64, each verified against the checksum in the package index. Each package installs one file, /usr/libexec/docker/cli-plugins/docker-buildx, a Go program: up to 0.39.0-r0 it is an executable dynamically linked against musl (its interpreter is /lib/ld-musl-x86_64.so.1 or /lib/ld-musl-aarch64.so.1 and its only needed library is the matching libc.musl shared object), and in 0.39.1-r0 and 0.39.1-r1 it is a statically linked executable built with CGO_ENABLED=0. Its Go build information shows that builds before 0.37.2-r0 embed github.com/containerd/containerd/v2 v2.2.3 to v2.3.4, inside the affected range, and that 0.37.2-r0 and every later build embed v2.3.6, v2.4.1 or v2.4.2; no build embeds v2.3.5 or v2.4.0. The Go function table (pclntab) of every build before 0.37.2-r0 contains github.com/containerd/containerd/v2/core/images.Dispatch and core/images.Walk, so the vulnerable functions are in the program. 0.37.2-r0 is the first fixed build for this owner."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-zyez-rpwn-7cnp-4qoq",
+        "aliases": [
+          "CVE-2026-53493"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.37.2-r0?distro=dhi-3.24"
         },
@@ -3376,7 +3423,8 @@
           "@id": "pkg:apk/dhi/docker-cli-buildx@0.39.1-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-53493 (GHSA-pg57-6jwg-q645, GO-2026-6597): containerd's image handlers walked a crafted OCI image index graph without depth, breadth or deduplication limits, so pulling a malicious image could consume unbounded CPU and memory. github.com/containerd/containerd/v2 is affected in 2.0.0 to 2.0.12, 2.1.0 to 2.2.8, 2.3.0 to 2.3.5 and 2.4.0, and fixed in 2.0.13, 2.2.9, 2.3.6 and 2.4.1. The fix bounds the traversal in core/images/handlers.go, in the Dispatch and Walk functions; on the release/2.3 branch these are commits bfe1672 (Dispatch) and 03fbef3 (Walk), first released in v2.3.6: https://github.com/containerd/containerd/security/advisories/GHSA-pg57-6jwg-q645, https://github.com/containerd/containerd/commit/bfe167214b9c17d48949aab74f213544a17464da, https://github.com/containerd/containerd/commit/03fbef37dad145d03299b31a742023a7025e1c8a, https://github.com/containerd/containerd/releases/tag/v2.3.6, https://github.com/containerd/containerd/releases/tag/v2.4.1. Read every published docker-cli-buildx package for Alpine 3.24 in the DHI Alpine repository: 0.34.1-r0 to the current 0.39.1-r1, 27 builds each for x86_64 and aarch64, each verified against the checksum in the package index. Each package installs one file, /usr/libexec/docker/cli-plugins/docker-buildx, a Go program: up to 0.39.0-r0 it is an executable dynamically linked against musl (its interpreter is /lib/ld-musl-x86_64.so.1 or /lib/ld-musl-aarch64.so.1 and its only needed library is the matching libc.musl shared object), and in 0.39.1-r0 and 0.39.1-r1 it is a statically linked executable built with CGO_ENABLED=0. Its Go build information shows that builds before 0.37.2-r0 embed github.com/containerd/containerd/v2 v2.2.3 to v2.3.4, inside the affected range, and that 0.37.2-r0 and every later build embed v2.3.6, v2.4.1 or v2.4.2; no build embeds v2.3.5 or v2.4.0. The Go function table (pclntab) of every build before 0.37.2-r0 contains github.com/containerd/containerd/v2/core/images.Dispatch and core/images.Walk, so the vulnerable functions are in the program. 0.37.2-r0 is the first fixed build for this owner."
     },
     {
       "vulnerability": {
@@ -8271,6 +8319,9 @@
         },
         {
           "@id": "pkg:apk/dhi/openshift-console-dev@4.22.22-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/openshift-console-dev@4.22.22-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -8342,6 +8393,9 @@
         },
         {
           "@id": "pkg:apk/dhi/openshift-console-fips-dev@4.22.22-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/openshift-console-fips-dev@4.22.22-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -8413,6 +8467,9 @@
         },
         {
           "@id": "pkg:apk/dhi/openshift-console-fips@4.22.22-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/openshift-console-fips@4.22.22-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -8484,6 +8541,9 @@
         },
         {
           "@id": "pkg:apk/dhi/openshift-console@4.22.22-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/openshift-console@4.22.22-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11793,6 +11853,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-dev@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-dev@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11846,6 +11909,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-fips-dev@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-fips-dev@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11899,6 +11965,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-fips@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-fips@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11934,6 +12003,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-ui-dev@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-ui-dev@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -11969,6 +12041,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-ui-fips-dev@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-ui-fips-dev@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -12004,6 +12079,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-ui-fips@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-ui-fips@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -12039,6 +12117,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot-ui@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot-ui@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -12092,6 +12173,9 @@
         },
         {
           "@id": "pkg:apk/dhi/zot@2.1.23-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/zot@2.1.23-r3?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -13174,6 +13258,12 @@
           "@id": "pkg:deb/dhi/gitlab-webservice-18@18.11.14-23?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/gitlab-webservice-18@18.11.14-24?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/gitlab-webservice-18@18.11.14-25?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/gitlab-webservice-18@18.11.14-2?distro=dhi-13"
         },
         {
@@ -13252,6 +13342,12 @@
         },
         {
           "@id": "pkg:deb/dhi/gitlab-webservice-19@19.1.10-22?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/gitlab-webservice-19@19.1.10-23?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/gitlab-webservice-19@19.1.10-24?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/gitlab-webservice-19@19.1.10-2?distro=dhi-13"
