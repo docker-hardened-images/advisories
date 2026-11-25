@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T03:39:51Z",
-  "last_updated": "2026-11-23T12:04:44Z",
-  "version": 2,
+  "last_updated": "2026-11-25T02:58:55Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -21,6 +21,27 @@
       ],
       "status": "affected",
       "action_statement": "Update mariadb to 1:11.8.6-0+deb13u1+dhi1 or later.",
+      "status_notes": "CVE-2026-107818 (GHSA-mhvc-vqcq-7vq5, MDEV-40629): from MariaDB 10.6.1 until 11.8.9 and the other fixed releases, the mariadb.service systemd unit read its wsrep bootstrap variables from /run/mysqld/wsrep-new-cluster at the next service restart; a database user with the FILE privilege and a secure_file_priv setting that permits writes to /run/mysqld could create that file and inject environment values into the restarted service. It is fixed in MariaDB 11.8.9 by upstream commit e3d62d4e78fd4941cef3f5053e6a50d0b32d740e, which moves that file out of the directory the server can write: https://github.com/MariaDB/server/security/advisories/GHSA-mhvc-vqcq-7vq5, https://github.com/MariaDB/server/commit/e3d62d4e78fd4941cef3f5053e6a50d0b32d740e, https://security-tracker.debian.org/tracker/CVE-2026-107818. The DHI mariadb packages backport that change onto 11.8.6 from the second DHI rebuild, the version this range names as fixed. We checked every mariadb build published in the DHI Debian repository: four successive DHI rebuilds of Debian's mariadb 1:11.8.6-0+deb13u1 (called the first to fourth rebuild below; the fourth is the current build), each with 56 binary packages per architecture including the -dbgsym packages, on amd64 and arm64; every package read was verified against the repository index checksum. In the mariadb-server package of the first rebuild on both architectures, mariadb.service still reads EnvironmentFile=-/run/mysqld/wsrep-new-cluster and galera_new_cluster writes that file; in the second, third and fourth rebuilds on both architectures, mariadb.service reads /run/mariadb-wsrep-new-cluster instead and galera_new_cluster writes there, and the Debian changelog shipped in mariadb-server-core records the backport of this fix from the second rebuild on. The range ends at the first build that carries it."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-2dt5-uysf-thht-obet",
+        "aliases": [
+          "CVE-2026-107818"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi3?distro=dhi-13"
+        }
+      ],
+      "status": "fixed",
       "status_notes": "CVE-2026-107818 (GHSA-mhvc-vqcq-7vq5, MDEV-40629): from MariaDB 10.6.1 until 11.8.9 and the other fixed releases, the mariadb.service systemd unit read its wsrep bootstrap variables from /run/mysqld/wsrep-new-cluster at the next service restart; a database user with the FILE privilege and a secure_file_priv setting that permits writes to /run/mysqld could create that file and inject environment values into the restarted service. It is fixed in MariaDB 11.8.9 by upstream commit e3d62d4e78fd4941cef3f5053e6a50d0b32d740e, which moves that file out of the directory the server can write: https://github.com/MariaDB/server/security/advisories/GHSA-mhvc-vqcq-7vq5, https://github.com/MariaDB/server/commit/e3d62d4e78fd4941cef3f5053e6a50d0b32d740e, https://security-tracker.debian.org/tracker/CVE-2026-107818. The DHI mariadb packages backport that change onto 11.8.6 from the second DHI rebuild, the version this range names as fixed. We checked every mariadb build published in the DHI Debian repository: four successive DHI rebuilds of Debian's mariadb 1:11.8.6-0+deb13u1 (called the first to fourth rebuild below; the fourth is the current build), each with 56 binary packages per architecture including the -dbgsym packages, on amd64 and arm64; every package read was verified against the repository index checksum. In the mariadb-server package of the first rebuild on both architectures, mariadb.service still reads EnvironmentFile=-/run/mysqld/wsrep-new-cluster and galera_new_cluster writes that file; in the second, third and fourth rebuilds on both architectures, mariadb.service reads /run/mariadb-wsrep-new-cluster instead and galera_new_cluster writes there, and the Debian changelog shipped in mariadb-server-core records the backport of this fix from the second rebuild on. The range ends at the first build that carries it."
     }
   ]
