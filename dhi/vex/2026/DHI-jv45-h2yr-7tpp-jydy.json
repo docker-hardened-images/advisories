@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:41:00Z",
-  "last_updated": "2026-11-24T17:19:18Z",
-  "version": 5,
+  "last_updated": "2026-11-25T01:28:36Z",
+  "version": 6,
   "statements": [
     {
       "vulnerability": {
@@ -94,7 +94,8 @@
           "@id": "pkg:apk/dhi/python-3.10@3.10.22-r8?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-12003: when a file named Modules/Setup.local is found at a location derived from the build-time VPATH relative to the interpreter, Python assumes it runs from a source tree and builds a different default sys.path, so whoever can create that landmark and a Lib folder next to it can supply the standard library. Upstream issue: https://github.com/python/cpython/issues/151544, advisory: https://mail.python.org/archives/list/security-announce@python.org/thread/JIFOBO7UX3LY4VJKJUOKYJV62CFR2IRH/ and CVE record: https://www.cve.org/CVERecord?id=CVE-2026-12003. Upstream removed the fallback in 3.11.16 and later; the 3.11 commit is https://github.com/python/cpython/commit/872038377db2e170e0e140b5f8aaedf636b3fbf5, which changes Modules/getpath.py. There is no 3.10 fix upstream, and no DHI backport. Python 3.10 has the same fallback in Modules/getpath.c: if Modules/Setup.local exists in the interpreter's own directory, it looks for the standard library under that directory's VPATH/Lib. Checked usr/lib/libpython3.10.so.1.0 in the python-3.10 package and the static libpython3.10.a in python-3.10-dev in every build of the python-3.10 source published in the DHI Alpine 3.23 repository, 3.10.19-r0 to 3.10.22-r8, x86_64 and aarch64, checksums verified against the repository index: every build contains the Modules/Setup.local landmark string that getpath.c uses, so none removes the fallback. The advisory describes the exploitable layout on Windows and says other platforms are unlikely to have the landmark outside the install directory. Open question: whether creating Modules/Setup.local beside the interpreter, and a Lib directory under it, needs write access to the installation that an attacker would not otherwise have, for every image built on this package (including copies of the interpreter outside /usr/bin, such as virtual environments created with --copies); pending that analysis or a backport of the upstream change."
     },
     {
       "vulnerability": {
@@ -156,7 +157,8 @@
           "@id": "pkg:apk/dhi/python-3.10@3.10.22-r8?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-12003: when a file named Modules/Setup.local is found at a location derived from the build-time VPATH relative to the interpreter, Python assumes it runs from a source tree and builds a different default sys.path, so whoever can create that landmark and a Lib folder next to it can supply the standard library. Upstream issue: https://github.com/python/cpython/issues/151544, advisory: https://mail.python.org/archives/list/security-announce@python.org/thread/JIFOBO7UX3LY4VJKJUOKYJV62CFR2IRH/ and CVE record: https://www.cve.org/CVERecord?id=CVE-2026-12003. Upstream removed the fallback in 3.11.16 and later; the 3.11 commit is https://github.com/python/cpython/commit/872038377db2e170e0e140b5f8aaedf636b3fbf5, which changes Modules/getpath.py. There is no 3.10 fix upstream, and no DHI backport. Python 3.10 has the same fallback in Modules/getpath.c: if Modules/Setup.local exists in the interpreter's own directory, it looks for the standard library under that directory's VPATH/Lib. Checked usr/lib/libpython3.10.so.1.0 in the python-3.10 package and the static libpython3.10.a in python-3.10-dev in every build of the python-3.10 source published in the DHI Alpine 3.24 repository, 3.10.20-r0 to 3.10.22-r8, x86_64 and aarch64, checksums verified against the repository index: every build contains the Modules/Setup.local landmark string that getpath.c uses, so none removes the fallback. The advisory describes the exploitable layout on Windows and says other platforms are unlikely to have the landmark outside the install directory. Open question: whether creating Modules/Setup.local beside the interpreter, and a Lib directory under it, needs write access to the installation that an attacker would not otherwise have, for every image built on this package (including copies of the interpreter outside /usr/bin, such as virtual environments created with --copies); pending that analysis or a backport of the upstream change."
     },
     {
       "vulnerability": {
@@ -915,7 +917,8 @@
           "@id": "pkg:deb/dhi/python-3.10@3.10.22-8?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-12003: when a file named Modules/Setup.local is found at a location derived from the build-time VPATH relative to the interpreter, Python assumes it runs from a source tree and builds a different default sys.path, so whoever can create that landmark and a Lib folder next to it can supply the standard library. Upstream issue: https://github.com/python/cpython/issues/151544, advisory: https://mail.python.org/archives/list/security-announce@python.org/thread/JIFOBO7UX3LY4VJKJUOKYJV62CFR2IRH/ and CVE record: https://www.cve.org/CVERecord?id=CVE-2026-12003. Upstream removed the fallback in 3.11.16 and later; the 3.11 commit is https://github.com/python/cpython/commit/872038377db2e170e0e140b5f8aaedf636b3fbf5, which changes Modules/getpath.py. There is no 3.10 fix upstream, and no DHI backport. Python 3.10 has the same fallback in Modules/getpath.c: if Modules/Setup.local exists in the interpreter's own directory, it looks for the standard library under that directory's VPATH/Lib. Checked libpython3.10.so.1.0, which ships in libpython-3.10-minimal up to 3.10.20-9 and in libpython-3.10 from 3.10.20-10 in every build of the python-3.10 source published in the DHI Debian 13 repository, 3.10.20-0 to 3.10.22-8, amd64 and arm64 (3.10.20-0 to 3.10.20-2 were published as architecture-independent packages), checksums verified against the repository index: every build contains the Modules/Setup.local landmark string that getpath.c uses, so none removes the fallback. The advisory describes the exploitable layout on Windows and says other platforms are unlikely to have the landmark outside the install directory. Open question: whether creating Modules/Setup.local beside the interpreter, and a Lib directory under it, needs write access to the installation that an attacker would not otherwise have, for every image built on this package (including copies of the interpreter outside /usr/bin, such as virtual environments created with --copies); pending that analysis or a backport of the upstream change."
     },
     {
       "vulnerability": {
