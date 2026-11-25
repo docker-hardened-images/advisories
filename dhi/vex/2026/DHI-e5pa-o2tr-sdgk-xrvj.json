@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:32Z",
-  "last_updated": "2026-11-25T06:23:29Z",
-  "version": 40,
+  "last_updated": "2026-11-25T07:25:34Z",
+  "version": 41,
   "statements": [
     {
       "vulnerability": {
@@ -19956,6 +19956,9 @@
           "@id": "pkg:apk/dhi/loki-canary-2.9-dev@2.9.17-r16?distro=dhi-3.24"
         },
         {
+          "@id": "pkg:apk/dhi/loki-canary-2.9-dev@2.9.17-r17?distro=dhi-3.24"
+        },
+        {
           "@id": "pkg:apk/dhi/loki-canary-2.9-dev@2.9.17-r1?distro=dhi-3.24"
         },
         {
@@ -20010,6 +20013,9 @@
         },
         {
           "@id": "pkg:apk/dhi/loki-canary-2.9-fips-dev@2.9.17-r16?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/loki-canary-2.9-fips-dev@2.9.17-r17?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/loki-canary-2.9-fips-dev@2.9.17-r1?distro=dhi-3.23"
@@ -20068,6 +20074,9 @@
           "@id": "pkg:apk/dhi/loki-canary-2.9-fips-dev@2.9.17-r16?distro=dhi-3.24"
         },
         {
+          "@id": "pkg:apk/dhi/loki-canary-2.9-fips-dev@2.9.17-r17?distro=dhi-3.24"
+        },
+        {
           "@id": "pkg:apk/dhi/loki-canary-2.9-fips-dev@2.9.17-r1?distro=dhi-3.24"
         },
         {
@@ -20124,6 +20133,9 @@
           "@id": "pkg:apk/dhi/loki-canary-2.9-fips@2.9.17-r16?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/loki-canary-2.9-fips@2.9.17-r17?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/loki-canary-2.9-fips@2.9.17-r1?distro=dhi-3.23"
         },
         {
@@ -20178,6 +20190,9 @@
         },
         {
           "@id": "pkg:apk/dhi/loki-canary-2.9-fips@2.9.17-r16?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/loki-canary-2.9-fips@2.9.17-r17?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/loki-canary-2.9-fips@2.9.17-r1?distro=dhi-3.24"
@@ -20293,6 +20308,9 @@
         },
         {
           "@id": "pkg:apk/dhi/loki-canary-2.9@2.9.17-r16?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/loki-canary-2.9@2.9.17-r17?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/loki-canary-2.9@2.9.17-r1?distro=dhi-3.24"
@@ -21812,7 +21830,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-contrib-dev package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -21889,7 +21909,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-contrib-dev package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -21966,7 +21988,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-contrib-fips-dev package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -22043,7 +22067,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-contrib-fips-dev package for Alpine 3.24 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -22120,7 +22146,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-contrib-fips package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -22197,7 +22225,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-contrib-fips package for Alpine 3.24 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -22274,7 +22304,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-contrib package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -22351,7 +22383,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-contrib package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -22428,7 +22462,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-dev package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -22505,7 +22541,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-dev package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -22582,7 +22620,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-fips-dev package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -22659,7 +22699,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-fips-dev package for Alpine 3.24 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -22736,7 +22778,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-fips package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -22813,7 +22857,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-fips package for Alpine 3.24 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -22890,7 +22936,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -22967,7 +23015,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -44777,6 +44827,9 @@
         },
         {
           "@id": "pkg:deb/dhi/grafana-12.4-fips-dev@12.4.15-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/grafana-12.4-fips-dev@12.4.16-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -44905,6 +44958,9 @@
         },
         {
           "@id": "pkg:deb/dhi/grafana-12.4-fips@12.4.15-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/grafana-12.4-fips@12.4.16-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -45390,6 +45446,9 @@
           "@id": "pkg:deb/dhi/grafana-13.0-fips-dev@13.0.13-9?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/grafana-13.0-fips-dev@13.0.14-0?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/grafana-13.0-fips-dev@13.0.8-0?distro=dhi-13"
         },
         {
@@ -45543,6 +45602,9 @@
         },
         {
           "@id": "pkg:deb/dhi/grafana-13.0-fips@13.0.13-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/grafana-13.0-fips@13.0.14-0?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/grafana-13.0-fips@13.0.8-0?distro=dhi-13"
@@ -45953,6 +46015,9 @@
           "@id": "pkg:deb/dhi/grafana-13.1-fips-dev@13.1.10-9?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/grafana-13.1-fips-dev@13.1.11-0?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/grafana-13.1-fips-dev@13.1.5-0?distro=dhi-13"
         },
         {
@@ -46106,6 +46171,9 @@
         },
         {
           "@id": "pkg:deb/dhi/grafana-13.1-fips@13.1.10-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/grafana-13.1-fips@13.1.11-0?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/grafana-13.1-fips@13.1.5-0?distro=dhi-13"
@@ -46646,6 +46714,9 @@
         },
         {
           "@id": "pkg:deb/dhi/grafana-13.2-fips-dev@13.2.6-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/grafana-13.2-fips-dev@13.2.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -46798,6 +46869,9 @@
         },
         {
           "@id": "pkg:deb/dhi/grafana-13.2-fips@13.2.6-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/grafana-13.2-fips@13.2.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -54297,6 +54371,9 @@
           "@id": "pkg:deb/dhi/loki-canary-2.9-dev@2.9.17-16?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/loki-canary-2.9-dev@2.9.17-17?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/loki-canary-2.9-dev@2.9.17-1?distro=dhi-13"
         },
         {
@@ -54469,6 +54546,9 @@
         },
         {
           "@id": "pkg:deb/dhi/loki-canary-2.9@2.9.17-16?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/loki-canary-2.9@2.9.17-17?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/loki-canary-2.9@2.9.17-1?distro=dhi-13"
@@ -55747,7 +55827,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-contrib-dev package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -55824,7 +55906,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-contrib-fips-dev package for Debian 13 in the DHI Debian security repository, which requires authentication: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -55901,7 +55985,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-contrib-fips package for Debian 13 in the DHI Debian security repository, which requires authentication: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -55978,7 +56064,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-contrib package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -56055,7 +56143,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-dev@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-dev package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -56132,7 +56222,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips-dev@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-fips-dev package for Debian 13 in the DHI Debian security repository, which requires authentication: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -56209,7 +56301,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector-fips package for Debian 13 in the DHI Debian security repository, which requires authentication: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -56286,7 +56380,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2020-8911 (GHSA-f5pg-7wfw-84q9, GO-2022-0646): the V1 Amazon S3 encryption client in github.com/aws/aws-sdk-go (package service/s3/s3crypto) lets callers encrypt objects with AES-CBC without a message authentication code, so an attacker with write access to the bucket who can observe whether a client with the key fails to decrypt an object can recover its plaintext through a padding oracle. AWS addressed it in V2 of the S3 encryption client API, which no longer encrypts new objects with CBC: EncryptionClientV2 and DecryptionClientV2 were added in aws-sdk-go 1.33.0 by pull request 3403, and the GitHub advisory gives 1.34.0 as the first patched version. The V1 clients remain in the module, and the Go vulnerability entry lists every aws-sdk-go version, with no fixed version, and the functions s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient. Sources: https://github.com/advisories/GHSA-f5pg-7wfw-84q9, https://pkg.go.dev/vuln/GO-2022-0646, https://github.com/aws/aws-sdk-go/pull/3403. We checked every published opentelemetry-collector package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information lists github.com/aws/aws-sdk-go v1.55.8, with no replace directive, in every build. No build links the S3 encryption client: the Go function table of every build, which lists runtime.main as a control, has no function from github.com/aws/aws-sdk-go/service/s3/s3crypto, so neither NewDecryptionClient nor NewEncryptionClient is present, and a byte search of the program in every build, which also catches the names of inlined functions, finds no aws-sdk-go/service/s3/s3crypto. name, while it finds aws-sdk-go/aws. names in every build. The same function-table reader and byte search find s3crypto.NewDecryptionClient and s3crypto.NewEncryptionClient in test programs we built with aws-sdk-go 1.55.8 for amd64 and arm64. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
