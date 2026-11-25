@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T02:59:15Z",
-  "last_updated": "2026-11-24T22:11:59Z",
-  "version": 9,
+  "last_updated": "2026-11-25T00:38:31Z",
+  "version": 10,
   "statements": [
     {
       "vulnerability": {
@@ -28,7 +28,9 @@
           "@id": "pkg:apk/dhi/postgresql16@16.16-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-120142 (PostgreSQL dropped-column type confusion executes arbitrary code) affects only PostgreSQL 17 and 18: the PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-120142/, says versions before PostgreSQL 17 are unaffected and lists 18.7 and 17.12 as the only fixed releases, and the 16.16 release notes, https://www.postgresql.org/docs/release/16.16/, do not list it. The flaw is in equalRowTypes(), which the record type cache uses to decide whether two tuple descriptors match and which ignored the width and alignment of dropped columns. The fix, https://github.com/postgres/postgres/commit/c2439a04353ccab618006f21df8698aa9cc31167, changes only src/backend/access/common/tupdesc.c, is marked Backpatch-through: 17, and calls the bug an oversight in commit https://github.com/postgres/postgres/commit/20e58105badff383bd43f0b97e532771768f94df, which introduced equalRowTypes() and is in the REL_17_0 tag but not on the REL_16_STABLE branch. We read the PostgreSQL 16 sources at REL_16_13 and REL_16_16, for example https://github.com/postgres/postgres/blob/REL_16_16/src/backend/access/common/tupdesc.c and https://github.com/postgres/postgres/blob/REL_16_16/src/backend/utils/cache/typcache.c, and there is no equalRowTypes() in them; the record type cache compares descriptors with equalTupleDescs(), which already compares attlen and attalign for every attribute, dropped or not. We checked the postgres server binary, /usr/libexec/postgresql16/postgres, in every published postgresql16 package for Alpine 3.23 (16.13-r0, 16.14-r0, 16.15-r0 and 16.16-r0) on both x86_64 and aarch64, with checksums verified against the package index: each reports its PostgreSQL 16.x release, and the string \"equalRowTypes\" appears in no ELF file of those postgresql16 packages, while \"equalTupleDescs\" is present in every server binary. As a positive control, the same search finds \"equalRowTypes\" in the postgresql17 17.12-r0 server binary on both architectures. None of the patches applied by Alpine's postgresql16 APKBUILD, https://github.com/alpinelinux/aports/blob/859fa0795e895af033fab32094a83301f2b4d8ff/community/postgresql16/APKBUILD, touch tuple descriptors or the type cache. Alpine's postgresql16 16.16-r0 secfixes list CVE-2026-120142, but upstream's own advisory places PostgreSQL 16 outside the affected range."
     },
     {
       "vulnerability": {
@@ -48,7 +50,9 @@
           "@id": "pkg:apk/dhi/postgresql16@16.16-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-120142 (PostgreSQL dropped-column type confusion executes arbitrary code) affects only PostgreSQL 17 and 18: the PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-120142/, says versions before PostgreSQL 17 are unaffected and lists 18.7 and 17.12 as the only fixed releases, and the 16.16 release notes, https://www.postgresql.org/docs/release/16.16/, do not list it. The flaw is in equalRowTypes(), which the record type cache uses to decide whether two tuple descriptors match and which ignored the width and alignment of dropped columns. The fix, https://github.com/postgres/postgres/commit/c2439a04353ccab618006f21df8698aa9cc31167, changes only src/backend/access/common/tupdesc.c, is marked Backpatch-through: 17, and calls the bug an oversight in commit https://github.com/postgres/postgres/commit/20e58105badff383bd43f0b97e532771768f94df, which introduced equalRowTypes() and is in the REL_17_0 tag but not on the REL_16_STABLE branch. We read the PostgreSQL 16 sources at REL_16_13 and REL_16_16, for example https://github.com/postgres/postgres/blob/REL_16_16/src/backend/access/common/tupdesc.c and https://github.com/postgres/postgres/blob/REL_16_16/src/backend/utils/cache/typcache.c, and there is no equalRowTypes() in them; the record type cache compares descriptors with equalTupleDescs(), which already compares attlen and attalign for every attribute, dropped or not. We checked the postgres server binary, /usr/libexec/postgresql16/postgres, in every published postgresql16 package for Alpine 3.24 (16.14-r0, 16.15-r0 and 16.16-r0) on both x86_64 and aarch64, with checksums verified against the package index: each reports its PostgreSQL 16.x release, and the string \"equalRowTypes\" appears in no ELF file of those postgresql16 packages, while \"equalTupleDescs\" is present in every server binary. As a positive control, the same search finds \"equalRowTypes\" in the postgresql17 17.12-r0 server binary on both architectures. None of the patches applied by Alpine's postgresql16 APKBUILD, https://github.com/alpinelinux/aports/blob/4ceb4766cb82ae191dc47628382b37cb94423468/community/postgresql16/APKBUILD, touch tuple descriptors or the type cache. Alpine's postgresql16 16.16-r0 secfixes list CVE-2026-120142, but upstream's own advisory places PostgreSQL 16 outside the affected range."
     },
     {
       "vulnerability": {
@@ -65,9 +69,6 @@
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
         },
         {
@@ -77,7 +78,24 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.12-r0 or later.",
+      "status_notes": "CVE-2026-120142 (PostgreSQL dropped-column type confusion executes arbitrary code) is fixed upstream in PostgreSQL 17.12: https://www.postgresql.org/support/security/CVE-2026-120142/ and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/. PostgreSQL lists only major versions 17 and 18 as affected, and 17.12 is the fix for 17. Alpine's postgresql17 17.12-r0 on the 3.23-stable branch is the upgrade to upstream 17.12 and lists CVE-2026-120142 under its secfixes: https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD. The DHI postgresql17 17.12-r0 package for Alpine 3.23 is built from that APKBUILD and the upstream 17.12 source release, and its postgres server binary reports PostgreSQL 17.12 on both x86_64 and aarch64. Every earlier published build for Alpine 3.23 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0) is an earlier upstream release whose server binary reports that older version, so it is affected; 17.12-r0 and later carry the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-nnwo-rmca-nsne-mevt",
+        "aliases": [
+          "CVE-2026-120142"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-120142 (PostgreSQL dropped-column type confusion executes arbitrary code) is fixed upstream in PostgreSQL 17.12: https://www.postgresql.org/support/security/CVE-2026-120142/ and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/. PostgreSQL lists only major versions 17 and 18 as affected, and 17.12 is the fix for 17. Alpine's postgresql17 17.12-r0 on the 3.23-stable branch is the upgrade to upstream 17.12 and lists CVE-2026-120142 under its secfixes: https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD. The DHI postgresql17 17.12-r0 package for Alpine 3.23 is built from that APKBUILD and the upstream 17.12 source release, and its postgres server binary reports PostgreSQL 17.12 on both x86_64 and aarch64. Every earlier published build for Alpine 3.23 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0) is an earlier upstream release whose server binary reports that older version, so it is affected; 17.12-r0 and later carry the fix."
     },
     {
       "vulnerability": {
@@ -92,12 +110,26 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.12-r0 or later.",
+      "status_notes": "CVE-2026-120142 (PostgreSQL dropped-column type confusion executes arbitrary code) is fixed upstream in PostgreSQL 17.12: https://www.postgresql.org/support/security/CVE-2026-120142/ and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/. PostgreSQL lists only major versions 17 and 18 as affected, and 17.12 is the fix for 17. Alpine's postgresql17 17.12-r0 on the 3.24-stable branch is the upgrade to upstream 17.12 and lists CVE-2026-120142 under its secfixes: https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD. The DHI postgresql17 17.12-r0 package for Alpine 3.24 is built from that APKBUILD and the upstream 17.12 source release, and its postgres server binary reports PostgreSQL 17.12 on both x86_64 and aarch64. Every earlier published build for Alpine 3.24 (17.10-r0 and 17.11-r0) is an earlier upstream release whose server binary reports that older version, so it is affected; 17.12-r0 and later carry the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-nnwo-rmca-nsne-mevt",
+        "aliases": [
+          "CVE-2026-120142"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-120142 (PostgreSQL dropped-column type confusion executes arbitrary code) is fixed upstream in PostgreSQL 17.12: https://www.postgresql.org/support/security/CVE-2026-120142/ and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/. PostgreSQL lists only major versions 17 and 18 as affected, and 17.12 is the fix for 17. Alpine's postgresql17 17.12-r0 on the 3.24-stable branch is the upgrade to upstream 17.12 and lists CVE-2026-120142 under its secfixes: https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD. The DHI postgresql17 17.12-r0 package for Alpine 3.24 is built from that APKBUILD and the upstream 17.12 source release, and its postgres server binary reports PostgreSQL 17.12 on both x86_64 and aarch64. Every earlier published build for Alpine 3.24 (17.10-r0 and 17.11-r0) is an earlier upstream release whose server binary reports that older version, so it is affected; 17.12-r0 and later carry the fix."
     },
     {
       "vulnerability": {
