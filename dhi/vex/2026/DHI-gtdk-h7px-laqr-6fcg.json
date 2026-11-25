@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T02:52:32Z",
-  "last_updated": "2026-11-24T22:11:59Z",
-  "version": 9,
+  "last_updated": "2026-11-25T00:21:22Z",
+  "version": 10,
   "statements": [
     {
       "vulnerability": {
@@ -23,12 +23,26 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql16@16.15-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql16 to 16.16-r0 or later.",
+      "status_notes": "CVE-2026-116326 (PostgreSQL plperl tied-object exceptions follow stale sigjmp_buf): a tied Perl object, or one whose overloaded conversion throws while plperl is handling another error, makes plperl use a stale sigjmp_buf; PostgreSQL has not ruled out arbitrary code execution. It is fixed upstream in PostgreSQL 16.16 for the 16 major version. The PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-116326/, lists 16.16 as the fixed release for 16, and the 16.16 release notes, https://www.postgresql.org/docs/release/16.16/, list this CVE. The fix on the REL_16_STABLE branch is three commits that carry the trailer \"Security: CVE-2026-116326\" and are in the REL_16_16 tag: https://github.com/postgres/postgres/commit/26a89a81ad2006bcc3da41359f244cdcab06ce8a (support tied Perl objects in plperl and its contrib modules), https://github.com/postgres/postgres/commit/ab70d013ea5600d5db49b6cd9d8e6ee475b48769 (cope with errors thrown from tied structures) and https://github.com/postgres/postgres/commit/8d6ca43589a3b724b0669f830783a0718a696bb4 (further hardening against tied scalars). plperl.so, shipped in postgresql16-plperl in every build, contains the \"unexpected Perl longjmp\" error message that the second commit adds in 16.16-r0 on both architectures and lacks it in every earlier build. Alpine's postgresql16 16.16-r0 on the 3.23-stable branch upgrades to the upstream 16.16 release and lists CVE-2026-116326 under 16.16-r0 in its secfixes: https://github.com/alpinelinux/aports/blob/859fa0795e895af033fab32094a83301f2b4d8ff/community/postgresql16/APKBUILD. Of the Alpine patches applied in that APKBUILD, only perl-rpath.patch touches a file the fix also changes: it adds an rpath link flag to src/pl/plperl/GNUmakefile, where the first commit only adds a regression test to the test list. No Alpine patch changes the C sources or headers the fix changes. This owner covers the packages built from Alpine's postgresql16 recipe: postgresql16 and its subpackages postgresql16-client, -contrib, -contrib-jit, -dev, -doc, -jit, -openrc, -plperl, -plperl-contrib, -plpython3, -plpython3-contrib and -pltcl. We checked every package built from that source in the DHI Alpine 3.23 repository, 4 builds (16.13-r0, 16.14-r0, 16.15-r0 and 16.16-r0) for x86_64 and aarch64, each against its index checksum; 16.14-r0 for x86_64 is published without the -plperl-contrib, -plpython3, -plpython3-contrib and -pltcl subpackages. The server binary /usr/libexec/postgresql16/postgres in each build reports its release on both architectures: PostgreSQL 16.13 in 16.13-r0, PostgreSQL 16.14 in 16.14-r0, PostgreSQL 16.15 in 16.15-r0 and PostgreSQL 16.16 in 16.16-r0. The builds before 16.16-r0 (16.13-r0, 16.14-r0 and 16.15-r0) are PostgreSQL releases before 16.16 and are affected; 16.16-r0 carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-gtdk-h7px-laqr-6fcg",
+        "aliases": [
+          "CVE-2026-116326"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql16@16.16-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-116326 (PostgreSQL plperl tied-object exceptions follow stale sigjmp_buf): a tied Perl object, or one whose overloaded conversion throws while plperl is handling another error, makes plperl use a stale sigjmp_buf; PostgreSQL has not ruled out arbitrary code execution. It is fixed upstream in PostgreSQL 16.16 for the 16 major version. The PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-116326/, lists 16.16 as the fixed release for 16, and the 16.16 release notes, https://www.postgresql.org/docs/release/16.16/, list this CVE. The fix on the REL_16_STABLE branch is three commits that carry the trailer \"Security: CVE-2026-116326\" and are in the REL_16_16 tag: https://github.com/postgres/postgres/commit/26a89a81ad2006bcc3da41359f244cdcab06ce8a (support tied Perl objects in plperl and its contrib modules), https://github.com/postgres/postgres/commit/ab70d013ea5600d5db49b6cd9d8e6ee475b48769 (cope with errors thrown from tied structures) and https://github.com/postgres/postgres/commit/8d6ca43589a3b724b0669f830783a0718a696bb4 (further hardening against tied scalars). plperl.so, shipped in postgresql16-plperl in every build, contains the \"unexpected Perl longjmp\" error message that the second commit adds in 16.16-r0 on both architectures and lacks it in every earlier build. Alpine's postgresql16 16.16-r0 on the 3.23-stable branch upgrades to the upstream 16.16 release and lists CVE-2026-116326 under 16.16-r0 in its secfixes: https://github.com/alpinelinux/aports/blob/859fa0795e895af033fab32094a83301f2b4d8ff/community/postgresql16/APKBUILD. Of the Alpine patches applied in that APKBUILD, only perl-rpath.patch touches a file the fix also changes: it adds an rpath link flag to src/pl/plperl/GNUmakefile, where the first commit only adds a regression test to the test list. No Alpine patch changes the C sources or headers the fix changes. This owner covers the packages built from Alpine's postgresql16 recipe: postgresql16 and its subpackages postgresql16-client, -contrib, -contrib-jit, -dev, -doc, -jit, -openrc, -plperl, -plperl-contrib, -plpython3, -plpython3-contrib and -pltcl. We checked every package built from that source in the DHI Alpine 3.23 repository, 4 builds (16.13-r0, 16.14-r0, 16.15-r0 and 16.16-r0) for x86_64 and aarch64, each against its index checksum; 16.14-r0 for x86_64 is published without the -plperl-contrib, -plpython3, -plpython3-contrib and -pltcl subpackages. The server binary /usr/libexec/postgresql16/postgres in each build reports its release on both architectures: PostgreSQL 16.13 in 16.13-r0, PostgreSQL 16.14 in 16.14-r0, PostgreSQL 16.15 in 16.15-r0 and PostgreSQL 16.16 in 16.16-r0. The builds before 16.16-r0 (16.13-r0, 16.14-r0 and 16.15-r0) are PostgreSQL releases before 16.16 and are affected; 16.16-r0 carries the fix."
     },
     {
       "vulnerability": {
@@ -43,12 +57,26 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql16@16.15-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql16 to 16.16-r0 or later.",
+      "status_notes": "CVE-2026-116326 (PostgreSQL plperl tied-object exceptions follow stale sigjmp_buf): a tied Perl object, or one whose overloaded conversion throws while plperl is handling another error, makes plperl use a stale sigjmp_buf; PostgreSQL has not ruled out arbitrary code execution. It is fixed upstream in PostgreSQL 16.16 for the 16 major version. The PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-116326/, lists 16.16 as the fixed release for 16, and the 16.16 release notes, https://www.postgresql.org/docs/release/16.16/, list this CVE. The fix on the REL_16_STABLE branch is three commits that carry the trailer \"Security: CVE-2026-116326\" and are in the REL_16_16 tag: https://github.com/postgres/postgres/commit/26a89a81ad2006bcc3da41359f244cdcab06ce8a (support tied Perl objects in plperl and its contrib modules), https://github.com/postgres/postgres/commit/ab70d013ea5600d5db49b6cd9d8e6ee475b48769 (cope with errors thrown from tied structures) and https://github.com/postgres/postgres/commit/8d6ca43589a3b724b0669f830783a0718a696bb4 (further hardening against tied scalars). plperl.so, shipped in postgresql16-plperl in every build, contains the \"unexpected Perl longjmp\" error message that the second commit adds in 16.16-r0 on both architectures and lacks it in every earlier build. Alpine's postgresql16 16.16-r0 on the 3.24-stable branch upgrades to the upstream 16.16 release and lists CVE-2026-116326 under 16.16-r0 in its secfixes: https://github.com/alpinelinux/aports/blob/4ceb4766cb82ae191dc47628382b37cb94423468/community/postgresql16/APKBUILD. Of the Alpine patches applied in that APKBUILD, only perl-rpath.patch touches a file the fix also changes: it adds an rpath link flag to src/pl/plperl/GNUmakefile, where the first commit only adds a regression test to the test list. No Alpine patch changes the C sources or headers the fix changes. This owner covers the packages built from Alpine's postgresql16 recipe: postgresql16 and its subpackages postgresql16-client, -contrib, -contrib-jit, -dev, -doc, -jit, -openrc, -plperl, -plperl-contrib, -plpython3, -plpython3-contrib and -pltcl. We checked every package built from that source in the DHI Alpine 3.24 repository, 3 builds (16.14-r0, 16.15-r0 and 16.16-r0) for x86_64 and aarch64, each against its index checksum. The server binary /usr/libexec/postgresql16/postgres in each build reports its release on both architectures: PostgreSQL 16.14 in 16.14-r0, PostgreSQL 16.15 in 16.15-r0 and PostgreSQL 16.16 in 16.16-r0. The builds before 16.16-r0 (16.14-r0 and 16.15-r0) are PostgreSQL releases before 16.16 and are affected; 16.16-r0 carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-gtdk-h7px-laqr-6fcg",
+        "aliases": [
+          "CVE-2026-116326"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql16@16.16-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-116326 (PostgreSQL plperl tied-object exceptions follow stale sigjmp_buf): a tied Perl object, or one whose overloaded conversion throws while plperl is handling another error, makes plperl use a stale sigjmp_buf; PostgreSQL has not ruled out arbitrary code execution. It is fixed upstream in PostgreSQL 16.16 for the 16 major version. The PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-116326/, lists 16.16 as the fixed release for 16, and the 16.16 release notes, https://www.postgresql.org/docs/release/16.16/, list this CVE. The fix on the REL_16_STABLE branch is three commits that carry the trailer \"Security: CVE-2026-116326\" and are in the REL_16_16 tag: https://github.com/postgres/postgres/commit/26a89a81ad2006bcc3da41359f244cdcab06ce8a (support tied Perl objects in plperl and its contrib modules), https://github.com/postgres/postgres/commit/ab70d013ea5600d5db49b6cd9d8e6ee475b48769 (cope with errors thrown from tied structures) and https://github.com/postgres/postgres/commit/8d6ca43589a3b724b0669f830783a0718a696bb4 (further hardening against tied scalars). plperl.so, shipped in postgresql16-plperl in every build, contains the \"unexpected Perl longjmp\" error message that the second commit adds in 16.16-r0 on both architectures and lacks it in every earlier build. Alpine's postgresql16 16.16-r0 on the 3.24-stable branch upgrades to the upstream 16.16 release and lists CVE-2026-116326 under 16.16-r0 in its secfixes: https://github.com/alpinelinux/aports/blob/4ceb4766cb82ae191dc47628382b37cb94423468/community/postgresql16/APKBUILD. Of the Alpine patches applied in that APKBUILD, only perl-rpath.patch touches a file the fix also changes: it adds an rpath link flag to src/pl/plperl/GNUmakefile, where the first commit only adds a regression test to the test list. No Alpine patch changes the C sources or headers the fix changes. This owner covers the packages built from Alpine's postgresql16 recipe: postgresql16 and its subpackages postgresql16-client, -contrib, -contrib-jit, -dev, -doc, -jit, -openrc, -plperl, -plperl-contrib, -plpython3, -plpython3-contrib and -pltcl. We checked every package built from that source in the DHI Alpine 3.24 repository, 3 builds (16.14-r0, 16.15-r0 and 16.16-r0) for x86_64 and aarch64, each against its index checksum. The server binary /usr/libexec/postgresql16/postgres in each build reports its release on both architectures: PostgreSQL 16.14 in 16.14-r0, PostgreSQL 16.15 in 16.15-r0 and PostgreSQL 16.16 in 16.16-r0. The builds before 16.16-r0 (16.14-r0 and 16.15-r0) are PostgreSQL releases before 16.16 and are affected; 16.16-r0 carries the fix."
     },
     {
       "vulnerability": {

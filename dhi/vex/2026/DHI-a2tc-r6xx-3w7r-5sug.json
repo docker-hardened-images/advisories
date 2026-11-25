@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T02:59:15Z",
-  "last_updated": "2026-11-19T16:28:19Z",
-  "version": 8,
+  "last_updated": "2026-11-25T00:21:07Z",
+  "version": 9,
   "statements": [
     {
       "vulnerability": {
@@ -28,7 +28,9 @@
           "@id": "pkg:apk/dhi/postgresql16@16.16-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-116322 (PostgreSQL pre-authentication cancel request can leak a spinlock) affects only PostgreSQL 18. The PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-116322/, says versions before PostgreSQL 18 are unaffected and lists 18.7 as the only fixed release, and the 16.16 release notes, https://www.postgresql.org/docs/release/16.16/, do not list it. The fix, https://github.com/postgres/postgres/commit/208ea05a51b8e2116323054aa5110f66803a010d, changes only src/backend/tcop/backend_startup.c (plus a typedef list), says it is back-patched through 18, and explains that the bug came with a PostgreSQL 18 change after which a starting backend handles a cancel request itself and can hold a shared-memory spinlock at a point where authentication_timeout or SIGTERM can still make it exit. PostgreSQL 16 has neither that file nor that code path: at REL_16_16 the postmaster itself handles a cancel request in processCancelRequest by searching its own list of backends, without taking a spinlock, https://github.com/postgres/postgres/blob/REL_16_16/src/backend/postmaster/postmaster.c . Alpine's postgresql16 16.16-r0 lists CVE-2026-116322 in its secfixes, https://github.com/alpinelinux/aports/blob/859fa0795e895af033fab32094a83301f2b4d8ff/community/postgresql16/APKBUILD, but upstream's own record places PostgreSQL 16 outside the affected range, and none of the Alpine patches applied in that APKBUILD touch cancel handling. This owner covers the packages built from Alpine's postgresql16 recipe: postgresql16 and its subpackages postgresql16-client, -contrib, -contrib-jit, -dev, -doc, -jit, -openrc, -plperl, -plperl-contrib, -plpython3, -plpython3-contrib and -pltcl. We checked every package built from that source in the DHI Alpine 3.23 repository, 4 builds (16.13-r0, 16.14-r0, 16.15-r0 and 16.16-r0) for x86_64 and aarch64, each against its index checksum; 16.14-r0 for x86_64 is published without the -plperl-contrib, -plpython3, -plpython3-contrib and -pltcl subpackages. The server binary /usr/libexec/postgresql16/postgres in each build reports its release on both architectures: PostgreSQL 16.13 in 16.13-r0, PostgreSQL 16.14 in 16.14-r0, PostgreSQL 16.15 in 16.15-r0 and PostgreSQL 16.16 in 16.16-r0. Every build is a PostgreSQL 16 release, so the vulnerable code is not present."
     },
     {
       "vulnerability": {
@@ -48,7 +50,9 @@
           "@id": "pkg:apk/dhi/postgresql16@16.16-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-116322 (PostgreSQL pre-authentication cancel request can leak a spinlock) affects only PostgreSQL 18. The PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-116322/, says versions before PostgreSQL 18 are unaffected and lists 18.7 as the only fixed release, and the 16.16 release notes, https://www.postgresql.org/docs/release/16.16/, do not list it. The fix, https://github.com/postgres/postgres/commit/208ea05a51b8e2116323054aa5110f66803a010d, changes only src/backend/tcop/backend_startup.c (plus a typedef list), says it is back-patched through 18, and explains that the bug came with a PostgreSQL 18 change after which a starting backend handles a cancel request itself and can hold a shared-memory spinlock at a point where authentication_timeout or SIGTERM can still make it exit. PostgreSQL 16 has neither that file nor that code path: at REL_16_16 the postmaster itself handles a cancel request in processCancelRequest by searching its own list of backends, without taking a spinlock, https://github.com/postgres/postgres/blob/REL_16_16/src/backend/postmaster/postmaster.c . Alpine's postgresql16 16.16-r0 lists CVE-2026-116322 in its secfixes, https://github.com/alpinelinux/aports/blob/4ceb4766cb82ae191dc47628382b37cb94423468/community/postgresql16/APKBUILD, but upstream's own record places PostgreSQL 16 outside the affected range, and none of the Alpine patches applied in that APKBUILD touch cancel handling. This owner covers the packages built from Alpine's postgresql16 recipe: postgresql16 and its subpackages postgresql16-client, -contrib, -contrib-jit, -dev, -doc, -jit, -openrc, -plperl, -plperl-contrib, -plpython3, -plpython3-contrib and -pltcl. We checked every package built from that source in the DHI Alpine 3.24 repository, 3 builds (16.14-r0, 16.15-r0 and 16.16-r0) for x86_64 and aarch64, each against its index checksum. The server binary /usr/libexec/postgresql16/postgres in each build reports its release on both architectures: PostgreSQL 16.14 in 16.14-r0, PostgreSQL 16.15 in 16.15-r0 and PostgreSQL 16.16 in 16.16-r0. Every build is a PostgreSQL 16 release, so the vulnerable code is not present."
     },
     {
       "vulnerability": {
