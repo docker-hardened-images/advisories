@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T02:59:15Z",
-  "last_updated": "2026-11-24T22:11:59Z",
-  "version": 9,
+  "last_updated": "2026-11-25T17:32:45Z",
+  "version": 10,
   "statements": [
     {
       "vulnerability": {
@@ -23,12 +23,26 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql16@16.15-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql16 to 16.16-r0 or later.",
+      "status_notes": "CVE-2026-14661 (PostgreSQL dblink and subscriptions can append to arbitrary files): the sslkeylogfile connection option, passed through dblink or CREATE/ALTER SUBSCRIPTION, makes libpq append NSS keylog lines to a file the user chooses. https://www.postgresql.org/support/security/CVE-2026-14661/ lists 16.16 as the fixed release for major version 16 and says releases before PostgreSQL 18 are affected if libpq 18 or later is installed and used by the server; the 16.16 release notes, https://www.postgresql.org/docs/release/16.16/, list this CVE. The fix on the REL_16_STABLE branch is https://github.com/postgres/postgres/commit/f7b12b9f7d62f9ab83af0b72383a8684bece33d3 (Security: CVE-2026-14661; master commit https://github.com/postgres/postgres/commit/08010fa4f43dc06b701592e605b548eaf07fd5f7), in tag REL_16_16 and not in REL_16_15. It adds a check that dblink, postgres_fdw and libpqwalreceiver run on the connection options before connecting, which refuses any option not on an allowed list with \"permission denied to set connection option\"; libpqwalreceiver skips the check for the server's own primary_conninfo and for physical replication connections. Alpine's postgresql16 APKBUILD on the 3.23-stable branch, https://github.com/alpinelinux/aports/blob/859fa0795e895af033fab32094a83301f2b4d8ff/community/postgresql16/APKBUILD, lists CVE-2026-14661 under 16.16-r0 in its secfixes. The DHI postgresql16 packages for Alpine 3.23 are built from Alpine's postgresql16 APKBUILD on that branch and the upstream PostgreSQL release tarball; the current 16.16-r0 build uses the APKBUILD at that commit. None of its patches changes the C sources or headers the fix changes; its external-libpq patch edits only src/Makefile and src/Makefile.global.in so that the build links against the system libpq instead of building its own. The libpq-18 condition holds here: in every published build for Alpine 3.23 (16.13-r0, 16.14-r0, 16.15-r0 and 16.16-r0) on x86_64 and aarch64, /usr/lib/postgresql16/libpqwalreceiver.so in postgresql16 and /usr/lib/postgresql16/dblink.so in postgresql16-contrib list libpq.so.5 as NEEDED, and the only package providing libpq.so.5 in the DHI Alpine 3.23 repository is libpq built from PostgreSQL 18 (18.1-r0 to 18.7-r0). In those builds the \"permission denied to set connection option\" message is in libpqwalreceiver.so, dblink.so and postgres_fdw.so in 16.16-r0 only, while 16.13-r0, 16.14-r0 and 16.15-r0 lack it; /usr/libexec/postgresql16/postgres in each reports the matching PostgreSQL release. 16.16-r0 is the first published build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-mutx-6dqu-dzrn-cug2",
+        "aliases": [
+          "CVE-2026-14661"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql16@16.16-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14661 (PostgreSQL dblink and subscriptions can append to arbitrary files): the sslkeylogfile connection option, passed through dblink or CREATE/ALTER SUBSCRIPTION, makes libpq append NSS keylog lines to a file the user chooses. https://www.postgresql.org/support/security/CVE-2026-14661/ lists 16.16 as the fixed release for major version 16 and says releases before PostgreSQL 18 are affected if libpq 18 or later is installed and used by the server; the 16.16 release notes, https://www.postgresql.org/docs/release/16.16/, list this CVE. The fix on the REL_16_STABLE branch is https://github.com/postgres/postgres/commit/f7b12b9f7d62f9ab83af0b72383a8684bece33d3 (Security: CVE-2026-14661; master commit https://github.com/postgres/postgres/commit/08010fa4f43dc06b701592e605b548eaf07fd5f7), in tag REL_16_16 and not in REL_16_15. It adds a check that dblink, postgres_fdw and libpqwalreceiver run on the connection options before connecting, which refuses any option not on an allowed list with \"permission denied to set connection option\"; libpqwalreceiver skips the check for the server's own primary_conninfo and for physical replication connections. Alpine's postgresql16 APKBUILD on the 3.23-stable branch, https://github.com/alpinelinux/aports/blob/859fa0795e895af033fab32094a83301f2b4d8ff/community/postgresql16/APKBUILD, lists CVE-2026-14661 under 16.16-r0 in its secfixes. The DHI postgresql16 packages for Alpine 3.23 are built from Alpine's postgresql16 APKBUILD on that branch and the upstream PostgreSQL release tarball; the current 16.16-r0 build uses the APKBUILD at that commit. None of its patches changes the C sources or headers the fix changes; its external-libpq patch edits only src/Makefile and src/Makefile.global.in so that the build links against the system libpq instead of building its own. The libpq-18 condition holds here: in every published build for Alpine 3.23 (16.13-r0, 16.14-r0, 16.15-r0 and 16.16-r0) on x86_64 and aarch64, /usr/lib/postgresql16/libpqwalreceiver.so in postgresql16 and /usr/lib/postgresql16/dblink.so in postgresql16-contrib list libpq.so.5 as NEEDED, and the only package providing libpq.so.5 in the DHI Alpine 3.23 repository is libpq built from PostgreSQL 18 (18.1-r0 to 18.7-r0). In those builds the \"permission denied to set connection option\" message is in libpqwalreceiver.so, dblink.so and postgres_fdw.so in 16.16-r0 only, while 16.13-r0, 16.14-r0 and 16.15-r0 lack it; /usr/libexec/postgresql16/postgres in each reports the matching PostgreSQL release. 16.16-r0 is the first published build that carries the fix."
     },
     {
       "vulnerability": {
@@ -43,12 +57,26 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql16@16.15-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql16 to 16.16-r0 or later.",
+      "status_notes": "CVE-2026-14661 (PostgreSQL dblink and subscriptions can append to arbitrary files): the sslkeylogfile connection option, passed through dblink or CREATE/ALTER SUBSCRIPTION, makes libpq append NSS keylog lines to a file the user chooses. https://www.postgresql.org/support/security/CVE-2026-14661/ lists 16.16 as the fixed release for major version 16 and says releases before PostgreSQL 18 are affected if libpq 18 or later is installed and used by the server; the 16.16 release notes, https://www.postgresql.org/docs/release/16.16/, list this CVE. The fix on the REL_16_STABLE branch is https://github.com/postgres/postgres/commit/f7b12b9f7d62f9ab83af0b72383a8684bece33d3 (Security: CVE-2026-14661; master commit https://github.com/postgres/postgres/commit/08010fa4f43dc06b701592e605b548eaf07fd5f7), in tag REL_16_16 and not in REL_16_15. It adds a check that dblink, postgres_fdw and libpqwalreceiver run on the connection options before connecting, which refuses any option not on an allowed list with \"permission denied to set connection option\"; libpqwalreceiver skips the check for the server's own primary_conninfo and for physical replication connections. Alpine's postgresql16 APKBUILD on the 3.24-stable branch, https://github.com/alpinelinux/aports/blob/4ceb4766cb82ae191dc47628382b37cb94423468/community/postgresql16/APKBUILD, lists CVE-2026-14661 under 16.16-r0 in its secfixes. The DHI postgresql16 packages for Alpine 3.24 are built from Alpine's postgresql16 APKBUILD on that branch and the upstream PostgreSQL release tarball; the current 16.16-r0 build uses the APKBUILD at that commit. None of its patches changes the C sources or headers the fix changes; its external-libpq patch edits only src/Makefile and src/Makefile.global.in so that the build links against the system libpq instead of building its own. The libpq-18 condition holds here: in every published build for Alpine 3.24 (16.14-r0, 16.15-r0 and 16.16-r0) on x86_64 and aarch64, /usr/lib/postgresql16/libpqwalreceiver.so in postgresql16 and /usr/lib/postgresql16/dblink.so in postgresql16-contrib list libpq.so.5 as NEEDED, and the only package providing libpq.so.5 in the DHI Alpine 3.24 repository is libpq built from PostgreSQL 18 (18.4-r0 to 18.7-r0). In those builds the \"permission denied to set connection option\" message is in libpqwalreceiver.so, dblink.so and postgres_fdw.so in 16.16-r0 only, while 16.14-r0 and 16.15-r0 lack it; /usr/libexec/postgresql16/postgres in each reports the matching PostgreSQL release. 16.16-r0 is the first published build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-mutx-6dqu-dzrn-cug2",
+        "aliases": [
+          "CVE-2026-14661"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql16@16.16-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14661 (PostgreSQL dblink and subscriptions can append to arbitrary files): the sslkeylogfile connection option, passed through dblink or CREATE/ALTER SUBSCRIPTION, makes libpq append NSS keylog lines to a file the user chooses. https://www.postgresql.org/support/security/CVE-2026-14661/ lists 16.16 as the fixed release for major version 16 and says releases before PostgreSQL 18 are affected if libpq 18 or later is installed and used by the server; the 16.16 release notes, https://www.postgresql.org/docs/release/16.16/, list this CVE. The fix on the REL_16_STABLE branch is https://github.com/postgres/postgres/commit/f7b12b9f7d62f9ab83af0b72383a8684bece33d3 (Security: CVE-2026-14661; master commit https://github.com/postgres/postgres/commit/08010fa4f43dc06b701592e605b548eaf07fd5f7), in tag REL_16_16 and not in REL_16_15. It adds a check that dblink, postgres_fdw and libpqwalreceiver run on the connection options before connecting, which refuses any option not on an allowed list with \"permission denied to set connection option\"; libpqwalreceiver skips the check for the server's own primary_conninfo and for physical replication connections. Alpine's postgresql16 APKBUILD on the 3.24-stable branch, https://github.com/alpinelinux/aports/blob/4ceb4766cb82ae191dc47628382b37cb94423468/community/postgresql16/APKBUILD, lists CVE-2026-14661 under 16.16-r0 in its secfixes. The DHI postgresql16 packages for Alpine 3.24 are built from Alpine's postgresql16 APKBUILD on that branch and the upstream PostgreSQL release tarball; the current 16.16-r0 build uses the APKBUILD at that commit. None of its patches changes the C sources or headers the fix changes; its external-libpq patch edits only src/Makefile and src/Makefile.global.in so that the build links against the system libpq instead of building its own. The libpq-18 condition holds here: in every published build for Alpine 3.24 (16.14-r0, 16.15-r0 and 16.16-r0) on x86_64 and aarch64, /usr/lib/postgresql16/libpqwalreceiver.so in postgresql16 and /usr/lib/postgresql16/dblink.so in postgresql16-contrib list libpq.so.5 as NEEDED, and the only package providing libpq.so.5 in the DHI Alpine 3.24 repository is libpq built from PostgreSQL 18 (18.4-r0 to 18.7-r0). In those builds the \"permission denied to set connection option\" message is in libpqwalreceiver.so, dblink.so and postgres_fdw.so in 16.16-r0 only, while 16.14-r0 and 16.15-r0 lack it; /usr/libexec/postgresql16/postgres in each reports the matching PostgreSQL release. 16.16-r0 is the first published build that carries the fix."
     },
     {
       "vulnerability": {

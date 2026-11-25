@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T00:55:26Z",
-  "last_updated": "2026-11-21T16:17:22Z",
-  "version": 2,
+  "last_updated": "2026-11-25T17:32:36Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -26,12 +26,26 @@
         },
         {
           "@id": "pkg:apk/dhi/perl@5.42.2-r1?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update perl to 5.42.2-r2 or later.",
+      "status_notes": "CVE-2026-13221: when a regular expression alternation of more than 65535 fixed-string branches is compiled into a trie in Perl_study_chunk, the distance from the first branch to the shared tail is stored in a 16-bit field; it overflows and the trie's match table is truncated without warning, so the pattern gives false positive and false negative matches. The CVE record lists Perl from 5.41.0 before 5.42.3-RC1 as affected: https://www.cve.org/CVERecord?id=CVE-2026-13221, with the announcement at https://lists.security.metacpan.org/cve-announce/msg/41780104/ and the upstream issue at https://github.com/Perl/perl5/issues/23388. The upstream fix, https://github.com/Perl/perl5/commit/03f74bbbd3a68350d926ee93d56ee4808c28c4c7, makes regcomp_study.c skip building a trie whose start-to-tail distance would not fit in that field. The DHI perl packages for Alpine 3.23 are built from upstream 5.42.x releases, and DHI backports that regcomp_study.c change into its builds starting with 5.42.2-r2. We installed every perl and miniperl package published for Alpine 3.23 in the DHI Alpine repository, 5.42.0-r0, 5.42.1-r0, 5.42.2-r0, 5.42.2-r1 and 5.42.2-r2, on x86_64 and aarch64. With perl we ran the regression case the fix commit adds (an alternation of \"aaa\"..\"mzz\" and \"naa\"..\"zzz\" compiled under use re \"Debug\"), and with both perl and miniperl we matched the same alternation, anchored with ^ and $, against all 17576 three-letter strings it lists. On 5.42.0-r0 through 5.42.2-r1 the regression case dies with \"regexp memory corruption\" and the anchored pattern fails to match one of the 17576 strings, on both arches. On 5.42.2-r2 the regression case exits cleanly and the anchored pattern matches all 17576, on both arches. 5.42.2-r2 is the first published build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wyyk-yudm-6heu-edsh",
+        "aliases": [
+          "CVE-2026-13221"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/perl@5.42.2-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-13221: when a regular expression alternation of more than 65535 fixed-string branches is compiled into a trie in Perl_study_chunk, the distance from the first branch to the shared tail is stored in a 16-bit field; it overflows and the trie's match table is truncated without warning, so the pattern gives false positive and false negative matches. The CVE record lists Perl from 5.41.0 before 5.42.3-RC1 as affected: https://www.cve.org/CVERecord?id=CVE-2026-13221, with the announcement at https://lists.security.metacpan.org/cve-announce/msg/41780104/ and the upstream issue at https://github.com/Perl/perl5/issues/23388. The upstream fix, https://github.com/Perl/perl5/commit/03f74bbbd3a68350d926ee93d56ee4808c28c4c7, makes regcomp_study.c skip building a trie whose start-to-tail distance would not fit in that field. The DHI perl packages for Alpine 3.23 are built from upstream 5.42.x releases, and DHI backports that regcomp_study.c change into its builds starting with 5.42.2-r2. We installed every perl and miniperl package published for Alpine 3.23 in the DHI Alpine repository, 5.42.0-r0, 5.42.1-r0, 5.42.2-r0, 5.42.2-r1 and 5.42.2-r2, on x86_64 and aarch64. With perl we ran the regression case the fix commit adds (an alternation of \"aaa\"..\"mzz\" and \"naa\"..\"zzz\" compiled under use re \"Debug\"), and with both perl and miniperl we matched the same alternation, anchored with ^ and $, against all 17576 three-letter strings it lists. On 5.42.0-r0 through 5.42.2-r1 the regression case dies with \"regexp memory corruption\" and the anchored pattern fails to match one of the 17576 strings, on both arches. On 5.42.2-r2 the regression case exits cleanly and the anchored pattern matches all 17576, on both arches. 5.42.2-r2 is the first published build that carries the fix."
     }
   ]
 }
