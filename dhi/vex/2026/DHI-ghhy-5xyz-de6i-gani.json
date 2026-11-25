@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T02:59:15Z",
-  "last_updated": "2026-11-24T22:11:59Z",
-  "version": 9,
+  "last_updated": "2026-11-25T16:54:31Z",
+  "version": 10,
   "statements": [
     {
       "vulnerability": {
@@ -65,9 +65,6 @@
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
         },
         {
@@ -77,7 +74,24 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.12-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-120151 (PostgreSQL plpgsql record-field type confusion executes arbitrary code) in 17.12 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-120151/ lists 17.12 as the fixed release for major version 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/3a3eb761619cfd24fb3817628ccec699f2cc9187 on the REL_17_STABLE branch, which changes src/pl/plpgsql/src/pl_exec.c so that assigning to a record field rechecks the field's type and column number after casting the value when the record's row type changed; it is tagged Security: CVE-2026-120151, and it is in the REL_17_12 release tag and not in REL_17_11. PL/pgSQL, /usr/lib/postgresql17/plpgsql.so, ships in the postgresql17 package. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies touch the source files this fix changes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every published postgresql17 package for Alpine 3.23 on both x86_64 and aarch64 (checksums verified against the package index): 17.12-r0 reports PostgreSQL 17.12 and carries the fix, while the earlier builds 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0 report 17.7, 17.8, 17.9, 17.10 and 17.11 and are affected. As a check, plpgsql.so in the postgresql17 package contains the error message this fix adds ('record \"%s\" field \"%s\" changed type during assignment') in 17.12-r0 on both architectures, and the same file in 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0 does not; the existing message 'record \"%s\" has no field \"%s\"' is present in every build. 17.12-r0 is the first published build that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-120151 under its 17.12-r0 secfixes."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ghhy-5xyz-de6i-gani",
+        "aliases": [
+          "CVE-2026-120151"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-120151 (PostgreSQL plpgsql record-field type confusion executes arbitrary code) in 17.12 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-120151/ lists 17.12 as the fixed release for major version 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/3a3eb761619cfd24fb3817628ccec699f2cc9187 on the REL_17_STABLE branch, which changes src/pl/plpgsql/src/pl_exec.c so that assigning to a record field rechecks the field's type and column number after casting the value when the record's row type changed; it is tagged Security: CVE-2026-120151, and it is in the REL_17_12 release tag and not in REL_17_11. PL/pgSQL, /usr/lib/postgresql17/plpgsql.so, ships in the postgresql17 package. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies touch the source files this fix changes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every published postgresql17 package for Alpine 3.23 on both x86_64 and aarch64 (checksums verified against the package index): 17.12-r0 reports PostgreSQL 17.12 and carries the fix, while the earlier builds 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0 report 17.7, 17.8, 17.9, 17.10 and 17.11 and are affected. As a check, plpgsql.so in the postgresql17 package contains the error message this fix adds ('record \"%s\" field \"%s\" changed type during assignment') in 17.12-r0 on both architectures, and the same file in 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0 does not; the existing message 'record \"%s\" has no field \"%s\"' is present in every build. 17.12-r0 is the first published build that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-120151 under its 17.12-r0 secfixes."
     },
     {
       "vulnerability": {
@@ -92,12 +106,26 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.12-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-120151 (PostgreSQL plpgsql record-field type confusion executes arbitrary code) in 17.12 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-120151/ lists 17.12 as the fixed release for major version 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/3a3eb761619cfd24fb3817628ccec699f2cc9187 on the REL_17_STABLE branch, which changes src/pl/plpgsql/src/pl_exec.c so that assigning to a record field rechecks the field's type and column number after casting the value when the record's row type changed; it is tagged Security: CVE-2026-120151, and it is in the REL_17_12 release tag and not in REL_17_11. PL/pgSQL, /usr/lib/postgresql17/plpgsql.so, ships in the postgresql17 package. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies touch the source files this fix changes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every published postgresql17 package for Alpine 3.24 on both x86_64 and aarch64 (checksums verified against the package index): 17.12-r0 reports PostgreSQL 17.12 and carries the fix, while the earlier builds 17.10-r0 and 17.11-r0 report 17.10 and 17.11 and are affected. As a check, plpgsql.so in the postgresql17 package contains the error message this fix adds ('record \"%s\" field \"%s\" changed type during assignment') in 17.12-r0 on both architectures, and the same file in 17.10-r0 and 17.11-r0 does not; the existing message 'record \"%s\" has no field \"%s\"' is present in every build. 17.12-r0 is the first published build that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-120151 under its 17.12-r0 secfixes."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ghhy-5xyz-de6i-gani",
+        "aliases": [
+          "CVE-2026-120151"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-120151 (PostgreSQL plpgsql record-field type confusion executes arbitrary code) in 17.12 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-120151/ lists 17.12 as the fixed release for major version 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/3a3eb761619cfd24fb3817628ccec699f2cc9187 on the REL_17_STABLE branch, which changes src/pl/plpgsql/src/pl_exec.c so that assigning to a record field rechecks the field's type and column number after casting the value when the record's row type changed; it is tagged Security: CVE-2026-120151, and it is in the REL_17_12 release tag and not in REL_17_11. PL/pgSQL, /usr/lib/postgresql17/plpgsql.so, ships in the postgresql17 package. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies touch the source files this fix changes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every published postgresql17 package for Alpine 3.24 on both x86_64 and aarch64 (checksums verified against the package index): 17.12-r0 reports PostgreSQL 17.12 and carries the fix, while the earlier builds 17.10-r0 and 17.11-r0 report 17.10 and 17.11 and are affected. As a check, plpgsql.so in the postgresql17 package contains the error message this fix adds ('record \"%s\" field \"%s\" changed type during assignment') in 17.12-r0 on both architectures, and the same file in 17.10-r0 and 17.11-r0 does not; the existing message 'record \"%s\" has no field \"%s\"' is present in every build. 17.12-r0 is the first published build that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-120151 under its 17.12-r0 secfixes."
     },
     {
       "vulnerability": {
