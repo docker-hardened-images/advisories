@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T22:00:30Z",
-  "last_updated": "2026-11-23T20:49:00Z",
-  "version": 3,
+  "last_updated": "2026-11-25T04:08:30Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -26,12 +26,26 @@
         },
         {
           "@id": "pkg:apk/dhi/sqlite@3.53.4-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update sqlite to 3.53.4-r1 or later.",
+      "status_notes": "CVE-2026-119374 is a heap buffer overflow in fts5DoSecureDelete() in SQLite's FTS5 extension: deleting from an FTS5 table with secure-delete enabled, in a database file whose FTS5 index has crafted footer key offsets, writes past the leaf page buffer. SQLite lists it as fixed in 3.54.0: https://sqlite.org/cves.html, https://sqlite.org/src/info/9cd4f9e920. The trunk fix is that check-in, mirrored as https://github.com/sqlite/sqlite/commit/d9de6eedbe918c074c7556400fa21df5960704d9, and the same change on the 3.53 maintenance branch is https://github.com/sqlite/sqlite/commit/50563d14a46481ae39b77e6ab751cd3a686cf643, which adds a corruption check (FTS5_CORRUPT_IDX, an SQLITE_CORRUPT_VTAB error) to fts5DoSecureDelete() in ext/fts5/fts5_index.c when a key offset points past the page; it was committed after the 3.53.4 release. DHI's 3.53.4-r1 build is SQLite 3.53.4 with a backport of the branch commit. The DHI Alpine 3.23 package repository publishes packages built from source sqlite (sqlite, sqlite-libs, sqlite-static, sqlite-dev and sqlite-doc) at 3.51.1-r0, 3.51.2-r0, 3.53.4-r0 and 3.53.4-r1, for x86_64 and aarch64. We unpacked the sqlite, sqlite-libs, sqlite-static and sqlite-dev packages of every one of those builds on both architectures, each checked against its index checksum. SQLite is compiled into three files in each build: the sqlite3 shell in the sqlite package, which carries its own copy and does not link libsqlite3; the shared library in sqlite-libs; and the static archive libsqlite3.a in sqlite-static. sqlite-dev holds only headers, a pkg-config file and the libsqlite3.so link. The shell and both libraries report SQLite 3.51.1, 3.51.2, 3.53.4 and 3.53.4 in those builds. The 3.51.1-r0, 3.51.2-r0 and 3.53.4-r0 builds are built from the upstream 3.51.1, 3.51.2 and 3.53.4 releases, none of which contains the fix. FTS5 is compiled in: the compile-option list in the shell and both libraries of every build includes ENABLE_FTS5. The shared library and the shell are stripped, so we compared the compiled code of the static archive libsqlite3.a, which keeps its function names, in every build on x86_64 and aarch64: the secure-delete code, which is inlined into fts5FlushSecureDelete(), has an added SQLITE_CORRUPT_VTAB exit in 3.53.4-r1 that 3.53.4-r0 lacks, on both architectures, which is the corruption check the fix adds. The shell and the shared library in 3.53.4-r1 are built from the same patched source, and the reproducible fixes in the same build (for example CVE-2026-119371) behave as fixed in all three copies. So 3.51.1-r0, 3.51.2-r0 and 3.53.4-r0 are affected and 3.53.4-r1 is fixed."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-mpq4-4eox-7s2v-jt52",
+        "aliases": [
+          "CVE-2026-119374"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/sqlite@3.53.4-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-119374 is a heap buffer overflow in fts5DoSecureDelete() in SQLite's FTS5 extension: deleting from an FTS5 table with secure-delete enabled, in a database file whose FTS5 index has crafted footer key offsets, writes past the leaf page buffer. SQLite lists it as fixed in 3.54.0: https://sqlite.org/cves.html, https://sqlite.org/src/info/9cd4f9e920. The trunk fix is that check-in, mirrored as https://github.com/sqlite/sqlite/commit/d9de6eedbe918c074c7556400fa21df5960704d9, and the same change on the 3.53 maintenance branch is https://github.com/sqlite/sqlite/commit/50563d14a46481ae39b77e6ab751cd3a686cf643, which adds a corruption check (FTS5_CORRUPT_IDX, an SQLITE_CORRUPT_VTAB error) to fts5DoSecureDelete() in ext/fts5/fts5_index.c when a key offset points past the page; it was committed after the 3.53.4 release. DHI's 3.53.4-r1 build is SQLite 3.53.4 with a backport of the branch commit. The DHI Alpine 3.23 package repository publishes packages built from source sqlite (sqlite, sqlite-libs, sqlite-static, sqlite-dev and sqlite-doc) at 3.51.1-r0, 3.51.2-r0, 3.53.4-r0 and 3.53.4-r1, for x86_64 and aarch64. We unpacked the sqlite, sqlite-libs, sqlite-static and sqlite-dev packages of every one of those builds on both architectures, each checked against its index checksum. SQLite is compiled into three files in each build: the sqlite3 shell in the sqlite package, which carries its own copy and does not link libsqlite3; the shared library in sqlite-libs; and the static archive libsqlite3.a in sqlite-static. sqlite-dev holds only headers, a pkg-config file and the libsqlite3.so link. The shell and both libraries report SQLite 3.51.1, 3.51.2, 3.53.4 and 3.53.4 in those builds. The 3.51.1-r0, 3.51.2-r0 and 3.53.4-r0 builds are built from the upstream 3.51.1, 3.51.2 and 3.53.4 releases, none of which contains the fix. FTS5 is compiled in: the compile-option list in the shell and both libraries of every build includes ENABLE_FTS5. The shared library and the shell are stripped, so we compared the compiled code of the static archive libsqlite3.a, which keeps its function names, in every build on x86_64 and aarch64: the secure-delete code, which is inlined into fts5FlushSecureDelete(), has an added SQLITE_CORRUPT_VTAB exit in 3.53.4-r1 that 3.53.4-r0 lacks, on both architectures, which is the corruption check the fix adds. The shell and the shared library in 3.53.4-r1 are built from the same patched source, and the reproducible fixes in the same build (for example CVE-2026-119371) behave as fixed in all three copies. So 3.51.1-r0, 3.51.2-r0 and 3.53.4-r0 are affected and 3.53.4-r1 is fixed."
     }
   ]
 }
