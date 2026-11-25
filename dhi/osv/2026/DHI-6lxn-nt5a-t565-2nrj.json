@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-6lxn-nt5a-t565-2nrj",
+  "modified": "2026-11-25T15:33:03Z",
+  "published": "2026-11-25T15:33:03Z",
+  "upstream": [
+    "GHSA-xc3w-55vh-cw3w"
+  ],
+  "summary": "When an application reads an interned value's fields or uses that value as an input to a tracked function, Salsa must…",
+  "details": "When an application reads an interned value's fields or uses that value as an input to a tracked function, Salsa must ensure that reusable storage has been validated for the current database revision. This prevents the value's fields and associated cached function results from being freed while in use. Affected versions checked this invariant only with `debug_assert!` when reading fields, and did not check it when using an interned value to access a tracked function's cached result.\n\nBugs in Salsa's dependency tracking, or an application-provided `Eq` implementation that incorrectly treats a changed query result as unchanged, can cause Salsa to reuse cached results containing stale interned values. If the application accesses these values and then interns additional values, Salsa can free the old fields or cached function results while references to them are still in use. This causes use-after-free through safe Rust APIs. Depending on the consuming application, attacker-controlled input may expose process memory or permit arbitrary code execution.\n\nThe fix asserts that an interned value's reusable storage has been validated for the current database revision before allowing an application to read its fields or access a tracked function's cached result using that value as input. If the assertion fails, Salsa panics before returning references to storage that could be freed while in use.\n\nSalsa 0.28.5 and newer address this vulnerability. Dependent applications should update Salsa and rebuild.\n\nApplications that disable garbage collection for all explicitly declared interned structs using `#[salsa::interned(revisions = usize::MAX)]` and do not use implicitly interned query arguments are not affected by this vulnerability.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "rustc",
+        "purl": "pkg:deb/dhi/rustc"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.97.1-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "1.100.0-1",
+        "1.100.0-2",
+        "1.100.0-3",
+        "1.97.1-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-6lxn-nt5a-t565-2nrj"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0308"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://rustsec.org/advisories/RUSTSEC-2026-0308.html"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/salsa-rs/salsa/pull/1329"
+    }
+  ]
+}
