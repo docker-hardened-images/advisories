@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T17:02:28Z",
-  "last_updated": "2026-11-25T00:06:10Z",
-  "version": 20,
+  "last_updated": "2026-11-25T04:24:50Z",
+  "version": 21,
   "statements": [
     {
       "vulnerability": {
@@ -4129,7 +4129,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.161.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-dev to 0.162.0-r0 or later.",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-dev package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lrxs-2hym-cyfn-7wm6",
+        "aliases": [
+          "CVE-2026-107386"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.162.0-r0?distro=dhi-3.23"
         },
@@ -4164,7 +4177,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-dev package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
     },
     {
       "vulnerability": {
@@ -4206,7 +4220,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.161.0-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-dev to 0.162.0-r0 or later.",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-dev package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lrxs-2hym-cyfn-7wm6",
+        "aliases": [
+          "CVE-2026-107386"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.162.0-r0?distro=dhi-3.24"
         },
@@ -4241,7 +4268,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-dev package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
     },
     {
       "vulnerability": {
@@ -4283,7 +4311,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.161.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-fips-dev to 0.162.0-r0 or later.",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-fips-dev package for Alpine 3.23 in the authenticated DHI Alpine FIPS repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lrxs-2hym-cyfn-7wm6",
+        "aliases": [
+          "CVE-2026-107386"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.162.0-r0?distro=dhi-3.23"
         },
@@ -4318,7 +4359,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-fips-dev package for Alpine 3.23 in the authenticated DHI Alpine FIPS repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
     },
     {
       "vulnerability": {
@@ -4360,7 +4402,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.161.0-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-fips-dev to 0.162.0-r0 or later.",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-fips-dev package for Alpine 3.24 in the authenticated DHI Alpine FIPS repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lrxs-2hym-cyfn-7wm6",
+        "aliases": [
+          "CVE-2026-107386"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.162.0-r0?distro=dhi-3.24"
         },
@@ -4395,7 +4450,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-fips-dev package for Alpine 3.24 in the authenticated DHI Alpine FIPS repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
     },
     {
       "vulnerability": {
@@ -4437,7 +4493,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.161.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-fips to 0.162.0-r0 or later.",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-fips package for Alpine 3.23 in the authenticated DHI Alpine FIPS repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lrxs-2hym-cyfn-7wm6",
+        "aliases": [
+          "CVE-2026-107386"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.162.0-r0?distro=dhi-3.23"
         },
@@ -4472,7 +4541,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-fips package for Alpine 3.23 in the authenticated DHI Alpine FIPS repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
     },
     {
       "vulnerability": {
@@ -4514,7 +4584,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.161.0-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-fips to 0.162.0-r0 or later.",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-fips package for Alpine 3.24 in the authenticated DHI Alpine FIPS repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lrxs-2hym-cyfn-7wm6",
+        "aliases": [
+          "CVE-2026-107386"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.162.0-r0?distro=dhi-3.24"
         },
@@ -4549,7 +4632,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-fips package for Alpine 3.24 in the authenticated DHI Alpine FIPS repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
     },
     {
       "vulnerability": {
@@ -4591,7 +4675,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.161.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib to 0.162.0-r0 or later.",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lrxs-2hym-cyfn-7wm6",
+        "aliases": [
+          "CVE-2026-107386"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.162.0-r0?distro=dhi-3.23"
         },
@@ -4626,7 +4723,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
     },
     {
       "vulnerability": {
@@ -4668,7 +4766,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.161.0-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib to 0.162.0-r0 or later.",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lrxs-2hym-cyfn-7wm6",
+        "aliases": [
+          "CVE-2026-107386"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.162.0-r0?distro=dhi-3.24"
         },
@@ -4703,7 +4814,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-r0 to 0.160.0-r0, 1.13.0 in 0.160.0-r1 to 0.161.0-r0, 1.15.0 in 0.162.0-r0 to 0.164.0-r2, 1.16.0 in 0.165.0-r0 to 0.165.0-r2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-r0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-r0."
     },
     {
       "vulnerability": {
@@ -4780,7 +4892,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-dev package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. amqp091-go is not part of this program: its Go build information lists no github.com/rabbitmq/amqp091-go module in any build, its function table, which lists runtime.main as a control, has no amqp091-go function, and a byte search of the program in every build finds no rabbitmq/amqp091-go. name. The same function-table reader and byte search find amqp091-go.DialConfig and amqp091-go.Open in test programs we built with amqp091-go 1.13.0 for amd64 and arm64, and the same reader finds them in every opentelemetry-collector-contrib program. The Debian security tracker lists this CVE as no-DSA for golang-github-rabbitmq-amqp091-go in trixie; this decision rests on the absence of the component shown above, not on that rating. The vulnerable component is not in this package."
     },
     {
       "vulnerability": {
@@ -4857,7 +4971,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-dev package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. amqp091-go is not part of this program: its Go build information lists no github.com/rabbitmq/amqp091-go module in any build, its function table, which lists runtime.main as a control, has no amqp091-go function, and a byte search of the program in every build finds no rabbitmq/amqp091-go. name. The same function-table reader and byte search find amqp091-go.DialConfig and amqp091-go.Open in test programs we built with amqp091-go 1.13.0 for amd64 and arm64, and the same reader finds them in every opentelemetry-collector-contrib program. The Debian security tracker lists this CVE as no-DSA for golang-github-rabbitmq-amqp091-go in trixie; this decision rests on the absence of the component shown above, not on that rating. The vulnerable component is not in this package."
     },
     {
       "vulnerability": {
@@ -4934,7 +5050,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-fips-dev package for Alpine 3.23 in the authenticated DHI Alpine FIPS repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. amqp091-go is not part of this program: its Go build information lists no github.com/rabbitmq/amqp091-go module in any build, its function table, which lists runtime.main as a control, has no amqp091-go function, and a byte search of the program in every build finds no rabbitmq/amqp091-go. name. The same function-table reader and byte search find amqp091-go.DialConfig and amqp091-go.Open in test programs we built with amqp091-go 1.13.0 for amd64 and arm64, and the same reader finds them in every opentelemetry-collector-contrib program. The Debian security tracker lists this CVE as no-DSA for golang-github-rabbitmq-amqp091-go in trixie; this decision rests on the absence of the component shown above, not on that rating. The vulnerable component is not in this package."
     },
     {
       "vulnerability": {
@@ -5011,7 +5129,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-fips-dev package for Alpine 3.24 in the authenticated DHI Alpine FIPS repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. amqp091-go is not part of this program: its Go build information lists no github.com/rabbitmq/amqp091-go module in any build, its function table, which lists runtime.main as a control, has no amqp091-go function, and a byte search of the program in every build finds no rabbitmq/amqp091-go. name. The same function-table reader and byte search find amqp091-go.DialConfig and amqp091-go.Open in test programs we built with amqp091-go 1.13.0 for amd64 and arm64, and the same reader finds them in every opentelemetry-collector-contrib program. The Debian security tracker lists this CVE as no-DSA for golang-github-rabbitmq-amqp091-go in trixie; this decision rests on the absence of the component shown above, not on that rating. The vulnerable component is not in this package."
     },
     {
       "vulnerability": {
@@ -5088,7 +5208,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-fips package for Alpine 3.23 in the authenticated DHI Alpine FIPS repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. amqp091-go is not part of this program: its Go build information lists no github.com/rabbitmq/amqp091-go module in any build, its function table, which lists runtime.main as a control, has no amqp091-go function, and a byte search of the program in every build finds no rabbitmq/amqp091-go. name. The same function-table reader and byte search find amqp091-go.DialConfig and amqp091-go.Open in test programs we built with amqp091-go 1.13.0 for amd64 and arm64, and the same reader finds them in every opentelemetry-collector-contrib program. The Debian security tracker lists this CVE as no-DSA for golang-github-rabbitmq-amqp091-go in trixie; this decision rests on the absence of the component shown above, not on that rating. The vulnerable component is not in this package."
     },
     {
       "vulnerability": {
@@ -5165,7 +5287,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-fips package for Alpine 3.24 in the authenticated DHI Alpine FIPS repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. amqp091-go is not part of this program: its Go build information lists no github.com/rabbitmq/amqp091-go module in any build, its function table, which lists runtime.main as a control, has no amqp091-go function, and a byte search of the program in every build finds no rabbitmq/amqp091-go. name. The same function-table reader and byte search find amqp091-go.DialConfig and amqp091-go.Open in test programs we built with amqp091-go 1.13.0 for amd64 and arm64, and the same reader finds them in every opentelemetry-collector-contrib program. The Debian security tracker lists this CVE as no-DSA for golang-github-rabbitmq-amqp091-go in trixie; this decision rests on the absence of the component shown above, not on that rating. The vulnerable component is not in this package."
     },
     {
       "vulnerability": {
@@ -5242,7 +5366,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. amqp091-go is not part of this program: its Go build information lists no github.com/rabbitmq/amqp091-go module in any build, its function table, which lists runtime.main as a control, has no amqp091-go function, and a byte search of the program in every build finds no rabbitmq/amqp091-go. name. The same function-table reader and byte search find amqp091-go.DialConfig and amqp091-go.Open in test programs we built with amqp091-go 1.13.0 for amd64 and arm64, and the same reader finds them in every opentelemetry-collector-contrib program. The Debian security tracker lists this CVE as no-DSA for golang-github-rabbitmq-amqp091-go in trixie; this decision rests on the absence of the component shown above, not on that rating. The vulnerable component is not in this package."
     },
     {
       "vulnerability": {
@@ -5319,7 +5445,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. amqp091-go is not part of this program: its Go build information lists no github.com/rabbitmq/amqp091-go module in any build, its function table, which lists runtime.main as a control, has no amqp091-go function, and a byte search of the program in every build finds no rabbitmq/amqp091-go. name. The same function-table reader and byte search find amqp091-go.DialConfig and amqp091-go.Open in test programs we built with amqp091-go 1.13.0 for amd64 and arm64, and the same reader finds them in every opentelemetry-collector-contrib program. The Debian security tracker lists this CVE as no-DSA for golang-github-rabbitmq-amqp091-go in trixie; this decision rests on the absence of the component shown above, not on that rating. The vulnerable component is not in this package."
     },
     {
       "vulnerability": {
@@ -10184,7 +10312,20 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.161.0-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-dev to 0.162.0-0 or later.",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-dev package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-0 to 0.160.0-0, 1.13.0 in 0.160.0-1 to 0.161.0-0, 1.15.0 in 0.162.0-0 to 0.164.0-2, 1.16.0 in 0.165.0-0 to 0.165.0-2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lrxs-2hym-cyfn-7wm6",
+        "aliases": [
+          "CVE-2026-107386"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.162.0-0?distro=dhi-13"
         },
@@ -10219,7 +10360,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-dev package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-0 to 0.160.0-0, 1.13.0 in 0.160.0-1 to 0.161.0-0, 1.15.0 in 0.162.0-0 to 0.164.0-2, 1.16.0 in 0.165.0-0 to 0.165.0-2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-0."
     },
     {
       "vulnerability": {
@@ -10261,7 +10403,20 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.161.0-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-fips-dev to 0.162.0-0 or later.",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-fips-dev package for Debian 13 in the authenticated DHI Debian FIPS repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-0 to 0.160.0-0, 1.13.0 in 0.160.0-1 to 0.161.0-0, 1.15.0 in 0.162.0-0 to 0.164.0-2, 1.16.0 in 0.165.0-0 to 0.165.0-2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lrxs-2hym-cyfn-7wm6",
+        "aliases": [
+          "CVE-2026-107386"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.162.0-0?distro=dhi-13"
         },
@@ -10296,7 +10451,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-fips-dev package for Debian 13 in the authenticated DHI Debian FIPS repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-0 to 0.160.0-0, 1.13.0 in 0.160.0-1 to 0.161.0-0, 1.15.0 in 0.162.0-0 to 0.164.0-2, 1.16.0 in 0.165.0-0 to 0.165.0-2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-0."
     },
     {
       "vulnerability": {
@@ -10338,7 +10494,20 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.161.0-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-fips to 0.162.0-0 or later.",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-fips package for Debian 13 in the authenticated DHI Debian FIPS repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-0 to 0.160.0-0, 1.13.0 in 0.160.0-1 to 0.161.0-0, 1.15.0 in 0.162.0-0 to 0.164.0-2, 1.16.0 in 0.165.0-0 to 0.165.0-2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lrxs-2hym-cyfn-7wm6",
+        "aliases": [
+          "CVE-2026-107386"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.162.0-0?distro=dhi-13"
         },
@@ -10373,7 +10542,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib-fips package for Debian 13 in the authenticated DHI Debian FIPS repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-0 to 0.160.0-0, 1.13.0 in 0.160.0-1 to 0.161.0-0, 1.15.0 in 0.162.0-0 to 0.164.0-2, 1.16.0 in 0.165.0-0 to 0.165.0-2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-0."
     },
     {
       "vulnerability": {
@@ -10415,7 +10585,20 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.161.0-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib to 0.162.0-0 or later.",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-0 to 0.160.0-0, 1.13.0 in 0.160.0-1 to 0.161.0-0, 1.15.0 in 0.162.0-0 to 0.164.0-2, 1.16.0 in 0.165.0-0 to 0.165.0-2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lrxs-2hym-cyfn-7wm6",
+        "aliases": [
+          "CVE-2026-107386"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.162.0-0?distro=dhi-13"
         },
@@ -10450,7 +10633,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-contrib package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. Its Go build information shows the same github.com/rabbitmq/amqp091-go version on both architectures in every build, with no replace directive: 1.12.0 in 0.156.0-0 to 0.160.0-0, 1.13.0 in 0.160.0-1 to 0.161.0-0, 1.15.0 in 0.162.0-0 to 0.164.0-2, 1.16.0 in 0.165.0-0 to 0.165.0-2. Its Go function table, which lists runtime.main as a control, contains the entry points amqp091-go.DialConfig and amqp091-go.Open in every build and attributes them to the amqp091-go version named in the build information, so the module version decides. 0.162.0-0 is the first build with amqp091-go 1.14.0 or later: every earlier build carries 1.12.0 or 1.13.0 and every later build carries 1.15.0 or 1.16.0. The range ends at 0.162.0-0."
     },
     {
       "vulnerability": {
@@ -10527,7 +10711,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-dev@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-dev package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. amqp091-go is not part of this program: its Go build information lists no github.com/rabbitmq/amqp091-go module in any build, its function table, which lists runtime.main as a control, has no amqp091-go function, and a byte search of the program in every build finds no rabbitmq/amqp091-go. name. The same function-table reader and byte search find amqp091-go.DialConfig and amqp091-go.Open in test programs we built with amqp091-go 1.13.0 for amd64 and arm64, and the same reader finds them in every opentelemetry-collector-contrib program. The Debian security tracker lists this CVE as no-DSA for golang-github-rabbitmq-amqp091-go in trixie; this decision rests on the absence of the component shown above, not on that rating. The vulnerable component is not in this package."
     },
     {
       "vulnerability": {
@@ -10604,7 +10790,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips-dev@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-fips-dev package for Debian 13 in the authenticated DHI Debian FIPS repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. amqp091-go is not part of this program: its Go build information lists no github.com/rabbitmq/amqp091-go module in any build, its function table, which lists runtime.main as a control, has no amqp091-go function, and a byte search of the program in every build finds no rabbitmq/amqp091-go. name. The same function-table reader and byte search find amqp091-go.DialConfig and amqp091-go.Open in test programs we built with amqp091-go 1.13.0 for amd64 and arm64, and the same reader finds them in every opentelemetry-collector-contrib program. The Debian security tracker lists this CVE as no-DSA for golang-github-rabbitmq-amqp091-go in trixie; this decision rests on the absence of the component shown above, not on that rating. The vulnerable component is not in this package."
     },
     {
       "vulnerability": {
@@ -10681,7 +10869,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector-fips package for Debian 13 in the authenticated DHI Debian FIPS repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. amqp091-go is not part of this program: its Go build information lists no github.com/rabbitmq/amqp091-go module in any build, its function table, which lists runtime.main as a control, has no amqp091-go function, and a byte search of the program in every build finds no rabbitmq/amqp091-go. name. The same function-table reader and byte search find amqp091-go.DialConfig and amqp091-go.Open in test programs we built with amqp091-go 1.13.0 for amd64 and arm64, and the same reader finds them in every opentelemetry-collector-contrib program. The Debian security tracker lists this CVE as no-DSA for golang-github-rabbitmq-amqp091-go in trixie; this decision rests on the absence of the component shown above, not on that rating. The vulnerable component is not in this package."
     },
     {
       "vulnerability": {
@@ -10758,7 +10948,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-107386 (GHSA-w6r9-248c-frg8, GO-2026-6700): github.com/rabbitmq/amqp091-go, a Go AMQP 0.9.1 client, applies no frame-size limit before connection.tune completes, because Connection.maxFrameSize starts at zero and the frame reader treats zero as unlimited. A malicious or compromised AMQP server can send a body-frame header that declares a large payload and make the client allocate that much memory before authentication, a denial of service. The GitHub advisory describes this as a bypass of the frame-size check that v1.13.0 added for GHSA-r9c8-gcjp-xfwh, so versions before v1.13.0 lack that check as well; both the GitHub advisory and the Go vulnerability entry list every version before v1.14.0, and the Go entry names Dial, DialConfig, DialTLS, DialTLS_ExternalAuth and Open as the affected entry points. The fix, https://github.com/rabbitmq/amqp091-go/commit/6723e8cff8710f0a6bf5fb4af375e285052535b3 (pull request https://github.com/rabbitmq/amqp091-go/pull/377), first released in v1.14.0, makes Open store the 4096-byte pre-negotiation frame limit before the reader starts. Sources: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-w6r9-248c-frg8, https://pkg.go.dev/vuln/GO-2026-6700. We checked every published opentelemetry-collector package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol, a statically linked Go program (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0. amqp091-go is not part of this program: its Go build information lists no github.com/rabbitmq/amqp091-go module in any build, its function table, which lists runtime.main as a control, has no amqp091-go function, and a byte search of the program in every build finds no rabbitmq/amqp091-go. name. The same function-table reader and byte search find amqp091-go.DialConfig and amqp091-go.Open in test programs we built with amqp091-go 1.13.0 for amd64 and arm64, and the same reader finds them in every opentelemetry-collector-contrib program. The Debian security tracker lists this CVE as no-DSA for golang-github-rabbitmq-amqp091-go in trixie; this decision rests on the absence of the component shown above, not on that rating. The vulnerable component is not in this package."
     },
     {
       "vulnerability": {
