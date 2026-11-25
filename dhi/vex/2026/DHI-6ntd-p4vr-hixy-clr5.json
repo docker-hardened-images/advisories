@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:05:23Z",
-  "version": 1,
+  "last_updated": "2026-11-24T21:14:46Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -90,7 +91,9 @@
           "@id": "pkg:deb/dhi/openssl@3.5.9-1~deb13u1%2Bfips%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-107494 (\"Unbounded QUIC RETIRE_CONNECTION_ID Frame Sending Queue\", Low) affects OpenSSL 3.5; the advisory describes it as an incomplete fix for CVE-2026-84784 and says 3.5 users should upgrade to OpenSSL 3.5.10, which is not released yet: https://openssl-library.org/news/secadv/20261124.txt . The fix on the openssl-3.5 branch is commit 734c6cd, which makes ossl_quic_channel_on_new_conn_id() in ssl/quic/quic_channel.c return early for a retransmitted NEW_CONNECTION_ID frame carrying the current sequence number, so it no longer queues a RETIRE_CONNECTION_ID frame for each retransmission, and adds a handled-frame counter with the accessor ossl_quic_channel_get_on_new_conn_id_handled(); it is not in the openssl-3.5.9 tag: https://github.com/openssl/openssl/commit/734c6cd7444bdbf589bfec917e47598c1b21ddd3 . Debian lists trixie as vulnerable with no fixed version: https://security-tracker.debian.org/tracker/CVE-2026-107494 . No DHI Debian 13 openssl build carries the fix. We checked every published build of the openssl source in the DHI Debian repository, 25 versions from 3.5.5-1~deb13u2 to 3.5.9-1~deb13u1 including the FIPS builds, on amd64 and arm64, with each download verified against the repository index checksum. In every build, libssl.so.3 in libssl3t64 exports the QUIC client and server methods (OSSL_QUIC_client_method, OSSL_QUIC_server_method, SSL_new_listener), and the libssl3t64-dbgsym symbols and the static libssl.a in libssl-dev contain ossl_quic_channel_on_new_conn_id() but not the fix's ossl_quic_channel_get_on_new_conn_id_handled(); no package changelog mentions this CVE. The advisory lists all of OpenSSL 3.5 as vulnerable and states that the FIPS module is not affected because the QUIC implementation is outside its boundary; the FIPS builds' libssl.so.3 and libssl.a contain the same unfixed QUIC code."
     }
   ]
 }
