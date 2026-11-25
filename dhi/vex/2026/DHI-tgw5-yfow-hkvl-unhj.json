@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:53:03Z",
-  "last_updated": "2026-11-24T22:12:28Z",
-  "version": 7,
+  "last_updated": "2026-11-25T17:45:34Z",
+  "version": 8,
   "statements": [
     {
       "vulnerability": {
@@ -90,12 +90,6 @@
           "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
         },
         {
@@ -105,7 +99,27 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.11-r0 or later.",
+      "status_notes": "CVE-2026-14672 (PostgreSQL observable response discrepancy with non-default scram_iterations provides user existence oracle): an unauthenticated user can test whether a role exists when that role has a non-default SCRAM iteration count, because the mock authentication challenge for a nonexistent role always used the default iteration count. https://www.postgresql.org/support/security/CVE-2026-14672/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix on the REL_17_STABLE branch is https://github.com/postgres/postgres/commit/dec60e8ada4cd46d0201efea844a4b22cb06444e (Security: CVE-2026-14672, in tag REL_17_11 and not in REL_17_10), which changes mock_scram_secret() in src/backend/libpq/auth-scram.c to use the scram_iterations setting instead of the built-in default, and adds a note to the scram_iterations documentation. Alpine's postgresql17 APKBUILD on the 3.23-stable branch, https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, lists CVE-2026-14672 under 17.11-r0 in its secfixes. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD on that branch and the upstream PostgreSQL release tarball; the current 17.12-r0 build uses the APKBUILD at that commit, and none of its patches changes the file the fix changes, nor do the patches of the 17.11-r0 APKBUILD on that branch. We read every published postgresql17 package for Alpine 3.23 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0) on x86_64 and aarch64, checking each against the repository index checksum: /usr/libexec/postgresql17/postgres in each reports the PostgreSQL release matching its package version. 17.7-r0, 17.8-r0, 17.9-r0 and 17.10-r0 are built from PostgreSQL releases before 17.11 and are affected; 17.11-r0 is the first published build that carries the fix. The fix makes the mock challenge use the server's scram_iterations setting; as the updated PostgreSQL documentation says, a role whose password was created with an iteration count different from the server's scram_iterations setting can still be discerned, so passwords should be created with the configured value."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-tgw5-yfow-hkvl-unhj",
+        "aliases": [
+          "CVE-2026-14672"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-14672 (PostgreSQL observable response discrepancy with non-default scram_iterations provides user existence oracle): an unauthenticated user can test whether a role exists when that role has a non-default SCRAM iteration count, because the mock authentication challenge for a nonexistent role always used the default iteration count. https://www.postgresql.org/support/security/CVE-2026-14672/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix on the REL_17_STABLE branch is https://github.com/postgres/postgres/commit/dec60e8ada4cd46d0201efea844a4b22cb06444e (Security: CVE-2026-14672, in tag REL_17_11 and not in REL_17_10), which changes mock_scram_secret() in src/backend/libpq/auth-scram.c to use the scram_iterations setting instead of the built-in default, and adds a note to the scram_iterations documentation. Alpine's postgresql17 APKBUILD on the 3.23-stable branch, https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, lists CVE-2026-14672 under 17.11-r0 in its secfixes. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD on that branch and the upstream PostgreSQL release tarball; the current 17.12-r0 build uses the APKBUILD at that commit, and none of its patches changes the file the fix changes, nor do the patches of the 17.11-r0 APKBUILD on that branch. We read every published postgresql17 package for Alpine 3.23 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0) on x86_64 and aarch64, checking each against the repository index checksum: /usr/libexec/postgresql17/postgres in each reports the PostgreSQL release matching its package version. 17.7-r0, 17.8-r0, 17.9-r0 and 17.10-r0 are built from PostgreSQL releases before 17.11 and are affected; 17.11-r0 is the first published build that carries the fix. The fix makes the mock challenge use the server's scram_iterations setting; as the updated PostgreSQL documentation says, a role whose password was created with an iteration count different from the server's scram_iterations setting can still be discerned, so passwords should be created with the configured value."
     },
     {
       "vulnerability": {
@@ -117,7 +131,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.11-r0 or later.",
+      "status_notes": "CVE-2026-14672 (PostgreSQL observable response discrepancy with non-default scram_iterations provides user existence oracle): an unauthenticated user can test whether a role exists when that role has a non-default SCRAM iteration count, because the mock authentication challenge for a nonexistent role always used the default iteration count. https://www.postgresql.org/support/security/CVE-2026-14672/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix on the REL_17_STABLE branch is https://github.com/postgres/postgres/commit/dec60e8ada4cd46d0201efea844a4b22cb06444e (Security: CVE-2026-14672, in tag REL_17_11 and not in REL_17_10), which changes mock_scram_secret() in src/backend/libpq/auth-scram.c to use the scram_iterations setting instead of the built-in default, and adds a note to the scram_iterations documentation. Alpine's postgresql17 APKBUILD on the 3.24-stable branch, https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, lists CVE-2026-14672 under 17.11-r0 in its secfixes. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD on that branch and the upstream PostgreSQL release tarball; the current 17.12-r0 build uses the APKBUILD at that commit, and none of its patches changes the file the fix changes, nor do the patches of the 17.11-r0 APKBUILD on that branch. We read every published postgresql17 package for Alpine 3.24 (17.10-r0, 17.11-r0 and 17.12-r0) on x86_64 and aarch64, checking each against the repository index checksum: /usr/libexec/postgresql17/postgres in each reports the PostgreSQL release matching its package version. 17.10-r0 is built from PostgreSQL releases before 17.11 and is affected; 17.11-r0 is the first published build that carries the fix. The fix makes the mock challenge use the server's scram_iterations setting; as the updated PostgreSQL documentation says, a role whose password was created with an iteration count different from the server's scram_iterations setting can still be discerned, so passwords should be created with the configured value."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-tgw5-yfow-hkvl-unhj",
+        "aliases": [
+          "CVE-2026-14672"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.24"
         },
@@ -125,7 +152,8 @@
           "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14672 (PostgreSQL observable response discrepancy with non-default scram_iterations provides user existence oracle): an unauthenticated user can test whether a role exists when that role has a non-default SCRAM iteration count, because the mock authentication challenge for a nonexistent role always used the default iteration count. https://www.postgresql.org/support/security/CVE-2026-14672/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix on the REL_17_STABLE branch is https://github.com/postgres/postgres/commit/dec60e8ada4cd46d0201efea844a4b22cb06444e (Security: CVE-2026-14672, in tag REL_17_11 and not in REL_17_10), which changes mock_scram_secret() in src/backend/libpq/auth-scram.c to use the scram_iterations setting instead of the built-in default, and adds a note to the scram_iterations documentation. Alpine's postgresql17 APKBUILD on the 3.24-stable branch, https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, lists CVE-2026-14672 under 17.11-r0 in its secfixes. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD on that branch and the upstream PostgreSQL release tarball; the current 17.12-r0 build uses the APKBUILD at that commit, and none of its patches changes the file the fix changes, nor do the patches of the 17.11-r0 APKBUILD on that branch. We read every published postgresql17 package for Alpine 3.24 (17.10-r0, 17.11-r0 and 17.12-r0) on x86_64 and aarch64, checking each against the repository index checksum: /usr/libexec/postgresql17/postgres in each reports the PostgreSQL release matching its package version. 17.10-r0 is built from PostgreSQL releases before 17.11 and is affected; 17.11-r0 is the first published build that carries the fix. The fix makes the mock challenge use the server's scram_iterations setting; as the updated PostgreSQL documentation says, a role whose password was created with an iteration count different from the server's scram_iterations setting can still be discerned, so passwords should be created with the configured value."
     },
     {
       "vulnerability": {
