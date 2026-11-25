@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:32Z",
-  "last_updated": "2026-11-25T05:13:21Z",
-  "version": 137,
+  "last_updated": "2026-11-25T05:56:35Z",
+  "version": 138,
   "statements": [
     {
       "vulnerability": {
@@ -9898,7 +9898,9 @@
           "@id": "pkg:deb/dhi/clickhouse-server-26.10@26.10.9.12-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2019-1010025 is a report that the GNU C Library (glibc) reduces address randomization for threads: when a thread created with pthread_create first calls malloc, glibc's allocator creates a new heap for it in new_heap (malloc/arena.c) aligned to its maximum heap size (64 MB on x86-64), which makes the heap address easier to guess: https://sourceware.org/bugzilla/show_bug.cgi?id=22853 and https://security-tracker.debian.org/tracker/CVE-2019-1010025. The glibc bug is still unconfirmed; glibc's maintainers treat it as hardening rather than a vulnerability (\"ASLR bypass itself is not a vulnerability\"), and the CVE record carries that position. Debian rates it unimportant and lists glibc as unfixed in trixie, so this decision rests on what the package contains, not on those ratings. This package does not contain glibc. We unpacked every package built from the clickhouse-server-26.10 source in the DHI Debian repository, on amd64 and arm64: the clickhouse-server-26.10 package in 7 builds, 26.10.2.103-0, 26.10.4.207-0, 26.10.6.18-0, 26.10.6.18-1, 26.10.9.12-0, 26.10.10.3-0 and the current 26.10.11.12-0 (14 packages, each matched to the repository's SHA-256 checksum). No debug-symbol packages are published for this source. Every build holds the same file list: 38 regular files, 16 symbolic links and 26 directories. Its one ELF file is /usr/bin/clickhouse, a dynamically linked program whose program interpreter is the glibc dynamic loader (/lib64/ld-linux-x86-64.so.2 on amd64, /lib/ld-linux-aarch64.so.1 on arm64) and which lists libc.so.6, libpthread.so.0, libm.so.6, libdl.so.2, librt.so.1 and that loader as dependencies; those libraries come from glibc's own packages, such as libc6, at run time. The other files are an init script and XML configuration, systemd unit, bash-completion, protobuf .proto, documentation and empty placeholder files, and the 16 symbolic links point to /usr/bin/clickhouse. No package contains libc.so.6, the dynamic loader, a static archive, a zip archive, or a PE or Mach-O file, and /usr/bin/clickhouse does not contain the GNU C Library version banner (the same search finds it in libc.so.6 from the DHI libc6 package for 2.41-12+deb13u5 as a control). /usr/bin/clickhouse does not compile in glibc's allocator: in all 14 packages its ELF symbol table defines none of new_heap, grow_heap, shrink_heap, heap_trim, arena_get2, _int_new_arena, reused_arena, get_free_list, sysmalloc, _int_malloc, _int_free, ptmalloc_init or tcache_init, and lists pthread_create only as an undefined symbol taken from the system C library. The same name search finds new_heap, arena_get2, sysmalloc, _int_malloc and __pthread_create_2_1 in libc.a from the DHI libc6-dev package for 2.41-12+deb13u5 (amd64) as a control. Instead, in all 14 packages /usr/bin/clickhouse defines and exports its own malloc, free, calloc, realloc and __libc_malloc, and defines the jemalloc functions je_malloc, je_free, je_calloc, je_realloc and je_mallocx, so the dynamic loader resolves ClickHouse's malloc calls to the program's own allocator rather than to the glibc arena code the report describes. The vulnerable glibc allocator code is not in this package; glibc itself reaches an image through glibc's own packages, such as libc6."
     },
     {
       "vulnerability": {
