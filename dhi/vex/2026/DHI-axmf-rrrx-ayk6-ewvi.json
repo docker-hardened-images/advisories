@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T23:22:36Z",
-  "last_updated": "2026-11-25T03:33:51Z",
-  "version": 10,
+  "last_updated": "2026-11-25T05:47:22Z",
+  "version": 11,
   "statements": [
     {
       "vulnerability": {
@@ -18016,7 +18016,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.159.0-r1?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-dev to 0.159.0-r2 or later.",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-dev package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-axmf-rrrx-ayk6-ewvi",
+        "aliases": [
+          "CVE-2026-10722"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.159.0-r2?distro=dhi-3.23"
         },
@@ -18066,7 +18079,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-dev package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
     },
     {
       "vulnerability": {
@@ -18093,7 +18107,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.159.0-r1?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-dev to 0.159.0-r2 or later.",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-dev package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-axmf-rrrx-ayk6-ewvi",
+        "aliases": [
+          "CVE-2026-10722"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.159.0-r2?distro=dhi-3.24"
         },
@@ -18143,7 +18170,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-dev package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
     },
     {
       "vulnerability": {
@@ -18170,7 +18198,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.159.0-r1?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-fips-dev to 0.159.0-r2 or later.",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-fips-dev package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-axmf-rrrx-ayk6-ewvi",
+        "aliases": [
+          "CVE-2026-10722"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.159.0-r2?distro=dhi-3.23"
         },
@@ -18220,7 +18261,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-fips-dev package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
     },
     {
       "vulnerability": {
@@ -18247,7 +18289,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.159.0-r1?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-fips-dev to 0.159.0-r2 or later.",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-fips-dev package for Alpine 3.24 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-axmf-rrrx-ayk6-ewvi",
+        "aliases": [
+          "CVE-2026-10722"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.159.0-r2?distro=dhi-3.24"
         },
@@ -18297,7 +18352,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-fips-dev package for Alpine 3.24 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
     },
     {
       "vulnerability": {
@@ -18324,7 +18380,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.159.0-r1?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-fips to 0.159.0-r2 or later.",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-fips package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-axmf-rrrx-ayk6-ewvi",
+        "aliases": [
+          "CVE-2026-10722"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.159.0-r2?distro=dhi-3.23"
         },
@@ -18374,7 +18443,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-fips package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
     },
     {
       "vulnerability": {
@@ -18401,7 +18471,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.159.0-r1?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-fips to 0.159.0-r2 or later.",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-fips package for Alpine 3.24 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-axmf-rrrx-ayk6-ewvi",
+        "aliases": [
+          "CVE-2026-10722"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.159.0-r2?distro=dhi-3.24"
         },
@@ -18451,7 +18534,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-fips package for Alpine 3.24 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
     },
     {
       "vulnerability": {
@@ -18478,7 +18562,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.159.0-r1?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib to 0.159.0-r2 or later.",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-axmf-rrrx-ayk6-ewvi",
+        "aliases": [
+          "CVE-2026-10722"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.159.0-r2?distro=dhi-3.23"
         },
@@ -18528,7 +18625,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
     },
     {
       "vulnerability": {
@@ -18555,7 +18653,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.159.0-r1?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib to 0.159.0-r2 or later.",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-axmf-rrrx-ayk6-ewvi",
+        "aliases": [
+          "CVE-2026-10722"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.159.0-r2?distro=dhi-3.24"
         },
@@ -18605,7 +18716,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-r0; in 0.157.0-r0 to 0.159.0-r1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-r2 to 0.165.0-r2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-r2, the first build compiled with the fixed module."
     },
     {
       "vulnerability": {
@@ -18682,7 +18794,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-dev package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a Go program with no program interpreter and no shared-library dependencies. Its Go build information lists no github.com/cilium/ebpf module in any build, and its Go function table has no function from any github.com/cilium/ebpf package in any build (runtime.main found in every build as a control). The same scan finds github.com/cilium/ebpf/btf.loadRawSpec and other functions on that list in every opentelemetry-collector-contrib program. The cilium/ebpf library is not part of this package."
     },
     {
       "vulnerability": {
@@ -18759,7 +18873,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-dev package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a Go program with no program interpreter and no shared-library dependencies. Its Go build information lists no github.com/cilium/ebpf module in any build, and its Go function table has no function from any github.com/cilium/ebpf package in any build (runtime.main found in every build as a control). The same scan finds github.com/cilium/ebpf/btf.loadRawSpec and other functions on that list in every opentelemetry-collector-contrib program. The cilium/ebpf library is not part of this package."
     },
     {
       "vulnerability": {
@@ -18836,7 +18952,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-fips-dev package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a Go program with no program interpreter and no shared-library dependencies. Its Go build information lists no github.com/cilium/ebpf module in any build, and its Go function table has no function from any github.com/cilium/ebpf package in any build (runtime.main found in every build as a control). The same scan finds github.com/cilium/ebpf/btf.loadRawSpec and other functions on that list in every opentelemetry-collector-contrib program. The cilium/ebpf library is not part of this package."
     },
     {
       "vulnerability": {
@@ -18913,7 +19031,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-fips-dev package for Alpine 3.24 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a Go program with no program interpreter and no shared-library dependencies. Its Go build information lists no github.com/cilium/ebpf module in any build, and its Go function table has no function from any github.com/cilium/ebpf package in any build (runtime.main found in every build as a control). The same scan finds github.com/cilium/ebpf/btf.loadRawSpec and other functions on that list in every opentelemetry-collector-contrib program. The cilium/ebpf library is not part of this package."
     },
     {
       "vulnerability": {
@@ -18990,7 +19110,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-fips package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a Go program with no program interpreter and no shared-library dependencies. Its Go build information lists no github.com/cilium/ebpf module in any build, and its Go function table has no function from any github.com/cilium/ebpf package in any build (runtime.main found in every build as a control). The same scan finds github.com/cilium/ebpf/btf.loadRawSpec and other functions on that list in every opentelemetry-collector-contrib program. The cilium/ebpf library is not part of this package."
     },
     {
       "vulnerability": {
@@ -19067,7 +19189,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-fips package for Alpine 3.24 in the DHI Alpine security repository, which requires authentication: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a Go program with no program interpreter and no shared-library dependencies. Its Go build information lists no github.com/cilium/ebpf module in any build, and its Go function table has no function from any github.com/cilium/ebpf package in any build (runtime.main found in every build as a control). The same scan finds github.com/cilium/ebpf/btf.loadRawSpec and other functions on that list in every opentelemetry-collector-contrib program. The cilium/ebpf library is not part of this package."
     },
     {
       "vulnerability": {
@@ -19144,7 +19268,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.165.0-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector package for Alpine 3.23 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a Go program with no program interpreter and no shared-library dependencies. Its Go build information lists no github.com/cilium/ebpf module in any build, and its Go function table has no function from any github.com/cilium/ebpf package in any build (runtime.main found in every build as a control). The same scan finds github.com/cilium/ebpf/btf.loadRawSpec and other functions on that list in every opentelemetry-collector-contrib program. The cilium/ebpf library is not part of this package."
     },
     {
       "vulnerability": {
@@ -19221,7 +19347,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.165.0-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector package for Alpine 3.24 in the DHI Alpine repository: 22 builds, 0.156.0-r0 to the current 0.165.0-r2, on x86_64 and aarch64 (44 packages), each against its index checksum. Each package holds one file, /usr/bin/otelcol, a Go program with no program interpreter and no shared-library dependencies. Its Go build information lists no github.com/cilium/ebpf module in any build, and its Go function table has no function from any github.com/cilium/ebpf package in any build (runtime.main found in every build as a control). The same scan finds github.com/cilium/ebpf/btf.loadRawSpec and other functions on that list in every opentelemetry-collector-contrib program. The cilium/ebpf library is not part of this package."
     },
     {
       "vulnerability": {
@@ -30709,7 +30837,20 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.159.0-1?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-dev to 0.159.0-2 or later.",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-dev package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-0; in 0.157.0-0 to 0.159.0-1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-2 to 0.165.0-2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-2, the first build compiled with the fixed module."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-axmf-rrrx-ayk6-ewvi",
+        "aliases": [
+          "CVE-2026-10722"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.159.0-2?distro=dhi-13"
         },
@@ -30759,7 +30900,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-dev package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-0; in 0.157.0-0 to 0.159.0-1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-2 to 0.165.0-2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-2, the first build compiled with the fixed module."
     },
     {
       "vulnerability": {
@@ -30786,7 +30928,20 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.159.0-1?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-fips-dev to 0.159.0-2 or later.",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-fips-dev package for Debian 13 in the DHI Debian security repository, which requires authentication: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-0; in 0.157.0-0 to 0.159.0-1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-2 to 0.165.0-2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-2, the first build compiled with the fixed module."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-axmf-rrrx-ayk6-ewvi",
+        "aliases": [
+          "CVE-2026-10722"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.159.0-2?distro=dhi-13"
         },
@@ -30836,7 +30991,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-fips-dev package for Debian 13 in the DHI Debian security repository, which requires authentication: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-0; in 0.157.0-0 to 0.159.0-1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-2 to 0.165.0-2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-2, the first build compiled with the fixed module."
     },
     {
       "vulnerability": {
@@ -30863,7 +31019,20 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.159.0-1?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-fips to 0.159.0-2 or later.",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-fips package for Debian 13 in the DHI Debian security repository, which requires authentication: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-0; in 0.157.0-0 to 0.159.0-1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-2 to 0.165.0-2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-2, the first build compiled with the fixed module."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-axmf-rrrx-ayk6-ewvi",
+        "aliases": [
+          "CVE-2026-10722"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.159.0-2?distro=dhi-13"
         },
@@ -30913,7 +31082,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib-fips package for Debian 13 in the DHI Debian security repository, which requires authentication: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-0; in 0.157.0-0 to 0.159.0-1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-2 to 0.165.0-2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-2, the first build compiled with the fixed module."
     },
     {
       "vulnerability": {
@@ -30940,7 +31110,20 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.159.0-1?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib to 0.159.0-2 or later.",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-0; in 0.157.0-0 to 0.159.0-1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-2 to 0.165.0-2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-2, the first build compiled with the fixed module."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-axmf-rrrx-ayk6-ewvi",
+        "aliases": [
+          "CVE-2026-10722"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.159.0-2?distro=dhi-13"
         },
@@ -30990,7 +31173,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-contrib package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol-contrib, a Go program with no program interpreter and no shared-library dependencies. Its Go build information shows the same github.com/cilium/ebpf module on both architectures for every build: v0.21.0 in 0.156.0-0; in 0.157.0-0 to 0.159.0-1 the program requires v0.22.0 but a replace directive substitutes v0.21.0; and in 0.159.0-2 to 0.165.0-2 the replace directive selects v0.22.0. Its Go function table contains github.com/cilium/ebpf/btf.loadRawSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec, Handle.Spec and Cache.Module from that list in every build (runtime.main found in the same scan as a control), so the module version decides. We disassembled loadRawSpec in the opentelemetry-collector-contrib packages at 0.159.0-r1 and 0.159.0-r2 for Alpine and 0.159.0-1 and 0.159.0-2 for Debian, on both architectures: in 0.159.0-r1 and 0.159.0-1 both bounds checks add the two header fields in 32 bits and compare signed, and in 0.159.0-r2 and 0.159.0-2 they add in 64 bits and compare unsigned, as the fix does. The range ends at 0.159.0-2, the first build compiled with the fixed module."
     },
     {
       "vulnerability": {
@@ -31067,7 +31251,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-dev@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-dev package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol, a Go program with no program interpreter and no shared-library dependencies. Its Go build information lists no github.com/cilium/ebpf module in any build, and its Go function table has no function from any github.com/cilium/ebpf package in any build (runtime.main found in every build as a control). The same scan finds github.com/cilium/ebpf/btf.loadRawSpec and other functions on that list in every opentelemetry-collector-contrib program. The cilium/ebpf library is not part of this package."
     },
     {
       "vulnerability": {
@@ -31144,7 +31330,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips-dev@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-fips-dev package for Debian 13 in the DHI Debian security repository, which requires authentication: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol, a Go program with no program interpreter and no shared-library dependencies. Its Go build information lists no github.com/cilium/ebpf module in any build, and its Go function table has no function from any github.com/cilium/ebpf package in any build (runtime.main found in every build as a control). The same scan finds github.com/cilium/ebpf/btf.loadRawSpec and other functions on that list in every opentelemetry-collector-contrib program. The cilium/ebpf library is not part of this package."
     },
     {
       "vulnerability": {
@@ -31221,7 +31409,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector-fips package for Debian 13 in the DHI Debian security repository, which requires authentication: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol, a Go program with no program interpreter and no shared-library dependencies. Its Go build information lists no github.com/cilium/ebpf module in any build, and its Go function table has no function from any github.com/cilium/ebpf package in any build (runtime.main found in every build as a control). The same scan finds github.com/cilium/ebpf/btf.loadRawSpec and other functions on that list in every opentelemetry-collector-contrib program. The cilium/ebpf library is not part of this package."
     },
     {
       "vulnerability": {
@@ -31298,7 +31488,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector@0.165.0-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-10722 (GHSA-xhgw-qwwf-pg32, GO-2026-6238): in github.com/cilium/ebpf before 0.22.0, loadRawSpec in btf/btf.go checks that the string and type sections named in a BTF header fit inside the BTF data by adding two 32-bit header fields, and that sum can wrap around, so a malformed BTF section, for example in an ELF file passed to LoadCollectionSpec, can pass the check and make the parser panic when it slices the section. Commit 533dfc8 fixes this by adding the fields in 64 bits; it is in v0.22.0 and not in v0.21.0, and it shipped with two other BTF parsing fixes for malformed input from the same pull request. Go's vulnerability database lists github.com/cilium/ebpf/btf functions including LoadSpec, LoadSpecFromReader, LoadSpecAndExtInfosFromReader, LoadSplitSpecFromReader, LoadKernelSpec and loadRawSpec. Sources: https://github.com/advisories/GHSA-xhgw-qwwf-pg32, https://pkg.go.dev/vuln/GO-2026-6238, https://github.com/cilium/ebpf/commit/533dfc82fd228bfadf42ea7180c39de7d9af47fa, https://github.com/cilium/ebpf/releases/tag/v0.22.0. We checked every published opentelemetry-collector package for Debian 13 in the DHI Debian repository: 22 builds, 0.156.0-0 to the current 0.165.0-2, on amd64 and arm64 (44 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/otelcol, a Go program with no program interpreter and no shared-library dependencies. Its Go build information lists no github.com/cilium/ebpf module in any build, and its Go function table has no function from any github.com/cilium/ebpf package in any build (runtime.main found in every build as a control). The same scan finds github.com/cilium/ebpf/btf.loadRawSpec and other functions on that list in every opentelemetry-collector-contrib program. The cilium/ebpf library is not part of this package."
     },
     {
       "vulnerability": {
