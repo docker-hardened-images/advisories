@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:53:03Z",
-  "last_updated": "2026-11-24T22:11:59Z",
-  "version": 7,
+  "last_updated": "2026-11-25T17:18:04Z",
+  "version": 8,
   "statements": [
     {
       "vulnerability": {
@@ -90,12 +90,6 @@
           "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
         },
         {
@@ -105,7 +99,27 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.11-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-14671 (PostgreSQL refint plan cache type confusion executes arbitrary code) in 17.11 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-14671/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/66a5146dc73d3ac1befe6ab595815157d5281cb5 on the REL_17_STABLE branch, which changes contrib/spi/refint.c (plus the trigger regression tests) so that check_primary_key() and check_foreign_key() prepare their queries on every call instead of reusing plans from a per-backend cache that was never invalidated; as the advisory says, the fix was committed as 'refint: Remove plan cache.' without a CVE number, and it is in the REL_17_11 release tag and not in REL_17_10. The refint module, /usr/lib/postgresql17/refint.so, ships in the postgresql17-contrib package. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies touch the source files this fix changes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every published postgresql17 package for Alpine 3.23 on both x86_64 and aarch64 (checksums verified against the package index): 17.11-r0 and 17.12-r0 report PostgreSQL 17.11 and 17.12 and carry the fix, while the earlier builds 17.7-r0, 17.8-r0, 17.9-r0 and 17.10-r0 report 17.7, 17.8, 17.9 and 17.10 and are affected. As a check, refint.so in the postgresql17-contrib package contains the plan-cache error messages this fix removes (\"check_foreign_key: # of plans changed in meantime\" and \"check_primary_key: SPI_keepplan failed\") in 17.7-r0, 17.8-r0, 17.9-r0 and 17.10-r0 and not in 17.11-r0 and 17.12-r0, on both architectures, while the message \"check_foreign_key: SPI_prepare returned %s\", which the fix keeps, is present in every build. 17.11-r0 is the first published build that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-14671 under its 17.11-r0 secfixes."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-pjn7-dhbp-feqz-jmap",
+        "aliases": [
+          "CVE-2026-14671"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-14671 (PostgreSQL refint plan cache type confusion executes arbitrary code) in 17.11 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-14671/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/66a5146dc73d3ac1befe6ab595815157d5281cb5 on the REL_17_STABLE branch, which changes contrib/spi/refint.c (plus the trigger regression tests) so that check_primary_key() and check_foreign_key() prepare their queries on every call instead of reusing plans from a per-backend cache that was never invalidated; as the advisory says, the fix was committed as 'refint: Remove plan cache.' without a CVE number, and it is in the REL_17_11 release tag and not in REL_17_10. The refint module, /usr/lib/postgresql17/refint.so, ships in the postgresql17-contrib package. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies touch the source files this fix changes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every published postgresql17 package for Alpine 3.23 on both x86_64 and aarch64 (checksums verified against the package index): 17.11-r0 and 17.12-r0 report PostgreSQL 17.11 and 17.12 and carry the fix, while the earlier builds 17.7-r0, 17.8-r0, 17.9-r0 and 17.10-r0 report 17.7, 17.8, 17.9 and 17.10 and are affected. As a check, refint.so in the postgresql17-contrib package contains the plan-cache error messages this fix removes (\"check_foreign_key: # of plans changed in meantime\" and \"check_primary_key: SPI_keepplan failed\") in 17.7-r0, 17.8-r0, 17.9-r0 and 17.10-r0 and not in 17.11-r0 and 17.12-r0, on both architectures, while the message \"check_foreign_key: SPI_prepare returned %s\", which the fix keeps, is present in every build. 17.11-r0 is the first published build that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-14671 under its 17.11-r0 secfixes."
     },
     {
       "vulnerability": {
@@ -117,7 +131,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.11-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-14671 (PostgreSQL refint plan cache type confusion executes arbitrary code) in 17.11 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-14671/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/66a5146dc73d3ac1befe6ab595815157d5281cb5 on the REL_17_STABLE branch, which changes contrib/spi/refint.c (plus the trigger regression tests) so that check_primary_key() and check_foreign_key() prepare their queries on every call instead of reusing plans from a per-backend cache that was never invalidated; as the advisory says, the fix was committed as 'refint: Remove plan cache.' without a CVE number, and it is in the REL_17_11 release tag and not in REL_17_10. The refint module, /usr/lib/postgresql17/refint.so, ships in the postgresql17-contrib package. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies touch the source files this fix changes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every published postgresql17 package for Alpine 3.24 on both x86_64 and aarch64 (checksums verified against the package index): 17.11-r0 and 17.12-r0 report PostgreSQL 17.11 and 17.12 and carry the fix, while the earlier build 17.10-r0 reports 17.10 and is affected. As a check, refint.so in the postgresql17-contrib package contains the plan-cache error messages this fix removes (\"check_foreign_key: # of plans changed in meantime\" and \"check_primary_key: SPI_keepplan failed\") in 17.10-r0 and not in 17.11-r0 and 17.12-r0, on both architectures, while the message \"check_foreign_key: SPI_prepare returned %s\", which the fix keeps, is present in every build. 17.11-r0 is the first published build that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-14671 under its 17.11-r0 secfixes."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-pjn7-dhbp-feqz-jmap",
+        "aliases": [
+          "CVE-2026-14671"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.24"
         },
@@ -125,7 +152,8 @@
           "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-14671 (PostgreSQL refint plan cache type confusion executes arbitrary code) in 17.11 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-14671/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/66a5146dc73d3ac1befe6ab595815157d5281cb5 on the REL_17_STABLE branch, which changes contrib/spi/refint.c (plus the trigger regression tests) so that check_primary_key() and check_foreign_key() prepare their queries on every call instead of reusing plans from a per-backend cache that was never invalidated; as the advisory says, the fix was committed as 'refint: Remove plan cache.' without a CVE number, and it is in the REL_17_11 release tag and not in REL_17_10. The refint module, /usr/lib/postgresql17/refint.so, ships in the postgresql17-contrib package. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies touch the source files this fix changes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every published postgresql17 package for Alpine 3.24 on both x86_64 and aarch64 (checksums verified against the package index): 17.11-r0 and 17.12-r0 report PostgreSQL 17.11 and 17.12 and carry the fix, while the earlier build 17.10-r0 reports 17.10 and is affected. As a check, refint.so in the postgresql17-contrib package contains the plan-cache error messages this fix removes (\"check_foreign_key: # of plans changed in meantime\" and \"check_primary_key: SPI_keepplan failed\") in 17.10-r0 and not in 17.11-r0 and 17.12-r0, on both architectures, while the message \"check_foreign_key: SPI_prepare returned %s\", which the fix keeps, is present in every build. 17.11-r0 is the first published build that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-14671 under its 17.11-r0 secfixes."
     },
     {
       "vulnerability": {
