@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-12T01:41:48Z",
-  "last_updated": "2026-11-25T03:13:28Z",
-  "version": 12,
+  "last_updated": "2026-11-25T21:44:42Z",
+  "version": 13,
   "statements": [
     {
       "vulnerability": {
@@ -55,7 +55,9 @@
           "@id": "pkg:apk/dhi/nodejs-22@22.23.5-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "CVE-2026-123863 is a reachable assertion in Node.js HTTP/2 session teardown: an Http2Stream that still holds nghttp2 header buffers outlives its session, and CHECK_EQ(current_nghttp2_memory_, 0) in ~Http2Session() aborts the process. Node.js's CVE record, https://www.cve.org/CVERecord?id=CVE-2026-123863, has default status unaffected, lists 24.0.0 before 24.22.3 and 25.0.0 before 26.13.1 as affected, and describes the bug as affecting 24.x since 24.22.0 and 26.x since 26.9.0; Node.js's November 2026 security release, https://nodejs.org/en/blog/vulnerability/november-2026-security-releases, says it affects the 24.x and 26.x lines. Neither lists 22.x. The code that the fix commit 9bce421783, 'http2: release headers when a stream is removed', https://github.com/nodejs/node/commit/9bce421783, corrects, RemoveStream() keeping a reset stream's header fields, is present in Node.js 22.x before 22.23.5, but the abort is not reachable there: the trigger needs the session to keep processing input for a stream that still has a socket write pending, and the 22.x line keeps the guard that pauses HTTP/2 input while a write is in progress. 24.22.0, the first 24.x release the advisory names, removed that guard in commit d520b9601c, 'http2: fix write deadlock exposed by larger window sizes', https://github.com/nodejs/node/commit/d520b9601c, from pull request https://github.com/nodejs/node/pull/65440. That change is not in 22.x: the commit is not an ancestor of v22.23.5, and CHANGELOG_V22 through 22.23.5 has no entry for it or for that pull request. We read src/node_http2.cc at every Node.js tag these packages carry (v22.22.0 through v22.23.5): in each, Http2Session::OnDataChunkReceived() still returns NGHTTP2_ERR_PAUSE while is_write_in_progress(), and Http2Session::MaybeStopReading() still stops reading while a write is in progress; both checks are gone at v24.22.0 and still present at v24.21.0. Node.js 22.23.5 also ships 9bce421783, and its release notes list this CVE, so in 22.23.5 and later the code is fixed as well. Upstream's regression test for this CVE, test/parallel/test-http2-removed-stream-headers-outlive-session.js (run with --expose-gc), passed three runs out of three against the node binary from each of these DHI nodejs-22 Alpine 3.23 packages on aarch64: 22.22.0-r0, 22.23.4-r2 and 22.23.5-r0. As a control, the same test aborts on this assertion in all three runs with Node.js 24.22.2 and passes with 24.22.3."
     },
     {
       "vulnerability": {
@@ -93,7 +95,9 @@
           "@id": "pkg:apk/dhi/nodejs-22@22.23.5-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "CVE-2026-123863 is a reachable assertion in Node.js HTTP/2 session teardown: an Http2Stream that still holds nghttp2 header buffers outlives its session, and CHECK_EQ(current_nghttp2_memory_, 0) in ~Http2Session() aborts the process. Node.js's CVE record, https://www.cve.org/CVERecord?id=CVE-2026-123863, has default status unaffected, lists 24.0.0 before 24.22.3 and 25.0.0 before 26.13.1 as affected, and describes the bug as affecting 24.x since 24.22.0 and 26.x since 26.9.0; Node.js's November 2026 security release, https://nodejs.org/en/blog/vulnerability/november-2026-security-releases, says it affects the 24.x and 26.x lines. Neither lists 22.x. The code that the fix commit 9bce421783, 'http2: release headers when a stream is removed', https://github.com/nodejs/node/commit/9bce421783, corrects, RemoveStream() keeping a reset stream's header fields, is present in Node.js 22.x before 22.23.5, but the abort is not reachable there: the trigger needs the session to keep processing input for a stream that still has a socket write pending, and the 22.x line keeps the guard that pauses HTTP/2 input while a write is in progress. 24.22.0, the first 24.x release the advisory names, removed that guard in commit d520b9601c, 'http2: fix write deadlock exposed by larger window sizes', https://github.com/nodejs/node/commit/d520b9601c, from pull request https://github.com/nodejs/node/pull/65440. That change is not in 22.x: the commit is not an ancestor of v22.23.5, and CHANGELOG_V22 through 22.23.5 has no entry for it or for that pull request. We read src/node_http2.cc at every Node.js tag these packages carry (v22.22.3 through v22.23.5): in each, Http2Session::OnDataChunkReceived() still returns NGHTTP2_ERR_PAUSE while is_write_in_progress(), and Http2Session::MaybeStopReading() still stops reading while a write is in progress; both checks are gone at v24.22.0 and still present at v24.21.0. Node.js 22.23.5 also ships 9bce421783, and its release notes list this CVE, so in 22.23.5 and later the code is fixed as well. Upstream's regression test for this CVE, test/parallel/test-http2-removed-stream-headers-outlive-session.js (run with --expose-gc), passed three runs out of three against the node binary from each of these DHI nodejs-22 Alpine 3.24 packages on aarch64: 22.22.3-r0 and 22.23.4-r2. As a control, the same test aborts on this assertion in all three runs with Node.js 24.22.2 and passes with 24.22.3."
     },
     {
       "vulnerability": {
@@ -628,7 +632,9 @@
           "@id": "pkg:deb/dhi/nodejs-22@22.23.5-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "CVE-2026-123863 is a reachable assertion in Node.js HTTP/2 session teardown: an Http2Stream that still holds nghttp2 header buffers outlives its session, and CHECK_EQ(current_nghttp2_memory_, 0) in ~Http2Session() aborts the process. Node.js's CVE record, https://www.cve.org/CVERecord?id=CVE-2026-123863, has default status unaffected, lists 24.0.0 before 24.22.3 and 25.0.0 before 26.13.1 as affected, and describes the bug as affecting 24.x since 24.22.0 and 26.x since 26.9.0; Node.js's November 2026 security release, https://nodejs.org/en/blog/vulnerability/november-2026-security-releases, says it affects the 24.x and 26.x lines. Neither lists 22.x. The code that the fix commit 9bce421783, 'http2: release headers when a stream is removed', https://github.com/nodejs/node/commit/9bce421783, corrects, RemoveStream() keeping a reset stream's header fields, is present in Node.js 22.x before 22.23.5, but the abort is not reachable there: the trigger needs the session to keep processing input for a stream that still has a socket write pending, and the 22.x line keeps the guard that pauses HTTP/2 input while a write is in progress. 24.22.0, the first 24.x release the advisory names, removed that guard in commit d520b9601c, 'http2: fix write deadlock exposed by larger window sizes', https://github.com/nodejs/node/commit/d520b9601c, from pull request https://github.com/nodejs/node/pull/65440. That change is not in 22.x: the commit is not an ancestor of v22.23.5, and CHANGELOG_V22 through 22.23.5 has no entry for it or for that pull request. We read src/node_http2.cc at every Node.js tag these packages carry (v22.22.3 through v22.23.5): in each, Http2Session::OnDataChunkReceived() still returns NGHTTP2_ERR_PAUSE while is_write_in_progress(), and Http2Session::MaybeStopReading() still stops reading while a write is in progress; both checks are gone at v24.22.0 and still present at v24.21.0. Node.js 22.23.5 also ships 9bce421783, and its release notes list this CVE, so in 22.23.5 and later the code is fixed as well. Upstream's regression test for this CVE, test/parallel/test-http2-removed-stream-headers-outlive-session.js (run with --expose-gc), passed three runs out of three against the node binary from each of these DHI nodejs-22 Debian 13 packages on arm64: 22.22.3-0 and 22.23.4-1. As a control, the same test aborts on this assertion in all three runs with Node.js 24.22.2 and passes with 24.22.3."
     },
     {
       "vulnerability": {

@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:08:52Z",
-  "last_updated": "2026-11-24T15:53:20Z",
-  "version": 2,
+  "last_updated": "2026-11-25T21:45:10Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -29,7 +29,20 @@
         },
         {
           "@id": "pkg:deb/dhi/nss@2:3.110-1%2Bdeb13u4%2Bdhi0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nss to 2:3.110-1+deb13u4+dhi1 or later.",
+      "status_notes": "CVE-2026-16389 is an integer overflow in NSS's CERT_Hexify(), which allocates three bytes per input byte for a hex string without guarding that multiplication; Mozilla fixed it in Firefox 153: https://www.mozilla.org/en-US/security/advisories/mfsa2026-68/#CVE-2026-16389. The fix, Mozilla bug 2043887, adds a check in lib/certhigh/certhtml.c that rejects an input longer than UINT_MAX / 3 before the allocation: https://hg-edge.mozilla.org/projects/nss/rev/9e854d9c6234. Debian fixed it in trixie in 2:3.110-1+deb13u4, DSA-6403-1, and lists 2:3.126-1 as the fixed version in unstable: https://security-tracker.debian.org/tracker/CVE-2026-16389. The DHI Debian repository publishes four builds of nss for Debian 13: a rebuild of Debian's 2:3.110-1+deb13u4 and builds of NSS 3.131.1, 3.132 and 3.134. We checked the libnss3 package of each on amd64 and arm64, verified against the index checksums: in every one, the disassembled CERT_Hexify() in libnss3.so compares the input length with 0x55555555 (UINT_MAX / 3) before it allocates, and the libnssutil3.so version strings confirm NSS 3.110, 3.131.1, 3.132 and 3.134. As a control, CERT_Hexify() in Debian's unfixed libnss3 2:3.124-1 for arm64 has no such comparison. The changelog shipped in the 2:3.110-1+deb13u4 rebuild lists this CVE under Debian's 2:3.110-1+deb13u4 entry. Every published build carries the fix, so the range closes at the lowest published build, the 2:3.110-1+deb13u4 rebuild."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-2jav-nx52-puw4-vvlw",
+        "aliases": [
+          "CVE-2026-16389"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/nss@2:3.110-1%2Bdeb13u4%2Bdhi1?distro=dhi-13"
         },
@@ -40,7 +53,8 @@
           "@id": "pkg:deb/dhi/nss@2:3.132-1%2Bdeb13u0%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-16389 is an integer overflow in NSS's CERT_Hexify(), which allocates three bytes per input byte for a hex string without guarding that multiplication; Mozilla fixed it in Firefox 153: https://www.mozilla.org/en-US/security/advisories/mfsa2026-68/#CVE-2026-16389. The fix, Mozilla bug 2043887, adds a check in lib/certhigh/certhtml.c that rejects an input longer than UINT_MAX / 3 before the allocation: https://hg-edge.mozilla.org/projects/nss/rev/9e854d9c6234. Debian fixed it in trixie in 2:3.110-1+deb13u4, DSA-6403-1, and lists 2:3.126-1 as the fixed version in unstable: https://security-tracker.debian.org/tracker/CVE-2026-16389. The DHI Debian repository publishes four builds of nss for Debian 13: a rebuild of Debian's 2:3.110-1+deb13u4 and builds of NSS 3.131.1, 3.132 and 3.134. We checked the libnss3 package of each on amd64 and arm64, verified against the index checksums: in every one, the disassembled CERT_Hexify() in libnss3.so compares the input length with 0x55555555 (UINT_MAX / 3) before it allocates, and the libnssutil3.so version strings confirm NSS 3.110, 3.131.1, 3.132 and 3.134. As a control, CERT_Hexify() in Debian's unfixed libnss3 2:3.124-1 for arm64 has no such comparison. The changelog shipped in the 2:3.110-1+deb13u4 rebuild lists this CVE under Debian's 2:3.110-1+deb13u4 entry. Every published build carries the fix, so the range closes at the lowest published build, the 2:3.110-1+deb13u4 rebuild."
     }
   ]
 }
