@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:54:10Z",
-  "last_updated": "2026-11-24T23:42:01Z",
-  "version": 79,
+  "last_updated": "2026-11-25T03:42:05Z",
+  "version": 84,
   "statements": [
     {
       "vulnerability": {
@@ -4557,6 +4557,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-dev@3.1.4-r5?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-dev@3.1.5-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4646,6 +4649,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-dev@3.1.4-r5?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-dev@3.1.5-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -4768,6 +4774,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips-dev@3.1.4-r5?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips-dev@3.1.5-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4857,6 +4866,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips-dev@3.1.4-r5?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips-dev@3.1.5-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -4979,6 +4991,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips@3.1.4-r5?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips@3.1.5-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -5068,6 +5083,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips@3.1.4-r5?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips@3.1.5-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -5190,6 +5208,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3@3.1.4-r5?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3@3.1.5-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -5279,6 +5300,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3@3.1.4-r5?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3@3.1.5-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -15707,7 +15731,9 @@
           "@id": "pkg:apk/dhi/envoy-gateway-dev@1.9.4-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p, GO-2026-4610): Docker CLI for Windows searches C:\\ProgramData\\Docker\\cli-plugins for plugin binaries, a directory a low-privileged user can create, so a Windows program that uses the plugin manager in the github.com/docker/cli/cli-plugins/manager package can run planted plugins. It is fixed in Docker CLI 29.2.0 by https://github.com/docker/cli/commit/13759330b1f7e7cb0d67047ea42c5482548ba7fa, which removes that path from the Windows plugin search list in cli-plugins/manager/manager_windows.go, its only change: https://github.com/docker/cli/security/advisories/GHSA-p436-gjf2-799p, https://pkg.go.dev/vuln/GO-2026-4610. The advisory states that it does not impact non-Windows binaries. We checked every published envoy-gateway-dev package for Alpine 3.23 in the DHI Alpine repository: 67 builds, 1.7.5-r0 to the current 1.10.0-r2, on x86_64 and aarch64 (134 packages), each against its index checksum. Each package holds one file, /usr/bin/envoy-gateway, a statically linked Go program built with CGO_ENABLED=0 for GOOS=linux. Being a Linux build, it does not compile manager_windows.go. Its build information lists github.com/docker/cli between 29.6.0 and 29.9.3, all at or above the fixed 29.2.0. The plugin manager is also not linked: the Go function table of every build, which lists runtime.main as a control, holds functions from github.com/docker/cli/cli/config and its configfile, credentials and memorystore packages and none from any github.com/docker/cli/cli-plugins package, and a byte search of the program in every build, which also catches the names of inlined functions and of variables such as defaultSystemPluginDirs, the symbol the Go advisory lists, finds no docker/cli/cli-plugins name and no defaultSystemPluginDirs string, while it finds github.com/docker/cli/cli/config names in every build. The same function-table reader and byte search find the cli-plugins/manager functions and defaultSystemPluginDirs in a Linux program we built for amd64 and arm64 against the vulnerable github.com/docker/cli 29.1.5 that lists plugins through the plugin manager. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -15919,7 +15945,9 @@
           "@id": "pkg:apk/dhi/envoy-gateway-dev@1.9.4-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p, GO-2026-4610): Docker CLI for Windows searches C:\\ProgramData\\Docker\\cli-plugins for plugin binaries, a directory a low-privileged user can create, so a Windows program that uses the plugin manager in the github.com/docker/cli/cli-plugins/manager package can run planted plugins. It is fixed in Docker CLI 29.2.0 by https://github.com/docker/cli/commit/13759330b1f7e7cb0d67047ea42c5482548ba7fa, which removes that path from the Windows plugin search list in cli-plugins/manager/manager_windows.go, its only change: https://github.com/docker/cli/security/advisories/GHSA-p436-gjf2-799p, https://pkg.go.dev/vuln/GO-2026-4610. The advisory states that it does not impact non-Windows binaries. We checked every published envoy-gateway-dev package for Alpine 3.24 in the DHI Alpine repository: 67 builds, 1.7.5-r0 to the current 1.10.0-r2, on x86_64 and aarch64 (134 packages), each against its index checksum. Each package holds one file, /usr/bin/envoy-gateway, a statically linked Go program built with CGO_ENABLED=0 for GOOS=linux. Being a Linux build, it does not compile manager_windows.go. Its build information lists github.com/docker/cli between 29.6.0 and 29.9.3, all at or above the fixed 29.2.0. The plugin manager is also not linked: the Go function table of every build, which lists runtime.main as a control, holds functions from github.com/docker/cli/cli/config and its configfile, credentials and memorystore packages and none from any github.com/docker/cli/cli-plugins package, and a byte search of the program in every build, which also catches the names of inlined functions and of variables such as defaultSystemPluginDirs, the symbol the Go advisory lists, finds no docker/cli/cli-plugins name and no defaultSystemPluginDirs string, while it finds github.com/docker/cli/cli/config names in every build. The same function-table reader and byte search find the cli-plugins/manager functions and defaultSystemPluginDirs in a Linux program we built for amd64 and arm64 against the vulnerable github.com/docker/cli 29.1.5 that lists plugins through the plugin manager. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -16131,7 +16159,9 @@
           "@id": "pkg:apk/dhi/envoy-gateway-fips-dev@1.9.4-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p, GO-2026-4610): Docker CLI for Windows searches C:\\ProgramData\\Docker\\cli-plugins for plugin binaries, a directory a low-privileged user can create, so a Windows program that uses the plugin manager in the github.com/docker/cli/cli-plugins/manager package can run planted plugins. It is fixed in Docker CLI 29.2.0 by https://github.com/docker/cli/commit/13759330b1f7e7cb0d67047ea42c5482548ba7fa, which removes that path from the Windows plugin search list in cli-plugins/manager/manager_windows.go, its only change: https://github.com/docker/cli/security/advisories/GHSA-p436-gjf2-799p, https://pkg.go.dev/vuln/GO-2026-4610. The advisory states that it does not impact non-Windows binaries. We checked every published envoy-gateway-fips-dev package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 67 builds, 1.7.5-r0 to the current 1.10.0-r2, on x86_64 and aarch64 (134 packages), each against its index checksum. Each package holds one file, /usr/bin/envoy-gateway, a statically linked Go program built with CGO_ENABLED=0 for GOOS=linux. Being a Linux build, it does not compile manager_windows.go. Its build information lists github.com/docker/cli between 29.6.0 and 29.9.3, all at or above the fixed 29.2.0. The plugin manager is also not linked: the Go function table of every build, which lists runtime.main as a control, holds functions from github.com/docker/cli/cli/config and its configfile, credentials and memorystore packages and none from any github.com/docker/cli/cli-plugins package, and a byte search of the program in every build, which also catches the names of inlined functions and of variables such as defaultSystemPluginDirs, the symbol the Go advisory lists, finds no docker/cli/cli-plugins name and no defaultSystemPluginDirs string, while it finds github.com/docker/cli/cli/config names in every build. The same function-table reader and byte search find the cli-plugins/manager functions and defaultSystemPluginDirs in a Linux program we built for amd64 and arm64 against the vulnerable github.com/docker/cli 29.1.5 that lists plugins through the plugin manager. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -16343,7 +16373,9 @@
           "@id": "pkg:apk/dhi/envoy-gateway-fips-dev@1.9.4-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p, GO-2026-4610): Docker CLI for Windows searches C:\\ProgramData\\Docker\\cli-plugins for plugin binaries, a directory a low-privileged user can create, so a Windows program that uses the plugin manager in the github.com/docker/cli/cli-plugins/manager package can run planted plugins. It is fixed in Docker CLI 29.2.0 by https://github.com/docker/cli/commit/13759330b1f7e7cb0d67047ea42c5482548ba7fa, which removes that path from the Windows plugin search list in cli-plugins/manager/manager_windows.go, its only change: https://github.com/docker/cli/security/advisories/GHSA-p436-gjf2-799p, https://pkg.go.dev/vuln/GO-2026-4610. The advisory states that it does not impact non-Windows binaries. We checked every published envoy-gateway-fips-dev package for Alpine 3.24 in the DHI Alpine security repository, which requires authentication: 67 builds, 1.7.5-r0 to the current 1.10.0-r2, on x86_64 and aarch64 (134 packages), each against its index checksum. Each package holds one file, /usr/bin/envoy-gateway, a statically linked Go program built with CGO_ENABLED=0 for GOOS=linux. Being a Linux build, it does not compile manager_windows.go. Its build information lists github.com/docker/cli between 29.6.0 and 29.9.3, all at or above the fixed 29.2.0. The plugin manager is also not linked: the Go function table of every build, which lists runtime.main as a control, holds functions from github.com/docker/cli/cli/config and its configfile, credentials and memorystore packages and none from any github.com/docker/cli/cli-plugins package, and a byte search of the program in every build, which also catches the names of inlined functions and of variables such as defaultSystemPluginDirs, the symbol the Go advisory lists, finds no docker/cli/cli-plugins name and no defaultSystemPluginDirs string, while it finds github.com/docker/cli/cli/config names in every build. The same function-table reader and byte search find the cli-plugins/manager functions and defaultSystemPluginDirs in a Linux program we built for amd64 and arm64 against the vulnerable github.com/docker/cli 29.1.5 that lists plugins through the plugin manager. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -16555,7 +16587,9 @@
           "@id": "pkg:apk/dhi/envoy-gateway-fips@1.9.4-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p, GO-2026-4610): Docker CLI for Windows searches C:\\ProgramData\\Docker\\cli-plugins for plugin binaries, a directory a low-privileged user can create, so a Windows program that uses the plugin manager in the github.com/docker/cli/cli-plugins/manager package can run planted plugins. It is fixed in Docker CLI 29.2.0 by https://github.com/docker/cli/commit/13759330b1f7e7cb0d67047ea42c5482548ba7fa, which removes that path from the Windows plugin search list in cli-plugins/manager/manager_windows.go, its only change: https://github.com/docker/cli/security/advisories/GHSA-p436-gjf2-799p, https://pkg.go.dev/vuln/GO-2026-4610. The advisory states that it does not impact non-Windows binaries. We checked every published envoy-gateway-fips package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 67 builds, 1.7.5-r0 to the current 1.10.0-r2, on x86_64 and aarch64 (134 packages), each against its index checksum. Each package holds one file, /usr/bin/envoy-gateway, a statically linked Go program built with CGO_ENABLED=0 for GOOS=linux. Being a Linux build, it does not compile manager_windows.go. Its build information lists github.com/docker/cli between 29.6.0 and 29.9.3, all at or above the fixed 29.2.0. The plugin manager is also not linked: the Go function table of every build, which lists runtime.main as a control, holds functions from github.com/docker/cli/cli/config and its configfile, credentials and memorystore packages and none from any github.com/docker/cli/cli-plugins package, and a byte search of the program in every build, which also catches the names of inlined functions and of variables such as defaultSystemPluginDirs, the symbol the Go advisory lists, finds no docker/cli/cli-plugins name and no defaultSystemPluginDirs string, while it finds github.com/docker/cli/cli/config names in every build. The same function-table reader and byte search find the cli-plugins/manager functions and defaultSystemPluginDirs in a Linux program we built for amd64 and arm64 against the vulnerable github.com/docker/cli 29.1.5 that lists plugins through the plugin manager. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -16767,7 +16801,9 @@
           "@id": "pkg:apk/dhi/envoy-gateway-fips@1.9.4-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p, GO-2026-4610): Docker CLI for Windows searches C:\\ProgramData\\Docker\\cli-plugins for plugin binaries, a directory a low-privileged user can create, so a Windows program that uses the plugin manager in the github.com/docker/cli/cli-plugins/manager package can run planted plugins. It is fixed in Docker CLI 29.2.0 by https://github.com/docker/cli/commit/13759330b1f7e7cb0d67047ea42c5482548ba7fa, which removes that path from the Windows plugin search list in cli-plugins/manager/manager_windows.go, its only change: https://github.com/docker/cli/security/advisories/GHSA-p436-gjf2-799p, https://pkg.go.dev/vuln/GO-2026-4610. The advisory states that it does not impact non-Windows binaries. We checked every published envoy-gateway-fips package for Alpine 3.24 in the DHI Alpine security repository, which requires authentication: 67 builds, 1.7.5-r0 to the current 1.10.0-r2, on x86_64 and aarch64 (134 packages), each against its index checksum. Each package holds one file, /usr/bin/envoy-gateway, a statically linked Go program built with CGO_ENABLED=0 for GOOS=linux. Being a Linux build, it does not compile manager_windows.go. Its build information lists github.com/docker/cli between 29.6.0 and 29.9.3, all at or above the fixed 29.2.0. The plugin manager is also not linked: the Go function table of every build, which lists runtime.main as a control, holds functions from github.com/docker/cli/cli/config and its configfile, credentials and memorystore packages and none from any github.com/docker/cli/cli-plugins package, and a byte search of the program in every build, which also catches the names of inlined functions and of variables such as defaultSystemPluginDirs, the symbol the Go advisory lists, finds no docker/cli/cli-plugins name and no defaultSystemPluginDirs string, while it finds github.com/docker/cli/cli/config names in every build. The same function-table reader and byte search find the cli-plugins/manager functions and defaultSystemPluginDirs in a Linux program we built for amd64 and arm64 against the vulnerable github.com/docker/cli 29.1.5 that lists plugins through the plugin manager. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -16979,7 +17015,9 @@
           "@id": "pkg:apk/dhi/envoy-gateway@1.9.4-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p, GO-2026-4610): Docker CLI for Windows searches C:\\ProgramData\\Docker\\cli-plugins for plugin binaries, a directory a low-privileged user can create, so a Windows program that uses the plugin manager in the github.com/docker/cli/cli-plugins/manager package can run planted plugins. It is fixed in Docker CLI 29.2.0 by https://github.com/docker/cli/commit/13759330b1f7e7cb0d67047ea42c5482548ba7fa, which removes that path from the Windows plugin search list in cli-plugins/manager/manager_windows.go, its only change: https://github.com/docker/cli/security/advisories/GHSA-p436-gjf2-799p, https://pkg.go.dev/vuln/GO-2026-4610. The advisory states that it does not impact non-Windows binaries. We checked every published envoy-gateway package for Alpine 3.23 in the DHI Alpine repository: 67 builds, 1.7.5-r0 to the current 1.10.0-r2, on x86_64 and aarch64 (134 packages), each against its index checksum. Each package holds one file, /usr/bin/envoy-gateway, a statically linked Go program built with CGO_ENABLED=0 for GOOS=linux. Being a Linux build, it does not compile manager_windows.go. Its build information lists github.com/docker/cli between 29.6.0 and 29.9.3, all at or above the fixed 29.2.0. The plugin manager is also not linked: the Go function table of every build, which lists runtime.main as a control, holds functions from github.com/docker/cli/cli/config and its configfile, credentials and memorystore packages and none from any github.com/docker/cli/cli-plugins package, and a byte search of the program in every build, which also catches the names of inlined functions and of variables such as defaultSystemPluginDirs, the symbol the Go advisory lists, finds no docker/cli/cli-plugins name and no defaultSystemPluginDirs string, while it finds github.com/docker/cli/cli/config names in every build. The same function-table reader and byte search find the cli-plugins/manager functions and defaultSystemPluginDirs in a Linux program we built for amd64 and arm64 against the vulnerable github.com/docker/cli 29.1.5 that lists plugins through the plugin manager. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -17191,7 +17229,9 @@
           "@id": "pkg:apk/dhi/envoy-gateway@1.9.4-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p, GO-2026-4610): Docker CLI for Windows searches C:\\ProgramData\\Docker\\cli-plugins for plugin binaries, a directory a low-privileged user can create, so a Windows program that uses the plugin manager in the github.com/docker/cli/cli-plugins/manager package can run planted plugins. It is fixed in Docker CLI 29.2.0 by https://github.com/docker/cli/commit/13759330b1f7e7cb0d67047ea42c5482548ba7fa, which removes that path from the Windows plugin search list in cli-plugins/manager/manager_windows.go, its only change: https://github.com/docker/cli/security/advisories/GHSA-p436-gjf2-799p, https://pkg.go.dev/vuln/GO-2026-4610. The advisory states that it does not impact non-Windows binaries. We checked every published envoy-gateway package for Alpine 3.24 in the DHI Alpine repository: 67 builds, 1.7.5-r0 to the current 1.10.0-r2, on x86_64 and aarch64 (134 packages), each against its index checksum. Each package holds one file, /usr/bin/envoy-gateway, a statically linked Go program built with CGO_ENABLED=0 for GOOS=linux. Being a Linux build, it does not compile manager_windows.go. Its build information lists github.com/docker/cli between 29.6.0 and 29.9.3, all at or above the fixed 29.2.0. The plugin manager is also not linked: the Go function table of every build, which lists runtime.main as a control, holds functions from github.com/docker/cli/cli/config and its configfile, credentials and memorystore packages and none from any github.com/docker/cli/cli-plugins package, and a byte search of the program in every build, which also catches the names of inlined functions and of variables such as defaultSystemPluginDirs, the symbol the Go advisory lists, finds no docker/cli/cli-plugins name and no defaultSystemPluginDirs string, while it finds github.com/docker/cli/cli/config names in every build. The same function-table reader and byte search find the cli-plugins/manager functions and defaultSystemPluginDirs in a Linux program we built for amd64 and arm64 against the vulnerable github.com/docker/cli 29.1.5 that lists plugins through the plugin manager. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -24942,6 +24982,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8-dev@1.8.5-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8-dev@1.8.5-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8-dev@1.8.5-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8-fips-dev@1.8.5-r0?distro=dhi-3.23"
         },
         {
@@ -24949,6 +25009,26 @@
         },
         {
           "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8-fips-dev@1.8.5-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8-fips-dev@1.8.5-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8-fips-dev@1.8.5-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8-fips-dev@1.8.5-r2?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -24982,6 +25062,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8-fips@1.8.5-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8-fips@1.8.5-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8-fips@1.8.5-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8@1.8.5-r0?distro=dhi-3.23"
         },
         {
@@ -24989,6 +25089,26 @@
         },
         {
           "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8@1.8.5-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8@1.8.5-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8@1.8.5-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/fluxcd-source-controller-1.8@1.8.5-r2?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -26551,6 +26671,9 @@
           "@id": "pkg:apk/dhi/gitlab-rails-18@18.11.14-r15?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/gitlab-rails-18@18.11.14-r16?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/gitlab-rails-18@18.11.14-r1?distro=dhi-3.23"
         },
         {
@@ -26632,6 +26755,9 @@
         },
         {
           "@id": "pkg:apk/dhi/gitlab-rails-18@18.11.14-r15?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/gitlab-rails-18@18.11.14-r16?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/gitlab-rails-18@18.11.14-r1?distro=dhi-3.24"
@@ -26751,6 +26877,9 @@
         },
         {
           "@id": "pkg:apk/dhi/gitlab-rails-19@19.6.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/gitlab-rails-19@19.6.1-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -26843,6 +26972,9 @@
         },
         {
           "@id": "pkg:apk/dhi/gitlab-rails-19@19.6.1-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/gitlab-rails-19@19.6.1-r2?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -27728,7 +27860,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/gitlab-runner-19.6-dev@19.6.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/gitlab-runner-19.6-dev@19.6.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/gitlab-runner-19.6-fips-dev@19.6.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -27756,7 +27916,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/gitlab-runner-19.6-fips@19.6.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/gitlab-runner-19.6-fips@19.6.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/gitlab-runner-19.6@19.6.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -32214,6 +32402,9 @@
           "@id": "pkg:apk/dhi/kargo-1.11-dev@1.11.10-r1?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/kargo-1.11-dev@1.11.11-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/kargo-1.11-dev@1.11.6-r1?distro=dhi-3.23"
         },
         {
@@ -32292,6 +32483,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.11-dev@1.11.10-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kargo-1.11-dev@1.11.11-r0?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.11-dev@1.11.6-r1?distro=dhi-3.24"
@@ -32374,6 +32568,9 @@
           "@id": "pkg:apk/dhi/kargo-1.11-fips-dev@1.11.10-r1?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/kargo-1.11-fips-dev@1.11.11-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/kargo-1.11-fips-dev@1.11.6-r1?distro=dhi-3.23"
         },
         {
@@ -32452,6 +32649,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.11-fips-dev@1.11.10-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kargo-1.11-fips-dev@1.11.11-r0?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.11-fips-dev@1.11.6-r1?distro=dhi-3.24"
@@ -32534,6 +32734,9 @@
           "@id": "pkg:apk/dhi/kargo-1.11-fips@1.11.10-r1?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/kargo-1.11-fips@1.11.11-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/kargo-1.11-fips@1.11.6-r1?distro=dhi-3.23"
         },
         {
@@ -32612,6 +32815,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.11-fips@1.11.10-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kargo-1.11-fips@1.11.11-r0?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.11-fips@1.11.6-r1?distro=dhi-3.24"
@@ -32694,6 +32900,9 @@
           "@id": "pkg:apk/dhi/kargo-1.11@1.11.10-r1?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/kargo-1.11@1.11.11-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/kargo-1.11@1.11.6-r1?distro=dhi-3.23"
         },
         {
@@ -32772,6 +32981,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.11@1.11.10-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kargo-1.11@1.11.11-r0?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.11@1.11.6-r1?distro=dhi-3.24"
@@ -32894,6 +33106,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.12-dev@1.12.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/kargo-1.12-dev@1.12.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -32953,6 +33168,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.12-dev@1.12.6-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kargo-1.12-dev@1.12.7-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -33012,6 +33230,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.12-fips-dev@1.12.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/kargo-1.12-fips-dev@1.12.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -33071,6 +33292,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.12-fips-dev@1.12.6-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kargo-1.12-fips-dev@1.12.7-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -33130,6 +33354,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.12-fips@1.12.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/kargo-1.12-fips@1.12.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -33189,6 +33416,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.12-fips@1.12.6-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kargo-1.12-fips@1.12.7-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -33248,6 +33478,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.12@1.12.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/kargo-1.12@1.12.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -33307,6 +33540,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kargo-1.12@1.12.6-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kargo-1.12@1.12.7-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -35496,6 +35732,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-activator-1.24-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-activator-1.24-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-activator-1.24-dev@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-activator-1.24-dev@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -35503,6 +35759,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-activator-1.24-dev@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-activator-1.24-fips-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-activator-1.24-fips-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-activator-1.24-fips-dev@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -35536,6 +35812,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-activator-1.24-fips@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-activator-1.24-fips@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-activator-1.24-fips@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-activator-1.24-fips@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -35543,6 +35839,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-activator-1.24-fips@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-activator-1.24@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-activator-1.24@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-activator-1.24@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -36424,6 +36740,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-autoscaler-1.24-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-1.24-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-1.24-dev@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-autoscaler-1.24-dev@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -36431,6 +36767,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-autoscaler-1.24-dev@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-1.24-fips-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-1.24-fips-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-1.24-fips-dev@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -36464,6 +36820,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-autoscaler-1.24-fips@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-1.24-fips@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-1.24-fips@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-autoscaler-1.24-fips@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -36471,6 +36847,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-autoscaler-1.24-fips@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-1.24@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-1.24@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-1.24@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -37352,6 +37748,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24-dev@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24-dev@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -37359,6 +37775,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24-dev@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24-fips-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24-fips-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24-fips-dev@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -37392,6 +37828,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24-fips@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24-fips@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24-fips@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24-fips@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -37399,6 +37855,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24-fips@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-autoscaler-hpa-1.24@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -38280,6 +38756,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-controller-1.24-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-controller-1.24-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-controller-1.24-dev@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-controller-1.24-dev@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -38287,6 +38783,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-controller-1.24-dev@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-controller-1.24-fips-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-controller-1.24-fips-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-controller-1.24-fips-dev@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -38320,6 +38836,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-controller-1.24-fips@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-controller-1.24-fips@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-controller-1.24-fips@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-controller-1.24-fips@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -38327,6 +38863,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-controller-1.24-fips@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-controller-1.24@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-controller-1.24@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-controller-1.24@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -39208,6 +39764,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-default-domain-1.24-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-default-domain-1.24-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-default-domain-1.24-dev@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-default-domain-1.24-dev@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -39215,6 +39791,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-default-domain-1.24-dev@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-default-domain-1.24-fips-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-default-domain-1.24-fips-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-default-domain-1.24-fips-dev@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -39248,6 +39844,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-default-domain-1.24-fips@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-default-domain-1.24-fips@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-default-domain-1.24-fips@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-default-domain-1.24-fips@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -39255,6 +39871,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-default-domain-1.24-fips@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-default-domain-1.24@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-default-domain-1.24@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-default-domain-1.24@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -40136,6 +40772,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-queue-1.24-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-queue-1.24-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-queue-1.24-dev@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-queue-1.24-dev@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -40143,6 +40799,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-queue-1.24-dev@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-queue-1.24-fips-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-queue-1.24-fips-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-queue-1.24-fips-dev@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -40176,6 +40852,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-queue-1.24-fips@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-queue-1.24-fips@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-queue-1.24-fips@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-queue-1.24-fips@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -40183,6 +40879,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-queue-1.24-fips@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-queue-1.24@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-queue-1.24@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-queue-1.24@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -41064,6 +41780,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-schema-tweak-1.24-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-schema-tweak-1.24-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-schema-tweak-1.24-dev@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-schema-tweak-1.24-dev@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -41071,6 +41807,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-schema-tweak-1.24-dev@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-schema-tweak-1.24-fips-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-schema-tweak-1.24-fips-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-schema-tweak-1.24-fips-dev@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -41104,6 +41860,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-schema-tweak-1.24-fips@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-schema-tweak-1.24-fips@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-schema-tweak-1.24-fips@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-schema-tweak-1.24-fips@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -41111,6 +41887,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-schema-tweak-1.24-fips@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-schema-tweak-1.24@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-schema-tweak-1.24@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-schema-tweak-1.24@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -41992,6 +42788,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-webhook-1.24-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-webhook-1.24-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-webhook-1.24-dev@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-webhook-1.24-dev@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -41999,6 +42815,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-webhook-1.24-dev@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-webhook-1.24-fips-dev@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-webhook-1.24-fips-dev@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-webhook-1.24-fips-dev@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -42032,6 +42868,26 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/knative-webhook-1.24-fips@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-webhook-1.24-fips@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-webhook-1.24-fips@1.24.0-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/knative-webhook-1.24-fips@1.24.0-r0?distro=dhi-3.24"
         },
         {
@@ -42039,6 +42895,26 @@
         },
         {
           "@id": "pkg:apk/dhi/knative-webhook-1.24-fips@1.24.0-r2?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/knative-webhook-1.24@1.24.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-webhook-1.24@1.24.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/knative-webhook-1.24@1.24.0-r2?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -43202,7 +44078,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kustomize-controller-1.7-dev@1.7.3-r1?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kustomize-controller-1.7-fips-dev@1.7.3-r1?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kustomize-controller-1.7-fips-dev@1.7.3-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -43230,7 +44134,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kustomize-controller-1.7-fips@1.7.3-r1?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kustomize-controller-1.7@1.7.3-r1?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kustomize-controller-1.7@1.7.3-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -43258,7 +44190,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kustomize-controller-1.9-dev@1.9.4-r5?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kustomize-controller-1.9-fips-dev@1.9.4-r5?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kustomize-controller-1.9-fips-dev@1.9.4-r5?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -43286,7 +44246,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kustomize-controller-1.9-fips@1.9.4-r5?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kustomize-controller-1.9@1.9.4-r5?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kustomize-controller-1.9@1.9.4-r5?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -46226,7 +47214,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-1.20-dev@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-1.20-fips-dev@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-1.20-fips-dev@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -46254,7 +47270,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-1.20-fips@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-1.20@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-1.20@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -48962,7 +50006,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-background-controller-1.20-dev@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-background-controller-1.20-fips-dev@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-background-controller-1.20-fips-dev@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -48990,7 +50062,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-background-controller-1.20-fips@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-background-controller-1.20@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-background-controller-1.20@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -52314,7 +53414,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-cleanup-controller-1.20-dev@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-cleanup-controller-1.20-fips-dev@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-cleanup-controller-1.20-fips-dev@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -52342,7 +53470,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-cleanup-controller-1.20-fips@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-cleanup-controller-1.20@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-cleanup-controller-1.20@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -55666,7 +56822,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-cli-1.20-dev@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-cli-1.20-fips-dev@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-cli-1.20-fips-dev@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -55694,7 +56878,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-cli-1.20-fips@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-cli-1.20@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-cli-1.20@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -59480,7 +60692,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-init-1.20-dev@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-init-1.20-fips-dev@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-init-1.20-fips-dev@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -59508,7 +60748,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-init-1.20-fips@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-init-1.20@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-init-1.20@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -62072,7 +63340,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-readiness-checker-1.20-dev@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-readiness-checker-1.20-fips-dev@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-readiness-checker-1.20-fips-dev@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -62100,7 +63396,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-readiness-checker-1.20-fips@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-readiness-checker-1.20@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-readiness-checker-1.20@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -65232,7 +66556,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-reports-controller-1.20-dev@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-reports-controller-1.20-fips-dev@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-reports-controller-1.20-fips-dev@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -65260,7 +66612,35 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/kyverno-reports-controller-1.20-fips@1.20.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/kyverno-reports-controller-1.20@1.20.0-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/kyverno-reports-controller-1.20@1.20.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -67799,6 +69179,29 @@
         },
         {
           "@id": "pkg:apk/dhi/opm@1.74.0-r9?distro=dhi-3.24"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/osv-cve-riddled@1.0.1-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/osv-cve-riddled@1.0.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/osv-cve-riddled@1.0.1-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/osv-cve-riddled@1.0.1-r3?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -81434,6 +82837,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-dev@3.1.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.5-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -81532,6 +82938,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.5-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -81630,6 +83039,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-fips@3.1.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.5-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -81728,6 +83140,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3@3.1.4-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.5-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -86658,6 +88073,9 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/docker-sbx@0.54.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/docker-sbx@0.54.1-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -87491,7 +88909,9 @@
           "@id": "pkg:deb/dhi/envoy-gateway-dev@1.9.4-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p, GO-2026-4610): Docker CLI for Windows searches C:\\ProgramData\\Docker\\cli-plugins for plugin binaries, a directory a low-privileged user can create, so a Windows program that uses the plugin manager in the github.com/docker/cli/cli-plugins/manager package can run planted plugins. It is fixed in Docker CLI 29.2.0 by https://github.com/docker/cli/commit/13759330b1f7e7cb0d67047ea42c5482548ba7fa, which removes that path from the Windows plugin search list in cli-plugins/manager/manager_windows.go, its only change: https://github.com/docker/cli/security/advisories/GHSA-p436-gjf2-799p, https://pkg.go.dev/vuln/GO-2026-4610. The advisory states that it does not impact non-Windows binaries. We checked every published envoy-gateway-dev package for Debian 13 in the DHI Debian repository: 67 builds, 1.7.5-0 to the current 1.10.0-2, on amd64 and arm64 (134 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/envoy-gateway, a statically linked Go program built with CGO_ENABLED=0 for GOOS=linux. Being a Linux build, it does not compile manager_windows.go. Its build information lists github.com/docker/cli between 29.6.0 and 29.9.3, all at or above the fixed 29.2.0. The plugin manager is also not linked: the Go function table of every build, which lists runtime.main as a control, holds functions from github.com/docker/cli/cli/config and its configfile, credentials and memorystore packages and none from any github.com/docker/cli/cli-plugins package, and a byte search of the program in every build, which also catches the names of inlined functions and of variables such as defaultSystemPluginDirs, the symbol the Go advisory lists, finds no docker/cli/cli-plugins name and no defaultSystemPluginDirs string, while it finds github.com/docker/cli/cli/config names in every build. The same function-table reader and byte search find the cli-plugins/manager functions and defaultSystemPluginDirs in a Linux program we built for amd64 and arm64 against the vulnerable github.com/docker/cli 29.1.5 that lists plugins through the plugin manager. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -87703,7 +89123,9 @@
           "@id": "pkg:deb/dhi/envoy-gateway-fips-dev@1.9.4-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p, GO-2026-4610): Docker CLI for Windows searches C:\\ProgramData\\Docker\\cli-plugins for plugin binaries, a directory a low-privileged user can create, so a Windows program that uses the plugin manager in the github.com/docker/cli/cli-plugins/manager package can run planted plugins. It is fixed in Docker CLI 29.2.0 by https://github.com/docker/cli/commit/13759330b1f7e7cb0d67047ea42c5482548ba7fa, which removes that path from the Windows plugin search list in cli-plugins/manager/manager_windows.go, its only change: https://github.com/docker/cli/security/advisories/GHSA-p436-gjf2-799p, https://pkg.go.dev/vuln/GO-2026-4610. The advisory states that it does not impact non-Windows binaries. We checked every published envoy-gateway-fips-dev package for Debian 13 in the DHI Debian security repository, which requires authentication: 67 builds, 1.7.5-0 to the current 1.10.0-2, on amd64 and arm64 (134 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/envoy-gateway, a statically linked Go program built with CGO_ENABLED=0 for GOOS=linux. Being a Linux build, it does not compile manager_windows.go. Its build information lists github.com/docker/cli between 29.6.0 and 29.9.3, all at or above the fixed 29.2.0. The plugin manager is also not linked: the Go function table of every build, which lists runtime.main as a control, holds functions from github.com/docker/cli/cli/config and its configfile, credentials and memorystore packages and none from any github.com/docker/cli/cli-plugins package, and a byte search of the program in every build, which also catches the names of inlined functions and of variables such as defaultSystemPluginDirs, the symbol the Go advisory lists, finds no docker/cli/cli-plugins name and no defaultSystemPluginDirs string, while it finds github.com/docker/cli/cli/config names in every build. The same function-table reader and byte search find the cli-plugins/manager functions and defaultSystemPluginDirs in a Linux program we built for amd64 and arm64 against the vulnerable github.com/docker/cli 29.1.5 that lists plugins through the plugin manager. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -87915,7 +89337,9 @@
           "@id": "pkg:deb/dhi/envoy-gateway-fips@1.9.4-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p, GO-2026-4610): Docker CLI for Windows searches C:\\ProgramData\\Docker\\cli-plugins for plugin binaries, a directory a low-privileged user can create, so a Windows program that uses the plugin manager in the github.com/docker/cli/cli-plugins/manager package can run planted plugins. It is fixed in Docker CLI 29.2.0 by https://github.com/docker/cli/commit/13759330b1f7e7cb0d67047ea42c5482548ba7fa, which removes that path from the Windows plugin search list in cli-plugins/manager/manager_windows.go, its only change: https://github.com/docker/cli/security/advisories/GHSA-p436-gjf2-799p, https://pkg.go.dev/vuln/GO-2026-4610. The advisory states that it does not impact non-Windows binaries. We checked every published envoy-gateway-fips package for Debian 13 in the DHI Debian security repository, which requires authentication: 67 builds, 1.7.5-0 to the current 1.10.0-2, on amd64 and arm64 (134 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/envoy-gateway, a statically linked Go program built with CGO_ENABLED=0 for GOOS=linux. Being a Linux build, it does not compile manager_windows.go. Its build information lists github.com/docker/cli between 29.6.0 and 29.9.3, all at or above the fixed 29.2.0. The plugin manager is also not linked: the Go function table of every build, which lists runtime.main as a control, holds functions from github.com/docker/cli/cli/config and its configfile, credentials and memorystore packages and none from any github.com/docker/cli/cli-plugins package, and a byte search of the program in every build, which also catches the names of inlined functions and of variables such as defaultSystemPluginDirs, the symbol the Go advisory lists, finds no docker/cli/cli-plugins name and no defaultSystemPluginDirs string, while it finds github.com/docker/cli/cli/config names in every build. The same function-table reader and byte search find the cli-plugins/manager functions and defaultSystemPluginDirs in a Linux program we built for amd64 and arm64 against the vulnerable github.com/docker/cli 29.1.5 that lists plugins through the plugin manager. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -88127,7 +89551,9 @@
           "@id": "pkg:deb/dhi/envoy-gateway@1.9.4-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2025-15558 (GHSA-p436-gjf2-799p, GO-2026-4610): Docker CLI for Windows searches C:\\ProgramData\\Docker\\cli-plugins for plugin binaries, a directory a low-privileged user can create, so a Windows program that uses the plugin manager in the github.com/docker/cli/cli-plugins/manager package can run planted plugins. It is fixed in Docker CLI 29.2.0 by https://github.com/docker/cli/commit/13759330b1f7e7cb0d67047ea42c5482548ba7fa, which removes that path from the Windows plugin search list in cli-plugins/manager/manager_windows.go, its only change: https://github.com/docker/cli/security/advisories/GHSA-p436-gjf2-799p, https://pkg.go.dev/vuln/GO-2026-4610. The advisory states that it does not impact non-Windows binaries. We checked every published envoy-gateway package for Debian 13 in the DHI Debian repository: 67 builds, 1.7.5-0 to the current 1.10.0-2, on amd64 and arm64 (134 packages), each matched to the repository's SHA-256 checksum. Each package holds one file, /usr/bin/envoy-gateway, a statically linked Go program built with CGO_ENABLED=0 for GOOS=linux. Being a Linux build, it does not compile manager_windows.go. Its build information lists github.com/docker/cli between 29.6.0 and 29.9.3, all at or above the fixed 29.2.0. The plugin manager is also not linked: the Go function table of every build, which lists runtime.main as a control, holds functions from github.com/docker/cli/cli/config and its configfile, credentials and memorystore packages and none from any github.com/docker/cli/cli-plugins package, and a byte search of the program in every build, which also catches the names of inlined functions and of variables such as defaultSystemPluginDirs, the symbol the Go advisory lists, finds no docker/cli/cli-plugins name and no defaultSystemPluginDirs string, while it finds github.com/docker/cli/cli/config names in every build. The same function-table reader and byte search find the cli-plugins/manager functions and defaultSystemPluginDirs in a Linux program we built for amd64 and arm64 against the vulnerable github.com/docker/cli 29.1.5 that lists plugins through the plugin manager. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -91998,6 +93424,86 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/fluxcd-source-controller-1.8-dev@1.8.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/fluxcd-source-controller-1.8-dev@1.8.5-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/fluxcd-source-controller-1.8-dev@1.8.5-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/fluxcd-source-controller-1.8-fips-dev@1.8.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/fluxcd-source-controller-1.8-fips-dev@1.8.5-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/fluxcd-source-controller-1.8-fips-dev@1.8.5-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/fluxcd-source-controller-1.8-fips@1.8.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/fluxcd-source-controller-1.8-fips@1.8.5-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/fluxcd-source-controller-1.8-fips@1.8.5-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/fluxcd-source-controller-1.8@1.8.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/fluxcd-source-controller-1.8@1.8.5-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/fluxcd-source-controller-1.8@1.8.5-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/fluxcd-source-controller-1.9-dev@1.9.3-1?distro=dhi-13"
         },
         {
@@ -93441,6 +94947,62 @@
         },
         {
           "@id": "pkg:deb/dhi/gitlab-runner-19.4@19.4.3-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/gitlab-runner-19.6-dev@19.6.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/gitlab-runner-19.6-fips-dev@19.6.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/gitlab-runner-19.6-fips@19.6.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/gitlab-runner-19.6@19.6.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -100664,6 +102226,9 @@
           "@id": "pkg:deb/dhi/kargo-1.11-dev@1.11.10-1?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/kargo-1.11-dev@1.11.11-0?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/kargo-1.11-dev@1.11.6-1?distro=dhi-13"
         },
         {
@@ -100742,6 +102307,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kargo-1.11-fips-dev@1.11.10-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kargo-1.11-fips-dev@1.11.11-0?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/kargo-1.11-fips-dev@1.11.6-1?distro=dhi-13"
@@ -100824,6 +102392,9 @@
           "@id": "pkg:deb/dhi/kargo-1.11-fips@1.11.10-1?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/kargo-1.11-fips@1.11.11-0?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/kargo-1.11-fips@1.11.6-1?distro=dhi-13"
         },
         {
@@ -100902,6 +102473,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kargo-1.11@1.11.10-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kargo-1.11@1.11.11-0?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/kargo-1.11@1.11.6-1?distro=dhi-13"
@@ -101024,6 +102598,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kargo-1.12-dev@1.12.6-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kargo-1.12-dev@1.12.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -101083,6 +102660,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kargo-1.12-fips-dev@1.12.6-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kargo-1.12-fips-dev@1.12.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -101142,6 +102722,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kargo-1.12-fips@1.12.6-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kargo-1.12-fips@1.12.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -101201,6 +102784,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kargo-1.12@1.12.6-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kargo-1.12@1.12.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -102302,6 +103888,86 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/knative-activator-1.24-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-activator-1.24-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-activator-1.24-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-activator-1.24-fips-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-activator-1.24-fips-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-activator-1.24-fips-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-activator-1.24-fips@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-activator-1.24-fips@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-activator-1.24-fips@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-activator-1.24@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-activator-1.24@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-activator-1.24@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/knative-autoscaler-1.22-dev@1.22.1-10?distro=dhi-13"
         },
         {
@@ -102713,6 +104379,86 @@
         },
         {
           "@id": "pkg:deb/dhi/knative-autoscaler-1.23@1.23.0-9?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-1.24-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-1.24-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-1.24-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-1.24-fips-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-1.24-fips-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-1.24-fips-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-1.24-fips@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-1.24-fips@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-1.24-fips@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-1.24@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-1.24@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-1.24@1.24.0-2?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -103150,6 +104896,86 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/knative-autoscaler-hpa-1.24-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-hpa-1.24-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-hpa-1.24-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-hpa-1.24-fips-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-hpa-1.24-fips-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-hpa-1.24-fips-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-hpa-1.24-fips@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-hpa-1.24-fips@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-hpa-1.24-fips@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-hpa-1.24@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-hpa-1.24@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-autoscaler-hpa-1.24@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/knative-controller-1.22-dev@1.22.1-10?distro=dhi-13"
         },
         {
@@ -103561,6 +105387,86 @@
         },
         {
           "@id": "pkg:deb/dhi/knative-controller-1.23@1.23.0-9?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-controller-1.24-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-controller-1.24-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-controller-1.24-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-controller-1.24-fips-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-controller-1.24-fips-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-controller-1.24-fips-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-controller-1.24-fips@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-controller-1.24-fips@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-controller-1.24-fips@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-controller-1.24@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-controller-1.24@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-controller-1.24@1.24.0-2?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -103998,6 +105904,86 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/knative-default-domain-1.24-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-default-domain-1.24-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-default-domain-1.24-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-default-domain-1.24-fips-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-default-domain-1.24-fips-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-default-domain-1.24-fips-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-default-domain-1.24-fips@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-default-domain-1.24-fips@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-default-domain-1.24-fips@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-default-domain-1.24@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-default-domain-1.24@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-default-domain-1.24@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/knative-queue-1.22-dev@1.22.1-10?distro=dhi-13"
         },
         {
@@ -104409,6 +106395,86 @@
         },
         {
           "@id": "pkg:deb/dhi/knative-queue-1.23@1.23.0-9?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-queue-1.24-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-queue-1.24-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-queue-1.24-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-queue-1.24-fips-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-queue-1.24-fips-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-queue-1.24-fips-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-queue-1.24-fips@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-queue-1.24-fips@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-queue-1.24-fips@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-queue-1.24@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-queue-1.24@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-queue-1.24@1.24.0-2?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -104846,6 +106912,86 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/knative-schema-tweak-1.24-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-schema-tweak-1.24-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-schema-tweak-1.24-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-schema-tweak-1.24-fips-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-schema-tweak-1.24-fips-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-schema-tweak-1.24-fips-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-schema-tweak-1.24-fips@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-schema-tweak-1.24-fips@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-schema-tweak-1.24-fips@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-schema-tweak-1.24@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-schema-tweak-1.24@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-schema-tweak-1.24@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/knative-webhook-1.22-dev@1.22.1-10?distro=dhi-13"
         },
         {
@@ -105257,6 +107403,86 @@
         },
         {
           "@id": "pkg:deb/dhi/knative-webhook-1.23@1.23.0-9?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-webhook-1.24-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-webhook-1.24-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-webhook-1.24-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-webhook-1.24-fips-dev@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-webhook-1.24-fips-dev@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-webhook-1.24-fips-dev@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-webhook-1.24-fips@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-webhook-1.24-fips@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-webhook-1.24-fips@1.24.0-2?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/knative-webhook-1.24@1.24.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-webhook-1.24@1.24.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/knative-webhook-1.24@1.24.0-2?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -105809,6 +108035,118 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/kustomize-controller-1.6@1.6.1-1?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kustomize-controller-1.7-dev@1.7.3-1?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kustomize-controller-1.7-fips-dev@1.7.3-1?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kustomize-controller-1.7-fips@1.7.3-1?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kustomize-controller-1.7@1.7.3-1?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kustomize-controller-1.9-dev@1.9.4-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kustomize-controller-1.9-fips-dev@1.9.4-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kustomize-controller-1.9-fips@1.9.4-5?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kustomize-controller-1.9@1.9.4-5?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -107278,6 +109616,62 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/kyverno-1.20-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-1.20-fips-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-1.20-fips@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-1.20@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/kyverno-background-controller-1.16-dev@1.16.4-10?distro=dhi-13"
         },
         {
@@ -108605,6 +110999,62 @@
         },
         {
           "@id": "pkg:deb/dhi/kyverno-background-controller-1.19@1.19.2-4?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-1.20-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-1.20-fips-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-1.20-fips@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-background-controller-1.20@1.20.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -110386,6 +112836,62 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-1.20-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-1.20-fips-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-1.20-fips@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cleanup-controller-1.20@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/kyverno-cleanup-controller-dev@1.15.3-0?distro=dhi-13"
         },
         {
@@ -112141,6 +114647,62 @@
         },
         {
           "@id": "pkg:deb/dhi/kyverno-cli-1.19@1.19.2-4?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-1.20-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-1.20-fips-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-1.20-fips@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-cli-1.20@1.20.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -114243,6 +116805,62 @@
       },
       "products": [
         {
+          "@id": "pkg:deb/dhi/kyverno-init-1.20-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-1.20-fips-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-1.20-fips@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-init-1.20@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/kyverno-init-dev@1.15.3-0?distro=dhi-13"
         },
         {
@@ -115618,6 +118236,62 @@
         },
         {
           "@id": "pkg:deb/dhi/kyverno-readiness-checker-1.19@1.19.2-4?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-readiness-checker-1.20-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-readiness-checker-1.20-fips-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-readiness-checker-1.20-fips@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-readiness-checker-1.20@1.20.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -117242,6 +119916,62 @@
         },
         {
           "@id": "pkg:deb/dhi/kyverno-reports-controller-1.19@1.19.2-4?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-1.20-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-1.20-fips-dev@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-1.20-fips@1.20.0-0?distro=dhi-13"
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-crvk-zalo-3bqw-53un",
+        "aliases": [
+          "CVE-2025-15558"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/kyverno-reports-controller-1.20@1.20.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -121551,6 +124281,9 @@
         },
         {
           "@id": "pkg:deb/dhi/teleport-17-dev@17.7.34-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/teleport-17-dev@17.7.34-8?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -121658,6 +124391,9 @@
         },
         {
           "@id": "pkg:deb/dhi/teleport-17-fips-dev@17.7.34-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/teleport-17-fips-dev@17.7.34-8?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -121765,6 +124501,9 @@
         },
         {
           "@id": "pkg:deb/dhi/teleport-17-fips@17.7.34-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/teleport-17-fips@17.7.34-8?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -121872,6 +124611,9 @@
         },
         {
           "@id": "pkg:deb/dhi/teleport-17@17.7.34-7?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/teleport-17@17.7.34-8?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -121961,6 +124703,9 @@
         },
         {
           "@id": "pkg:deb/dhi/teleport-18-dev@18.11.10-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/teleport-18-dev@18.11.10-9?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -122050,6 +124795,9 @@
         },
         {
           "@id": "pkg:deb/dhi/teleport-18-fips-dev@18.11.10-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/teleport-18-fips-dev@18.11.10-9?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -122139,6 +124887,9 @@
         },
         {
           "@id": "pkg:deb/dhi/teleport-18-fips@18.11.10-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/teleport-18-fips@18.11.10-9?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -122228,6 +124979,9 @@
         },
         {
           "@id": "pkg:deb/dhi/teleport-18@18.11.10-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/teleport-18@18.11.10-9?distro=dhi-13"
         }
       ],
       "status": "under_investigation"

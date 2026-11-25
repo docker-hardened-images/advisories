@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T02:59:15Z",
-  "last_updated": "2026-11-25T00:38:07Z",
-  "version": 10,
+  "last_updated": "2026-11-25T02:39:17Z",
+  "version": 11,
   "statements": [
     {
       "vulnerability": {
@@ -28,7 +28,9 @@
           "@id": "pkg:apk/dhi/postgresql16@16.16-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-116333 (PostgreSQL parallel B-tree array scan reads beyond array bounds) affects only PostgreSQL 17 and 18. The PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-116333/, says \"Versions before PostgreSQL 17 are unaffected\" and lists 18.7 and 17.12 as the fixed releases. The flaw is that the backends in a parallel B-tree scan with array keys hand their positions in the arrays to each other through shared memory (btps_arrElems) and use them without a range check. That exchange was added by commit https://github.com/postgres/postgres/commit/5bf748b86bc6786a3fc57fc7ce296c37da6564b0 (\"Enhance nbtree ScalarArrayOp execution\"), which is in the REL_17_0 tag and not on the PostgreSQL 16 branch; it also replaced _bt_parallel_advance_array_keys() with _bt_parallel_primscan_schedule(). The fix on the REL_17_STABLE branch, https://github.com/postgres/postgres/commit/4cd18df09917c856b79615dfa23aa4cd5ee7c23d, carries the trailer \"Security: CVE-2026-116333\" and \"Backpatch-through: 17\", and changes only src/backend/access/nbtree/nbtree.c. At every PostgreSQL 16 release this owner publishes, REL_16_13 through REL_16_16, the shared parallel B-tree scan state holds only a count of processed array keys (btps_arrayKeyCount) and no array element positions, so no backend indexes its own arrays with a position saved by another; see for example https://github.com/postgres/postgres/blob/REL_16_16/src/backend/access/nbtree/nbtree.c. The DHI Alpine 3.23 package repository (x86_64 and aarch64) publishes packages built from source postgresql16 at 16.13-r0, 16.14-r0, 16.15-r0 and 16.16-r0. In every one of those builds the postgres server binary, usr/libexec/postgresql16/postgres in the postgresql16 package, reports its 16.x release on both architectures, contains the symbol name _bt_parallel_advance_array_keys and does not contain _bt_parallel_primscan_schedule; the same byte search finds _bt_parallel_primscan_schedule in the postgres binary of the postgresql17 17.11-r0 and 17.12-r0 builds on both architectures. None of the Alpine patches applied in the 16.16-r0 APKBUILD, https://github.com/alpinelinux/aports/blob/859fa0795e895af033fab32094a83301f2b4d8ff/community/postgresql16/APKBUILD, touch the B-tree access method. Alpine's postgresql16 16.16-r0 secfixes list CVE-2026-116333, but upstream's own advisory places PostgreSQL 16 outside the affected range."
     },
     {
       "vulnerability": {
@@ -48,7 +50,9 @@
           "@id": "pkg:apk/dhi/postgresql16@16.16-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-116333 (PostgreSQL parallel B-tree array scan reads beyond array bounds) affects only PostgreSQL 17 and 18. The PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-116333/, says \"Versions before PostgreSQL 17 are unaffected\" and lists 18.7 and 17.12 as the fixed releases. The flaw is that the backends in a parallel B-tree scan with array keys hand their positions in the arrays to each other through shared memory (btps_arrElems) and use them without a range check. That exchange was added by commit https://github.com/postgres/postgres/commit/5bf748b86bc6786a3fc57fc7ce296c37da6564b0 (\"Enhance nbtree ScalarArrayOp execution\"), which is in the REL_17_0 tag and not on the PostgreSQL 16 branch; it also replaced _bt_parallel_advance_array_keys() with _bt_parallel_primscan_schedule(). The fix on the REL_17_STABLE branch, https://github.com/postgres/postgres/commit/4cd18df09917c856b79615dfa23aa4cd5ee7c23d, carries the trailer \"Security: CVE-2026-116333\" and \"Backpatch-through: 17\", and changes only src/backend/access/nbtree/nbtree.c. At every PostgreSQL 16 release this owner publishes, REL_16_14 through REL_16_16, the shared parallel B-tree scan state holds only a count of processed array keys (btps_arrayKeyCount) and no array element positions, so no backend indexes its own arrays with a position saved by another; see for example https://github.com/postgres/postgres/blob/REL_16_16/src/backend/access/nbtree/nbtree.c. The DHI Alpine 3.24 package repository (x86_64 and aarch64) publishes packages built from source postgresql16 at 16.14-r0, 16.15-r0 and 16.16-r0. In every one of those builds the postgres server binary, usr/libexec/postgresql16/postgres in the postgresql16 package, reports its 16.x release on both architectures, contains the symbol name _bt_parallel_advance_array_keys and does not contain _bt_parallel_primscan_schedule; the same byte search finds _bt_parallel_primscan_schedule in the postgres binary of the postgresql17 17.11-r0 and 17.12-r0 builds on both architectures. None of the Alpine patches applied in the 16.16-r0 APKBUILD, https://github.com/alpinelinux/aports/blob/4ceb4766cb82ae191dc47628382b37cb94423468/community/postgresql16/APKBUILD, touch the B-tree access method. Alpine's postgresql16 16.16-r0 secfixes list CVE-2026-116333, but upstream's own advisory places PostgreSQL 16 outside the affected range."
     },
     {
       "vulnerability": {
