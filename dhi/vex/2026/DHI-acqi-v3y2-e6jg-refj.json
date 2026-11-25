@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-23T22:07:18Z",
-  "last_updated": "2026-11-25T16:16:07Z",
-  "version": 2,
+  "last_updated": "2026-11-25T22:28:38Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -98,7 +98,20 @@
         },
         {
           "@id": "pkg:deb/dhi/valkey-9.1@9.1.3-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update valkey-9.1 to 9.1.4-0 or later.",
+      "status_notes": "Valkey's advisory GHSA-3885-pq5f-788j, https://github.com/valkey-io/valkey/security/advisories/GHSA-3885-pq5f-788j, reports a use-after-free in client eviction: when maxmemory-clients is not 0, an authenticated user who writes to a key that other clients are blocked on can make evictClients() free the client whose command is still executing, which reliably crashes the server. It lists 9.1.x before 9.1.4 as affected and notes that servers with the default maxmemory-clients 0 are not affected. The fix is upstream pull request https://github.com/valkey-io/valkey/pull/5435, which marks the client inside processCommandAndResetClient() with a processing_command flag and makes evictClients() skip a flagged client that is not the current client. On the 9.1 branch it is commit https://github.com/valkey-io/valkey/commit/37890c91b64065bbb50c053886f941c01e635c79. The fix is in the 9.1.4 release tag (commit 8efb5bb3dd3b69f707777352a105bbea911affd3) and not in 9.1.3. The DHI valkey-9.1 packages for Debian 13 are built from the upstream valkey release tag of the same version; the DHI packaging applies no patches to the valkey source. The server code ships in valkey-9.1-server as /usr/bin/valkey-server; valkey-9.1-sentinel provides valkey-sentinel as a symbolic link to it, and valkey-9.1-tools ships the separate valkey-cli and valkey-benchmark programs, in which neither the evictClients name nor its \"Evicting client\" log message appears. We checked valkey-server in every published valkey-9.1-server package on amd64 and arm64 (checksums verified against the package index): 9.1.4-0 and 9.1.4-1 report Valkey 9.1.4 and contain the assertion text \"!c->flag.processing_command\" that the fix adds, while 9.1.1-0, 9.1.2-0 and 9.1.3-0 report 9.1.1, 9.1.2 and 9.1.3 and do not contain it; the evictClients function name, our control, is present in every build. 9.1.4-0 is the first published build that carries the fix. Deployments that keep the default maxmemory-clients 0 do not enable client eviction and are not exposed on any build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-acqi-v3y2-e6jg-refj",
+        "aliases": [
+          "CVE-2026-130822"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/valkey-9.1@9.1.4-0?distro=dhi-13"
         },
@@ -106,7 +119,8 @@
           "@id": "pkg:deb/dhi/valkey-9.1@9.1.4-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "Valkey's advisory GHSA-3885-pq5f-788j, https://github.com/valkey-io/valkey/security/advisories/GHSA-3885-pq5f-788j, reports a use-after-free in client eviction: when maxmemory-clients is not 0, an authenticated user who writes to a key that other clients are blocked on can make evictClients() free the client whose command is still executing, which reliably crashes the server. It lists 9.1.x before 9.1.4 as affected and notes that servers with the default maxmemory-clients 0 are not affected. The fix is upstream pull request https://github.com/valkey-io/valkey/pull/5435, which marks the client inside processCommandAndResetClient() with a processing_command flag and makes evictClients() skip a flagged client that is not the current client. On the 9.1 branch it is commit https://github.com/valkey-io/valkey/commit/37890c91b64065bbb50c053886f941c01e635c79. The fix is in the 9.1.4 release tag (commit 8efb5bb3dd3b69f707777352a105bbea911affd3) and not in 9.1.3. The DHI valkey-9.1 packages for Debian 13 are built from the upstream valkey release tag of the same version; the DHI packaging applies no patches to the valkey source. The server code ships in valkey-9.1-server as /usr/bin/valkey-server; valkey-9.1-sentinel provides valkey-sentinel as a symbolic link to it, and valkey-9.1-tools ships the separate valkey-cli and valkey-benchmark programs, in which neither the evictClients name nor its \"Evicting client\" log message appears. We checked valkey-server in every published valkey-9.1-server package on amd64 and arm64 (checksums verified against the package index): 9.1.4-0 and 9.1.4-1 report Valkey 9.1.4 and contain the assertion text \"!c->flag.processing_command\" that the fix adds, while 9.1.1-0, 9.1.2-0 and 9.1.3-0 report 9.1.1, 9.1.2 and 9.1.3 and do not contain it; the evictClients function name, our control, is present in every build. 9.1.4-0 is the first published build that carries the fix. Deployments that keep the default maxmemory-clients 0 do not enable client eviction and are not exposed on any build."
     }
   ]
 }
