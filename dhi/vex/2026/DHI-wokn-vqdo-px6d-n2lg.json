@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T02:43:13Z",
-  "last_updated": "2026-11-25T01:11:49Z",
-  "version": 11,
+  "last_updated": "2026-11-25T04:55:23Z",
+  "version": 12,
   "statements": [
     {
       "vulnerability": {
@@ -69,9 +69,6 @@
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
         },
         {
@@ -81,7 +78,24 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.12-r0 or later.",
+      "status_notes": "CVE-2026-116325 (PostgreSQL reindexdb index name quoting allows SQL injection): a crafted index name embedded in the parallel catalog query that reindexdb builds for --jobs with --index lets an object creator run arbitrary SQL as the database user running reindexdb. PostgreSQL states that versions before 17 are unaffected. It is fixed upstream in PostgreSQL 17.12 for major version 17. The PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-116325/, lists 17.12 as the fixed release for 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix on the REL_17_STABLE branch is commit https://github.com/postgres/postgres/commit/2680b0781ac853736be8c93f85c6f581ef5d805f, which carries the trailer \"Security: CVE-2026-116325\", is contained in the REL_17_12 tag and not in REL_17_11, and changes src/bin/scripts/reindexdb.c so that each index name given with --index is resolved to a quoted identifier and then added to the parallel catalog query as a properly escaped string literal, instead of being placed between single quotes without escaping; it also adds a comment in src/bin/scripts/common.c and a regression test. Alpine's postgresql17 17.12-r0 on the 3.23-stable branch upgrades to the upstream 17.12 release and lists CVE-2026-116325 under 17.12-r0 in its secfixes: https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD. None of the Alpine patches applied in that APKBUILD change the files the fix touches. The DHI postgresql17 17.12-r0 packages for Alpine 3.23 are built from that APKBUILD and the upstream PostgreSQL 17.12 source tarball. The DHI Alpine 3.23 package repository (x86_64 and aarch64) publishes packages built from source postgresql17 at 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0; we downloaded the packages named below for every one of those builds on both architectures, each checked against its index checksum. The reindexdb program is usr/libexec/postgresql17/reindexdb, which the postgresql17-client subpackage ships in every published build on both architectures; it reports the same release as the server in every build. In the 17.12-r0 build the postgres server binary, usr/libexec/postgresql17/postgres, reports PostgreSQL 17.12 on both x86_64 and aarch64, and in each earlier build (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0) it reports that older 17.x release on both architectures. The reindexdb program in 17.12-r0 builds the catalog query without the quote characters around the index list (the query text ends in \"]::pg_catalog.regclass[])\"), while every earlier build still contains the \"ANY(ARRAY['\" and \"']::pg_catalog.regclass[])\" text the fix removes, on both architectures. The earlier builds are upstream releases before 17.12, so they are affected; 17.12-r0 and later carry the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wokn-vqdo-px6d-n2lg",
+        "aliases": [
+          "CVE-2026-116325"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-116325 (PostgreSQL reindexdb index name quoting allows SQL injection): a crafted index name embedded in the parallel catalog query that reindexdb builds for --jobs with --index lets an object creator run arbitrary SQL as the database user running reindexdb. PostgreSQL states that versions before 17 are unaffected. It is fixed upstream in PostgreSQL 17.12 for major version 17. The PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-116325/, lists 17.12 as the fixed release for 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix on the REL_17_STABLE branch is commit https://github.com/postgres/postgres/commit/2680b0781ac853736be8c93f85c6f581ef5d805f, which carries the trailer \"Security: CVE-2026-116325\", is contained in the REL_17_12 tag and not in REL_17_11, and changes src/bin/scripts/reindexdb.c so that each index name given with --index is resolved to a quoted identifier and then added to the parallel catalog query as a properly escaped string literal, instead of being placed between single quotes without escaping; it also adds a comment in src/bin/scripts/common.c and a regression test. Alpine's postgresql17 17.12-r0 on the 3.23-stable branch upgrades to the upstream 17.12 release and lists CVE-2026-116325 under 17.12-r0 in its secfixes: https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD. None of the Alpine patches applied in that APKBUILD change the files the fix touches. The DHI postgresql17 17.12-r0 packages for Alpine 3.23 are built from that APKBUILD and the upstream PostgreSQL 17.12 source tarball. The DHI Alpine 3.23 package repository (x86_64 and aarch64) publishes packages built from source postgresql17 at 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0; we downloaded the packages named below for every one of those builds on both architectures, each checked against its index checksum. The reindexdb program is usr/libexec/postgresql17/reindexdb, which the postgresql17-client subpackage ships in every published build on both architectures; it reports the same release as the server in every build. In the 17.12-r0 build the postgres server binary, usr/libexec/postgresql17/postgres, reports PostgreSQL 17.12 on both x86_64 and aarch64, and in each earlier build (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0) it reports that older 17.x release on both architectures. The reindexdb program in 17.12-r0 builds the catalog query without the quote characters around the index list (the query text ends in \"]::pg_catalog.regclass[])\"), while every earlier build still contains the \"ANY(ARRAY['\" and \"']::pg_catalog.regclass[])\" text the fix removes, on both architectures. The earlier builds are upstream releases before 17.12, so they are affected; 17.12-r0 and later carry the fix."
     },
     {
       "vulnerability": {
@@ -96,12 +110,26 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.12-r0 or later.",
+      "status_notes": "CVE-2026-116325 (PostgreSQL reindexdb index name quoting allows SQL injection): a crafted index name embedded in the parallel catalog query that reindexdb builds for --jobs with --index lets an object creator run arbitrary SQL as the database user running reindexdb. PostgreSQL states that versions before 17 are unaffected. It is fixed upstream in PostgreSQL 17.12 for major version 17. The PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-116325/, lists 17.12 as the fixed release for 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix on the REL_17_STABLE branch is commit https://github.com/postgres/postgres/commit/2680b0781ac853736be8c93f85c6f581ef5d805f, which carries the trailer \"Security: CVE-2026-116325\", is contained in the REL_17_12 tag and not in REL_17_11, and changes src/bin/scripts/reindexdb.c so that each index name given with --index is resolved to a quoted identifier and then added to the parallel catalog query as a properly escaped string literal, instead of being placed between single quotes without escaping; it also adds a comment in src/bin/scripts/common.c and a regression test. Alpine's postgresql17 17.12-r0 on the 3.24-stable branch upgrades to the upstream 17.12 release and lists CVE-2026-116325 under 17.12-r0 in its secfixes: https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD. None of the Alpine patches applied in that APKBUILD change the files the fix touches. The DHI postgresql17 17.12-r0 packages for Alpine 3.24 are built from that APKBUILD and the upstream PostgreSQL 17.12 source tarball. The DHI Alpine 3.24 package repository (x86_64 and aarch64) publishes packages built from source postgresql17 at 17.10-r0, 17.11-r0 and 17.12-r0; we downloaded the packages named below for every one of those builds on both architectures, each checked against its index checksum. The reindexdb program is usr/libexec/postgresql17/reindexdb, which the postgresql17-client subpackage ships in every published build on both architectures; it reports the same release as the server in every build. In the 17.12-r0 build the postgres server binary, usr/libexec/postgresql17/postgres, reports PostgreSQL 17.12 on both x86_64 and aarch64, and in each earlier build (17.10-r0 and 17.11-r0) it reports that older 17.x release on both architectures. The reindexdb program in 17.12-r0 builds the catalog query without the quote characters around the index list (the query text ends in \"]::pg_catalog.regclass[])\"), while every earlier build still contains the \"ANY(ARRAY['\" and \"']::pg_catalog.regclass[])\" text the fix removes, on both architectures. The earlier builds are upstream releases before 17.12, so they are affected; 17.12-r0 and later carry the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wokn-vqdo-px6d-n2lg",
+        "aliases": [
+          "CVE-2026-116325"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-116325 (PostgreSQL reindexdb index name quoting allows SQL injection): a crafted index name embedded in the parallel catalog query that reindexdb builds for --jobs with --index lets an object creator run arbitrary SQL as the database user running reindexdb. PostgreSQL states that versions before 17 are unaffected. It is fixed upstream in PostgreSQL 17.12 for major version 17. The PostgreSQL security page, https://www.postgresql.org/support/security/CVE-2026-116325/, lists 17.12 as the fixed release for 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix on the REL_17_STABLE branch is commit https://github.com/postgres/postgres/commit/2680b0781ac853736be8c93f85c6f581ef5d805f, which carries the trailer \"Security: CVE-2026-116325\", is contained in the REL_17_12 tag and not in REL_17_11, and changes src/bin/scripts/reindexdb.c so that each index name given with --index is resolved to a quoted identifier and then added to the parallel catalog query as a properly escaped string literal, instead of being placed between single quotes without escaping; it also adds a comment in src/bin/scripts/common.c and a regression test. Alpine's postgresql17 17.12-r0 on the 3.24-stable branch upgrades to the upstream 17.12 release and lists CVE-2026-116325 under 17.12-r0 in its secfixes: https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD. None of the Alpine patches applied in that APKBUILD change the files the fix touches. The DHI postgresql17 17.12-r0 packages for Alpine 3.24 are built from that APKBUILD and the upstream PostgreSQL 17.12 source tarball. The DHI Alpine 3.24 package repository (x86_64 and aarch64) publishes packages built from source postgresql17 at 17.10-r0, 17.11-r0 and 17.12-r0; we downloaded the packages named below for every one of those builds on both architectures, each checked against its index checksum. The reindexdb program is usr/libexec/postgresql17/reindexdb, which the postgresql17-client subpackage ships in every published build on both architectures; it reports the same release as the server in every build. In the 17.12-r0 build the postgres server binary, usr/libexec/postgresql17/postgres, reports PostgreSQL 17.12 on both x86_64 and aarch64, and in each earlier build (17.10-r0 and 17.11-r0) it reports that older 17.x release on both architectures. The reindexdb program in 17.12-r0 builds the catalog query without the quote characters around the index list (the query text ends in \"]::pg_catalog.regclass[])\"), while every earlier build still contains the \"ANY(ARRAY['\" and \"']::pg_catalog.regclass[])\" text the fix removes, on both architectures. The earlier builds are upstream releases before 17.12, so they are affected; 17.12-r0 and later carry the fix."
     },
     {
       "vulnerability": {
