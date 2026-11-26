@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-18T23:13:35Z",
-  "last_updated": "2026-11-25T19:20:58Z",
-  "version": 32,
+  "last_updated": "2026-11-26T05:22:05Z",
+  "version": 35,
   "statements": [
     {
       "vulnerability": {
@@ -4309,6 +4309,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-dev@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-dev@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4434,6 +4437,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips-dev@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips-dev@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4559,6 +4565,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4684,6 +4693,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -15969,7 +15981,9 @@
           "@id": "pkg:apk/dhi/metrics-server-dev@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39828 (GO-2026-5014, GHSA-45gg-vh54-h5m9): a golang.org/x/crypto/ssh server silently discarded the Permissions an authentication callback returned together with a PartialSuccessError, so restrictions set at that step, such as certificate restrictions, were not carried into the session. It is fixed in golang.org/x/crypto 0.52.0 by a change to ssh/server.go, and the Go vulnerability database lists the vulnerable symbols as NewServerConn and connection.serverAuthenticate in golang.org/x/crypto/ssh: https://pkg.go.dev/vuln/GO-2026-5014, https://go.dev/issue/79562, https://go.dev/cl/781621. We read every published metrics-server-dev package in the DHI Alpine 3.23 repository: 29 builds, 0.8.1-r0 to 0.9.1-r2, each for x86_64 and aarch64, each verified against its index checksum. Each package installs a single file, /usr/bin/metrics-server, a statically linked Go program built with CGO_ENABLED=0 and GOOS=linux; its Go build information, its Go function table and a raw byte search were read in every build. Every build lists the golang.org/x/crypto module (v0.45.0 in 0.8.1-r0 to 0.8.1-r3, v0.49.0 in 0.8.1-r4 and 0.8.1-r5, v0.50.0 in 0.8.1-r6 to 0.8.1-r8, v0.52.0 to v0.57.0 in 0.8.1-r9 to 0.9.0-r9, and v0.58.0 from 0.9.0-r10), but the only package of that module with functions in the program is golang.org/x/crypto/cryptobyte; the copies under vendor/golang.org/x/crypto belong to the Go standard library's TLS stack, not to the module. No golang.org/x/crypto/ssh function is in the function table of any build, and no build contains the byte string golang.org/x/crypto/ssh, which would also appear in the name of any inlined function from that package, while runtime.main is in every function table. As a positive control, the same function-table reader and byte search, run on a test program we built with CGO_ENABLED=0 and -ldflags=-w for linux/amd64 and linux/arm64 against golang.org/x/crypto v0.50.0, which calls ssh.NewServerConn and NewClientConn with CertChecker callbacks and rejects incoming channels, find golang.org/x/crypto/ssh.NewServerConn and (*connection).serverAuthenticate in both control binaries; serverAuthenticate is the function the fix changes. The SSH package is not compiled into metrics-server, so the vulnerable code is not present in any published build."
     },
     {
       "vulnerability": {
@@ -16067,7 +16081,9 @@
           "@id": "pkg:apk/dhi/metrics-server-fips-dev@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39828 (GO-2026-5014, GHSA-45gg-vh54-h5m9): a golang.org/x/crypto/ssh server silently discarded the Permissions an authentication callback returned together with a PartialSuccessError, so restrictions set at that step, such as certificate restrictions, were not carried into the session. It is fixed in golang.org/x/crypto 0.52.0 by a change to ssh/server.go, and the Go vulnerability database lists the vulnerable symbols as NewServerConn and connection.serverAuthenticate in golang.org/x/crypto/ssh: https://pkg.go.dev/vuln/GO-2026-5014, https://go.dev/issue/79562, https://go.dev/cl/781621. We read every published metrics-server-fips-dev package in the DHI Alpine 3.23 security repository, where the FIPS packages are published: 29 builds, 0.8.1-r0 to 0.9.1-r2, each for x86_64 and aarch64, each verified against its index checksum. Each package installs a single file, /usr/bin/metrics-server, a statically linked Go program built with CGO_ENABLED=0 and GOOS=linux; its Go build information, its Go function table and a raw byte search were read in every build. Every build lists the golang.org/x/crypto module (v0.45.0 in 0.8.1-r0 to 0.8.1-r3, v0.49.0 in 0.8.1-r4 and 0.8.1-r5, v0.50.0 in 0.8.1-r6 to 0.8.1-r8, v0.52.0 to v0.57.0 in 0.8.1-r9 to 0.9.0-r9, and v0.58.0 from 0.9.0-r10), but the only package of that module with functions in the program is golang.org/x/crypto/cryptobyte; the copies under vendor/golang.org/x/crypto belong to the Go standard library's TLS stack, not to the module. No golang.org/x/crypto/ssh function is in the function table of any build, and no build contains the byte string golang.org/x/crypto/ssh, which would also appear in the name of any inlined function from that package, while runtime.main is in every function table. As a positive control, the same function-table reader and byte search, run on a test program we built with CGO_ENABLED=0 and -ldflags=-w for linux/amd64 and linux/arm64 against golang.org/x/crypto v0.50.0, which calls ssh.NewServerConn and NewClientConn with CertChecker callbacks and rejects incoming channels, find golang.org/x/crypto/ssh.NewServerConn and (*connection).serverAuthenticate in both control binaries; serverAuthenticate is the function the fix changes. The SSH package is not compiled into metrics-server, so the vulnerable code is not present in any published build."
     },
     {
       "vulnerability": {
@@ -16165,7 +16181,9 @@
           "@id": "pkg:apk/dhi/metrics-server-fips@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39828 (GO-2026-5014, GHSA-45gg-vh54-h5m9): a golang.org/x/crypto/ssh server silently discarded the Permissions an authentication callback returned together with a PartialSuccessError, so restrictions set at that step, such as certificate restrictions, were not carried into the session. It is fixed in golang.org/x/crypto 0.52.0 by a change to ssh/server.go, and the Go vulnerability database lists the vulnerable symbols as NewServerConn and connection.serverAuthenticate in golang.org/x/crypto/ssh: https://pkg.go.dev/vuln/GO-2026-5014, https://go.dev/issue/79562, https://go.dev/cl/781621. We read every published metrics-server-fips package in the DHI Alpine 3.23 security repository, where the FIPS packages are published: 29 builds, 0.8.1-r0 to 0.9.1-r2, each for x86_64 and aarch64, each verified against its index checksum. Each package installs a single file, /usr/bin/metrics-server, a statically linked Go program built with CGO_ENABLED=0 and GOOS=linux; its Go build information, its Go function table and a raw byte search were read in every build. Every build lists the golang.org/x/crypto module (v0.45.0 in 0.8.1-r0 to 0.8.1-r3, v0.49.0 in 0.8.1-r4 and 0.8.1-r5, v0.50.0 in 0.8.1-r6 to 0.8.1-r8, v0.52.0 to v0.57.0 in 0.8.1-r9 to 0.9.0-r9, and v0.58.0 from 0.9.0-r10), but the only package of that module with functions in the program is golang.org/x/crypto/cryptobyte; the copies under vendor/golang.org/x/crypto belong to the Go standard library's TLS stack, not to the module. No golang.org/x/crypto/ssh function is in the function table of any build, and no build contains the byte string golang.org/x/crypto/ssh, which would also appear in the name of any inlined function from that package, while runtime.main is in every function table. As a positive control, the same function-table reader and byte search, run on a test program we built with CGO_ENABLED=0 and -ldflags=-w for linux/amd64 and linux/arm64 against golang.org/x/crypto v0.50.0, which calls ssh.NewServerConn and NewClientConn with CertChecker callbacks and rejects incoming channels, find golang.org/x/crypto/ssh.NewServerConn and (*connection).serverAuthenticate in both control binaries; serverAuthenticate is the function the fix changes. The SSH package is not compiled into metrics-server, so the vulnerable code is not present in any published build."
     },
     {
       "vulnerability": {
@@ -16263,7 +16281,9 @@
           "@id": "pkg:apk/dhi/metrics-server@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39828 (GO-2026-5014, GHSA-45gg-vh54-h5m9): a golang.org/x/crypto/ssh server silently discarded the Permissions an authentication callback returned together with a PartialSuccessError, so restrictions set at that step, such as certificate restrictions, were not carried into the session. It is fixed in golang.org/x/crypto 0.52.0 by a change to ssh/server.go, and the Go vulnerability database lists the vulnerable symbols as NewServerConn and connection.serverAuthenticate in golang.org/x/crypto/ssh: https://pkg.go.dev/vuln/GO-2026-5014, https://go.dev/issue/79562, https://go.dev/cl/781621. We read every published metrics-server package in the DHI Alpine 3.23 repository: 29 builds, 0.8.1-r0 to 0.9.1-r2, each for x86_64 and aarch64, each verified against its index checksum. Each package installs a single file, /usr/bin/metrics-server, a statically linked Go program built with CGO_ENABLED=0 and GOOS=linux; its Go build information, its Go function table and a raw byte search were read in every build. Every build lists the golang.org/x/crypto module (v0.45.0 in 0.8.1-r0 to 0.8.1-r3, v0.49.0 in 0.8.1-r4 and 0.8.1-r5, v0.50.0 in 0.8.1-r6 to 0.8.1-r8, v0.52.0 to v0.57.0 in 0.8.1-r9 to 0.9.0-r9, and v0.58.0 from 0.9.0-r10), but the only package of that module with functions in the program is golang.org/x/crypto/cryptobyte; the copies under vendor/golang.org/x/crypto belong to the Go standard library's TLS stack, not to the module. No golang.org/x/crypto/ssh function is in the function table of any build, and no build contains the byte string golang.org/x/crypto/ssh, which would also appear in the name of any inlined function from that package, while runtime.main is in every function table. As a positive control, the same function-table reader and byte search, run on a test program we built with CGO_ENABLED=0 and -ldflags=-w for linux/amd64 and linux/arm64 against golang.org/x/crypto v0.50.0, which calls ssh.NewServerConn and NewClientConn with CertChecker callbacks and rejects incoming channels, find golang.org/x/crypto/ssh.NewServerConn and (*connection).serverAuthenticate in both control binaries; serverAuthenticate is the function the fix changes. The SSH package is not compiled into metrics-server, so the vulnerable code is not present in any published build."
     },
     {
       "vulnerability": {
@@ -27862,6 +27882,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-dev@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -27963,6 +27986,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -28064,6 +28090,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-fips@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -28165,6 +28194,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -37665,7 +37697,9 @@
           "@id": "pkg:deb/dhi/metrics-server-dev@0.9.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39828 (GO-2026-5014, GHSA-45gg-vh54-h5m9): a golang.org/x/crypto/ssh server silently discarded the Permissions an authentication callback returned together with a PartialSuccessError, so restrictions set at that step, such as certificate restrictions, were not carried into the session. It is fixed in golang.org/x/crypto 0.52.0 by a change to ssh/server.go, and the Go vulnerability database lists the vulnerable symbols as NewServerConn and connection.serverAuthenticate in golang.org/x/crypto/ssh: https://pkg.go.dev/vuln/GO-2026-5014, https://go.dev/issue/79562, https://go.dev/cl/781621. We read every published metrics-server-dev package in the DHI Debian 13 repository: 23 builds, 0.8.1-6 to 0.9.1-2, each for amd64 and arm64, each verified against its index checksum. Each package installs a single file, /usr/bin/metrics-server, a statically linked Go program built with CGO_ENABLED=0 and GOOS=linux; its Go build information, its Go function table and a raw byte search were read in every build. Every build lists the golang.org/x/crypto module (v0.50.0 in 0.8.1-6 to 0.8.1-8, v0.52.0 to v0.57.0 in 0.8.1-9 to 0.9.0-9, and v0.58.0 from 0.9.0-10), but the only package of that module with functions in the program is golang.org/x/crypto/cryptobyte; the copies under vendor/golang.org/x/crypto belong to the Go standard library's TLS stack, not to the module. No golang.org/x/crypto/ssh function is in the function table of any build, and no build contains the byte string golang.org/x/crypto/ssh, which would also appear in the name of any inlined function from that package, while runtime.main is in every function table. As a positive control, the same function-table reader and byte search, run on a test program we built with CGO_ENABLED=0 and -ldflags=-w for linux/amd64 and linux/arm64 against golang.org/x/crypto v0.50.0, which calls ssh.NewServerConn and NewClientConn with CertChecker callbacks and rejects incoming channels, find golang.org/x/crypto/ssh.NewServerConn and (*connection).serverAuthenticate in both control binaries; serverAuthenticate is the function the fix changes. The SSH package is not compiled into metrics-server, so the vulnerable code is not present in any published build."
     },
     {
       "vulnerability": {
@@ -37745,7 +37779,9 @@
           "@id": "pkg:deb/dhi/metrics-server-fips-dev@0.9.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39828 (GO-2026-5014, GHSA-45gg-vh54-h5m9): a golang.org/x/crypto/ssh server silently discarded the Permissions an authentication callback returned together with a PartialSuccessError, so restrictions set at that step, such as certificate restrictions, were not carried into the session. It is fixed in golang.org/x/crypto 0.52.0 by a change to ssh/server.go, and the Go vulnerability database lists the vulnerable symbols as NewServerConn and connection.serverAuthenticate in golang.org/x/crypto/ssh: https://pkg.go.dev/vuln/GO-2026-5014, https://go.dev/issue/79562, https://go.dev/cl/781621. We read every published metrics-server-fips-dev package in the DHI Debian 13 security repository, where the FIPS packages are published: 23 builds, 0.8.1-6 to 0.9.1-2, each for amd64 and arm64, each verified against its index checksum. Each package installs a single file, /usr/bin/metrics-server, a statically linked Go program built with CGO_ENABLED=0 and GOOS=linux; its Go build information, its Go function table and a raw byte search were read in every build. Every build lists the golang.org/x/crypto module (v0.50.0 in 0.8.1-6 to 0.8.1-8, v0.52.0 to v0.57.0 in 0.8.1-9 to 0.9.0-9, and v0.58.0 from 0.9.0-10), but the only package of that module with functions in the program is golang.org/x/crypto/cryptobyte; the copies under vendor/golang.org/x/crypto belong to the Go standard library's TLS stack, not to the module. No golang.org/x/crypto/ssh function is in the function table of any build, and no build contains the byte string golang.org/x/crypto/ssh, which would also appear in the name of any inlined function from that package, while runtime.main is in every function table. As a positive control, the same function-table reader and byte search, run on a test program we built with CGO_ENABLED=0 and -ldflags=-w for linux/amd64 and linux/arm64 against golang.org/x/crypto v0.50.0, which calls ssh.NewServerConn and NewClientConn with CertChecker callbacks and rejects incoming channels, find golang.org/x/crypto/ssh.NewServerConn and (*connection).serverAuthenticate in both control binaries; serverAuthenticate is the function the fix changes. The SSH package is not compiled into metrics-server, so the vulnerable code is not present in any published build."
     },
     {
       "vulnerability": {
@@ -37825,7 +37861,9 @@
           "@id": "pkg:deb/dhi/metrics-server-fips@0.9.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39828 (GO-2026-5014, GHSA-45gg-vh54-h5m9): a golang.org/x/crypto/ssh server silently discarded the Permissions an authentication callback returned together with a PartialSuccessError, so restrictions set at that step, such as certificate restrictions, were not carried into the session. It is fixed in golang.org/x/crypto 0.52.0 by a change to ssh/server.go, and the Go vulnerability database lists the vulnerable symbols as NewServerConn and connection.serverAuthenticate in golang.org/x/crypto/ssh: https://pkg.go.dev/vuln/GO-2026-5014, https://go.dev/issue/79562, https://go.dev/cl/781621. We read every published metrics-server-fips package in the DHI Debian 13 security repository, where the FIPS packages are published: 23 builds, 0.8.1-6 to 0.9.1-2, each for amd64 and arm64, each verified against its index checksum. Each package installs a single file, /usr/bin/metrics-server, a statically linked Go program built with CGO_ENABLED=0 and GOOS=linux; its Go build information, its Go function table and a raw byte search were read in every build. Every build lists the golang.org/x/crypto module (v0.50.0 in 0.8.1-6 to 0.8.1-8, v0.52.0 to v0.57.0 in 0.8.1-9 to 0.9.0-9, and v0.58.0 from 0.9.0-10), but the only package of that module with functions in the program is golang.org/x/crypto/cryptobyte; the copies under vendor/golang.org/x/crypto belong to the Go standard library's TLS stack, not to the module. No golang.org/x/crypto/ssh function is in the function table of any build, and no build contains the byte string golang.org/x/crypto/ssh, which would also appear in the name of any inlined function from that package, while runtime.main is in every function table. As a positive control, the same function-table reader and byte search, run on a test program we built with CGO_ENABLED=0 and -ldflags=-w for linux/amd64 and linux/arm64 against golang.org/x/crypto v0.50.0, which calls ssh.NewServerConn and NewClientConn with CertChecker callbacks and rejects incoming channels, find golang.org/x/crypto/ssh.NewServerConn and (*connection).serverAuthenticate in both control binaries; serverAuthenticate is the function the fix changes. The SSH package is not compiled into metrics-server, so the vulnerable code is not present in any published build."
     },
     {
       "vulnerability": {
@@ -37905,7 +37943,9 @@
           "@id": "pkg:deb/dhi/metrics-server@0.9.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39828 (GO-2026-5014, GHSA-45gg-vh54-h5m9): a golang.org/x/crypto/ssh server silently discarded the Permissions an authentication callback returned together with a PartialSuccessError, so restrictions set at that step, such as certificate restrictions, were not carried into the session. It is fixed in golang.org/x/crypto 0.52.0 by a change to ssh/server.go, and the Go vulnerability database lists the vulnerable symbols as NewServerConn and connection.serverAuthenticate in golang.org/x/crypto/ssh: https://pkg.go.dev/vuln/GO-2026-5014, https://go.dev/issue/79562, https://go.dev/cl/781621. We read every published metrics-server package in the DHI Debian 13 repository: 23 builds, 0.8.1-6 to 0.9.1-2, each for amd64 and arm64, each verified against its index checksum. Each package installs a single file, /usr/bin/metrics-server, a statically linked Go program built with CGO_ENABLED=0 and GOOS=linux; its Go build information, its Go function table and a raw byte search were read in every build. Every build lists the golang.org/x/crypto module (v0.50.0 in 0.8.1-6 to 0.8.1-8, v0.52.0 to v0.57.0 in 0.8.1-9 to 0.9.0-9, and v0.58.0 from 0.9.0-10), but the only package of that module with functions in the program is golang.org/x/crypto/cryptobyte; the copies under vendor/golang.org/x/crypto belong to the Go standard library's TLS stack, not to the module. No golang.org/x/crypto/ssh function is in the function table of any build, and no build contains the byte string golang.org/x/crypto/ssh, which would also appear in the name of any inlined function from that package, while runtime.main is in every function table. As a positive control, the same function-table reader and byte search, run on a test program we built with CGO_ENABLED=0 and -ldflags=-w for linux/amd64 and linux/arm64 against golang.org/x/crypto v0.50.0, which calls ssh.NewServerConn and NewClientConn with CertChecker callbacks and rejects incoming channels, find golang.org/x/crypto/ssh.NewServerConn and (*connection).serverAuthenticate in both control binaries; serverAuthenticate is the function the fix changes. The SSH package is not compiled into metrics-server, so the vulnerable code is not present in any published build."
     },
     {
       "vulnerability": {
