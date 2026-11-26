@@ -1,7 +1,7 @@
 {
   "schema_version": "1.8.0",
   "id": "DHI-l47t-iydt-unta-oneh",
-  "modified": "2026-11-23T23:56:20Z",
+  "modified": "2026-11-26T10:24:11Z",
   "published": "2026-11-11T20:50:42Z",
   "upstream": [
     "CVE-2026-93403"
@@ -9,6 +9,31 @@
   "summary": "## Summary",
   "details": "## Summary\r\n\r\nrsyslog versions before 8.2606.0 contain a stack-based buffer overflow in the\r\n`mmpstrucdata` output module. An unauthenticated network sender who can deliver\r\na crafted RFC 5424 message to an affected rsyslog instance can cause `rsyslogd`\r\nto terminate, resulting in denial of service.\r\n\r\n## Impact\r\n\r\nThe vulnerable parser copied structured-data parameter values into a fixed\r\n32 KiB stack buffer without sufficient bounds checking. A parameter value\r\nlarger than that buffer could corrupt the stack and terminate the daemon.\r\n\r\nThe issue affects configurations that load and use `mmpstrucdata` and permit\r\nmessages large enough to carry the malformed structured-data value. The\r\ndefault maximum message size is below the vulnerable threshold, but affected\r\nconfigurations are common where rsyslog receives large RFC 5424 messages.\r\n\r\nNo code execution has been demonstrated or claimed.\r\n\r\n## Patches\r\n\r\nrsyslog 8.2606.0 fixes the issue. The fix replaces the fixed-size stack buffer\r\nwith storage allocated from the actual structured-data length and adds a\r\nstructured-data size limit. It also includes regression coverage for large\r\nstructured-data messages and configured size limits.\r\n\r\nUsers should upgrade to rsyslog 8.2606.0 or later. Distribution packages may\r\nbackport the fix; consult the distribution's security advisory or package\r\nchangelog where applicable.\r\n\r\n## Workarounds\r\n\r\nIf upgrading is not immediately possible, do not load or use the\r\n`mmpstrucdata` module. Keeping the global maximum message size at its default\r\nvalue also prevents messages large enough to reach the vulnerable buffer, but\r\nupgrading is the recommended remediation.\r\n\r\n## Credits\r\n\r\nReported by Georgii Shutiaev (@gart0s).\r\n\r\n## References\r\n\r\n- https://github.com/rsyslog/rsyslog/pull/6991",
   "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "rsyslog",
+        "purl": "pkg:apk/dhi/rsyslog"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.2512.0-r0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "8.2512.0-r0",
+        "8.2512.0-r1",
+        "8.2512.0-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
     {
       "package": {
         "ecosystem": "Docker Hardened Images:Alpine:3.24",

@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-dhfs-6vyx-o5fg-6q6y",
+  "modified": "2026-11-26T10:24:11Z",
+  "published": "2026-11-26T10:03:23Z",
+  "upstream": [
+    "CVE-2026-129833"
+  ],
+  "summary": "## Summary",
+  "details": "## Summary\n\nA malformed embedded IPv4-in-IPv6 token in a log message can cause a stack buffer overflow in rsyslog `mmanon`. An assert-enabled build aborts when the token reaches the affected path; an `NDEBUG` build instrumented with AddressSanitizer reports an out-of-bounds stack write. The demonstrated security impact is loss of logging availability. Code execution and confidentiality or integrity impacts have not been established.\n\n## Affected configurations\n\nThe issue requires attacker-controlled message text to reach a configured `mmanon` action with embedded IPv4 anonymization enabled. This anonymization mode is enabled by default when `mmanon` is used. A network attacker can reach the vulnerable path when an exposed, unauthenticated input such as `imtcp`, `imudp`, or `imrelp` feeds that action. Input authentication, access controls, and ruleset configuration determine reachability in a given deployment. Loading the module without using the affected action does not itself process log records through this path.\n\n## Technical details\n\n`syntax_embedded()` accepted hexadecimal groups longer than the four digits allowed for an IPv6 group. An overlong token such as `fffff:fffff:fffff:fffff:fffff:fffff:255.255.255.255` was accepted and passed to `anonEmbedded()`. That function used `assert(iplen < sizeof(address))` as the only guard before copying the token into `char address[46]` and appending a NUL. The 51-byte token triggered SIGABRT with assertions enabled. With `NDEBUG`, the assertion disappeared and AddressSanitizer reported a stack-buffer-overflow write in `getip()`.\n\nThe plain IPv4 and IPv6 anonymizers use separate parser length bounds; this advisory covers the confirmed embedded IPv4-in-IPv6 path.\n\n## Affected versions\n\nThe vulnerable embedded path was introduced by commit `ed1bfe36db6bf7994fd9ca92e7e8efa76f111794` and first appeared in rsyslog v8.31.0. Upstream releases from v8.31.0 onward are affected until the fix. The path remained present in v8.2610.0 and public `main` at `8a86b533612c32065a864ff52d951afddb423e12` when rechecked on November 15, 2026. Distribution backports and package configurations should be checked separately.\n\n## Workaround\n\nUntil the fix is available, prevent untrusted log text from reaching the affected `mmanon` action. Where operationally acceptable, disable the embedded anonymizer with `embeddedipv4.enable=\"off\"` in that action or restrict the inputs and senders that can reach it. Disabling this option changes anonymization behavior and should be evaluated against local logging requirements.\n\n## Resolution\n\nThe fix rejects embedded IPv6 hexadecimal groups longer than four digits and checks the complete token length at runtime before copying into the fixed buffer. Malformed tokens remain unchanged. The fixed-version designation for the coordinated disclosure on November 17, 2026 at 16:00 UTC (17:00 CET) is `2026-11-17 daily stable`. The exact released tag and package availability will be verified separately.\n\n## Severity\n\nHigh, CVSS 3.1 7.5 (`CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H`) for the exposed, unauthenticated network configuration described above. CWE-121: Stack-based Buffer Overflow.\n\n## CVE status\n\nCVE-2026-129833\n\n## Credits\n\nReported by Manyo9. The reporter confirmed the availability scope and network-exposed vector on November 13, 2026.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.23",
+        "name": "rsyslog",
+        "purl": "pkg:apk/dhi/rsyslog"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.2512.0-r0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "8.2512.0-r0",
+        "8.2512.0-r1",
+        "8.2512.0-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "rsyslog",
+        "purl": "pkg:apk/dhi/rsyslog"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.2604.0-r0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "8.2604.0-r0",
+        "8.2604.0-r1",
+        "8.2608.0-r1",
+        "8.2608.0-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-dhfs-6vyx-o5fg-6q6y"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/rsyslog/rsyslog/security/advisories/GHSA-f9hg-rj32-693x"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-129833"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-129833"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-129833"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-129833"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-129833"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/rsyslog/rsyslog/pull/8020"
+    }
+  ]
+}
