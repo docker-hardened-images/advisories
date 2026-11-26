@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T02:59:15Z",
-  "last_updated": "2026-11-25T21:59:08Z",
-  "version": 11,
+  "last_updated": "2026-11-26T03:41:15Z",
+  "version": 12,
   "statements": [
     {
       "vulnerability": {
@@ -93,9 +93,6 @@
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
         },
         {
@@ -105,7 +102,24 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.12-r0 or later.",
+      "status_notes": "CVE-2026-14661 (PostgreSQL dblink and subscriptions can append to arbitrary files via the sslkeylogfile connection option) is fixed upstream in PostgreSQL 17.12: https://www.postgresql.org/support/security/CVE-2026-14661/ lists 17.12 as the fixed release for major version 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, include it. The advisory says versions before PostgreSQL 18 are affected if libpq version 18 or later is installed and in use by the server. The fix is commit https://github.com/postgres/postgres/commit/ea9b427faa3aedff241548b9164ccd496857021a, Validate all connection options before using libpqsrv_connect*, on the REL_17_STABLE branch, tagged Security: CVE-2026-14661 and in the REL_17_12 release tag, not in REL_17_11; it changes dblink, postgres_fdw, the logical replication walreceiver and the backend libpq helper code. Alpine's postgresql17 17.12-r0 on the 3.23-stable branch is the upgrade to upstream 17.12 and lists CVE-2026-14661 under its secfixes: https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD. We downloaded every package built from the postgresql17 source in the DHI Alpine 3.23 repository, on x86_64 and aarch64, each checked against its index checksum: builds 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0. In every build the postgres server binary reports the PostgreSQL release of its package version. The error message permission denied to set connection option \"%s\", which the fix adds, appears in dblink.so and postgres_fdw.so from postgresql17-contrib and in libpqwalreceiver.so from postgresql17 in 17.12-r0 on both architectures, and in none of the earlier builds, while dblink.so in every build carries the existing message could not establish connection. The libpq condition holds on Alpine 3.23: dblink.so in postgresql17-contrib lists libpq.so.5 as a dependency in every build, and libpq is not built by postgresql17 but comes from the separate libpq package built from the postgresql18 source, published for this release as 18.1-r0 to 18.7-r0. The earlier builds (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0) are built from earlier upstream releases and lack the fix, so they are affected; 17.12-r0 is the first published build that carries it."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-mutx-6dqu-dzrn-cug2",
+        "aliases": [
+          "CVE-2026-14661"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-14661 (PostgreSQL dblink and subscriptions can append to arbitrary files via the sslkeylogfile connection option) is fixed upstream in PostgreSQL 17.12: https://www.postgresql.org/support/security/CVE-2026-14661/ lists 17.12 as the fixed release for major version 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, include it. The advisory says versions before PostgreSQL 18 are affected if libpq version 18 or later is installed and in use by the server. The fix is commit https://github.com/postgres/postgres/commit/ea9b427faa3aedff241548b9164ccd496857021a, Validate all connection options before using libpqsrv_connect*, on the REL_17_STABLE branch, tagged Security: CVE-2026-14661 and in the REL_17_12 release tag, not in REL_17_11; it changes dblink, postgres_fdw, the logical replication walreceiver and the backend libpq helper code. Alpine's postgresql17 17.12-r0 on the 3.23-stable branch is the upgrade to upstream 17.12 and lists CVE-2026-14661 under its secfixes: https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD. We downloaded every package built from the postgresql17 source in the DHI Alpine 3.23 repository, on x86_64 and aarch64, each checked against its index checksum: builds 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0. In every build the postgres server binary reports the PostgreSQL release of its package version. The error message permission denied to set connection option \"%s\", which the fix adds, appears in dblink.so and postgres_fdw.so from postgresql17-contrib and in libpqwalreceiver.so from postgresql17 in 17.12-r0 on both architectures, and in none of the earlier builds, while dblink.so in every build carries the existing message could not establish connection. The libpq condition holds on Alpine 3.23: dblink.so in postgresql17-contrib lists libpq.so.5 as a dependency in every build, and libpq is not built by postgresql17 but comes from the separate libpq package built from the postgresql18 source, published for this release as 18.1-r0 to 18.7-r0. The earlier builds (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0) are built from earlier upstream releases and lack the fix, so they are affected; 17.12-r0 is the first published build that carries it."
     },
     {
       "vulnerability": {
@@ -120,12 +134,26 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.12-r0 or later.",
+      "status_notes": "CVE-2026-14661 (PostgreSQL dblink and subscriptions can append to arbitrary files via the sslkeylogfile connection option) is fixed upstream in PostgreSQL 17.12: https://www.postgresql.org/support/security/CVE-2026-14661/ lists 17.12 as the fixed release for major version 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, include it. The advisory says versions before PostgreSQL 18 are affected if libpq version 18 or later is installed and in use by the server. The fix is commit https://github.com/postgres/postgres/commit/ea9b427faa3aedff241548b9164ccd496857021a, Validate all connection options before using libpqsrv_connect*, on the REL_17_STABLE branch, tagged Security: CVE-2026-14661 and in the REL_17_12 release tag, not in REL_17_11; it changes dblink, postgres_fdw, the logical replication walreceiver and the backend libpq helper code. Alpine's postgresql17 17.12-r0 on the 3.24-stable branch is the upgrade to upstream 17.12 and lists CVE-2026-14661 under its secfixes: https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD. We downloaded every package built from the postgresql17 source in the DHI Alpine 3.24 repository, on x86_64 and aarch64, each checked against its index checksum: builds 17.10-r0, 17.11-r0 and 17.12-r0. In every build the postgres server binary reports the PostgreSQL release of its package version. The error message permission denied to set connection option \"%s\", which the fix adds, appears in dblink.so and postgres_fdw.so from postgresql17-contrib and in libpqwalreceiver.so from postgresql17 in 17.12-r0 on both architectures, and in none of the earlier builds, while dblink.so in every build carries the existing message could not establish connection. The libpq condition holds on Alpine 3.24: dblink.so in postgresql17-contrib lists libpq.so.5 as a dependency in every build, and libpq is not built by postgresql17 but comes from the separate libpq package built from the postgresql18 source, published for this release as 18.4-r0 to 18.7-r0. The earlier builds (17.10-r0 and 17.11-r0) are built from earlier upstream releases and lack the fix, so they are affected; 17.12-r0 is the first published build that carries it."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-mutx-6dqu-dzrn-cug2",
+        "aliases": [
+          "CVE-2026-14661"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14661 (PostgreSQL dblink and subscriptions can append to arbitrary files via the sslkeylogfile connection option) is fixed upstream in PostgreSQL 17.12: https://www.postgresql.org/support/security/CVE-2026-14661/ lists 17.12 as the fixed release for major version 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, include it. The advisory says versions before PostgreSQL 18 are affected if libpq version 18 or later is installed and in use by the server. The fix is commit https://github.com/postgres/postgres/commit/ea9b427faa3aedff241548b9164ccd496857021a, Validate all connection options before using libpqsrv_connect*, on the REL_17_STABLE branch, tagged Security: CVE-2026-14661 and in the REL_17_12 release tag, not in REL_17_11; it changes dblink, postgres_fdw, the logical replication walreceiver and the backend libpq helper code. Alpine's postgresql17 17.12-r0 on the 3.24-stable branch is the upgrade to upstream 17.12 and lists CVE-2026-14661 under its secfixes: https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD. We downloaded every package built from the postgresql17 source in the DHI Alpine 3.24 repository, on x86_64 and aarch64, each checked against its index checksum: builds 17.10-r0, 17.11-r0 and 17.12-r0. In every build the postgres server binary reports the PostgreSQL release of its package version. The error message permission denied to set connection option \"%s\", which the fix adds, appears in dblink.so and postgres_fdw.so from postgresql17-contrib and in libpqwalreceiver.so from postgresql17 in 17.12-r0 on both architectures, and in none of the earlier builds, while dblink.so in every build carries the existing message could not establish connection. The libpq condition holds on Alpine 3.24: dblink.so in postgresql17-contrib lists libpq.so.5 as a dependency in every build, and libpq is not built by postgresql17 but comes from the separate libpq package built from the postgresql18 source, published for this release as 18.4-r0 to 18.7-r0. The earlier builds (17.10-r0 and 17.11-r0) are built from earlier upstream releases and lack the fix, so they are affected; 17.12-r0 is the first published build that carries it."
     },
     {
       "vulnerability": {
