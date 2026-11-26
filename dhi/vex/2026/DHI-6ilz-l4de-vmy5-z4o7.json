@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-25T23:34:06Z",
-  "version": 22,
+  "last_updated": "2026-11-26T04:36:18Z",
+  "version": 24,
   "statements": [
     {
       "vulnerability": {
@@ -2091,6 +2091,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -2216,6 +2219,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -2910,7 +2916,9 @@
           "@id": "pkg:apk/dhi/external-dns-fips@0.24.0-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-27139 (GO-2026-4602): On Unix platforms, when a program lists a directory with File.ReadDir or File.Readdir in the Go standard library's os package, the returned FileInfo could refer to a file outside the os.Root in which the File was opened, exposing lstat metadata from outside the root but not allowing files outside it to be read or written. It is fixed in Go 1.25.8 and 1.26.1: https://pkg.go.dev/vuln/GO-2026-4602, https://go.dev/issue/77827, https://go.dev/cl/749480 and https://groups.google.com/g/golang-announce/c/EdhZqrQ98hk give the details, and the release-branch.go1.26 commit https://github.com/golang/go/commit/8cce3ab20c49a5c3c9fa8e97ad47335c3ccd2620 names this CVE and is in go1.26.1 but not go1.26.0. We downloaded every published package built from the external-dns-fips source for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: external-dns-fips (33 builds, 0.20.0-r0 to 0.24.0-r5) and external-dns-fips-dev (33 builds, 0.20.0-r0 to 0.24.0-r5), on x86_64 and aarch64; each package was checked against its index checksum. Each package holds one file, /usr/bin/external-dns, a statically linked Go program built with CGO_ENABLED=0. The Go release in each build, the same in every package and on both architectures, is: 0.20.0-r0 with Go 1.25.7; 0.20.0-r1 to 0.21.0-r0 with Go 1.26.1; 0.21.0-r1 to 0.21.0-r2 with Go 1.26.2; 0.21.0-r3 to 0.21.0-r5 with Go 1.26.3; 0.21.0-r6 to 0.21.0-r7 with Go 1.26.4; 0.21.0-r8 to 0.21.0-r11 with Go 1.26.5; 0.21.0-r12 with Go 1.26.6; 0.21.0-r13 to 0.22.0-r0 with Go 1.26.7; 0.22.0-r1 to 0.22.0-r3 with Go 1.26.8; 0.23.0-r1 to 0.23.0-r2 with Go 1.27.1; 0.23.0-r3 with Go 1.27.2; 0.23.0-r4 to 0.24.0-r2 with Go 1.27.3; 0.24.0-r3 to 0.24.0-r5 with Go 1.27.4. The Go vulnerability database names os.OpenInRoot, Root.Open, Root.ReadFile and the Open, ReadDir and ReadFile methods of the root file system (rootFS) as the vulnerable functions: a File is only exposed when it was opened through an os.Root. Reading the Go function table of the program in every package (runtime.main found in each as a control), none of those functions is present, and neither is any other os.Root function (no os.(*Root) method, os.OpenRoot or rootFS method), although the program lists os.(*File).ReadDir and os.(*File).Readdir; without an os.Root no File the program opens can be inside one. A byte search of the program in every package, which also finds the names of functions the compiler inlined, finds none of os.(*Root), os.OpenRoot, os.OpenInRoot or os.rootFS. As a positive control, the same function-table reader and byte search, run on a test program that calls os.OpenRoot, Root.Open, Root.ReadFile, Root.FS and os.OpenInRoot, built with Go 1.25.7 and with Go 1.26.1 for linux/amd64 and linux/arm64 with CGO_ENABLED=0, find os.OpenInRoot, os.(*Root).ReadFile, os.(*Root).OpenFile and os.(*rootFS).Open in each. So none of the vulnerable functions is compiled into any build, although 0.20.0-r0 uses an affected Go release."
     },
     {
       "vulnerability": {
@@ -3020,7 +3028,9 @@
           "@id": "pkg:apk/dhi/external-dns@0.24.0-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-27139 (GO-2026-4602): On Unix platforms, when a program lists a directory with File.ReadDir or File.Readdir in the Go standard library's os package, the returned FileInfo could refer to a file outside the os.Root in which the File was opened, exposing lstat metadata from outside the root but not allowing files outside it to be read or written. It is fixed in Go 1.25.8 and 1.26.1: https://pkg.go.dev/vuln/GO-2026-4602, https://go.dev/issue/77827, https://go.dev/cl/749480 and https://groups.google.com/g/golang-announce/c/EdhZqrQ98hk give the details, and the release-branch.go1.26 commit https://github.com/golang/go/commit/8cce3ab20c49a5c3c9fa8e97ad47335c3ccd2620 names this CVE and is in go1.26.1 but not go1.26.0. We downloaded every published package built from the external-dns source for Alpine 3.23 in the DHI Alpine repository: external-dns (33 builds, 0.20.0-r0 to 0.24.0-r5) and external-dns-dev (33 builds, 0.20.0-r0 to 0.24.0-r5), on x86_64 and aarch64; each package was checked against its index checksum. Each package holds one file, /usr/bin/external-dns, a statically linked Go program built with CGO_ENABLED=0. The Go release in each build, the same in every package and on both architectures, is: 0.20.0-r0 with Go 1.25.7; 0.20.0-r1 to 0.21.0-r0 with Go 1.26.1; 0.21.0-r1 to 0.21.0-r2 with Go 1.26.2; 0.21.0-r3 to 0.21.0-r5 with Go 1.26.3; 0.21.0-r6 to 0.21.0-r7 with Go 1.26.4; 0.21.0-r8 to 0.21.0-r11 with Go 1.26.5; 0.21.0-r12 with Go 1.26.6; 0.21.0-r13 to 0.22.0-r0 with Go 1.26.7; 0.22.0-r1 to 0.22.0-r3 with Go 1.26.8; 0.23.0-r1 to 0.23.0-r2 with Go 1.27.1; 0.23.0-r3 with Go 1.27.2; 0.23.0-r4 to 0.24.0-r2 with Go 1.27.3; 0.24.0-r3 to 0.24.0-r5 with Go 1.27.4. The Go vulnerability database names os.OpenInRoot, Root.Open, Root.ReadFile and the Open, ReadDir and ReadFile methods of the root file system (rootFS) as the vulnerable functions: a File is only exposed when it was opened through an os.Root. Reading the Go function table of the program in every package (runtime.main found in each as a control), none of those functions is present, and neither is any other os.Root function (no os.(*Root) method, os.OpenRoot or rootFS method), although the program lists os.(*File).ReadDir and os.(*File).Readdir; without an os.Root no File the program opens can be inside one. A byte search of the program in every package, which also finds the names of functions the compiler inlined, finds none of os.(*Root), os.OpenRoot, os.OpenInRoot or os.rootFS. As a positive control, the same function-table reader and byte search, run on a test program that calls os.OpenRoot, Root.Open, Root.ReadFile, Root.FS and os.OpenInRoot, built with Go 1.25.7 and with Go 1.26.1 for linux/amd64 and linux/arm64 with CGO_ENABLED=0, find os.OpenInRoot, os.(*Root).ReadFile, os.(*Root).OpenFile and os.(*rootFS).Open in each. So none of the vulnerable functions is compiled into any build, although 0.20.0-r0 uses an affected Go release."
     },
     {
       "vulnerability": {
