@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-ozli-eq47-ldta-ceia",
+  "modified": "2026-11-26T10:03:23Z",
+  "published": "2026-11-26T10:03:23Z",
+  "upstream": [
+    "CVE-2026-129836"
+  ],
+  "summary": "The optional rsyslog `imdtls` input processes its UDP listener and connected DTLS clients in one event loop. A remote…",
+  "details": "The optional rsyslog `imdtls` input processes its UDP listener and connected DTLS clients in one event loop. A remote client can leave a DTLS handshake incomplete after the cookie exchange, causing the listener thread to wait in a blocking `SSL_accept` call before any client certificate is presented. A client that completes a DTLS session can leave the thread waiting in a blocking `SSL_read` call for up to the configured `timeout` (1800 seconds by default). While the thread waits on one client, it serves no other client of that input; the interruption can be repeated. At the default `tls.authmode`, a trusted client certificate is not required for the idle-session path.\r\n\r\nSeparately, an `imdtls` input configured with `tls.authmode=\"name\"` or `\"fingerprint\"` and `tls.permittedpeer` can accept a syslog message from a CA-signed client that is not a permitted peer. By pacing the final DTLS handshake flight, the client can cause `SSL_accept` to return before the handshake completes. When the handshake finishes during `SSL_read`, affected versions can process application data without running the permitted-peer check. This permits message injection into an input intended for pinned peers. The path was reproduced with a short configured timeout on current public main using OpenSSL 3.0.13 and 3.5.5; success on other timing, kernel, or OpenSSL combinations has not been established. The earlier GHSA-8v8w-f8wf-475j fix closed a session after a failed check; this path skips that check.\r\n\r\nThe advisory's primary structured CVSS v3.1 score is High / 7.5 (`CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H`) for the two availability paths, which do not require a trusted client certificate. The permitted-peer bypass has separate prerequisites and a conditional integrity impact on the pinned input's log stream. Its proposed subscore is Medium / 4.3 (`CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N`), treating possession of a CA-signed but non-permitted client certificate as low privilege. That integrity impact is not included in the 7.5 vector. Both CWE-400 and CWE-295 are listed to reflect these distinct effects.\r\n\r\nThe fix makes connected-client sockets nonblocking, advances incomplete handshakes when ready, services DTLS retransmission and idle timers, bounds read work per client event, and verifies a completed handshake against the configured permitted-peer policy before accepting application data. This affects deployments that explicitly configure and expose `imdtls`. Update to **2026-11-17 daily stable** or later. Until then, restrict network access to the `imdtls` listener and keep client-certificate issuance under tight control. Timeout changes alone are not a reliable substitute for the fix.\r\n\r\n## CVE identifiers\r\n\r\n- R1, incomplete-handshake listener stall: **CVE-2026-129836**\r\n- R2, idle DTLS session listener stall: **CVE-2026-129835**\r\n- R3, late-handshake permitted-peer bypass: **CVE-2026-129834**\r\n\r\nCoordinated public disclosure took place on **2026-11-17 at 16:00 UTC**.\r\n\r\n## Acknowledgements\r\n\r\nWe thank Fairuzan Roslan (@fairuzan) for reporting these issues, providing the original reproducer, and supplying the follow-up handshake-timing evidence that enabled confirmation of the permitted-peer bypass.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Alpine:3.24",
+        "name": "rsyslog",
+        "purl": "pkg:apk/dhi/rsyslog"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.2604.0-r0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "8.2604.0-r0",
+        "8.2604.0-r1",
+        "8.2608.0-r1",
+        "8.2608.0-r2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-ozli-eq47-ldta-ceia"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/rsyslog/rsyslog/security/advisories/GHSA-4chq-f2r9-5jp8"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security.alpinelinux.org/vuln/CVE-2026-129836"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-129836"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-129836"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-129836"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/rsyslog/rsyslog/pull/8022"
+    }
+  ]
+}
