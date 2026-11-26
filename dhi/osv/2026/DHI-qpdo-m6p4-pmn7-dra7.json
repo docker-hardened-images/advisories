@@ -1,0 +1,164 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-qpdo-m6p4-pmn7-dra7",
+  "modified": "2026-11-26T12:50:47Z",
+  "published": "2026-11-26T12:50:47Z",
+  "upstream": [
+    "CVE-2026-136156"
+  ],
+  "summary": "## Impact",
+  "details": "## Impact\r\n\r\nAn authenticated user who can publish to a channel on a server running in\r\ncluster mode can make the server allocate a heap buffer far smaller than\r\nthe message it is about to copy into it, and then write past the end of\r\nthat buffer with attacker-controlled bytes. This reliably crashes the\r\nserver process, and because the overflowing bytes are chosen by the\r\nattacker, it may be possible to escalate it to remote code execution\r\nrunning as the user the server runs as.\r\n\r\nThis issue affects Valkey 7.2, 8.0, 8.1, 9.0, 9.1 and 9.2 running in\r\ncluster mode. Servers that do not have cluster mode enabled are not\r\naffected.\r\n\r\n## Details\r\n\r\nWhen a node propagates a `PUBLISH` or `SPUBLISH` to the rest of the\r\ncluster, `clusterCreatePublishMsgBlock` in `src/cluster_legacy.c`\r\n(`src/cluster.c` on 7.2) computes the length of the cluster bus message as\r\na `size_t`, but passes it to `createClusterMsgSendBlock`, which takes a\r\n`uint32_t`. When the channel and message together exceed `UINT32_MAX`, the\r\nlength is silently truncated and a buffer far smaller than the message is\r\nallocated. The two `memcpy` calls that follow copy the full channel and\r\nmessage into it. Both the regular and the light cluster bus header paths\r\nare affected, as are the module publish APIs.\r\n\r\nBuilding a channel and message this large requires more than 4 GiB of\r\nmemory. With the default `proto-max-bulk-len` of 512 MB, a client cannot\r\nsend arguments that large directly, but a script can construct them on the\r\nserver.\r\n\r\nThe cluster bus cannot represent a message of this size, so the fix\r\nvalidates the complete serialized length before any 32-bit conversion or\r\nallocation. `PUBLISH` and `SPUBLISH` now reply with an error, and the\r\nmessage is neither published locally nor propagated.\r\n\r\n## Mitigation\r\n\r\nYou can mitigate this issue by using Valkey ACLs to restrict the scripting\r\ncommands (`EVAL`, `EVALSHA`, `EVAL_RO`, `EVALSHA_RO`, `FCALL`, `FCALL_RO`\r\nand `FUNCTION`) if your application does not intend to use them, and by\r\nnot raising `proto-max-bulk-len` above its default.\r\n\r\n## Credits\r\n\r\nThe defect was reported by Nenad Stojanovski working with Trend Micro Zero\r\nDay Initiative (ZDI-CAN-28318). The fix was authored by\r\nhttps://github.com/roshkhatri (#5030).",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-7.2",
+        "purl": "pkg:deb/dhi/valkey-7.2"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "7.2.14-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "7.2.14-0",
+        "7.2.15-0",
+        "7.2.16-0",
+        "7.2.16-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-8.0",
+        "purl": "pkg:deb/dhi/valkey-8.0"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.0.10-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "8.0.10-0",
+        "8.0.11-0",
+        "8.0.12-0",
+        "8.0.13-0",
+        "8.0.13-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-8.1",
+        "purl": "pkg:deb/dhi/valkey-8.1"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.1.9-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "8.1.10-0",
+        "8.1.11-0",
+        "8.1.12-0",
+        "8.1.12-1",
+        "8.1.9-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-9.1",
+        "purl": "pkg:deb/dhi/valkey-9.1"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "9.1.1-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "9.1.1-0",
+        "9.1.2-0",
+        "9.1.3-0",
+        "9.1.4-0",
+        "9.1.4-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-qpdo-m6p4-pmn7-dra7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/valkey-io/valkey/security/advisories/GHSA-f4q9-j22m-xqq9"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-136156"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-136156"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-136156"
+    },
+    {
+      "type": "FIX",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-136156"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/valkey-io/valkey/pull/5030"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-136156"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-136156"
+    }
+  ]
+}

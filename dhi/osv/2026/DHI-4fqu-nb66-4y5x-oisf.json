@@ -1,0 +1,164 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-4fqu-nb66-4y5x-oisf",
+  "modified": "2026-11-26T12:50:47Z",
+  "published": "2026-11-26T12:50:47Z",
+  "upstream": [
+    "CVE-2026-136157"
+  ],
+  "summary": "## Impact",
+  "details": "## Impact\r\n\r\nAn authenticated user can run a command that frees another client's\r\nconnection while the RDMA transport is processing pending data, leaving a\r\ndangling pointer that is dereferenced shortly after. This reliably crashes\r\nthe server process, and the freed heap chunk can be reclaimed with\r\nattacker-influenced bytes.\r\n\r\nThis issue only affects servers built with RDMA support (`USE_RDMA`) and\r\nconfigured with an RDMA listener, which is off by default and requires\r\nRDMA-capable hardware. Builds without RDMA are not affected, and the RDMA\r\ntransport does not exist before 8.0.\r\n\r\n## Details\r\n\r\nThe RDMA pending-data handler walked its connection list with an iterator\r\nthat caches the next entry. Running a client's read handler from inside\r\nthat loop can process a command such as `CLIENT KILL`, which synchronously\r\nfrees a different client's connection, invalidating the cached entry.\r\nSeparately, closing an RDMA connection freed it without removing it from\r\nthe pending list, so a stale entry also persisted into later passes.\r\n\r\nThis is the RDMA equivalent of the TLS issue fixed in GHSA-53mc-f3m3-99vh.\r\n\r\n## Mitigation\r\n\r\nIf you do not need RDMA, build without `USE_RDMA` or do not configure an\r\nRDMA listener. Otherwise, you can mitigate this issue by using Valkey ACLs\r\nto restrict the CLIENT command, in particular `CLIENT KILL`.\r\n\r\n## Credits\r\n\r\nReported by Andreas Gabriel Berbescu (aberbescu@gmail.com",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-7.2",
+        "purl": "pkg:deb/dhi/valkey-7.2"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "7.2.14-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "7.2.14-0",
+        "7.2.15-0",
+        "7.2.16-0",
+        "7.2.16-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-8.0",
+        "purl": "pkg:deb/dhi/valkey-8.0"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.0.10-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "8.0.10-0",
+        "8.0.11-0",
+        "8.0.12-0",
+        "8.0.13-0",
+        "8.0.13-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-8.1",
+        "purl": "pkg:deb/dhi/valkey-8.1"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.1.9-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "8.1.10-0",
+        "8.1.11-0",
+        "8.1.12-0",
+        "8.1.12-1",
+        "8.1.9-0"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "valkey-9.1",
+        "purl": "pkg:deb/dhi/valkey-9.1"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "9.1.1-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "9.1.1-0",
+        "9.1.2-0",
+        "9.1.3-0",
+        "9.1.4-0",
+        "9.1.4-1"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-4fqu-nb66-4y5x-oisf"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/valkey-io/valkey/security/advisories/GHSA-jcj7-v34w-v9vv"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-136157"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-136157"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://access.redhat.com/security/cve/CVE-2026-136157"
+    },
+    {
+      "type": "FIX",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-136157"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/valkey-io/valkey/pull/4534"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://ubuntu.com/security/CVE-2026-136157"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2026-136157"
+    }
+  ]
+}

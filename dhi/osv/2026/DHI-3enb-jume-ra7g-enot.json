@@ -1,13 +1,13 @@
 {
   "schema_version": "1.8.0",
   "id": "DHI-3enb-jume-ra7g-enot",
-  "modified": "2026-11-26T10:34:48Z",
+  "modified": "2026-11-26T12:50:47Z",
   "published": "2026-11-20T13:23:59Z",
   "upstream": [
     "CVE-2026-93402"
   ],
   "summary": "## Summary",
-  "details": "## Summary\r\n\r\nThe optional `imdtls` input module does not enforce `tls.permittedpeer` after a successful DTLS handshake when configured with `tls.authmode=\"name\"` or `tls.authmode=\"fingerprint\"`.\r\n\r\nAfter the handshake succeeds, `imdtls` performs the additional permitted-peer identity check. If that check fails, the module logs a warning but leaves the DTLS session active. The session is subsequently read and received records are passed to the configured ruleset.\r\n\r\n## Impact\r\n\r\nA remote peer whose certificate is accepted by the listener's configured CA, but whose name or fingerprint is not listed in `tls.permittedpeer`, can inject chosen syslog records into the configured input stream.\r\n\r\nThe issue is limited to integrity of that input stream. It does not provide access to stored logs, modification or deletion of existing records, confidentiality loss, memory corruption, or code execution.\r\n\r\n## Affected configurations\r\n\r\nThis issue affects deployments only when all of the following apply:\r\n\r\n- rsyslog was built with the optional `imdtls` module and the module is explicitly loaded;\r\n- a reachable `imdtls` listener uses `tls.authmode=\"name\"` or `tls.authmode=\"fingerprint\"` together with `tls.permittedpeer`; and\r\n- the attacker possesses the private key for a client certificate accepted by the listener's configured CA.\r\n\r\nNormal DTLS certificate-chain validation remains effective. Arbitrary remote clients, including clients with self-signed or otherwise untrusted certificates, cannot exploit this issue. `tls.authmode=\"certvalid\"` is not affected.\r\n\r\nThe issue is most relevant where the configured CA trusts a broader certificate population than the `tls.permittedpeer` allow-list.\r\n\r\n## Fix\r\n\r\nThe fix was merged in [PR #7617](https://github.com/rsyslog/rsyslog/pull/7617). It immediately removes a DTLS session when post-handshake permitted-peer verification fails. No tagged rsyslog release containing the fix is available yet; downstream distributors may backport the change.\r\n\r\n## Credits\r\n\r\nThis issue was found by Anthropic using Claude to study the security of open-source software and was manually validated by David Korczynski from Ada Logics.\r\n",
+  "details": "## Summary\r\n\r\nThe optional `imdtls` input module does not enforce `tls.permittedpeer` after a successful DTLS handshake when configured with `tls.authmode=\"name\"` or `tls.authmode=\"fingerprint\"`.\r\n\r\nAfter the handshake succeeds, `imdtls` performs the additional permitted-peer identity check. If that check fails, the module logs a warning but leaves the DTLS session active. The session is subsequently read and received records are passed to the configured ruleset.\r\n\r\n## Impact\r\n\r\nA remote peer whose certificate is accepted by the listener's configured CA, but whose name or fingerprint is not listed in `tls.permittedpeer`, can inject chosen syslog records into the configured input stream.\r\n\r\nThe issue is limited to integrity of that input stream. It does not provide access to stored logs, modification or deletion of existing records, confidentiality loss, memory corruption, or code execution.\r\n\r\n## Affected configurations\r\n\r\nThis issue affects deployments only when all of the following apply:\r\n\r\n- rsyslog was built with the optional `imdtls` module and the module is explicitly loaded;\r\n- a reachable `imdtls` listener uses `tls.authmode=\"name\"` or `tls.authmode=\"fingerprint\"` together with `tls.permittedpeer`; and\r\n- the attacker possesses the private key for a client certificate accepted by the listener's configured CA.\r\n\r\nNormal DTLS certificate-chain validation remains effective. Arbitrary remote clients, including clients with self-signed or otherwise untrusted certificates, cannot exploit this issue. `tls.authmode=\"certvalid\"` is not affected.\r\n\r\nThe issue is most relevant where the configured CA trusts a broader certificate population than the `tls.permittedpeer` allow-list.\r\n\r\n## Fix\r\n\r\nThe fix was merged in [PR #7617](https://github.com/rsyslog/rsyslog/pull/7617). It immediately removes a DTLS session when post-handshake permitted-peer verification fails. The fix is included in rsyslog 8.2610.0. Upgrade to 8.2610.0 or later; downstream distributors may backport the change.\r\n\r\n## Credits\r\n\r\nThis issue was found by Anthropic using Claude to study the security of open-source software and was manually validated by David Korczynski from Ada Logics. Kudos to David for the clear report and the end-to-end validation.\r\n",
   "affected": [
     {
       "package": {
@@ -30,35 +30,6 @@
         "8.2604.0-r1",
         "8.2608.0-r1",
         "8.2608.0-r2"
-      ],
-      "database_specific": {
-        "owner_kind": "HSP"
-      }
-    },
-    {
-      "package": {
-        "ecosystem": "Docker Hardened Images:Debian:13",
-        "name": "ascender-25",
-        "purl": "pkg:deb/dhi/ascender-25"
-      },
-      "ranges": [
-        {
-          "type": "ECOSYSTEM",
-          "events": [
-            {
-              "introduced": "25.6.3-0"
-            }
-          ]
-        }
-      ],
-      "versions": [
-        "25.6.3-0",
-        "25.6.3-1",
-        "25.6.3-2",
-        "25.6.3-3",
-        "25.6.3-4",
-        "25.6.3-5",
-        "25.6.3-6"
       ],
       "database_specific": {
         "owner_kind": "HSP"
