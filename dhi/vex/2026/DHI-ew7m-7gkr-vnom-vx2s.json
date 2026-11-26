@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-25T09:32:15Z",
-  "version": 21,
+  "last_updated": "2026-11-26T04:35:18Z",
+  "version": 23,
   "statements": [
     {
       "vulnerability": {
@@ -508,6 +508,73 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/build-fips@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.6.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.7.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.7.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.7.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.7.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.3-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.8.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.9.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.9.1-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-fips@2.9.2-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build-fips to 2.10.0-r0 or later.",
+      "status_notes": "CVE-2026-32280 (GO-2026-4947): during certificate chain building, crypto/x509 does not correctly limit its work when a large number of intermediate certificates is passed in VerifyOptions.Intermediates, which can cause a denial of service for direct users of crypto/x509 and for crypto/tls. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320, https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU. The fix shipped in go1.26.2 as release-branch.go1.26 commit 7b4ed1d, which changes src/crypto/x509/verify.go and its test: https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2. We downloaded every build-fips package listed in the Alpine 3.23 index of the DHI Alpine security repository, where the FIPS packages are published and which requires authentication, for x86_64 and aarch64, and checked each download against the index checksum: 91 builds, 2.6.4-r0 to the current 2.30.0-r0, each for both architectures except 2.6.4-r0 for aarch64 only. Version 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. The Go programs in the packages are /usr/bin/build, /opt/docker/dhi/yq from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on. /opt/docker/dhi/uv from 2.27.1-r1 on is not a Go program: it has no Go build information. All Go programs in one build use the same Go release: 2.6.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The Go function table (pclntab) of /usr/bin/build and /usr/bin/dhi-source lists functions the advisory names in every build that ships them: crypto/x509 Certificate.Verify and Certificate.buildChains. The function table of /opt/docker/dhi/yq lists none of the advisory's functions. The 18 builds before 2.10.0-r0 use Go releases inside the affected range; 2.10.0-r0 and every later build use a Go release that carries the fix, so 2.10.0-r0 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ew7m-7gkr-vnom-vx2s",
+        "aliases": [
+          "CVE-2026-32280"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/build-fips@2.10.0-r0?distro=dhi-3.23"
         },
         {
@@ -725,63 +792,80 @@
         },
         {
           "@id": "pkg:apk/dhi/build-fips@2.30.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.7.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.7.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.7.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.7.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.3-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.3-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.8.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.9.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.9.1-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-fips@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-32280 (GO-2026-4947): during certificate chain building, crypto/x509 does not correctly limit its work when a large number of intermediate certificates is passed in VerifyOptions.Intermediates, which can cause a denial of service for direct users of crypto/x509 and for crypto/tls. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320, https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU. The fix shipped in go1.26.2 as release-branch.go1.26 commit 7b4ed1d, which changes src/crypto/x509/verify.go and its test: https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2. We downloaded every build-fips package listed in the Alpine 3.23 index of the DHI Alpine security repository, where the FIPS packages are published and which requires authentication, for x86_64 and aarch64, and checked each download against the index checksum: 91 builds, 2.6.4-r0 to the current 2.30.0-r0, each for both architectures except 2.6.4-r0 for aarch64 only. Version 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. The Go programs in the packages are /usr/bin/build, /opt/docker/dhi/yq from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on. /opt/docker/dhi/uv from 2.27.1-r1 on is not a Go program: it has no Go build information. All Go programs in one build use the same Go release: 2.6.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The Go function table (pclntab) of /usr/bin/build and /usr/bin/dhi-source lists functions the advisory names in every build that ships them: crypto/x509 Certificate.Verify and Certificate.buildChains. The function table of /opt/docker/dhi/yq lists none of the advisory's functions. The 18 builds before 2.10.0-r0 use Go releases inside the affected range; 2.10.0-r0 and every later build use a Go release that carries the fix, so 2.10.0-r0 is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ew7m-7gkr-vnom-vx2s",
+        "aliases": [
+          "CVE-2026-32280"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/build@2.4.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.3-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.9.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.9.1-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.9.2-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build to 2.10.0-r0 or later.",
+      "status_notes": "CVE-2026-32280 (GO-2026-4947): during certificate chain building, crypto/x509 does not correctly limit its work when a large number of intermediate certificates is passed in VerifyOptions.Intermediates, which can cause a denial of service for direct users of crypto/x509 and for crypto/tls. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320, https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU. The fix shipped in go1.26.2 as release-branch.go1.26 commit 7b4ed1d, which changes src/crypto/x509/verify.go and its test: https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2. We downloaded every build package listed in the Alpine 3.23 index of the DHI Alpine repository, for x86_64 and aarch64, and checked each download against the index checksum: 92 builds, 2.4.4-r0 to the current 2.30.0-r0, each for both architectures except 2.6.4-r0 for aarch64 only. Version 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. The Go programs in the packages are /opt/docker/dhi/build in 2.4.4-r0 only, /usr/bin/build from 2.6.4-r0 on, /opt/docker/dhi/yq from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on. /opt/docker/dhi/uv from 2.27.1-r1 on is not a Go program: it has no Go build information. All Go programs in one build use the same Go release: 2.4.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The Go function table (pclntab) of /opt/docker/dhi/build, /usr/bin/build and /usr/bin/dhi-source lists functions the advisory names in every build that ships them: crypto/x509 Certificate.Verify and Certificate.buildChains. The function table of /opt/docker/dhi/yq lists none of the advisory's functions. The 19 builds before 2.10.0-r0 use Go releases inside the affected range; 2.10.0-r0 and every later build use a Go release that carries the fix, so 2.10.0-r0 is the first fixed build."
     },
     {
       "vulnerability": {
@@ -1009,66 +1093,10 @@
         },
         {
           "@id": "pkg:apk/dhi/build@2.30.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.4.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.3-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.3-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.9.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.9.1-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-32280 (GO-2026-4947): during certificate chain building, crypto/x509 does not correctly limit its work when a large number of intermediate certificates is passed in VerifyOptions.Intermediates, which can cause a denial of service for direct users of crypto/x509 and for crypto/tls. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320, https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU. The fix shipped in go1.26.2 as release-branch.go1.26 commit 7b4ed1d, which changes src/crypto/x509/verify.go and its test: https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2. We downloaded every build package listed in the Alpine 3.23 index of the DHI Alpine repository, for x86_64 and aarch64, and checked each download against the index checksum: 92 builds, 2.4.4-r0 to the current 2.30.0-r0, each for both architectures except 2.6.4-r0 for aarch64 only. Version 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves was the one read. The Go programs in the packages are /opt/docker/dhi/build in 2.4.4-r0 only, /usr/bin/build from 2.6.4-r0 on, /opt/docker/dhi/yq from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on. /opt/docker/dhi/uv from 2.27.1-r1 on is not a Go program: it has no Go build information. All Go programs in one build use the same Go release: 2.4.4-r0 to 2.6.6-r1 Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 Go 1.26.5; 2.20.0-r6 Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 Go 1.26.11. The Go function table (pclntab) of /opt/docker/dhi/build, /usr/bin/build and /usr/bin/dhi-source lists functions the advisory names in every build that ships them: crypto/x509 Certificate.Verify and Certificate.buildChains. The function table of /opt/docker/dhi/yq lists none of the advisory's functions. The 19 builds before 2.10.0-r0 use Go releases inside the affected range; 2.10.0-r0 and every later build use a Go release that carries the fix, so 2.10.0-r0 is the first fixed build."
     },
     {
       "vulnerability": {
@@ -2087,6 +2115,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -2212,6 +2243,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -3273,7 +3307,20 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.1-r3?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26-dev to 1.26.2-r3 or later.",
+      "status_notes": "CVE-2026-32280 (GO-2026-4947): During chain building in the Go standard library's crypto/x509, the amount of work done is not correctly limited when VerifyOptions.Intermediates holds a large number of intermediate certificates, which can lead to a denial of service for direct users of crypto/x509 and for users of crypto/tls. Sources: https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320 and https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU give the details. Go 1.26.2 carries the fix as the release-branch.go1.26 commit https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2 , which names this CVE and is in go1.26.2 but not go1.26.1. It changes only src/crypto/x509/verify.go outside its test, adding the errSignatureLimit sentinel that stops chain building once the signature-check limit is reached. This package is the Go 1.26 toolchain: its version is the Go release it packages, and it ships the standard library source under /usr/lib/go/src that Go programs are compiled from. We downloaded every published golang-1.26-dev package for Alpine 3.23 in the DHI Alpine repository, 15 builds from 1.26.1-r2 to the current 1.26.11-r1, on x86_64 and aarch64, each checked against its index checksum, together with the other packages built from the same source (golang-1.26-dev-doc, golang-1.26-dev-fips-oci-config, golang-1.26-dev-oci-config), which hold only documentation or container configuration and no Go source; the fips-oci-config packages are in the DHI Alpine security repository, which requires authentication. In every build, /usr/lib/go/bin/go reports the Go release in the package version, the same on both architectures. The errSignatureLimit sentinel in /usr/lib/go/src/crypto/x509/verify.go is absent from every build from 1.26.1-r2 to 1.26.1-r3 and present in every build from 1.26.2-r3 to 1.26.11-r1, while Certificate.Verify in the same file is present in every build as a control; each of these files is also byte-identical to the one in the upstream Go release the package reports. The range ends at 1.26.2-r3, the first build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ew7m-7gkr-vnom-vx2s",
+        "aliases": [
+          "CVE-2026-32280"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.10-r0?distro=dhi-3.23"
         },
@@ -3314,7 +3361,8 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-32280 (GO-2026-4947): During chain building in the Go standard library's crypto/x509, the amount of work done is not correctly limited when VerifyOptions.Intermediates holds a large number of intermediate certificates, which can lead to a denial of service for direct users of crypto/x509 and for users of crypto/tls. Sources: https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320 and https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU give the details. Go 1.26.2 carries the fix as the release-branch.go1.26 commit https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2 , which names this CVE and is in go1.26.2 but not go1.26.1. It changes only src/crypto/x509/verify.go outside its test, adding the errSignatureLimit sentinel that stops chain building once the signature-check limit is reached. This package is the Go 1.26 toolchain: its version is the Go release it packages, and it ships the standard library source under /usr/lib/go/src that Go programs are compiled from. We downloaded every published golang-1.26-dev package for Alpine 3.23 in the DHI Alpine repository, 15 builds from 1.26.1-r2 to the current 1.26.11-r1, on x86_64 and aarch64, each checked against its index checksum, together with the other packages built from the same source (golang-1.26-dev-doc, golang-1.26-dev-fips-oci-config, golang-1.26-dev-oci-config), which hold only documentation or container configuration and no Go source; the fips-oci-config packages are in the DHI Alpine security repository, which requires authentication. In every build, /usr/lib/go/bin/go reports the Go release in the package version, the same on both architectures. The errSignatureLimit sentinel in /usr/lib/go/src/crypto/x509/verify.go is absent from every build from 1.26.1-r2 to 1.26.1-r3 and present in every build from 1.26.2-r3 to 1.26.11-r1, while Certificate.Verify in the same file is present in every build as a control; each of these files is also byte-identical to the one in the upstream Go release the package reports. The range ends at 1.26.2-r3, the first build that carries the fix."
     },
     {
       "vulnerability": {
@@ -3341,7 +3389,20 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.1-r3?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26 to 1.26.2-r3 or later.",
+      "status_notes": "CVE-2026-32280 (GO-2026-4947): During chain building in the Go standard library's crypto/x509, the amount of work done is not correctly limited when VerifyOptions.Intermediates holds a large number of intermediate certificates, which can lead to a denial of service for direct users of crypto/x509 and for users of crypto/tls. Sources: https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320 and https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU give the details. Go 1.26.2 carries the fix as the release-branch.go1.26 commit https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2 , which names this CVE and is in go1.26.2 but not go1.26.1. It changes only src/crypto/x509/verify.go outside its test, adding the errSignatureLimit sentinel that stops chain building once the signature-check limit is reached. This package is the Go 1.26 toolchain: its version is the Go release it packages, and it ships the standard library source under /usr/lib/go/src that Go programs are compiled from. We downloaded every published golang-1.26 package for Alpine 3.23 in the DHI Alpine repository, 18 builds from 1.26.0-r0 to the current 1.26.11-r1, on x86_64 and aarch64, each checked against its index checksum, together with the other packages built from the same source (golang-1.26-doc, golang-1.26-fips-oci-config, golang-1.26-oci-config), which hold only documentation or container configuration and no Go source; the fips-oci-config packages are in the DHI Alpine security repository, which requires authentication. In every build, /usr/lib/go/bin/go reports the Go release in the package version, the same on both architectures. The errSignatureLimit sentinel in /usr/lib/go/src/crypto/x509/verify.go is absent from every build from 1.26.0-r0 to 1.26.1-r3 and present in every build from 1.26.2-r3 to 1.26.11-r1, while Certificate.Verify in the same file is present in every build as a control; each of these files is also byte-identical to the one in the upstream Go release the package reports. The range ends at 1.26.2-r3, the first build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ew7m-7gkr-vnom-vx2s",
+        "aliases": [
+          "CVE-2026-32280"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.10-r0?distro=dhi-3.23"
         },
@@ -3382,7 +3443,8 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-32280 (GO-2026-4947): During chain building in the Go standard library's crypto/x509, the amount of work done is not correctly limited when VerifyOptions.Intermediates holds a large number of intermediate certificates, which can lead to a denial of service for direct users of crypto/x509 and for users of crypto/tls. Sources: https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320 and https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU give the details. Go 1.26.2 carries the fix as the release-branch.go1.26 commit https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2 , which names this CVE and is in go1.26.2 but not go1.26.1. It changes only src/crypto/x509/verify.go outside its test, adding the errSignatureLimit sentinel that stops chain building once the signature-check limit is reached. This package is the Go 1.26 toolchain: its version is the Go release it packages, and it ships the standard library source under /usr/lib/go/src that Go programs are compiled from. We downloaded every published golang-1.26 package for Alpine 3.23 in the DHI Alpine repository, 18 builds from 1.26.0-r0 to the current 1.26.11-r1, on x86_64 and aarch64, each checked against its index checksum, together with the other packages built from the same source (golang-1.26-doc, golang-1.26-fips-oci-config, golang-1.26-oci-config), which hold only documentation or container configuration and no Go source; the fips-oci-config packages are in the DHI Alpine security repository, which requires authentication. In every build, /usr/lib/go/bin/go reports the Go release in the package version, the same on both architectures. The errSignatureLimit sentinel in /usr/lib/go/src/crypto/x509/verify.go is absent from every build from 1.26.0-r0 to 1.26.1-r3 and present in every build from 1.26.2-r3 to 1.26.11-r1, while Certificate.Verify in the same file is present in every build as a control; each of these files is also byte-identical to the one in the upstream Go release the package reports. The range ends at 1.26.2-r3, the first build that carries the fix."
     },
     {
       "vulnerability": {
@@ -3942,6 +4004,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend-fips@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend-fips@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4040,6 +4105,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
