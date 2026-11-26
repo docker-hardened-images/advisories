@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T22:21:32Z",
-  "last_updated": "2026-11-25T19:26:17Z",
-  "version": 37,
+  "last_updated": "2026-11-26T04:36:43Z",
+  "version": 39,
   "statements": [
     {
       "vulnerability": {
@@ -4153,6 +4153,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-dev@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-dev@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4278,6 +4281,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips-dev@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips-dev@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4403,6 +4409,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4528,6 +4537,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -8061,6 +8073,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend-dev@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend-dev@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -8159,6 +8174,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend-fips-dev@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend-fips-dev@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -8257,6 +8275,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend-fips@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend-fips@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -8355,6 +8376,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -10996,7 +11020,9 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-dev@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-25680 (GO-2026-5028, GHSA-5cv4-jp36-h3mw): parsing arbitrary HTML with the golang.org/x/net/html package can consume excessive CPU time, possibly leading to a denial of service. The functions GO-2026-5028 lists are Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html. The fix, commit 08be507 in golang.org/x/net v0.55.0, changes only html/parse.go: it adds an attrCompare helper and sorts element attributes so that the parser's addFormattingElement method compares them with slices.Equal. Sources: https://pkg.go.dev/vuln/GO-2026-5028, https://github.com/advisories/GHSA-5cv4-jp36-h3mw, https://github.com/golang/go/issues/79573, https://github.com/golang/net/commit/08be507abce89191d78cd49da60f4501fc910472 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Debian lists this CVE as no-dsa for golang-golang-x-net in trixie; this decision rests on our own scan of the shipped binaries, not on that status. We downloaded every published kube-state-metrics-dev package for Alpine 3.23 from the DHI Alpine repository, 2.18.0-r0 to 2.20.0-r13 (28 versions, 54 packages: x86_64 and aarch64, except 2.20.0-r7 and 2.20.0-r8, which are published for aarch64 only), each checked against its index checksum. Each package holds one file, /usr/bin/kube-state-metrics, a Go program built with CGO_ENABLED=0. Its build information lists the golang.org/x/net module (v0.48.0 to v0.53.0 up to 2.18.0-r6, v0.55.0 to v0.62.0 from 2.19.0-r0 on), but in none of the 54 binaries does the Go function table (read from .gopclntab) contain any function of the golang.org/x/net/html package, and a byte search of every binary finds no golang.org/x/net/html symbol name, so neither the functions listed above nor the addFormattingElement code the fix changes is present. The golang.org/x/net packages the program does link, in every build, are bpf, http/httpguts, http/httpproxy, http2, http2/hpack, idna, internal/httpcommon, internal/timeseries, trace and websocket. As controls, the function table of every one of these binaries lists runtime.main, and the same function-table read finds 91 golang.org/x/net/html functions, including the parser's parse and addFormattingElement methods, ParseWithOptions and ParseFragmentWithOptions, in test programs built for linux/amd64 and linux/arm64 against golang.org/x/net v0.54.0 that call all four exported functions; the same byte search finds all five listed names there (Parse and ParseFragment are inlined into their caller, so they appear only as strings). The vulnerable code is not present, so the golang.org/x/net version recorded in the build information does not make this package affected."
     },
     {
       "vulnerability": {
@@ -11091,7 +11117,9 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-fips-dev@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-25680 (GO-2026-5028, GHSA-5cv4-jp36-h3mw): parsing arbitrary HTML with the golang.org/x/net/html package can consume excessive CPU time, possibly leading to a denial of service. The functions GO-2026-5028 lists are Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html. The fix, commit 08be507 in golang.org/x/net v0.55.0, changes only html/parse.go: it adds an attrCompare helper and sorts element attributes so that the parser's addFormattingElement method compares them with slices.Equal. Sources: https://pkg.go.dev/vuln/GO-2026-5028, https://github.com/advisories/GHSA-5cv4-jp36-h3mw, https://github.com/golang/go/issues/79573, https://github.com/golang/net/commit/08be507abce89191d78cd49da60f4501fc910472 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Debian lists this CVE as no-dsa for golang-golang-x-net in trixie; this decision rests on our own scan of the shipped binaries, not on that status. We downloaded every published kube-state-metrics-fips-dev package for Alpine 3.23 from the DHI Alpine security repository, which requires authentication, 2.18.0-r0 to 2.20.0-r13 (28 versions, 54 packages: x86_64 and aarch64, except 2.20.0-r7 and 2.20.0-r8, which are published for aarch64 only), each checked against its index checksum. Each package holds one file, /usr/bin/kube-state-metrics, a Go program built with CGO_ENABLED=0. Its build information lists the golang.org/x/net module (v0.48.0 to v0.53.0 up to 2.18.0-r6, v0.55.0 to v0.62.0 from 2.19.0-r0 on), but in none of the 54 binaries does the Go function table (read from .gopclntab) contain any function of the golang.org/x/net/html package, and a byte search of every binary finds no golang.org/x/net/html symbol name, so neither the functions listed above nor the addFormattingElement code the fix changes is present. The golang.org/x/net packages the program does link, in every build, are bpf, http/httpguts, http/httpproxy, http2, http2/hpack, idna, internal/httpcommon, internal/timeseries, trace and websocket. As controls, the function table of every one of these binaries lists runtime.main, and the same function-table read finds 91 golang.org/x/net/html functions, including the parser's parse and addFormattingElement methods, ParseWithOptions and ParseFragmentWithOptions, in test programs built for linux/amd64 and linux/arm64 against golang.org/x/net v0.54.0 that call all four exported functions; the same byte search finds all five listed names there (Parse and ParseFragment are inlined into their caller, so they appear only as strings). The vulnerable code is not present, so the golang.org/x/net version recorded in the build information does not make this package affected."
     },
     {
       "vulnerability": {
@@ -11186,7 +11214,9 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-fips@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-25680 (GO-2026-5028, GHSA-5cv4-jp36-h3mw): parsing arbitrary HTML with the golang.org/x/net/html package can consume excessive CPU time, possibly leading to a denial of service. The functions GO-2026-5028 lists are Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html. The fix, commit 08be507 in golang.org/x/net v0.55.0, changes only html/parse.go: it adds an attrCompare helper and sorts element attributes so that the parser's addFormattingElement method compares them with slices.Equal. Sources: https://pkg.go.dev/vuln/GO-2026-5028, https://github.com/advisories/GHSA-5cv4-jp36-h3mw, https://github.com/golang/go/issues/79573, https://github.com/golang/net/commit/08be507abce89191d78cd49da60f4501fc910472 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Debian lists this CVE as no-dsa for golang-golang-x-net in trixie; this decision rests on our own scan of the shipped binaries, not on that status. We downloaded every published kube-state-metrics-fips package for Alpine 3.23 from the DHI Alpine security repository, which requires authentication, 2.18.0-r0 to 2.20.0-r13 (28 versions, 54 packages: x86_64 and aarch64, except 2.20.0-r7 and 2.20.0-r8, which are published for aarch64 only), each checked against its index checksum. Each package holds one file, /usr/bin/kube-state-metrics, a Go program built with CGO_ENABLED=0. Its build information lists the golang.org/x/net module (v0.48.0 to v0.53.0 up to 2.18.0-r6, v0.55.0 to v0.62.0 from 2.19.0-r0 on), but in none of the 54 binaries does the Go function table (read from .gopclntab) contain any function of the golang.org/x/net/html package, and a byte search of every binary finds no golang.org/x/net/html symbol name, so neither the functions listed above nor the addFormattingElement code the fix changes is present. The golang.org/x/net packages the program does link, in every build, are bpf, http/httpguts, http/httpproxy, http2, http2/hpack, idna, internal/httpcommon, internal/timeseries, trace and websocket. As controls, the function table of every one of these binaries lists runtime.main, and the same function-table read finds 91 golang.org/x/net/html functions, including the parser's parse and addFormattingElement methods, ParseWithOptions and ParseFragmentWithOptions, in test programs built for linux/amd64 and linux/arm64 against golang.org/x/net v0.54.0 that call all four exported functions; the same byte search finds all five listed names there (Parse and ParseFragment are inlined into their caller, so they appear only as strings). The vulnerable code is not present, so the golang.org/x/net version recorded in the build information does not make this package affected."
     },
     {
       "vulnerability": {
@@ -11281,7 +11311,9 @@
           "@id": "pkg:apk/dhi/kube-state-metrics@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-25680 (GO-2026-5028, GHSA-5cv4-jp36-h3mw): parsing arbitrary HTML with the golang.org/x/net/html package can consume excessive CPU time, possibly leading to a denial of service. The functions GO-2026-5028 lists are Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html. The fix, commit 08be507 in golang.org/x/net v0.55.0, changes only html/parse.go: it adds an attrCompare helper and sorts element attributes so that the parser's addFormattingElement method compares them with slices.Equal. Sources: https://pkg.go.dev/vuln/GO-2026-5028, https://github.com/advisories/GHSA-5cv4-jp36-h3mw, https://github.com/golang/go/issues/79573, https://github.com/golang/net/commit/08be507abce89191d78cd49da60f4501fc910472 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Debian lists this CVE as no-dsa for golang-golang-x-net in trixie; this decision rests on our own scan of the shipped binaries, not on that status. We downloaded every published kube-state-metrics package for Alpine 3.23 from the DHI Alpine repository, 2.18.0-r0 to 2.20.0-r13 (28 versions, 54 packages: x86_64 and aarch64, except 2.20.0-r7 and 2.20.0-r8, which are published for aarch64 only), each checked against its index checksum. Each package holds one file, /usr/bin/kube-state-metrics, a Go program built with CGO_ENABLED=0. Its build information lists the golang.org/x/net module (v0.48.0 to v0.53.0 up to 2.18.0-r6, v0.55.0 to v0.62.0 from 2.19.0-r0 on), but in none of the 54 binaries does the Go function table (read from .gopclntab) contain any function of the golang.org/x/net/html package, and a byte search of every binary finds no golang.org/x/net/html symbol name, so neither the functions listed above nor the addFormattingElement code the fix changes is present. The golang.org/x/net packages the program does link, in every build, are bpf, http/httpguts, http/httpproxy, http2, http2/hpack, idna, internal/httpcommon, internal/timeseries, trace and websocket. As controls, the function table of every one of these binaries lists runtime.main, and the same function-table read finds 91 golang.org/x/net/html functions, including the parser's parse and addFormattingElement methods, ParseWithOptions and ParseFragmentWithOptions, in test programs built for linux/amd64 and linux/arm64 against golang.org/x/net v0.54.0 that call all four exported functions; the same byte search finds all five listed names there (Parse and ParseFragment are inlined into their caller, so they appear only as strings). The vulnerable code is not present, so the golang.org/x/net version recorded in the build information does not make this package affected."
     },
     {
       "vulnerability": {
@@ -29124,6 +29156,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-dev@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -29225,6 +29260,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -29326,6 +29364,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-fips@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -29427,6 +29468,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -32037,6 +32081,9 @@
         },
         {
           "@id": "pkg:deb/dhi/hubble-ui-backend-dev@0.13.6-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/hubble-ui-backend-dev@0.13.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -32117,6 +32164,9 @@
         },
         {
           "@id": "pkg:deb/dhi/hubble-ui-backend-fips-dev@0.13.6-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/hubble-ui-backend-fips-dev@0.13.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -32197,6 +32247,9 @@
         },
         {
           "@id": "pkg:deb/dhi/hubble-ui-backend-fips@0.13.6-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/hubble-ui-backend-fips@0.13.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -32277,6 +32330,9 @@
         },
         {
           "@id": "pkg:deb/dhi/hubble-ui-backend@0.13.6-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/hubble-ui-backend@0.13.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -34747,7 +34803,9 @@
           "@id": "pkg:deb/dhi/kube-state-metrics-dev@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-25680 (GO-2026-5028, GHSA-5cv4-jp36-h3mw): parsing arbitrary HTML with the golang.org/x/net/html package can consume excessive CPU time, possibly leading to a denial of service. The functions GO-2026-5028 lists are Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html. The fix, commit 08be507 in golang.org/x/net v0.55.0, changes only html/parse.go: it adds an attrCompare helper and sorts element attributes so that the parser's addFormattingElement method compares them with slices.Equal. Sources: https://pkg.go.dev/vuln/GO-2026-5028, https://github.com/advisories/GHSA-5cv4-jp36-h3mw, https://github.com/golang/go/issues/79573, https://github.com/golang/net/commit/08be507abce89191d78cd49da60f4501fc910472 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Debian lists this CVE as no-dsa for golang-golang-x-net in trixie; this decision rests on our own scan of the shipped binaries, not on that status. We downloaded every published kube-state-metrics-dev package for Debian 13 from the DHI Debian repository, 2.18.0-5 to 2.20.0-13 (23 versions, 44 packages: amd64 and arm64, except 2.20.0-7 and 2.20.0-8, which are published for arm64 only), each checked against the repository's SHA-256 checksum except the amd64 2.20.0-4 package, whose served file does not match the checksum in the repository index; we read the file the repository serves, which reports Go 1.26.8 and golang.org/x/net v0.58.0. The amd64 package of 2.20.0-4 that the repository serves does not match its index checksum (the same size, the same different SHA-256 on repeated downloads); we read the served file. Each package holds one file, /usr/bin/kube-state-metrics, a Go program built with CGO_ENABLED=0. Its build information lists the golang.org/x/net module (v0.53.0 up to 2.18.0-6, v0.55.0 to v0.62.0 from 2.19.0-0 on), but in none of the 44 binaries does the Go function table (read from .gopclntab) contain any function of the golang.org/x/net/html package, and a byte search of every binary finds no golang.org/x/net/html symbol name, so neither the functions listed above nor the addFormattingElement code the fix changes is present. The golang.org/x/net packages the program does link, in every build, are bpf, http/httpguts, http/httpproxy, http2, http2/hpack, idna, internal/httpcommon, internal/timeseries, trace and websocket. As controls, the function table of every one of these binaries lists runtime.main, and the same function-table read finds 91 golang.org/x/net/html functions, including the parser's parse and addFormattingElement methods, ParseWithOptions and ParseFragmentWithOptions, in test programs built for linux/amd64 and linux/arm64 against golang.org/x/net v0.54.0 that call all four exported functions; the same byte search finds all five listed names there (Parse and ParseFragment are inlined into their caller, so they appear only as strings). The vulnerable code is not present, so the golang.org/x/net version recorded in the build information does not make this package affected."
     },
     {
       "vulnerability": {
@@ -34827,7 +34885,9 @@
           "@id": "pkg:deb/dhi/kube-state-metrics-fips-dev@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-25680 (GO-2026-5028, GHSA-5cv4-jp36-h3mw): parsing arbitrary HTML with the golang.org/x/net/html package can consume excessive CPU time, possibly leading to a denial of service. The functions GO-2026-5028 lists are Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html. The fix, commit 08be507 in golang.org/x/net v0.55.0, changes only html/parse.go: it adds an attrCompare helper and sorts element attributes so that the parser's addFormattingElement method compares them with slices.Equal. Sources: https://pkg.go.dev/vuln/GO-2026-5028, https://github.com/advisories/GHSA-5cv4-jp36-h3mw, https://github.com/golang/go/issues/79573, https://github.com/golang/net/commit/08be507abce89191d78cd49da60f4501fc910472 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Debian lists this CVE as no-dsa for golang-golang-x-net in trixie; this decision rests on our own scan of the shipped binaries, not on that status. We downloaded every published kube-state-metrics-fips-dev package for Debian 13 from the DHI Debian security repository, which requires authentication, 2.18.0-5 to 2.20.0-13 (23 versions, 44 packages: amd64 and arm64, except 2.20.0-7 and 2.20.0-8, which are published for arm64 only), each checked against the repository's SHA-256 checksum. Each package holds one file, /usr/bin/kube-state-metrics, a Go program built with CGO_ENABLED=0. Its build information lists the golang.org/x/net module (v0.53.0 up to 2.18.0-6, v0.55.0 to v0.62.0 from 2.19.0-0 on), but in none of the 44 binaries does the Go function table (read from .gopclntab) contain any function of the golang.org/x/net/html package, and a byte search of every binary finds no golang.org/x/net/html symbol name, so neither the functions listed above nor the addFormattingElement code the fix changes is present. The golang.org/x/net packages the program does link, in every build, are bpf, http/httpguts, http/httpproxy, http2, http2/hpack, idna, internal/httpcommon, internal/timeseries, trace and websocket. As controls, the function table of every one of these binaries lists runtime.main, and the same function-table read finds 91 golang.org/x/net/html functions, including the parser's parse and addFormattingElement methods, ParseWithOptions and ParseFragmentWithOptions, in test programs built for linux/amd64 and linux/arm64 against golang.org/x/net v0.54.0 that call all four exported functions; the same byte search finds all five listed names there (Parse and ParseFragment are inlined into their caller, so they appear only as strings). The vulnerable code is not present, so the golang.org/x/net version recorded in the build information does not make this package affected."
     },
     {
       "vulnerability": {
@@ -34907,7 +34967,9 @@
           "@id": "pkg:deb/dhi/kube-state-metrics-fips@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-25680 (GO-2026-5028, GHSA-5cv4-jp36-h3mw): parsing arbitrary HTML with the golang.org/x/net/html package can consume excessive CPU time, possibly leading to a denial of service. The functions GO-2026-5028 lists are Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html. The fix, commit 08be507 in golang.org/x/net v0.55.0, changes only html/parse.go: it adds an attrCompare helper and sorts element attributes so that the parser's addFormattingElement method compares them with slices.Equal. Sources: https://pkg.go.dev/vuln/GO-2026-5028, https://github.com/advisories/GHSA-5cv4-jp36-h3mw, https://github.com/golang/go/issues/79573, https://github.com/golang/net/commit/08be507abce89191d78cd49da60f4501fc910472 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Debian lists this CVE as no-dsa for golang-golang-x-net in trixie; this decision rests on our own scan of the shipped binaries, not on that status. We downloaded every published kube-state-metrics-fips package for Debian 13 from the DHI Debian security repository, which requires authentication, 2.18.0-5 to 2.20.0-13 (23 versions, 44 packages: amd64 and arm64, except 2.20.0-7 and 2.20.0-8, which are published for arm64 only), each checked against the repository's SHA-256 checksum except the amd64 2.20.0-4 package, whose served file does not match the checksum in the repository index; we read the file the repository serves, which reports Go 1.26.8 and golang.org/x/net v0.58.0. The amd64 package of 2.20.0-4 that the repository serves does not match its index checksum (the same size, the same different SHA-256 on repeated downloads); we read the served file. Each package holds one file, /usr/bin/kube-state-metrics, a Go program built with CGO_ENABLED=0. Its build information lists the golang.org/x/net module (v0.53.0 up to 2.18.0-6, v0.55.0 to v0.62.0 from 2.19.0-0 on), but in none of the 44 binaries does the Go function table (read from .gopclntab) contain any function of the golang.org/x/net/html package, and a byte search of every binary finds no golang.org/x/net/html symbol name, so neither the functions listed above nor the addFormattingElement code the fix changes is present. The golang.org/x/net packages the program does link, in every build, are bpf, http/httpguts, http/httpproxy, http2, http2/hpack, idna, internal/httpcommon, internal/timeseries, trace and websocket. As controls, the function table of every one of these binaries lists runtime.main, and the same function-table read finds 91 golang.org/x/net/html functions, including the parser's parse and addFormattingElement methods, ParseWithOptions and ParseFragmentWithOptions, in test programs built for linux/amd64 and linux/arm64 against golang.org/x/net v0.54.0 that call all four exported functions; the same byte search finds all five listed names there (Parse and ParseFragment are inlined into their caller, so they appear only as strings). The vulnerable code is not present, so the golang.org/x/net version recorded in the build information does not make this package affected."
     },
     {
       "vulnerability": {
@@ -34987,7 +35049,9 @@
           "@id": "pkg:deb/dhi/kube-state-metrics@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-25680 (GO-2026-5028, GHSA-5cv4-jp36-h3mw): parsing arbitrary HTML with the golang.org/x/net/html package can consume excessive CPU time, possibly leading to a denial of service. The functions GO-2026-5028 lists are Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html. The fix, commit 08be507 in golang.org/x/net v0.55.0, changes only html/parse.go: it adds an attrCompare helper and sorts element attributes so that the parser's addFormattingElement method compares them with slices.Equal. Sources: https://pkg.go.dev/vuln/GO-2026-5028, https://github.com/advisories/GHSA-5cv4-jp36-h3mw, https://github.com/golang/go/issues/79573, https://github.com/golang/net/commit/08be507abce89191d78cd49da60f4501fc910472 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Debian lists this CVE as no-dsa for golang-golang-x-net in trixie; this decision rests on our own scan of the shipped binaries, not on that status. We downloaded every published kube-state-metrics package for Debian 13 from the DHI Debian repository, 2.18.0-5 to 2.20.0-13 (23 versions, 44 packages: amd64 and arm64, except 2.20.0-7 and 2.20.0-8, which are published for arm64 only), each checked against the repository's SHA-256 checksum. Each package holds one file, /usr/bin/kube-state-metrics, a Go program built with CGO_ENABLED=0. Its build information lists the golang.org/x/net module (v0.53.0 up to 2.18.0-6, v0.55.0 to v0.62.0 from 2.19.0-0 on), but in none of the 44 binaries does the Go function table (read from .gopclntab) contain any function of the golang.org/x/net/html package, and a byte search of every binary finds no golang.org/x/net/html symbol name, so neither the functions listed above nor the addFormattingElement code the fix changes is present. The golang.org/x/net packages the program does link, in every build, are bpf, http/httpguts, http/httpproxy, http2, http2/hpack, idna, internal/httpcommon, internal/timeseries, trace and websocket. As controls, the function table of every one of these binaries lists runtime.main, and the same function-table read finds 91 golang.org/x/net/html functions, including the parser's parse and addFormattingElement methods, ParseWithOptions and ParseFragmentWithOptions, in test programs built for linux/amd64 and linux/arm64 against golang.org/x/net v0.54.0 that call all four exported functions; the same byte search finds all five listed names there (Parse and ParseFragment are inlined into their caller, so they appear only as strings). The vulnerable code is not present, so the golang.org/x/net version recorded in the build information does not make this package affected."
     },
     {
       "vulnerability": {
