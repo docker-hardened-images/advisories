@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:07:59Z",
-  "last_updated": "2026-11-25T22:36:11Z",
-  "version": 10,
+  "last_updated": "2026-11-26T03:24:29Z",
+  "version": 11,
   "statements": [
     {
       "vulnerability": {
@@ -866,7 +866,8 @@
           "@id": "pkg:apk/dhi/python-3.15@3.15.2-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-12345: the cleanup of tempfile.TemporaryDirectory races with changes to the directory tree. An attacker who can modify the tree during cleanup can replace a subdirectory with a symbolic link, so files outside the temporary directory are deleted or have their permissions and file flags reset, with the privileges of the process doing the cleanup: https://www.cve.org/CVERecord?id=CVE-2026-12345 and https://github.com/python/cpython/issues/157579 . The fix for the 3.15 branch is commit https://github.com/python/cpython/commit/06ef3d43fdaf4da97af12fa694b4886092c4b970 , the backport of https://github.com/python/cpython/pull/157580 ; outside tests, documentation and its NEWS entry it changes Lib/tempfile.py and Lib/shutil.py. It is in CPython 3.15.0rc3, 3.15.0 and 3.15.2, and the CVE record lists 3.15.0rc3 as the first fixed 3.15 release. The record adds that platforms where shutil.rmtree.avoids_symlink_attacks is false remain affected, and that file flags may still be reset outside the tree on all platforms. A later main-branch change for the same issue, https://github.com/python/cpython/commit/aa17c688d2c160969f2c8963f4454cdd139808e7 , fixes the cleanup fallbacks for temporary directories created with bytes paths; upstream filed it as a Library change, not a Security one, and it is not in any 3.15 release up to 3.15.2. The DHI Alpine 3.23 repository publishes six python-3.15 builds, 3.15.0-r0, 3.15.2-r0, 3.15.2-r1, 3.15.2-r2, 3.15.2-r3 and 3.15.2-r4, for x86_64 and aarch64. We downloaded the python-3.15, python-3.15-pycache-pyc0, python-3.15-pycache-pyc1 and python-3.15-pycache-pyc2 packages of every build on both architectures, and the pyc-3.15 and python-3.15-pyc packages, which hold no files; each was verified against its index checksum. In every build, /usr/lib/python3.15/tempfile.py and /usr/lib/python3.15/shutil.py are byte-identical to Lib/tempfile.py and Lib/shutil.py in the upstream CPython 3.15.0 and 3.15.2 releases, which are the same in both, so every build has the fixed cleanup. The compiled tempfile and shutil modules in the three pycache packages are checked-hash .pyc files whose source hash matches those files. Running each build's own python3.15 (3.15.0 in 3.15.0-r0, 3.15.2 in the later builds) shows that shutil.rmtree.avoids_symlink_attacks is True and that the os module has no chflags or lchflags function, so the cleanup's file-flag reset in tempfile does nothing on these builds. 3.15.0-r0, the lowest published build, carries the fix, so the range ends there."
     },
     {
       "vulnerability": {

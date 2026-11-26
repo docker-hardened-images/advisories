@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-12T01:41:48Z",
-  "last_updated": "2026-11-25T03:14:19Z",
-  "version": 12,
+  "last_updated": "2026-11-26T03:24:34Z",
+  "version": 13,
   "statements": [
     {
       "vulnerability": {
@@ -50,12 +50,26 @@
         },
         {
           "@id": "pkg:apk/dhi/nodejs-22@22.23.4-r2?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nodejs-22 to 22.23.5-r0 or later.",
+      "status_notes": "CVE-2026-123829 is a Node.js Permission Model bypass in recursive fs.watch() that discloses the names of descendants the process may not read. Node.js's advisory limits it to macOS and Windows: 'On macOS and Windows, fs.watch() and fs.promises.watch() in recursive mode are backed by the native libuv watcher', and the flaw 'requires macOS or Windows plus files created under the watched directory by another actor': https://nodejs.org/en/blog/vulnerability/november-2026-security-releases . The fix, https://github.com/nodejs/node/commit/5c9eed3b1e , adds a per-path read check to FSEventWrap::OnEvent in src/fs_event_wrap.cc; Node.js 22.23.5 includes it. FSEventWrap::OnEvent is compiled into the Linux node binary, where non-recursive fs.watch() uses it, so these builds carry the fixed code from 22.23.5 on. On Linux the reported leak does not occur: when the platform is neither macOS nor Windows, fs.watch() and fs.promises.watch() hand a recursive watch to the JavaScript watcher in lib/internal/fs/recursive_watch.js, because inotify cannot watch recursively, so libuv never reports descendant paths to FSEventWrap. See https://github.com/nodejs/node/blob/v22.23.5/lib/fs.js#L2545-L2551 and https://github.com/nodejs/node/blob/v22.23.5/lib/internal/fs/promises.js#L1262-L1268 . We read the node binary of every published nodejs-22 package for Alpine 3.23 (22.22.0-r0 to 22.23.5-r0, 13 builds) on x86_64 and aarch64, each checked against its index checksum, and found that platform check, if (options.recursive && !isMacOS && !isWindows), in both embedded modules of every build. 22.23.5-r0 is the first that reports v22.23.5, and every earlier build reports v22.22 or an earlier v22.23 release. The range follows the release that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-vt3l-x6f4-rjqx-24vk",
+        "aliases": [
+          "CVE-2026-123829"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/nodejs-22@22.23.5-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-123829 is a Node.js Permission Model bypass in recursive fs.watch() that discloses the names of descendants the process may not read. Node.js's advisory limits it to macOS and Windows: 'On macOS and Windows, fs.watch() and fs.promises.watch() in recursive mode are backed by the native libuv watcher', and the flaw 'requires macOS or Windows plus files created under the watched directory by another actor': https://nodejs.org/en/blog/vulnerability/november-2026-security-releases . The fix, https://github.com/nodejs/node/commit/5c9eed3b1e , adds a per-path read check to FSEventWrap::OnEvent in src/fs_event_wrap.cc; Node.js 22.23.5 includes it. FSEventWrap::OnEvent is compiled into the Linux node binary, where non-recursive fs.watch() uses it, so these builds carry the fixed code from 22.23.5 on. On Linux the reported leak does not occur: when the platform is neither macOS nor Windows, fs.watch() and fs.promises.watch() hand a recursive watch to the JavaScript watcher in lib/internal/fs/recursive_watch.js, because inotify cannot watch recursively, so libuv never reports descendant paths to FSEventWrap. See https://github.com/nodejs/node/blob/v22.23.5/lib/fs.js#L2545-L2551 and https://github.com/nodejs/node/blob/v22.23.5/lib/internal/fs/promises.js#L1262-L1268 . We read the node binary of every published nodejs-22 package for Alpine 3.23 (22.22.0-r0 to 22.23.5-r0, 13 builds) on x86_64 and aarch64, each checked against its index checksum, and found that platform check, if (options.recursive && !isMacOS && !isWindows), in both embedded modules of every build. 22.23.5-r0 is the first that reports v22.23.5, and every earlier build reports v22.22 or an earlier v22.23 release. The range follows the release that carries the fix."
     },
     {
       "vulnerability": {
@@ -88,12 +102,26 @@
         },
         {
           "@id": "pkg:apk/dhi/nodejs-22@22.23.4-r2?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nodejs-22 to 22.23.5-r0 or later.",
+      "status_notes": "CVE-2026-123829 is a Node.js Permission Model bypass in recursive fs.watch() that discloses the names of descendants the process may not read. Node.js's advisory limits it to macOS and Windows: 'On macOS and Windows, fs.watch() and fs.promises.watch() in recursive mode are backed by the native libuv watcher', and the flaw 'requires macOS or Windows plus files created under the watched directory by another actor': https://nodejs.org/en/blog/vulnerability/november-2026-security-releases . The fix, https://github.com/nodejs/node/commit/5c9eed3b1e , adds a per-path read check to FSEventWrap::OnEvent in src/fs_event_wrap.cc; Node.js 22.23.5 includes it. FSEventWrap::OnEvent is compiled into the Linux node binary, where non-recursive fs.watch() uses it, so these builds carry the fixed code from 22.23.5 on. On Linux the reported leak does not occur: when the platform is neither macOS nor Windows, fs.watch() and fs.promises.watch() hand a recursive watch to the JavaScript watcher in lib/internal/fs/recursive_watch.js, because inotify cannot watch recursively, so libuv never reports descendant paths to FSEventWrap. See https://github.com/nodejs/node/blob/v22.23.5/lib/fs.js#L2545-L2551 and https://github.com/nodejs/node/blob/v22.23.5/lib/internal/fs/promises.js#L1262-L1268 . We read the node binary of every published nodejs-22 package for Alpine 3.24 (22.22.3-r0 to 22.23.5-r0, 9 builds) on x86_64 and aarch64, each checked against its index checksum, and found that platform check, if (options.recursive && !isMacOS && !isWindows), in both embedded modules of every build. 22.23.5-r0 is the first that reports v22.23.5, and every earlier build reports v22.22 or an earlier v22.23 release. The range follows the release that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-vt3l-x6f4-rjqx-24vk",
+        "aliases": [
+          "CVE-2026-123829"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/nodejs-22@22.23.5-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-123829 is a Node.js Permission Model bypass in recursive fs.watch() that discloses the names of descendants the process may not read. Node.js's advisory limits it to macOS and Windows: 'On macOS and Windows, fs.watch() and fs.promises.watch() in recursive mode are backed by the native libuv watcher', and the flaw 'requires macOS or Windows plus files created under the watched directory by another actor': https://nodejs.org/en/blog/vulnerability/november-2026-security-releases . The fix, https://github.com/nodejs/node/commit/5c9eed3b1e , adds a per-path read check to FSEventWrap::OnEvent in src/fs_event_wrap.cc; Node.js 22.23.5 includes it. FSEventWrap::OnEvent is compiled into the Linux node binary, where non-recursive fs.watch() uses it, so these builds carry the fixed code from 22.23.5 on. On Linux the reported leak does not occur: when the platform is neither macOS nor Windows, fs.watch() and fs.promises.watch() hand a recursive watch to the JavaScript watcher in lib/internal/fs/recursive_watch.js, because inotify cannot watch recursively, so libuv never reports descendant paths to FSEventWrap. See https://github.com/nodejs/node/blob/v22.23.5/lib/fs.js#L2545-L2551 and https://github.com/nodejs/node/blob/v22.23.5/lib/internal/fs/promises.js#L1262-L1268 . We read the node binary of every published nodejs-22 package for Alpine 3.24 (22.22.3-r0 to 22.23.5-r0, 9 builds) on x86_64 and aarch64, each checked against its index checksum, and found that platform check, if (options.recursive && !isMacOS && !isWindows), in both embedded modules of every build. 22.23.5-r0 is the first that reports v22.23.5, and every earlier build reports v22.22 or an earlier v22.23 release. The range follows the release that carries the fix."
     },
     {
       "vulnerability": {
@@ -680,7 +708,20 @@
         },
         {
           "@id": "pkg:deb/dhi/nodejs-22@22.23.4-1?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nodejs-22 to 22.23.5-0 or later.",
+      "status_notes": "CVE-2026-123829 is a Node.js Permission Model bypass in recursive fs.watch() that discloses the names of descendants the process may not read. Node.js's advisory limits it to macOS and Windows: 'On macOS and Windows, fs.watch() and fs.promises.watch() in recursive mode are backed by the native libuv watcher', and the flaw 'requires macOS or Windows plus files created under the watched directory by another actor': https://nodejs.org/en/blog/vulnerability/november-2026-security-releases . The fix, https://github.com/nodejs/node/commit/5c9eed3b1e , adds a per-path read check to FSEventWrap::OnEvent in src/fs_event_wrap.cc; Node.js 22.23.5 includes it. FSEventWrap::OnEvent is compiled into the Linux node binary, where non-recursive fs.watch() uses it, so these builds carry the fixed code from 22.23.5 on. On Linux the reported leak does not occur: when the platform is neither macOS nor Windows, fs.watch() and fs.promises.watch() hand a recursive watch to the JavaScript watcher in lib/internal/fs/recursive_watch.js, because inotify cannot watch recursively, so libuv never reports descendant paths to FSEventWrap. See https://github.com/nodejs/node/blob/v22.23.5/lib/fs.js#L2545-L2551 and https://github.com/nodejs/node/blob/v22.23.5/lib/internal/fs/promises.js#L1262-L1268 . We read the node binary of every published nodejs-22 package for Debian 13 (22.22.3-0 to 22.23.5-1, 10 builds) on amd64 and arm64, each checked against its index checksum, and found that platform check, if (options.recursive && !isMacOS && !isWindows), in both embedded modules of every build. 22.23.5-0 and 22.23.5-1 report v22.23.5, and every earlier build reports v22.22 or an earlier v22.23 release. The range follows the release that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-vt3l-x6f4-rjqx-24vk",
+        "aliases": [
+          "CVE-2026-123829"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/nodejs-22@22.23.5-0?distro=dhi-13"
         },
@@ -688,7 +729,8 @@
           "@id": "pkg:deb/dhi/nodejs-22@22.23.5-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-123829 is a Node.js Permission Model bypass in recursive fs.watch() that discloses the names of descendants the process may not read. Node.js's advisory limits it to macOS and Windows: 'On macOS and Windows, fs.watch() and fs.promises.watch() in recursive mode are backed by the native libuv watcher', and the flaw 'requires macOS or Windows plus files created under the watched directory by another actor': https://nodejs.org/en/blog/vulnerability/november-2026-security-releases . The fix, https://github.com/nodejs/node/commit/5c9eed3b1e , adds a per-path read check to FSEventWrap::OnEvent in src/fs_event_wrap.cc; Node.js 22.23.5 includes it. FSEventWrap::OnEvent is compiled into the Linux node binary, where non-recursive fs.watch() uses it, so these builds carry the fixed code from 22.23.5 on. On Linux the reported leak does not occur: when the platform is neither macOS nor Windows, fs.watch() and fs.promises.watch() hand a recursive watch to the JavaScript watcher in lib/internal/fs/recursive_watch.js, because inotify cannot watch recursively, so libuv never reports descendant paths to FSEventWrap. See https://github.com/nodejs/node/blob/v22.23.5/lib/fs.js#L2545-L2551 and https://github.com/nodejs/node/blob/v22.23.5/lib/internal/fs/promises.js#L1262-L1268 . We read the node binary of every published nodejs-22 package for Debian 13 (22.22.3-0 to 22.23.5-1, 10 builds) on amd64 and arm64, each checked against its index checksum, and found that platform check, if (options.recursive && !isMacOS && !isWindows), in both embedded modules of every build. 22.23.5-0 and 22.23.5-1 report v22.23.5, and every earlier build reports v22.22 or an earlier v22.23 release. The range follows the release that carries the fix."
     },
     {
       "vulnerability": {
