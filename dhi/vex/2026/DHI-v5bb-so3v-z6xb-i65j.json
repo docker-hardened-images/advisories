@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T16:59:50Z",
-  "last_updated": "2026-11-20T14:20:51Z",
-  "version": 2,
+  "last_updated": "2026-11-26T03:07:58Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -54,6 +54,28 @@
       },
       "products": [
         {
+          "@id": "pkg:apk/dhi/ruby-3.4@3.4.8-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/ruby-3.4@3.4.8-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/ruby-3.4@3.4.9-r1?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update ruby-3.4 to 3.4.9-r2 or later.",
+      "status_notes": "CVE-2026-42256 (GHSA-87pf-fpwv-p7m7): in the Ruby net-imap gem, a malicious IMAP server can send an arbitrarily high iteration count during SCRAM-* authentication and make the client spend unbounded CPU time deriving the key (a denial of service): https://github.com/ruby/net-imap/security/advisories/GHSA-87pf-fpwv-p7m7. Upstream fixed it in net-imap 0.4.24 on the 0.4 line, 0.5.14 on the 0.5 line and 0.6.4 on the 0.6 line; the 0.5.14 release notes list GHSA-87pf-fpwv-p7m7: https://github.com/ruby/net-imap/releases/tag/v0.5.14. The fix adds a max_iterations option to the SCRAM authenticators, which a caller passes to Net::IMAP#authenticate; its default is 2^31 - 1, the largest iteration count OpenSSL accepts, so a client is protected only when it sets a lower max_iterations or avoids SCRAM mechanisms with untrusted servers, as the advisory says. The DHI ruby-3.4 package for Alpine 3.23 is published as 3.4.8-r0, 3.4.8-r1, 3.4.9-r1, 3.4.9-r2, 3.4.10-r2, 3.4.10-r3, 3.4.11-r3, 3.4.12-r3, 3.4.13-r3 and 3.4.13-r4, for x86_64 and aarch64. It ships net-imap in its ruby3.4-net-imap gem package, which carries the gem's version rather than Ruby's, so the range below is written in the ruby-3.4 package's own versions, and each ruby-3.4 build is placed by the net-imap its ruby3.4-net-imap package installs. The gem package keeps the gem's own version but takes its -rN release number from the Ruby build that produced it, and the repository keeps one copy of each package version, so the gem package versions published under a given -rN are exactly the net-imap releases the Ruby builds with that -rN shipped. We read Net::IMAP::VERSION in lib/net/imap.rb of every published ruby3.4-net-imap package for both architectures, each verified against the repository index checksum, and listed the contents of every published ruby-3.4-libs package: the published ruby3.4-net-imap packages are 0.5.8-r0, 0.5.8-r1, 0.5.8-r2, 0.5.15-r2, 0.5.15-r3 and 0.5.15-r4. 0.5.8-r0 and 0.5.8-r1 install net-imap 0.5.8, which Ruby 3.4.8 and 3.4.9 bundle, per https://github.com/ruby/ruby/blob/v3_4_9/gems/bundled_gems, so 3.4.8-r0, 3.4.8-r1 and 3.4.9-r1 ship 0.5.8. Under -r2 two gem versions exist: 0.5.8-r2, which despite its label installs net-imap 0.5.14 (ruby-3.4-libs 3.4.9-r2 still carries the net-imap-0.5.14 gem archive that install left behind, and no other ruby-3.4-libs build carries a net-imap archive), and 0.5.15-r2, which installs net-imap 0.5.15. Ruby 3.4.10 onward bundles net-imap 0.5.15, per https://github.com/ruby/ruby/blob/v3_4_10/gems/bundled_gems, so 3.4.9-r2 is the build that replaced its bundled 0.5.8 with 0.5.14, and 3.4.10-r2 ships the bundled 0.5.15. 0.5.15-r3 and 0.5.15-r4 install net-imap 0.5.15, so 3.4.10-r3, 3.4.11-r3, 3.4.12-r3, 3.4.13-r3 and 3.4.13-r4 ship 0.5.15. Both architectures agree for every build. Every ruby-3.4 build before 3.4.9-r2 ships a net-imap without this fix, and 3.4.9-r2 is the first that ships net-imap 0.5.14, so the range is introduced at the first published build and fixed at 3.4.9-r2."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-v5bb-so3v-z6xb-i65j",
+        "aliases": [
+          "CVE-2026-42256"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/ruby-3.4@3.4.10-r2?distro=dhi-3.23"
         },
         {
@@ -72,19 +94,11 @@
           "@id": "pkg:apk/dhi/ruby-3.4@3.4.13-r4?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/ruby-3.4@3.4.8-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/ruby-3.4@3.4.8-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/ruby-3.4@3.4.9-r1?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/ruby-3.4@3.4.9-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-42256 (GHSA-87pf-fpwv-p7m7): in the Ruby net-imap gem, a malicious IMAP server can send an arbitrarily high iteration count during SCRAM-* authentication and make the client spend unbounded CPU time deriving the key (a denial of service): https://github.com/ruby/net-imap/security/advisories/GHSA-87pf-fpwv-p7m7. Upstream fixed it in net-imap 0.4.24 on the 0.4 line, 0.5.14 on the 0.5 line and 0.6.4 on the 0.6 line; the 0.5.14 release notes list GHSA-87pf-fpwv-p7m7: https://github.com/ruby/net-imap/releases/tag/v0.5.14. The fix adds a max_iterations option to the SCRAM authenticators, which a caller passes to Net::IMAP#authenticate; its default is 2^31 - 1, the largest iteration count OpenSSL accepts, so a client is protected only when it sets a lower max_iterations or avoids SCRAM mechanisms with untrusted servers, as the advisory says. The DHI ruby-3.4 package for Alpine 3.23 is published as 3.4.8-r0, 3.4.8-r1, 3.4.9-r1, 3.4.9-r2, 3.4.10-r2, 3.4.10-r3, 3.4.11-r3, 3.4.12-r3, 3.4.13-r3 and 3.4.13-r4, for x86_64 and aarch64. It ships net-imap in its ruby3.4-net-imap gem package, which carries the gem's version rather than Ruby's, so the range below is written in the ruby-3.4 package's own versions, and each ruby-3.4 build is placed by the net-imap its ruby3.4-net-imap package installs. The gem package keeps the gem's own version but takes its -rN release number from the Ruby build that produced it, and the repository keeps one copy of each package version, so the gem package versions published under a given -rN are exactly the net-imap releases the Ruby builds with that -rN shipped. We read Net::IMAP::VERSION in lib/net/imap.rb of every published ruby3.4-net-imap package for both architectures, each verified against the repository index checksum, and listed the contents of every published ruby-3.4-libs package: the published ruby3.4-net-imap packages are 0.5.8-r0, 0.5.8-r1, 0.5.8-r2, 0.5.15-r2, 0.5.15-r3 and 0.5.15-r4. 0.5.8-r0 and 0.5.8-r1 install net-imap 0.5.8, which Ruby 3.4.8 and 3.4.9 bundle, per https://github.com/ruby/ruby/blob/v3_4_9/gems/bundled_gems, so 3.4.8-r0, 3.4.8-r1 and 3.4.9-r1 ship 0.5.8. Under -r2 two gem versions exist: 0.5.8-r2, which despite its label installs net-imap 0.5.14 (ruby-3.4-libs 3.4.9-r2 still carries the net-imap-0.5.14 gem archive that install left behind, and no other ruby-3.4-libs build carries a net-imap archive), and 0.5.15-r2, which installs net-imap 0.5.15. Ruby 3.4.10 onward bundles net-imap 0.5.15, per https://github.com/ruby/ruby/blob/v3_4_10/gems/bundled_gems, so 3.4.9-r2 is the build that replaced its bundled 0.5.8 with 0.5.14, and 3.4.10-r2 ships the bundled 0.5.15. 0.5.15-r3 and 0.5.15-r4 install net-imap 0.5.15, so 3.4.10-r3, 3.4.11-r3, 3.4.12-r3, 3.4.13-r3 and 3.4.13-r4 ship 0.5.15. Both architectures agree for every build. Every ruby-3.4 build before 3.4.9-r2 ships a net-imap without this fix, and 3.4.9-r2 is the first that ships net-imap 0.5.14, so the range is introduced at the first published build and fixed at 3.4.9-r2."
     },
     {
       "vulnerability": {
@@ -101,12 +115,6 @@
           "@id": "pkg:apk/dhi/ruby-4.0@4.0.1-r1?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/ruby-4.0@4.0.10-r4?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/ruby-4.0@4.0.10-r5?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/ruby-4.0@4.0.2-r1?distro=dhi-3.23"
         },
         {
@@ -117,6 +125,25 @@
         },
         {
           "@id": "pkg:apk/dhi/ruby-4.0@4.0.4-r2?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update ruby-4.0 to 4.0.4-r3 or later.",
+      "status_notes": "CVE-2026-42256 (GHSA-87pf-fpwv-p7m7): in the Ruby net-imap gem, a malicious IMAP server can send an arbitrarily high iteration count during SCRAM-* authentication and make the client spend unbounded CPU time deriving the key (a denial of service): https://github.com/ruby/net-imap/security/advisories/GHSA-87pf-fpwv-p7m7. Upstream fixed it in net-imap 0.4.24 on the 0.4 line, 0.5.14 on the 0.5 line and 0.6.4 on the 0.6 line; the 0.6.4 release notes list GHSA-87pf-fpwv-p7m7: https://github.com/ruby/net-imap/releases/tag/v0.6.4. The DHI ruby-4.0 package for Alpine 3.23 is published as 4.0.1-r0, 4.0.1-r1, 4.0.2-r1, 4.0.2-r2, 4.0.3-r2, 4.0.4-r2, 4.0.4-r3, 4.0.5-r3, 4.0.6-r3, 4.0.6-r4, 4.0.7-r4, 4.0.9-r4, 4.0.10-r4 and 4.0.10-r5, for x86_64 and aarch64. It ships net-imap in its ruby4.0-net-imap gem package, which carries the gem's version rather than Ruby's, so the range below is written in the ruby-4.0 package's own versions, and each ruby-4.0 build is placed by the net-imap its ruby4.0-net-imap package installs. The gem package keeps the gem's own version but takes its -rN release number from the Ruby build that produced it, and the repository keeps one copy of each package version, so the gem package versions published under a given -rN are exactly the net-imap releases the Ruby builds with that -rN shipped. We read Net::IMAP::VERSION in lib/net/imap.rb of every published ruby4.0-net-imap package for both architectures, each verified against the repository index checksum, and listed the contents of every published ruby-4.0-libs package: the published ruby4.0-net-imap packages are 0.6.2-r0, 0.6.2-r1, 0.6.2-r2, 0.6.2-r3, 0.6.4.1-r3, 0.6.4.1-r4 and 0.6.4.1-r5. 0.6.2-r0, -r1 and -r2 install net-imap 0.6.2, the only gem version under -r0, -r1 and -r2, so 4.0.1-r0 through 4.0.4-r2 ship 0.6.2. Under -r3 two gem versions exist: 0.6.2-r3, which despite its label installs net-imap 0.6.4, and 0.6.4.1-r3, which installs net-imap 0.6.4.1. The 4.0.4-r3 and 4.0.5-r3 builds are the ones that replaced their bundled net-imap with 0.6.4: ruby-4.0-libs 4.0.4-r3 and 4.0.5-r3 both carry the net-imap-0.6.4 gem archive that install left behind, while no other ruby-4.0-libs build carries a net-imap archive; 4.0.6-r3 ships 0.6.4.1. 0.6.4.1-r4 and 0.6.4.1-r5 install net-imap 0.6.4.1, so 4.0.6-r4, 4.0.7-r4, 4.0.9-r4, 4.0.10-r4 and 4.0.10-r5 ship 0.6.4.1. Both architectures agree for every build. Every ruby-4.0 build before 4.0.4-r3 ships a net-imap without this fix, and 4.0.4-r3 is the first that ships net-imap 0.6.4, so the range is introduced at the first published build and fixed at 4.0.4-r3."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-v5bb-so3v-z6xb-i65j",
+        "aliases": [
+          "CVE-2026-42256"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/ruby-4.0@4.0.10-r4?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/ruby-4.0@4.0.10-r5?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/ruby-4.0@4.0.4-r3?distro=dhi-3.23"
@@ -137,7 +164,8 @@
           "@id": "pkg:apk/dhi/ruby-4.0@4.0.9-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-42256 (GHSA-87pf-fpwv-p7m7): in the Ruby net-imap gem, a malicious IMAP server can send an arbitrarily high iteration count during SCRAM-* authentication and make the client spend unbounded CPU time deriving the key (a denial of service): https://github.com/ruby/net-imap/security/advisories/GHSA-87pf-fpwv-p7m7. Upstream fixed it in net-imap 0.4.24 on the 0.4 line, 0.5.14 on the 0.5 line and 0.6.4 on the 0.6 line; the 0.6.4 release notes list GHSA-87pf-fpwv-p7m7: https://github.com/ruby/net-imap/releases/tag/v0.6.4. The DHI ruby-4.0 package for Alpine 3.23 is published as 4.0.1-r0, 4.0.1-r1, 4.0.2-r1, 4.0.2-r2, 4.0.3-r2, 4.0.4-r2, 4.0.4-r3, 4.0.5-r3, 4.0.6-r3, 4.0.6-r4, 4.0.7-r4, 4.0.9-r4, 4.0.10-r4 and 4.0.10-r5, for x86_64 and aarch64. It ships net-imap in its ruby4.0-net-imap gem package, which carries the gem's version rather than Ruby's, so the range below is written in the ruby-4.0 package's own versions, and each ruby-4.0 build is placed by the net-imap its ruby4.0-net-imap package installs. The gem package keeps the gem's own version but takes its -rN release number from the Ruby build that produced it, and the repository keeps one copy of each package version, so the gem package versions published under a given -rN are exactly the net-imap releases the Ruby builds with that -rN shipped. We read Net::IMAP::VERSION in lib/net/imap.rb of every published ruby4.0-net-imap package for both architectures, each verified against the repository index checksum, and listed the contents of every published ruby-4.0-libs package: the published ruby4.0-net-imap packages are 0.6.2-r0, 0.6.2-r1, 0.6.2-r2, 0.6.2-r3, 0.6.4.1-r3, 0.6.4.1-r4 and 0.6.4.1-r5. 0.6.2-r0, -r1 and -r2 install net-imap 0.6.2, the only gem version under -r0, -r1 and -r2, so 4.0.1-r0 through 4.0.4-r2 ship 0.6.2. Under -r3 two gem versions exist: 0.6.2-r3, which despite its label installs net-imap 0.6.4, and 0.6.4.1-r3, which installs net-imap 0.6.4.1. The 4.0.4-r3 and 4.0.5-r3 builds are the ones that replaced their bundled net-imap with 0.6.4: ruby-4.0-libs 4.0.4-r3 and 4.0.5-r3 both carry the net-imap-0.6.4 gem archive that install left behind, while no other ruby-4.0-libs build carries a net-imap archive; 4.0.6-r3 ships 0.6.4.1. 0.6.4.1-r4 and 0.6.4.1-r5 install net-imap 0.6.4.1, so 4.0.6-r4, 4.0.7-r4, 4.0.9-r4, 4.0.10-r4 and 4.0.10-r5 ship 0.6.4.1. Both architectures agree for every build. Every ruby-4.0 build before 4.0.4-r3 ships a net-imap without this fix, and 4.0.4-r3 is the first that ships net-imap 0.6.4, so the range is introduced at the first published build and fixed at 4.0.4-r3."
     }
   ]
 }

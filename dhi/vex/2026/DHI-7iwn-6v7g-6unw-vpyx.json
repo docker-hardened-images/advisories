@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T02:59:15Z",
-  "last_updated": "2026-11-25T21:58:35Z",
-  "version": 11,
+  "last_updated": "2026-11-26T03:08:32Z",
+  "version": 12,
   "statements": [
     {
       "vulnerability": {
@@ -93,9 +93,6 @@
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
         },
         {
@@ -105,7 +102,24 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.12-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-120148 (PostgreSQL extended-statistics pseudo-type confusion executes arbitrary code) in 17.12 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-120148/ lists 17.12 as the fixed release for major version 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/7f51d62e115503bfc1a9997089aece2935d99185 on the REL_17_STABLE branch, which changes src/backend/catalog/heap.c, src/backend/commands/statscmds.c, src/backend/statistics/extended_stats.c, src/backend/statistics/mcv.c, src/backend/utils/adt/ruleutils.c and src/backend/utils/adt/selfuncs.c (plus regression tests) so that CREATE STATISTICS rejects expressions of a pseudo-type, and the planner, statistics readers and ANALYZE refuse such statistics objects that already exist; it is tagged Security: CVE-2026-120148 and is in the REL_17_12 release tag and not in REL_17_11. The commit message notes that statistics objects of this kind created on an earlier minor release can still exist after the upgrade and should be dropped; the fixed release raises an error when they are used rather than removing them. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies touch the files this fix changes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every published postgresql17 package for Alpine 3.23 on both x86_64 and aarch64 (checksums verified against the package index): 17.12-r0 reports PostgreSQL 17.12 and carries the fix, while the earlier builds 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0 report 17.7, 17.8, 17.9, 17.10 and 17.11 and are affected. As a check, the postgres server binary contains the error messages this fix adds (\"expression has pseudo-type %s\", \"cannot interpret statistics on an expression of pseudo-type %s\" and \"no collation was derived for expression with collatable type %s\") in 17.12-r0 on both architectures, and the same file in 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0 does not. 17.12-r0 is the first published build that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-120148 under its 17.12-r0 secfixes."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7iwn-6v7g-6unw-vpyx",
+        "aliases": [
+          "CVE-2026-120148"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-120148 (PostgreSQL extended-statistics pseudo-type confusion executes arbitrary code) in 17.12 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-120148/ lists 17.12 as the fixed release for major version 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/7f51d62e115503bfc1a9997089aece2935d99185 on the REL_17_STABLE branch, which changes src/backend/catalog/heap.c, src/backend/commands/statscmds.c, src/backend/statistics/extended_stats.c, src/backend/statistics/mcv.c, src/backend/utils/adt/ruleutils.c and src/backend/utils/adt/selfuncs.c (plus regression tests) so that CREATE STATISTICS rejects expressions of a pseudo-type, and the planner, statistics readers and ANALYZE refuse such statistics objects that already exist; it is tagged Security: CVE-2026-120148 and is in the REL_17_12 release tag and not in REL_17_11. The commit message notes that statistics objects of this kind created on an earlier minor release can still exist after the upgrade and should be dropped; the fixed release raises an error when they are used rather than removing them. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies touch the files this fix changes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every published postgresql17 package for Alpine 3.23 on both x86_64 and aarch64 (checksums verified against the package index): 17.12-r0 reports PostgreSQL 17.12 and carries the fix, while the earlier builds 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0 report 17.7, 17.8, 17.9, 17.10 and 17.11 and are affected. As a check, the postgres server binary contains the error messages this fix adds (\"expression has pseudo-type %s\", \"cannot interpret statistics on an expression of pseudo-type %s\" and \"no collation was derived for expression with collatable type %s\") in 17.12-r0 on both architectures, and the same file in 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0 does not. 17.12-r0 is the first published build that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-120148 under its 17.12-r0 secfixes."
     },
     {
       "vulnerability": {
@@ -120,12 +134,26 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.12-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-120148 (PostgreSQL extended-statistics pseudo-type confusion executes arbitrary code) in 17.12 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-120148/ lists 17.12 as the fixed release for major version 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/7f51d62e115503bfc1a9997089aece2935d99185 on the REL_17_STABLE branch, which changes src/backend/catalog/heap.c, src/backend/commands/statscmds.c, src/backend/statistics/extended_stats.c, src/backend/statistics/mcv.c, src/backend/utils/adt/ruleutils.c and src/backend/utils/adt/selfuncs.c (plus regression tests) so that CREATE STATISTICS rejects expressions of a pseudo-type, and the planner, statistics readers and ANALYZE refuse such statistics objects that already exist; it is tagged Security: CVE-2026-120148 and is in the REL_17_12 release tag and not in REL_17_11. The commit message notes that statistics objects of this kind created on an earlier minor release can still exist after the upgrade and should be dropped; the fixed release raises an error when they are used rather than removing them. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD, https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies touch the files this fix changes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every published postgresql17 package for Alpine 3.24 on both x86_64 and aarch64 (checksums verified against the package index): 17.12-r0 reports PostgreSQL 17.12 and carries the fix, while the earlier builds 17.10-r0 and 17.11-r0 report 17.10 and 17.11 and are affected. As a check, the postgres server binary contains the error messages this fix adds (\"expression has pseudo-type %s\", \"cannot interpret statistics on an expression of pseudo-type %s\" and \"no collation was derived for expression with collatable type %s\") in 17.12-r0 on both architectures, and the same file in 17.10-r0 and 17.11-r0 does not. 17.12-r0 is the first published build that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-120148 under its 17.12-r0 secfixes."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7iwn-6v7g-6unw-vpyx",
+        "aliases": [
+          "CVE-2026-120148"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-120148 (PostgreSQL extended-statistics pseudo-type confusion executes arbitrary code) in 17.12 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-120148/ lists 17.12 as the fixed release for major version 17, and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/7f51d62e115503bfc1a9997089aece2935d99185 on the REL_17_STABLE branch, which changes src/backend/catalog/heap.c, src/backend/commands/statscmds.c, src/backend/statistics/extended_stats.c, src/backend/statistics/mcv.c, src/backend/utils/adt/ruleutils.c and src/backend/utils/adt/selfuncs.c (plus regression tests) so that CREATE STATISTICS rejects expressions of a pseudo-type, and the planner, statistics readers and ANALYZE refuse such statistics objects that already exist; it is tagged Security: CVE-2026-120148 and is in the REL_17_12 release tag and not in REL_17_11. The commit message notes that statistics objects of this kind created on an earlier minor release can still exist after the upgrade and should be dropped; the fixed release raises an error when they are used rather than removing them. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD, https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies touch the files this fix changes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every published postgresql17 package for Alpine 3.24 on both x86_64 and aarch64 (checksums verified against the package index): 17.12-r0 reports PostgreSQL 17.12 and carries the fix, while the earlier builds 17.10-r0 and 17.11-r0 report 17.10 and 17.11 and are affected. As a check, the postgres server binary contains the error messages this fix adds (\"expression has pseudo-type %s\", \"cannot interpret statistics on an expression of pseudo-type %s\" and \"no collation was derived for expression with collatable type %s\") in 17.12-r0 on both architectures, and the same file in 17.10-r0 and 17.11-r0 does not. 17.12-r0 is the first published build that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-120148 under its 17.12-r0 secfixes."
     },
     {
       "vulnerability": {

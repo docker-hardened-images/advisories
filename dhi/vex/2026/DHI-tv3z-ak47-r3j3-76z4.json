@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:11:33Z",
-  "last_updated": "2026-11-25T21:07:41Z",
-  "version": 3,
+  "last_updated": "2026-11-26T03:08:11Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -28,7 +28,9 @@
           "@id": "pkg:apk/dhi/libxml2@2.13.9-r5?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-0990: xmlCatalogXMLResolveURI() in libxml2 recurses without limit when an XML catalog has a delegateURI entry that refers back to the same catalog, so resolving a URI through such a catalog exhausts the stack and crashes the process (a denial of service): https://gitlab.gnome.org/GNOME/libxml2/-/issues/1018. Upstream fixed it in commit https://gitlab.gnome.org/GNOME/libxml2/-/commit/1961208e958ca22f80a0b4e4c9d71cfa050aa982, part of merge request https://gitlab.gnome.org/GNOME/libxml2/-/merge_requests/368, which adds a recursion depth check to xmlCatalogListXMLResolveURI() in catalog.c. The DHI libxml2 packages for Alpine 3.24 are builds of libxml2 2.13.9 from Alpine's 3.24-stable libxml2 package, whose patches change parser.c, xinclude.c and the testparser.c test program, plus DHI's own backports for CVE-2026-11979 and CVE-2026-1757, which change xmlcatalog.c and debugXML.c: https://github.com/alpinelinux/aports/blob/3.24-stable/main/libxml2/APKBUILD. None of them changes catalog.c. Alpine has backported the fix only on its development branch (edge), in that branch's own libxml2 2.13.9-r4: https://github.com/alpinelinux/aports/commit/e3071fe8f7dc214608fdc5c7b65756cb552eaa42. The DHI Alpine 3.24 builds numbered 2.13.9-r4 and 2.13.9-r5 are separate builds from 3.24-stable and do not carry it. The DHI Alpine 3.24 main repository publishes packages built from source libxml2 at 2.13.9-r2, 2.13.9-r3, 2.13.9-r4 and 2.13.9-r5 for x86_64 and aarch64, and the security repository publishes none. We downloaded every one of them, each verified against its index checksum. None of the libxml2 libraries (libxml2.so.2.13.9 in libxml2) or static archives (libxml2.a in libxml2-static) of these builds contains the message \"Ignoring repeated nextCatalog\" that the companion fix for CVE-2026-0992 from the same merge request adds, on either architecture, while each contains the catalog code's existing \"Detected recursion in catalog\" message. Running the xmlcatalog program from libxml2-utils with each build's own libxml2 library against a catalog whose delegateURI entry points to itself ends in a segmentation fault for 2.13.9-r2 and 2.13.9-r5 on x86_64 and 2.13.9-r5 on aarch64. Every published build therefore ships the vulnerable code, and no published build carries the fix yet; the status will move to FIXED once a DHI build with the upstream fix is published."
     },
     {
       "vulnerability": {
@@ -46,11 +48,20 @@
         },
         {
           "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u2dhi0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3%2Bdhi0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3%2Bdhi1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3%2Bdhi2?distro=dhi-13"
         }
       ],
       "status": "affected",
-      "action_statement": "Update libxml2 to 2.12.7+dfsg+really2.9.14-2.1+deb13u3+dhi0 or later.",
-      "status_notes": "CVE-2026-0990: xmlCatalogXMLResolveURI() recurses without bound when an XML catalog has a URI delegate entry that references itself, exhausting the stack (https://gitlab.gnome.org/GNOME/libxml2/-/issues/1018). Debian fixed it for trixie in libxml2 2.12.7+dfsg+really2.9.14-2.1+deb13u3, whose changelog reads \"Fix CVE-2026-0990: `xmlCatalogXMLResolveURI()` will recurse infinitely if a catalog has a URI delegate referencing itself\" (https://security-tracker.debian.org/tracker/CVE-2026-0990). The DHI libxml2 packages for Debian 13 are rebuilds of Debian's trixie libxml2. The rebuilds of 2.12.7+dfsg+really2.9.14-2.1+deb13u2 predate the fix; the first rebuild of 2.12.7+dfsg+really2.9.14-2.1+deb13u3, used as the fixed version here, and every later build are built from that Debian release, and the Debian changelog shipped in the current libxml2 package (read for amd64 and arm64) carries Debian's entry for this CVE."
+      "action_statement": "Update libxml2 to 2.12.7+dfsg+really2.9.14-2.1+deb13u3+dhi3 or later.",
+      "status_notes": "CVE-2026-0990: xmlCatalogXMLResolveURI() in libxml2 recurses without limit when an XML catalog has a delegateURI entry that refers back to the same catalog, so resolving a URI through such a catalog exhausts the stack and crashes the process (a denial of service): https://gitlab.gnome.org/GNOME/libxml2/-/issues/1018. Upstream fixed it in commit https://gitlab.gnome.org/GNOME/libxml2/-/commit/1961208e958ca22f80a0b4e4c9d71cfa050aa982, part of merge request https://gitlab.gnome.org/GNOME/libxml2/-/merge_requests/368, which adds a recursion depth check to xmlCatalogListXMLResolveURI() in catalog.c. Debian fixed it for trixie in libxml2 2.12.7+dfsg+really2.9.14-2.1+deb13u3, whose changelog reads \"Fix CVE-2026-0990: `xmlCatalogXMLResolveURI()` will recurse infinitely if a catalog has a URI delegate referencing itself, eventually resulting in a call stack overflow.\" See https://security-tracker.debian.org/tracker/CVE-2026-0990. The DHI libxml2 packages for Debian 13 are rebuilds of Debian's trixie libxml2. The DHI Debian repository now publishes one build from source libxml2, a rebuild of Debian's 2.12.7+dfsg+really2.9.14-2.1+deb13u3, for amd64 and arm64. We downloaded every binary package of it (libxml2, libxml2-dev, libxml2-utils and python3-libxml2, plus the libxml2-dbgsym, libxml2-utils-dbgsym and python3-libxml2-dbgsym packages), each verified against its index checksum: the Debian changelog shipped in each of the four non-debug packages carries Debian's entry for this CVE, and its libxml2.so.2.9.14 library and the libxml2.a static archive in libxml2-dev, on both architectures, contain the message \"Ignoring repeated nextCatalog\" that Debian's deb13u3 update adds with its fix for CVE-2026-0992, released alongside this one. Running the xmlcatalog program from its libxml2-utils package with its libxml2 library, on amd64 and arm64, against a catalog whose delegateURI entry points to itself now stops with \"Detected recursion in catalog\" instead of crashing. Earlier rebuilds are no longer in the repository, so they could not be checked and read as affected. The range ends at that rebuild, the lowest published build, which carries the fix."
     },
     {
       "vulnerability": {
@@ -61,20 +72,11 @@
       },
       "products": [
         {
-          "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3%2Bdhi0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3%2Bdhi1?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3%2Bdhi2?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3%2Bdhi3?distro=dhi-13"
         }
       ],
       "status": "fixed",
-      "status_notes": "CVE-2026-0990: xmlCatalogXMLResolveURI() recurses without bound when an XML catalog has a URI delegate entry that references itself, exhausting the stack (https://gitlab.gnome.org/GNOME/libxml2/-/issues/1018). Debian fixed it for trixie in libxml2 2.12.7+dfsg+really2.9.14-2.1+deb13u3, whose changelog reads \"Fix CVE-2026-0990: `xmlCatalogXMLResolveURI()` will recurse infinitely if a catalog has a URI delegate referencing itself\" (https://security-tracker.debian.org/tracker/CVE-2026-0990). The DHI libxml2 packages for Debian 13 are rebuilds of Debian's trixie libxml2. The rebuilds of 2.12.7+dfsg+really2.9.14-2.1+deb13u2 predate the fix; the first rebuild of 2.12.7+dfsg+really2.9.14-2.1+deb13u3, used as the fixed version here, and every later build are built from that Debian release, and the Debian changelog shipped in the current libxml2 package (read for amd64 and arm64) carries Debian's entry for this CVE."
+      "status_notes": "CVE-2026-0990: xmlCatalogXMLResolveURI() in libxml2 recurses without limit when an XML catalog has a delegateURI entry that refers back to the same catalog, so resolving a URI through such a catalog exhausts the stack and crashes the process (a denial of service): https://gitlab.gnome.org/GNOME/libxml2/-/issues/1018. Upstream fixed it in commit https://gitlab.gnome.org/GNOME/libxml2/-/commit/1961208e958ca22f80a0b4e4c9d71cfa050aa982, part of merge request https://gitlab.gnome.org/GNOME/libxml2/-/merge_requests/368, which adds a recursion depth check to xmlCatalogListXMLResolveURI() in catalog.c. Debian fixed it for trixie in libxml2 2.12.7+dfsg+really2.9.14-2.1+deb13u3, whose changelog reads \"Fix CVE-2026-0990: `xmlCatalogXMLResolveURI()` will recurse infinitely if a catalog has a URI delegate referencing itself, eventually resulting in a call stack overflow.\" See https://security-tracker.debian.org/tracker/CVE-2026-0990. The DHI libxml2 packages for Debian 13 are rebuilds of Debian's trixie libxml2. The DHI Debian repository now publishes one build from source libxml2, a rebuild of Debian's 2.12.7+dfsg+really2.9.14-2.1+deb13u3, for amd64 and arm64. We downloaded every binary package of it (libxml2, libxml2-dev, libxml2-utils and python3-libxml2, plus the libxml2-dbgsym, libxml2-utils-dbgsym and python3-libxml2-dbgsym packages), each verified against its index checksum: the Debian changelog shipped in each of the four non-debug packages carries Debian's entry for this CVE, and its libxml2.so.2.9.14 library and the libxml2.a static archive in libxml2-dev, on both architectures, contain the message \"Ignoring repeated nextCatalog\" that Debian's deb13u3 update adds with its fix for CVE-2026-0992, released alongside this one. Running the xmlcatalog program from its libxml2-utils package with its libxml2 library, on amd64 and arm64, against a catalog whose delegateURI entry points to itself now stops with \"Detected recursion in catalog\" instead of crashing. Earlier rebuilds are no longer in the repository, so they could not be checked and read as affected. The range ends at that rebuild, the lowest published build, which carries the fix."
     }
   ]
 }

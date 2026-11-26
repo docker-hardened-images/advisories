@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T06:34:29Z",
-  "last_updated": "2026-11-23T20:42:17Z",
-  "version": 4,
+  "last_updated": "2026-11-26T03:08:48Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -20,7 +20,20 @@
         },
         {
           "@id": "pkg:apk/dhi/openssh@10.2_p1-r1?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update openssh to 10.2_p1-r2 or later.",
+      "status_notes": "CVE-2026-123158: sshd in OpenSSH before 10.6p2 on Linux, when musl libc is used without PAM, lacks a workaround for a password authentication bypass: for some account configurations any password between 256 and 1024 characters succeeds. Upstream's fix, https://github.com/openssh/openssh-portable/commit/4353fdc43ef646c43a8dda7025cc1a898caf1482 (\"avoid password authn bypass\"; the same change is commit 90f9c2f on the V_10_6 release branch, released in OpenSSH 10.6p2), makes sys_auth_passwd in auth-passwd.c reject a stored password hash shorter than four characters (MIN_PASSWORD_HASH_LEN) before comparing it, copies the fallback password with xstrdup and clears the copy with freezero. Announcement: https://www.openwall.com/lists/oss-security/2026/11/05/3 Alpine fixed its own package in 10.2_p1-r1 with aports commit 346b97be82550e66b8f69c5e8e7b0de1b4e04b11 (\"main/openssh: fix password authentication\"), which adds the upstream change as pw.patch. Alpine tracker: https://security.alpinelinux.org/vuln/CVE-2026-123158 DHI's Alpine 3.23 openssh adds its own backports on top of Alpine's package, so its revision numbers do not match Alpine's, and DHI's 10.2_p1-r1 does not carry the fix. Checked every published openssh build for Alpine 3.23 in the DHI Alpine repository, 10.2_p1-r0 to 10.2_p1-r3, for x86_64 and aarch64, each package checked against the index checksum. We located sys_auth_passwd through the symbol tables in the published debug package and disassembled it in the shipped binaries. In sshd-session and sshd-auth (openssh-server) and their .pam (openssh-server-pam) and .krb5 (openssh-server-krb5) variants, sys_auth_passwd in 10.2_p1-r0 and 10.2_p1-r1 calls only shadow_pw and xcrypt and has no length check, while in 10.2_p1-r2 and 10.2_p1-r3 it also calls xstrdup and freezero and compares the stored hash length against the four-character minimum before comparing. No other ELF file in any openssh package built from this source (including openssh-dbg) defines sys_auth_passwd. The range ends at 10.2_p1-r2."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wsh6-a5qs-c5ts-bzma",
+        "aliases": [
+          "CVE-2026-123158"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/openssh@10.2_p1-r2?distro=dhi-3.23"
         },
@@ -28,7 +41,8 @@
           "@id": "pkg:apk/dhi/openssh@10.2_p1-r3?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-123158: sshd in OpenSSH before 10.6p2 on Linux, when musl libc is used without PAM, lacks a workaround for a password authentication bypass: for some account configurations any password between 256 and 1024 characters succeeds. Upstream's fix, https://github.com/openssh/openssh-portable/commit/4353fdc43ef646c43a8dda7025cc1a898caf1482 (\"avoid password authn bypass\"; the same change is commit 90f9c2f on the V_10_6 release branch, released in OpenSSH 10.6p2), makes sys_auth_passwd in auth-passwd.c reject a stored password hash shorter than four characters (MIN_PASSWORD_HASH_LEN) before comparing it, copies the fallback password with xstrdup and clears the copy with freezero. Announcement: https://www.openwall.com/lists/oss-security/2026/11/05/3 Alpine fixed its own package in 10.2_p1-r1 with aports commit 346b97be82550e66b8f69c5e8e7b0de1b4e04b11 (\"main/openssh: fix password authentication\"), which adds the upstream change as pw.patch. Alpine tracker: https://security.alpinelinux.org/vuln/CVE-2026-123158 DHI's Alpine 3.23 openssh adds its own backports on top of Alpine's package, so its revision numbers do not match Alpine's, and DHI's 10.2_p1-r1 does not carry the fix. Checked every published openssh build for Alpine 3.23 in the DHI Alpine repository, 10.2_p1-r0 to 10.2_p1-r3, for x86_64 and aarch64, each package checked against the index checksum. We located sys_auth_passwd through the symbol tables in the published debug package and disassembled it in the shipped binaries. In sshd-session and sshd-auth (openssh-server) and their .pam (openssh-server-pam) and .krb5 (openssh-server-krb5) variants, sys_auth_passwd in 10.2_p1-r0 and 10.2_p1-r1 calls only shadow_pw and xcrypt and has no length check, while in 10.2_p1-r2 and 10.2_p1-r3 it also calls xstrdup and freezero and compares the stored hash length against the four-character minimum before comparing. No other ELF file in any openssh package built from this source (including openssh-dbg) defines sys_auth_passwd. The range ends at 10.2_p1-r2."
     },
     {
       "vulnerability": {
@@ -46,12 +60,26 @@
         },
         {
           "@id": "pkg:apk/dhi/openssh@10.3_p1-r1?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update openssh to 10.3_p1-r2 or later.",
+      "status_notes": "CVE-2026-123158: sshd in OpenSSH before 10.6p2 on Linux, when musl libc is used without PAM, lacks a workaround for a password authentication bypass: for some account configurations any password between 256 and 1024 characters succeeds. Upstream's fix, https://github.com/openssh/openssh-portable/commit/4353fdc43ef646c43a8dda7025cc1a898caf1482 (\"avoid password authn bypass\"; the same change is commit 90f9c2f on the V_10_6 release branch, released in OpenSSH 10.6p2), makes sys_auth_passwd in auth-passwd.c reject a stored password hash shorter than four characters (MIN_PASSWORD_HASH_LEN) before comparing it, copies the fallback password with xstrdup and clears the copy with freezero. Announcement: https://www.openwall.com/lists/oss-security/2026/11/05/3 Alpine fixed it for 3.24 in 10.3_p1-r2 with aports commit 384e25e6bd1f2e7b30095900e48b570d46953510 (\"main/openssh: fix password authentication\"), which adds the upstream change as pw.patch. Alpine tracker: https://security.alpinelinux.org/vuln/CVE-2026-123158 DHI's Alpine 3.24 openssh is built from that aports tree with the same revision numbers. Checked every published openssh build for Alpine 3.24 in the DHI Alpine repository, 10.2_p1-r0, 10.3_p1-r0, 10.3_p1-r1 and 10.3_p1-r2, for x86_64 and aarch64, each package checked against the index checksum (10.3_p1-r0 publishes no openssh-server-pam, openssh-server-krb5, openssh-sftp-server or openssh-sk-helper for x86_64). We located sys_auth_passwd through the symbol tables in the published debug package and disassembled it in the shipped binaries. In sshd-session and sshd-auth (openssh-server) and their .pam (openssh-server-pam) and .krb5 (openssh-server-krb5) variants, sys_auth_passwd in 10.2_p1-r0, 10.3_p1-r0 and 10.3_p1-r1 calls only shadow_pw and xcrypt and has no length check, while in 10.3_p1-r2 it also calls xstrdup and freezero and compares the stored hash length against the four-character minimum before comparing. No other ELF file in any openssh package built from this source (including openssh-dbg) defines sys_auth_passwd. The range ends at 10.3_p1-r2."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wsh6-a5qs-c5ts-bzma",
+        "aliases": [
+          "CVE-2026-123158"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/openssh@10.3_p1-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-123158: sshd in OpenSSH before 10.6p2 on Linux, when musl libc is used without PAM, lacks a workaround for a password authentication bypass: for some account configurations any password between 256 and 1024 characters succeeds. Upstream's fix, https://github.com/openssh/openssh-portable/commit/4353fdc43ef646c43a8dda7025cc1a898caf1482 (\"avoid password authn bypass\"; the same change is commit 90f9c2f on the V_10_6 release branch, released in OpenSSH 10.6p2), makes sys_auth_passwd in auth-passwd.c reject a stored password hash shorter than four characters (MIN_PASSWORD_HASH_LEN) before comparing it, copies the fallback password with xstrdup and clears the copy with freezero. Announcement: https://www.openwall.com/lists/oss-security/2026/11/05/3 Alpine fixed it for 3.24 in 10.3_p1-r2 with aports commit 384e25e6bd1f2e7b30095900e48b570d46953510 (\"main/openssh: fix password authentication\"), which adds the upstream change as pw.patch. Alpine tracker: https://security.alpinelinux.org/vuln/CVE-2026-123158 DHI's Alpine 3.24 openssh is built from that aports tree with the same revision numbers. Checked every published openssh build for Alpine 3.24 in the DHI Alpine repository, 10.2_p1-r0, 10.3_p1-r0, 10.3_p1-r1 and 10.3_p1-r2, for x86_64 and aarch64, each package checked against the index checksum (10.3_p1-r0 publishes no openssh-server-pam, openssh-server-krb5, openssh-sftp-server or openssh-sk-helper for x86_64). We located sys_auth_passwd through the symbol tables in the published debug package and disassembled it in the shipped binaries. In sshd-session and sshd-auth (openssh-server) and their .pam (openssh-server-pam) and .krb5 (openssh-server-krb5) variants, sys_auth_passwd in 10.2_p1-r0, 10.3_p1-r0 and 10.3_p1-r1 calls only shadow_pw and xcrypt and has no length check, while in 10.3_p1-r2 it also calls xstrdup and freezero and compares the stored hash length against the four-character minimum before comparing. No other ELF file in any openssh package built from this source (including openssh-dbg) defines sys_auth_passwd. The range ends at 10.3_p1-r2."
     },
     {
       "vulnerability": {
@@ -74,13 +102,27 @@
           "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4%2Bdhi2?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4%2Bdhi3?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update openssh to 1:10.0p1-7+deb13u4+dhi3 or later.",
+      "status_notes": "CVE-2026-123158: sshd in OpenSSH before 10.6p2 on Linux, when musl libc is used without PAM, lacks a workaround for a password authentication bypass: for some account configurations any password between 256 and 1024 characters succeeds. Upstream's fix, https://github.com/openssh/openssh-portable/commit/4353fdc43ef646c43a8dda7025cc1a898caf1482 (\"avoid password authn bypass\"; the same change is commit 90f9c2f on the V_10_6 release branch, released in OpenSSH 10.6p2), makes sys_auth_passwd in auth-passwd.c reject a stored password hash shorter than four characters (MIN_PASSWORD_HASH_LEN) before comparing it, copies the fallback password with xstrdup and clears the copy with freezero. Announcement: https://www.openwall.com/lists/oss-security/2026/11/05/3 Debian lists the CVE as unimportant and unfixed in trixie (fixed in forky and sid in 1:10.6p2-1) and notes that it only affects OpenSSH used with musl libc and without PAM, so Debian's glibc-built packages are not affected by the resulting problem: https://security-tracker.debian.org/tracker/CVE-2026-123158 DHI's Debian 13 openssh nevertheless applies upstream's fix commit in its newest build, so we record it as fixed there rather than resting on Debian's assessment. The DHI Debian repository publishes three openssh builds for Debian 13, all rebuilds of Debian's 1:10.0p1-7+deb13u4; we checked all three for amd64 and arm64, each package verified against the index SHA256. Their sshd-session and sshd-auth (openssh-server) link glibc (libc.so.6), libcrypt.so.1 and libpam.so.0. We located sys_auth_passwd through the symbol tables in the published -dbgsym packages and disassembled it in the shipped binaries: in the two older builds it calls only shadow_pw and xcrypt and has no length check, while in the newest it also calls xstrdup and freezero and compares the stored hash length against the four-character minimum before comparing. No other ELF file in any openssh package built from this source (openssh-client, openssh-sftp-server, openssh-tests and their -dbgsym packages, including the unit-test object files in openssh-tests) defines sys_auth_passwd. The range closes at that newest build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wsh6-a5qs-c5ts-bzma",
+        "aliases": [
+          "CVE-2026-123158"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/openssh@1:10.0p1-7%2Bdeb13u4%2Bdhi3?distro=dhi-13"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-123158: sshd in OpenSSH before 10.6p2 on Linux, when musl libc is used without PAM, lacks a workaround for a password authentication bypass: for some account configurations any password between 256 and 1024 characters succeeds. Upstream's fix, https://github.com/openssh/openssh-portable/commit/4353fdc43ef646c43a8dda7025cc1a898caf1482 (\"avoid password authn bypass\"; the same change is commit 90f9c2f on the V_10_6 release branch, released in OpenSSH 10.6p2), makes sys_auth_passwd in auth-passwd.c reject a stored password hash shorter than four characters (MIN_PASSWORD_HASH_LEN) before comparing it, copies the fallback password with xstrdup and clears the copy with freezero. Announcement: https://www.openwall.com/lists/oss-security/2026/11/05/3 Debian lists the CVE as unimportant and unfixed in trixie (fixed in forky and sid in 1:10.6p2-1) and notes that it only affects OpenSSH used with musl libc and without PAM, so Debian's glibc-built packages are not affected by the resulting problem: https://security-tracker.debian.org/tracker/CVE-2026-123158 DHI's Debian 13 openssh nevertheless applies upstream's fix commit in its newest build, so we record it as fixed there rather than resting on Debian's assessment. The DHI Debian repository publishes three openssh builds for Debian 13, all rebuilds of Debian's 1:10.0p1-7+deb13u4; we checked all three for amd64 and arm64, each package verified against the index SHA256. Their sshd-session and sshd-auth (openssh-server) link glibc (libc.so.6), libcrypt.so.1 and libpam.so.0. We located sys_auth_passwd through the symbol tables in the published -dbgsym packages and disassembled it in the shipped binaries: in the two older builds it calls only shadow_pw and xcrypt and has no length check, while in the newest it also calls xstrdup and freezero and compares the stored hash length against the four-character minimum before comparing. No other ELF file in any openssh package built from this source (openssh-client, openssh-sftp-server, openssh-tests and their -dbgsym packages, including the unit-test object files in openssh-tests) defines sys_auth_passwd. The range closes at that newest build."
     }
   ]
 }
