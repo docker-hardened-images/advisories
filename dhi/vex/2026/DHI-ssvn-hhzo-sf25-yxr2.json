@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-25T09:33:06Z",
-  "version": 22,
+  "last_updated": "2026-11-26T04:16:16Z",
+  "version": 24,
   "statements": [
     {
       "vulnerability": {
@@ -757,7 +757,9 @@
           "@id": "pkg:apk/dhi/build-fips@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-32282 (GO-2026-4864): On Linux, if the target of os.Root.Chmod in the Go standard library is replaced with a symlink while the chmod is in progress, Chmod can operate on the symlink's target even when it lies outside the root, because the Linux fchmodat syscall silently ignores AT_SYMLINK_NOFOLLOW; Root.Chmod checks its target first, so the impact is limited to a target replaced between the check and the operation. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4864, https://go.dev/issue/78293, https://go.dev/cl/763761 and https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU give the details, and the release-branch.go1.26 commit https://github.com/golang/go/commit/b6176f459ad7b84ea7fb8daab983f4cef644a119 names this CVE and is in go1.26.2 but not go1.26.1. We downloaded every published package built from the build-fips source for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: build-fips (91 builds, 2.6.4-r0 to 2.30.0-r0) and build-fips-dev (91 builds, 2.6.4-r0 to 2.30.0-r0), on x86_64 and aarch64, except 2.6.4-r0, published for aarch64 only; each package was checked against its index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves, the only one that matches its listed checksum, was the one read. Every build-fips-dev package holds only /usr/bin/build. In the build-fips packages the programs are: /usr/bin/build in 2.6.4-r0 to 2.26.2-r0; /opt/docker/dhi/yq and /usr/bin/build in 2.26.2-r1 to 2.27.1-r0; /opt/docker/dhi/uv, /opt/docker/dhi/yq and /usr/bin/build in 2.27.1-r1 to 2.28.0-r0; /opt/docker/dhi/uv, /opt/docker/dhi/yq, /usr/bin/build and /usr/bin/dhi-source in 2.28.0-r1 to 2.30.0-r0. /opt/docker/dhi/uv is not a Go program: it has no Go build information or Go function table. Every other program is a statically linked Go program built with CGO_ENABLED=0, and all Go programs in one build use the same Go release. The Go release in each build, the same in every package and on both architectures, is: 2.6.4-r0 to 2.6.6-r1 with Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 with Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 with Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 with Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 with Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 with Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 with Go 1.26.5; 2.20.0-r6 with Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 with Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 with Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 with Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 with Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 with Go 1.26.11. The Go vulnerability database names internal/syscall/unix.Fchmodat, which os.Root.Chmod calls on Linux, as the vulnerable function. Reading the Go function table of every Go program in every package (runtime.main found in each as a control), no program lists internal/syscall/unix.Fchmodat or any function of os.Root (no os.(*Root) method, os.OpenRoot, os.OpenInRoot or os.rootChmod), although each lists other internal/syscall/unix and os functions. /opt/docker/dhi/yq links the separate syscall.Fchmodat function, which the fix does not change and os.Root.Chmod does not use. A byte search of every Go program in every package, which also finds the names of functions the compiler inlined, finds none of internal/syscall/unix.Fchmodat, os.(*Root), os.OpenRoot or os.OpenInRoot. As a positive control, the same function-table reader and byte search, run on a test program that calls os.Root.Chmod, built with Go 1.25.7 and with Go 1.26.1 for linux/amd64 and linux/arm64 with CGO_ENABLED=0, find internal/syscall/unix.Fchmodat and os.rootChmod in each. So the vulnerable code is not compiled into any build, although the builds before 2.10.0-r0 use an affected Go release."
     },
     {
       "vulnerability": {
@@ -1044,7 +1046,9 @@
           "@id": "pkg:apk/dhi/build@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-32282 (GO-2026-4864): On Linux, if the target of os.Root.Chmod in the Go standard library is replaced with a symlink while the chmod is in progress, Chmod can operate on the symlink's target even when it lies outside the root, because the Linux fchmodat syscall silently ignores AT_SYMLINK_NOFOLLOW; Root.Chmod checks its target first, so the impact is limited to a target replaced between the check and the operation. It is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4864, https://go.dev/issue/78293, https://go.dev/cl/763761 and https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU give the details, and the release-branch.go1.26 commit https://github.com/golang/go/commit/b6176f459ad7b84ea7fb8daab983f4cef644a119 names this CVE and is in go1.26.2 but not go1.26.1. We downloaded every published package built from the build source for Alpine 3.23 in the DHI Alpine repository: build (92 builds, 2.4.4-r0 to 2.30.0-r0) and build-dev (91 builds, 2.6.4-r0 to 2.30.0-r0), on x86_64 and aarch64, except 2.6.4-r0, published for aarch64 only; each package was checked against its index checksum. 2.19.1-r1 is listed three times per architecture with different checksums; the copy the repository serves, the only one that matches its listed checksum, was the one read. Every build-dev package holds only /usr/bin/build. In the build packages the programs are: /opt/docker/dhi/build in 2.4.4-r0; /usr/bin/build in 2.6.4-r0 to 2.26.2-r0; /opt/docker/dhi/yq and /usr/bin/build in 2.26.2-r1 to 2.27.1-r0; /opt/docker/dhi/uv, /opt/docker/dhi/yq and /usr/bin/build in 2.27.1-r1 to 2.28.0-r0; /opt/docker/dhi/uv, /opt/docker/dhi/yq, /usr/bin/build and /usr/bin/dhi-source in 2.28.0-r1 to 2.30.0-r0. /opt/docker/dhi/uv is not a Go program: it has no Go build information or Go function table. Every other program is a statically linked Go program built with CGO_ENABLED=0, and all Go programs in one build use the same Go release. The Go release in each build, the same in every package and on both architectures, is: 2.4.4-r0 to 2.6.6-r1 with Go 1.25.7; 2.7.0-r1 to 2.8.3-r0 with Go 1.25.8; 2.8.3-r1 to 2.9.2-r0 with Go 1.26.1; 2.10.0-r0 to 2.15.0-r0 with Go 1.26.2; 2.15.0-r1 to 2.17.3-r0 with Go 1.26.3; 2.17.3-r1 to 2.20.0-r2 with Go 1.26.4; 2.20.0-r3 to 2.20.0-r5 with Go 1.26.5; 2.20.0-r6 with Go 1.26.6; 2.20.0-r7 to 2.20.0-r10 with Go 1.26.7; 2.20.0-r11 to 2.26.0-r0 with Go 1.26.8; 2.26.0-r1 to 2.26.1-r0 with Go 1.26.9; 2.26.1-r1 to 2.28.0-r2 with Go 1.26.10; 2.28.0-r3 to 2.30.0-r0 with Go 1.26.11. The Go vulnerability database names internal/syscall/unix.Fchmodat, which os.Root.Chmod calls on Linux, as the vulnerable function. Reading the Go function table of every Go program in every package (runtime.main found in each as a control), no program lists internal/syscall/unix.Fchmodat or any function of os.Root (no os.(*Root) method, os.OpenRoot, os.OpenInRoot or os.rootChmod), although each lists other internal/syscall/unix and os functions. /opt/docker/dhi/yq links the separate syscall.Fchmodat function, which the fix does not change and os.Root.Chmod does not use. A byte search of every Go program in every package, which also finds the names of functions the compiler inlined, finds none of internal/syscall/unix.Fchmodat, os.(*Root), os.OpenRoot or os.OpenInRoot. As a positive control, the same function-table reader and byte search, run on a test program that calls os.Root.Chmod, built with Go 1.25.7 and with Go 1.26.1 for linux/amd64 and linux/arm64 with CGO_ENABLED=0, find internal/syscall/unix.Fchmodat and os.rootChmod in each. So the vulnerable code is not compiled into any build, although the builds before 2.10.0-r0 use an affected Go release."
     },
     {
       "vulnerability": {
@@ -2063,6 +2067,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -2188,6 +2195,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -3225,7 +3235,20 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.1-r3?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26-dev to 1.26.2-r3 or later.",
+      "status_notes": "CVE-2026-32282 (GO-2026-4864): On Linux, if the target of os.Root.Chmod in the Go standard library is replaced with a symlink while the chmod is in progress, Chmod can operate on the symlink's target even when it lies outside the root, because the Linux fchmodat syscall silently ignores AT_SYMLINK_NOFOLLOW; Root.Chmod checks its target first, so the impact is limited to a target replaced between the check and the operation. Sources: https://pkg.go.dev/vuln/GO-2026-4864, https://go.dev/issue/78293, https://go.dev/cl/763761 and https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU give the details. Go 1.26.2 carries the fix as the release-branch.go1.26 commit https://github.com/golang/go/commit/b6176f459ad7b84ea7fb8daab983f4cef644a119 , which names this CVE and is in go1.26.2 but not go1.26.1. Outside its test, it adds src/internal/syscall/unix/fchmodat_linux.go, a Linux Fchmodat that honours AT_SYMLINK_NOFOLLOW (using fchmodat2, or an O_PATH descriptor on kernels without it), moves the previous Fchmodat from at.go into a new fchmodat_other.go for other systems, and adds the O_PATH constant to at_sysnum_linux.go and one line to cmd/dist/buildtool.go. This package is the Go 1.26 toolchain: its version is the Go release it packages, and it ships the standard library source under /usr/lib/go/src that Go programs are compiled from. We downloaded every published golang-1.26-dev package for Alpine 3.23 in the DHI Alpine repository, 15 builds from 1.26.1-r2 to the current 1.26.11-r1, on x86_64 and aarch64, each checked against its index checksum, together with the other packages built from the same source (golang-1.26-dev-doc, golang-1.26-dev-fips-oci-config, golang-1.26-dev-oci-config), which hold only documentation or container configuration and no Go source; the fips-oci-config packages are in the DHI Alpine security repository, which requires authentication. In every build, /usr/lib/go/bin/go reports the Go release in the package version, the same on both architectures. The new Linux Fchmodat in /usr/lib/go/src/internal/syscall/unix/fchmodat_linux.go and the O_PATH constant in at_sysnum_linux.go are absent from every build from 1.26.1-r2 to 1.26.1-r3 and present in every build from 1.26.2-r3 to 1.26.11-r1, while at.go in the same directory is present in every build as a control; each of these files is also byte-identical to the one in the upstream Go release the package reports. The range ends at 1.26.2-r3, the first build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ssvn-hhzo-sf25-yxr2",
+        "aliases": [
+          "CVE-2026-32282"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.10-r0?distro=dhi-3.23"
         },
@@ -3266,7 +3289,8 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-32282 (GO-2026-4864): On Linux, if the target of os.Root.Chmod in the Go standard library is replaced with a symlink while the chmod is in progress, Chmod can operate on the symlink's target even when it lies outside the root, because the Linux fchmodat syscall silently ignores AT_SYMLINK_NOFOLLOW; Root.Chmod checks its target first, so the impact is limited to a target replaced between the check and the operation. Sources: https://pkg.go.dev/vuln/GO-2026-4864, https://go.dev/issue/78293, https://go.dev/cl/763761 and https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU give the details. Go 1.26.2 carries the fix as the release-branch.go1.26 commit https://github.com/golang/go/commit/b6176f459ad7b84ea7fb8daab983f4cef644a119 , which names this CVE and is in go1.26.2 but not go1.26.1. Outside its test, it adds src/internal/syscall/unix/fchmodat_linux.go, a Linux Fchmodat that honours AT_SYMLINK_NOFOLLOW (using fchmodat2, or an O_PATH descriptor on kernels without it), moves the previous Fchmodat from at.go into a new fchmodat_other.go for other systems, and adds the O_PATH constant to at_sysnum_linux.go and one line to cmd/dist/buildtool.go. This package is the Go 1.26 toolchain: its version is the Go release it packages, and it ships the standard library source under /usr/lib/go/src that Go programs are compiled from. We downloaded every published golang-1.26-dev package for Alpine 3.23 in the DHI Alpine repository, 15 builds from 1.26.1-r2 to the current 1.26.11-r1, on x86_64 and aarch64, each checked against its index checksum, together with the other packages built from the same source (golang-1.26-dev-doc, golang-1.26-dev-fips-oci-config, golang-1.26-dev-oci-config), which hold only documentation or container configuration and no Go source; the fips-oci-config packages are in the DHI Alpine security repository, which requires authentication. In every build, /usr/lib/go/bin/go reports the Go release in the package version, the same on both architectures. The new Linux Fchmodat in /usr/lib/go/src/internal/syscall/unix/fchmodat_linux.go and the O_PATH constant in at_sysnum_linux.go are absent from every build from 1.26.1-r2 to 1.26.1-r3 and present in every build from 1.26.2-r3 to 1.26.11-r1, while at.go in the same directory is present in every build as a control; each of these files is also byte-identical to the one in the upstream Go release the package reports. The range ends at 1.26.2-r3, the first build that carries the fix."
     },
     {
       "vulnerability": {
@@ -3293,7 +3317,20 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.1-r3?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26 to 1.26.2-r3 or later.",
+      "status_notes": "CVE-2026-32282 (GO-2026-4864): On Linux, if the target of os.Root.Chmod in the Go standard library is replaced with a symlink while the chmod is in progress, Chmod can operate on the symlink's target even when it lies outside the root, because the Linux fchmodat syscall silently ignores AT_SYMLINK_NOFOLLOW; Root.Chmod checks its target first, so the impact is limited to a target replaced between the check and the operation. Sources: https://pkg.go.dev/vuln/GO-2026-4864, https://go.dev/issue/78293, https://go.dev/cl/763761 and https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU give the details. Go 1.26.2 carries the fix as the release-branch.go1.26 commit https://github.com/golang/go/commit/b6176f459ad7b84ea7fb8daab983f4cef644a119 , which names this CVE and is in go1.26.2 but not go1.26.1. Outside its test, it adds src/internal/syscall/unix/fchmodat_linux.go, a Linux Fchmodat that honours AT_SYMLINK_NOFOLLOW (using fchmodat2, or an O_PATH descriptor on kernels without it), moves the previous Fchmodat from at.go into a new fchmodat_other.go for other systems, and adds the O_PATH constant to at_sysnum_linux.go and one line to cmd/dist/buildtool.go. This package is the Go 1.26 toolchain: its version is the Go release it packages, and it ships the standard library source under /usr/lib/go/src that Go programs are compiled from. We downloaded every published golang-1.26 package for Alpine 3.23 in the DHI Alpine repository, 18 builds from 1.26.0-r0 to the current 1.26.11-r1, on x86_64 and aarch64, each checked against its index checksum, together with the other packages built from the same source (golang-1.26-doc, golang-1.26-fips-oci-config, golang-1.26-oci-config), which hold only documentation or container configuration and no Go source; the fips-oci-config packages are in the DHI Alpine security repository, which requires authentication. In every build, /usr/lib/go/bin/go reports the Go release in the package version, the same on both architectures. The new Linux Fchmodat in /usr/lib/go/src/internal/syscall/unix/fchmodat_linux.go and the O_PATH constant in at_sysnum_linux.go are absent from every build from 1.26.0-r0 to 1.26.1-r3 and present in every build from 1.26.2-r3 to 1.26.11-r1, while at.go in the same directory is present in every build as a control; each of these files is also byte-identical to the one in the upstream Go release the package reports. The range ends at 1.26.2-r3, the first build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ssvn-hhzo-sf25-yxr2",
+        "aliases": [
+          "CVE-2026-32282"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.10-r0?distro=dhi-3.23"
         },
@@ -3334,7 +3371,8 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-32282 (GO-2026-4864): On Linux, if the target of os.Root.Chmod in the Go standard library is replaced with a symlink while the chmod is in progress, Chmod can operate on the symlink's target even when it lies outside the root, because the Linux fchmodat syscall silently ignores AT_SYMLINK_NOFOLLOW; Root.Chmod checks its target first, so the impact is limited to a target replaced between the check and the operation. Sources: https://pkg.go.dev/vuln/GO-2026-4864, https://go.dev/issue/78293, https://go.dev/cl/763761 and https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU give the details. Go 1.26.2 carries the fix as the release-branch.go1.26 commit https://github.com/golang/go/commit/b6176f459ad7b84ea7fb8daab983f4cef644a119 , which names this CVE and is in go1.26.2 but not go1.26.1. Outside its test, it adds src/internal/syscall/unix/fchmodat_linux.go, a Linux Fchmodat that honours AT_SYMLINK_NOFOLLOW (using fchmodat2, or an O_PATH descriptor on kernels without it), moves the previous Fchmodat from at.go into a new fchmodat_other.go for other systems, and adds the O_PATH constant to at_sysnum_linux.go and one line to cmd/dist/buildtool.go. This package is the Go 1.26 toolchain: its version is the Go release it packages, and it ships the standard library source under /usr/lib/go/src that Go programs are compiled from. We downloaded every published golang-1.26 package for Alpine 3.23 in the DHI Alpine repository, 18 builds from 1.26.0-r0 to the current 1.26.11-r1, on x86_64 and aarch64, each checked against its index checksum, together with the other packages built from the same source (golang-1.26-doc, golang-1.26-fips-oci-config, golang-1.26-oci-config), which hold only documentation or container configuration and no Go source; the fips-oci-config packages are in the DHI Alpine security repository, which requires authentication. In every build, /usr/lib/go/bin/go reports the Go release in the package version, the same on both architectures. The new Linux Fchmodat in /usr/lib/go/src/internal/syscall/unix/fchmodat_linux.go and the O_PATH constant in at_sysnum_linux.go are absent from every build from 1.26.0-r0 to 1.26.1-r3 and present in every build from 1.26.2-r3 to 1.26.11-r1, while at.go in the same directory is present in every build as a control; each of these files is also byte-identical to the one in the upstream Go release the package reports. The range ends at 1.26.2-r3, the first build that carries the fix."
     },
     {
       "vulnerability": {
@@ -3894,6 +3932,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend-fips@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend-fips@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -3992,6 +4033,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"

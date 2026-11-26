@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T22:21:32Z",
-  "last_updated": "2026-11-25T19:20:07Z",
-  "version": 36,
+  "last_updated": "2026-11-26T04:36:18Z",
+  "version": 39,
   "statements": [
     {
       "vulnerability": {
@@ -4201,6 +4201,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-dev@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-dev@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4326,6 +4329,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips-dev@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips-dev@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4451,6 +4457,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4576,6 +4585,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -8109,6 +8121,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend-dev@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend-dev@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -8207,6 +8222,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend-fips-dev@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend-fips-dev@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -8305,6 +8323,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend-fips@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend-fips@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -8403,6 +8424,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -20805,7 +20829,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-dev@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-27136 (GO-2026-5030): the golang.org/x/net/html tokenizer kept duplicate attributes, so HTML that is parsed and then written back with Render can produce an unexpected tree, which can defeat HTML sanitizers and lead to cross-site scripting. The Go vulnerability database lists Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html as the affected functions, fixed in golang.org/x/net 0.55.0; the fix commit https://github.com/golang/net/commit/a452f3cc17168a60bc3f439a3ae0fcffc32eca0e which is in v0.55.0 and not in v0.54.0 adds an attrNames field to the Tokenizer type and changes the tokenizer's readTag method and NewTokenizerFragment in html/token.go, and its other change is the test file html/token_test.go. Sources: https://pkg.go.dev/vuln/GO-2026-5030, https://github.com/golang/go/issues/79575. We checked every published scout-sbom-indexer-dev package for Alpine 3.23 in the DHI Alpine repository: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, 50 packages, on x86_64 and aarch64, each checked against its index checksum. Each package holds one file, /sbom-indexer, a statically linked Go program built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). Its Go build information lists golang.org/x/net with no replacement, the same on both architectures in every build: v0.53.0 or v0.54.0, which are in the affected range, in 1.20.4-r1 to 1.20.4-r4, and v0.55.0 to v0.63.0 from 1.20.4-r5 on. The program links golang.org/x/net/html/charset, which imports golang.org/x/net/html, but in all 50 binaries the only function of golang.org/x/net/html in the Go function table (read from .gopclntab, with runtime.main found in every build as a control) is the package initializer html.init; none of Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, the tokenizer's readTag method or NewTokenizerFragment is present. A byte search of every binary for golang.org/x/net/html. names, which also finds the names of functions the compiler inlined, finds only the initializer (html.init and its init task) and the mathMLAttributeAdjustments table it sets up. So the vulnerable code is not linked, whichever x/net version a build carries. As a positive control, the same function-table reader and byte search, run on test programs built with CGO_ENABLED=0 and -trimpath for linux/amd64 and linux/arm64 against golang.org/x/net v0.53.0 that call html.Parse and html.ParseFragment, find Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, readTag and NewTokenizerFragment (Parse and ParseFragment by the byte search only, since they are inlined into their caller)."
     },
     {
       "vulnerability": {
@@ -20891,7 +20917,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips-dev@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-27136 (GO-2026-5030): the golang.org/x/net/html tokenizer kept duplicate attributes, so HTML that is parsed and then written back with Render can produce an unexpected tree, which can defeat HTML sanitizers and lead to cross-site scripting. The Go vulnerability database lists Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html as the affected functions, fixed in golang.org/x/net 0.55.0; the fix commit https://github.com/golang/net/commit/a452f3cc17168a60bc3f439a3ae0fcffc32eca0e which is in v0.55.0 and not in v0.54.0 adds an attrNames field to the Tokenizer type and changes the tokenizer's readTag method and NewTokenizerFragment in html/token.go, and its other change is the test file html/token_test.go. Sources: https://pkg.go.dev/vuln/GO-2026-5030, https://github.com/golang/go/issues/79575. We checked every published scout-sbom-indexer-fips-dev package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, 50 packages, on x86_64 and aarch64, each checked against its index checksum. Each package holds one file, /sbom-indexer, a statically linked Go program built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). Its Go build information lists golang.org/x/net with no replacement, the same on both architectures in every build: v0.53.0 or v0.54.0, which are in the affected range, in 1.20.4-r1 to 1.20.4-r4, and v0.55.0 to v0.63.0 from 1.20.4-r5 on. The program links golang.org/x/net/html/charset, which imports golang.org/x/net/html, but in all 50 binaries the only function of golang.org/x/net/html in the Go function table (read from .gopclntab, with runtime.main found in every build as a control) is the package initializer html.init; none of Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, the tokenizer's readTag method or NewTokenizerFragment is present. A byte search of every binary for golang.org/x/net/html. names, which also finds the names of functions the compiler inlined, finds only the initializer (html.init and its init task) and the mathMLAttributeAdjustments table it sets up. So the vulnerable code is not linked, whichever x/net version a build carries. As a positive control, the same function-table reader and byte search, run on test programs built with CGO_ENABLED=0 and -trimpath for linux/amd64 and linux/arm64 against golang.org/x/net v0.53.0 that call html.Parse and html.ParseFragment, find Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, readTag and NewTokenizerFragment (Parse and ParseFragment by the byte search only, since they are inlined into their caller)."
     },
     {
       "vulnerability": {
@@ -20977,7 +21005,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips-oci-config@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-27136 (GO-2026-5030): the golang.org/x/net/html tokenizer kept duplicate attributes, so HTML that is parsed and then written back with Render can produce an unexpected tree, which can defeat HTML sanitizers and lead to cross-site scripting. The Go vulnerability database lists Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html as the affected functions, fixed in golang.org/x/net 0.55.0; the fix commit https://github.com/golang/net/commit/a452f3cc17168a60bc3f439a3ae0fcffc32eca0e which is in v0.55.0 and not in v0.54.0 adds an attrNames field to the Tokenizer type and changes the tokenizer's readTag method and NewTokenizerFragment in html/token.go, and its other change is the test file html/token_test.go. Sources: https://pkg.go.dev/vuln/GO-2026-5030, https://github.com/golang/go/issues/79575. We checked every published scout-sbom-indexer-fips-oci-config package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, 50 packages, on x86_64 and aarch64, each checked against its index checksum. Each package holds one file, /opt/docker/config/scout-sbom-indexer-fips.yaml, a YAML configuration file; no package contains an ELF file, a Go program or any golang.org/x/net code, so the affected component is not present in this package."
     },
     {
       "vulnerability": {
@@ -21063,7 +21093,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-27136 (GO-2026-5030): the golang.org/x/net/html tokenizer kept duplicate attributes, so HTML that is parsed and then written back with Render can produce an unexpected tree, which can defeat HTML sanitizers and lead to cross-site scripting. The Go vulnerability database lists Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html as the affected functions, fixed in golang.org/x/net 0.55.0; the fix commit https://github.com/golang/net/commit/a452f3cc17168a60bc3f439a3ae0fcffc32eca0e which is in v0.55.0 and not in v0.54.0 adds an attrNames field to the Tokenizer type and changes the tokenizer's readTag method and NewTokenizerFragment in html/token.go, and its other change is the test file html/token_test.go. Sources: https://pkg.go.dev/vuln/GO-2026-5030, https://github.com/golang/go/issues/79575. We checked every published scout-sbom-indexer-fips package for Alpine 3.23 in the DHI Alpine security repository, which requires authentication: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, 50 packages, on x86_64 and aarch64, each checked against its index checksum. Each package holds one file, /sbom-indexer, a statically linked Go program built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). Its Go build information lists golang.org/x/net with no replacement, the same on both architectures in every build: v0.53.0 or v0.54.0, which are in the affected range, in 1.20.4-r1 to 1.20.4-r4, and v0.55.0 to v0.63.0 from 1.20.4-r5 on. The program links golang.org/x/net/html/charset, which imports golang.org/x/net/html, but in all 50 binaries the only function of golang.org/x/net/html in the Go function table (read from .gopclntab, with runtime.main found in every build as a control) is the package initializer html.init; none of Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, the tokenizer's readTag method or NewTokenizerFragment is present. A byte search of every binary for golang.org/x/net/html. names, which also finds the names of functions the compiler inlined, finds only the initializer (html.init and its init task) and the mathMLAttributeAdjustments table it sets up. So the vulnerable code is not linked, whichever x/net version a build carries. As a positive control, the same function-table reader and byte search, run on test programs built with CGO_ENABLED=0 and -trimpath for linux/amd64 and linux/arm64 against golang.org/x/net v0.53.0 that call html.Parse and html.ParseFragment, find Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, readTag and NewTokenizerFragment (Parse and ParseFragment by the byte search only, since they are inlined into their caller)."
     },
     {
       "vulnerability": {
@@ -21149,7 +21181,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-oci-config@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-27136 (GO-2026-5030): the golang.org/x/net/html tokenizer kept duplicate attributes, so HTML that is parsed and then written back with Render can produce an unexpected tree, which can defeat HTML sanitizers and lead to cross-site scripting. The Go vulnerability database lists Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html as the affected functions, fixed in golang.org/x/net 0.55.0; the fix commit https://github.com/golang/net/commit/a452f3cc17168a60bc3f439a3ae0fcffc32eca0e which is in v0.55.0 and not in v0.54.0 adds an attrNames field to the Tokenizer type and changes the tokenizer's readTag method and NewTokenizerFragment in html/token.go, and its other change is the test file html/token_test.go. Sources: https://pkg.go.dev/vuln/GO-2026-5030, https://github.com/golang/go/issues/79575. We checked every published scout-sbom-indexer-oci-config package for Alpine 3.23 in the DHI Alpine repository: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, 50 packages, on x86_64 and aarch64, each checked against its index checksum. Each package holds one file, /opt/docker/config/scout-sbom-indexer.yaml, a YAML configuration file; no package contains an ELF file, a Go program or any golang.org/x/net code, so the affected component is not present in this package."
     },
     {
       "vulnerability": {
@@ -21235,7 +21269,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-27136 (GO-2026-5030): the golang.org/x/net/html tokenizer kept duplicate attributes, so HTML that is parsed and then written back with Render can produce an unexpected tree, which can defeat HTML sanitizers and lead to cross-site scripting. The Go vulnerability database lists Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html as the affected functions, fixed in golang.org/x/net 0.55.0; the fix commit https://github.com/golang/net/commit/a452f3cc17168a60bc3f439a3ae0fcffc32eca0e which is in v0.55.0 and not in v0.54.0 adds an attrNames field to the Tokenizer type and changes the tokenizer's readTag method and NewTokenizerFragment in html/token.go, and its other change is the test file html/token_test.go. Sources: https://pkg.go.dev/vuln/GO-2026-5030, https://github.com/golang/go/issues/79575. We checked every published scout-sbom-indexer package for Alpine 3.23 in the DHI Alpine repository: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, 50 packages, on x86_64 and aarch64, each checked against its index checksum. Each package holds one file, /sbom-indexer, a statically linked Go program built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). Its Go build information lists golang.org/x/net with no replacement, the same on both architectures in every build: v0.53.0 or v0.54.0, which are in the affected range, in 1.20.4-r1 to 1.20.4-r4, and v0.55.0 to v0.63.0 from 1.20.4-r5 on. The program links golang.org/x/net/html/charset, which imports golang.org/x/net/html, but in all 50 binaries the only function of golang.org/x/net/html in the Go function table (read from .gopclntab, with runtime.main found in every build as a control) is the package initializer html.init; none of Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, the tokenizer's readTag method or NewTokenizerFragment is present. A byte search of every binary for golang.org/x/net/html. names, which also finds the names of functions the compiler inlined, finds only the initializer (html.init and its init task) and the mathMLAttributeAdjustments table it sets up. So the vulnerable code is not linked, whichever x/net version a build carries. As a positive control, the same function-table reader and byte search, run on test programs built with CGO_ENABLED=0 and -trimpath for linux/amd64 and linux/arm64 against golang.org/x/net v0.53.0 that call html.Parse and html.ParseFragment, find Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, readTag and NewTokenizerFragment (Parse and ParseFragment by the byte search only, since they are inlined into their caller)."
     },
     {
       "vulnerability": {
@@ -29172,6 +29208,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-dev@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -29273,6 +29312,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -29374,6 +29416,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-fips@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -29475,6 +29520,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -32085,6 +32133,9 @@
         },
         {
           "@id": "pkg:deb/dhi/hubble-ui-backend-dev@0.13.6-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/hubble-ui-backend-dev@0.13.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -32165,6 +32216,9 @@
         },
         {
           "@id": "pkg:deb/dhi/hubble-ui-backend-fips-dev@0.13.6-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/hubble-ui-backend-fips-dev@0.13.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -32245,6 +32299,9 @@
         },
         {
           "@id": "pkg:deb/dhi/hubble-ui-backend-fips@0.13.6-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/hubble-ui-backend-fips@0.13.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -32325,6 +32382,9 @@
         },
         {
           "@id": "pkg:deb/dhi/hubble-ui-backend@0.13.6-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/hubble-ui-backend@0.13.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -42933,7 +42993,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-dev@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-27136 (GO-2026-5030): the golang.org/x/net/html tokenizer kept duplicate attributes, so HTML that is parsed and then written back with Render can produce an unexpected tree, which can defeat HTML sanitizers and lead to cross-site scripting. The Go vulnerability database lists Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html as the affected functions, fixed in golang.org/x/net 0.55.0; the fix commit https://github.com/golang/net/commit/a452f3cc17168a60bc3f439a3ae0fcffc32eca0e which is in v0.55.0 and not in v0.54.0 adds an attrNames field to the Tokenizer type and changes the tokenizer's readTag method and NewTokenizerFragment in html/token.go, and its other change is the test file html/token_test.go. Sources: https://pkg.go.dev/vuln/GO-2026-5030, https://github.com/golang/go/issues/79575. We checked every published scout-sbom-indexer-dev package for Debian 13 in the DHI Debian repository: 25 builds, 1.20.4-1 to the current 1.30.0-0, 50 packages, on amd64 and arm64, each checked against its index checksum. Each package holds one file, /sbom-indexer, a statically linked Go program built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). Its Go build information lists golang.org/x/net with no replacement, the same on both architectures in every build: v0.53.0 or v0.54.0, which are in the affected range, in 1.20.4-1 to 1.20.4-4, and v0.55.0 to v0.63.0 from 1.20.4-5 on. The program links golang.org/x/net/html/charset, which imports golang.org/x/net/html, but in all 50 binaries the only function of golang.org/x/net/html in the Go function table (read from .gopclntab, with runtime.main found in every build as a control) is the package initializer html.init; none of Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, the tokenizer's readTag method or NewTokenizerFragment is present. A byte search of every binary for golang.org/x/net/html. names, which also finds the names of functions the compiler inlined, finds only the initializer (html.init and its init task) and the mathMLAttributeAdjustments table it sets up. So the vulnerable code is not linked, whichever x/net version a build carries. As a positive control, the same function-table reader and byte search, run on test programs built with CGO_ENABLED=0 and -trimpath for linux/amd64 and linux/arm64 against golang.org/x/net v0.53.0 that call html.Parse and html.ParseFragment, find Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, readTag and NewTokenizerFragment (Parse and ParseFragment by the byte search only, since they are inlined into their caller). The CVE is open in Debian 13 (trixie), where the golang-golang-x-net package is marked no-dsa; this decision rests on the code in these builds, not on that status. Debian tracker: https://security-tracker.debian.org/tracker/CVE-2026-27136"
     },
     {
       "vulnerability": {
@@ -43019,7 +43081,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-fips-dev@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-27136 (GO-2026-5030): the golang.org/x/net/html tokenizer kept duplicate attributes, so HTML that is parsed and then written back with Render can produce an unexpected tree, which can defeat HTML sanitizers and lead to cross-site scripting. The Go vulnerability database lists Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html as the affected functions, fixed in golang.org/x/net 0.55.0; the fix commit https://github.com/golang/net/commit/a452f3cc17168a60bc3f439a3ae0fcffc32eca0e which is in v0.55.0 and not in v0.54.0 adds an attrNames field to the Tokenizer type and changes the tokenizer's readTag method and NewTokenizerFragment in html/token.go, and its other change is the test file html/token_test.go. Sources: https://pkg.go.dev/vuln/GO-2026-5030, https://github.com/golang/go/issues/79575. We checked every published scout-sbom-indexer-fips-dev package for Debian 13 in the DHI Debian security repository, which requires authentication: 25 builds, 1.20.4-1 to the current 1.30.0-0, 50 packages, on amd64 and arm64, each checked against its index checksum. Each package holds one file, /sbom-indexer, a statically linked Go program built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). Its Go build information lists golang.org/x/net with no replacement, the same on both architectures in every build: v0.53.0 or v0.54.0, which are in the affected range, in 1.20.4-1 to 1.20.4-4, and v0.55.0 to v0.63.0 from 1.20.4-5 on. The program links golang.org/x/net/html/charset, which imports golang.org/x/net/html, but in all 50 binaries the only function of golang.org/x/net/html in the Go function table (read from .gopclntab, with runtime.main found in every build as a control) is the package initializer html.init; none of Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, the tokenizer's readTag method or NewTokenizerFragment is present. A byte search of every binary for golang.org/x/net/html. names, which also finds the names of functions the compiler inlined, finds only the initializer (html.init and its init task) and the mathMLAttributeAdjustments table it sets up. So the vulnerable code is not linked, whichever x/net version a build carries. As a positive control, the same function-table reader and byte search, run on test programs built with CGO_ENABLED=0 and -trimpath for linux/amd64 and linux/arm64 against golang.org/x/net v0.53.0 that call html.Parse and html.ParseFragment, find Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, readTag and NewTokenizerFragment (Parse and ParseFragment by the byte search only, since they are inlined into their caller). The CVE is open in Debian 13 (trixie), where the golang-golang-x-net package is marked no-dsa; this decision rests on the code in these builds, not on that status. Debian tracker: https://security-tracker.debian.org/tracker/CVE-2026-27136"
     },
     {
       "vulnerability": {
@@ -43105,7 +43169,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-fips-oci-config@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-27136 (GO-2026-5030): the golang.org/x/net/html tokenizer kept duplicate attributes, so HTML that is parsed and then written back with Render can produce an unexpected tree, which can defeat HTML sanitizers and lead to cross-site scripting. The Go vulnerability database lists Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html as the affected functions, fixed in golang.org/x/net 0.55.0; the fix commit https://github.com/golang/net/commit/a452f3cc17168a60bc3f439a3ae0fcffc32eca0e which is in v0.55.0 and not in v0.54.0 adds an attrNames field to the Tokenizer type and changes the tokenizer's readTag method and NewTokenizerFragment in html/token.go, and its other change is the test file html/token_test.go. Sources: https://pkg.go.dev/vuln/GO-2026-5030, https://github.com/golang/go/issues/79575. We checked every published scout-sbom-indexer-fips-oci-config package for Debian 13 in the DHI Debian security repository, which requires authentication: 25 builds, 1.20.4-1 to the current 1.30.0-0, 50 packages, on amd64 and arm64, each checked against its index checksum. Each package holds one file, /opt/docker/config/scout-sbom-indexer-fips.yaml, a YAML configuration file; no package contains an ELF file, a Go program or any golang.org/x/net code, so the affected component is not present in this package. The CVE is open in Debian 13 (trixie), where the golang-golang-x-net package is marked no-dsa; this decision rests on the code in these builds, not on that status. Debian tracker: https://security-tracker.debian.org/tracker/CVE-2026-27136"
     },
     {
       "vulnerability": {
@@ -43191,7 +43257,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-fips@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-27136 (GO-2026-5030): the golang.org/x/net/html tokenizer kept duplicate attributes, so HTML that is parsed and then written back with Render can produce an unexpected tree, which can defeat HTML sanitizers and lead to cross-site scripting. The Go vulnerability database lists Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html as the affected functions, fixed in golang.org/x/net 0.55.0; the fix commit https://github.com/golang/net/commit/a452f3cc17168a60bc3f439a3ae0fcffc32eca0e which is in v0.55.0 and not in v0.54.0 adds an attrNames field to the Tokenizer type and changes the tokenizer's readTag method and NewTokenizerFragment in html/token.go, and its other change is the test file html/token_test.go. Sources: https://pkg.go.dev/vuln/GO-2026-5030, https://github.com/golang/go/issues/79575. We checked every published scout-sbom-indexer-fips package for Debian 13 in the DHI Debian security repository, which requires authentication: 25 builds, 1.20.4-1 to the current 1.30.0-0, 50 packages, on amd64 and arm64, each checked against its index checksum. Each package holds one file, /sbom-indexer, a statically linked Go program built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). Its Go build information lists golang.org/x/net with no replacement, the same on both architectures in every build: v0.53.0 or v0.54.0, which are in the affected range, in 1.20.4-1 to 1.20.4-4, and v0.55.0 to v0.63.0 from 1.20.4-5 on. The program links golang.org/x/net/html/charset, which imports golang.org/x/net/html, but in all 50 binaries the only function of golang.org/x/net/html in the Go function table (read from .gopclntab, with runtime.main found in every build as a control) is the package initializer html.init; none of Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, the tokenizer's readTag method or NewTokenizerFragment is present. A byte search of every binary for golang.org/x/net/html. names, which also finds the names of functions the compiler inlined, finds only the initializer (html.init and its init task) and the mathMLAttributeAdjustments table it sets up. So the vulnerable code is not linked, whichever x/net version a build carries. As a positive control, the same function-table reader and byte search, run on test programs built with CGO_ENABLED=0 and -trimpath for linux/amd64 and linux/arm64 against golang.org/x/net v0.53.0 that call html.Parse and html.ParseFragment, find Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, readTag and NewTokenizerFragment (Parse and ParseFragment by the byte search only, since they are inlined into their caller). The CVE is open in Debian 13 (trixie), where the golang-golang-x-net package is marked no-dsa; this decision rests on the code in these builds, not on that status. Debian tracker: https://security-tracker.debian.org/tracker/CVE-2026-27136"
     },
     {
       "vulnerability": {
@@ -43277,7 +43345,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-oci-config@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-27136 (GO-2026-5030): the golang.org/x/net/html tokenizer kept duplicate attributes, so HTML that is parsed and then written back with Render can produce an unexpected tree, which can defeat HTML sanitizers and lead to cross-site scripting. The Go vulnerability database lists Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html as the affected functions, fixed in golang.org/x/net 0.55.0; the fix commit https://github.com/golang/net/commit/a452f3cc17168a60bc3f439a3ae0fcffc32eca0e which is in v0.55.0 and not in v0.54.0 adds an attrNames field to the Tokenizer type and changes the tokenizer's readTag method and NewTokenizerFragment in html/token.go, and its other change is the test file html/token_test.go. Sources: https://pkg.go.dev/vuln/GO-2026-5030, https://github.com/golang/go/issues/79575. We checked every published scout-sbom-indexer-oci-config package for Debian 13 in the DHI Debian repository: 25 builds, 1.20.4-1 to the current 1.30.0-0, 50 packages, on amd64 and arm64, each checked against its index checksum. Each package holds one file, /opt/docker/config/scout-sbom-indexer.yaml, a YAML configuration file; no package contains an ELF file, a Go program or any golang.org/x/net code, so the affected component is not present in this package. The CVE is open in Debian 13 (trixie), where the golang-golang-x-net package is marked no-dsa; this decision rests on the code in these builds, not on that status. Debian tracker: https://security-tracker.debian.org/tracker/CVE-2026-27136"
     },
     {
       "vulnerability": {
@@ -43363,7 +43433,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-27136 (GO-2026-5030): the golang.org/x/net/html tokenizer kept duplicate attributes, so HTML that is parsed and then written back with Render can produce an unexpected tree, which can defeat HTML sanitizers and lead to cross-site scripting. The Go vulnerability database lists Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions and the parser's parse method in golang.org/x/net/html as the affected functions, fixed in golang.org/x/net 0.55.0; the fix commit https://github.com/golang/net/commit/a452f3cc17168a60bc3f439a3ae0fcffc32eca0e which is in v0.55.0 and not in v0.54.0 adds an attrNames field to the Tokenizer type and changes the tokenizer's readTag method and NewTokenizerFragment in html/token.go, and its other change is the test file html/token_test.go. Sources: https://pkg.go.dev/vuln/GO-2026-5030, https://github.com/golang/go/issues/79575. We checked every published scout-sbom-indexer package for Debian 13 in the DHI Debian repository: 25 builds, 1.20.4-1 to the current 1.30.0-0, 50 packages, on amd64 and arm64, each checked against its index checksum. Each package holds one file, /sbom-indexer, a statically linked Go program built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). Its Go build information lists golang.org/x/net with no replacement, the same on both architectures in every build: v0.53.0 or v0.54.0, which are in the affected range, in 1.20.4-1 to 1.20.4-4, and v0.55.0 to v0.63.0 from 1.20.4-5 on. The program links golang.org/x/net/html/charset, which imports golang.org/x/net/html, but in all 50 binaries the only function of golang.org/x/net/html in the Go function table (read from .gopclntab, with runtime.main found in every build as a control) is the package initializer html.init; none of Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, the tokenizer's readTag method or NewTokenizerFragment is present. A byte search of every binary for golang.org/x/net/html. names, which also finds the names of functions the compiler inlined, finds only the initializer (html.init and its init task) and the mathMLAttributeAdjustments table it sets up. So the vulnerable code is not linked, whichever x/net version a build carries. As a positive control, the same function-table reader and byte search, run on test programs built with CGO_ENABLED=0 and -trimpath for linux/amd64 and linux/arm64 against golang.org/x/net v0.53.0 that call html.Parse and html.ParseFragment, find Parse, ParseFragment, ParseWithOptions, ParseFragmentWithOptions, the parser's parse method, readTag and NewTokenizerFragment (Parse and ParseFragment by the byte search only, since they are inlined into their caller). The CVE is open in Debian 13 (trixie), where the golang-golang-x-net package is marked no-dsa; this decision rests on the code in these builds, not on that status. Debian tracker: https://security-tracker.debian.org/tracker/CVE-2026-27136"
     },
     {
       "vulnerability": {

@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-25T19:26:17Z",
-  "version": 32,
+  "last_updated": "2026-11-26T04:16:48Z",
+  "version": 34,
   "statements": [
     {
       "vulnerability": {
@@ -127,7 +127,9 @@
           "@id": "pkg:apk/dhi/alertmanager-dev@0.35.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-33811 (GO-2026-4981): with Go's cgo DNS resolver, LookupCNAME on a very long CNAME response can free C memory twice in cgoResSearch and crash. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. The fix, https://github.com/golang/go/commit/ab2c7eb1c43011dda118282c1e757d8c27cd7d4f and its release-branch.go1.26 backport https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92 (first in go1.26.3), each change only src/net/cgo_unix.go, the file that holds cgoResSearch. That file is compiled only when cgo is enabled and the netgo build tag is not set; its build constraint is !netgo && ((cgo && unix) || darwin): https://go.googlesource.com/go/+/refs/tags/go1.26.2/src/net/cgo_unix.go . The Go vulnerability database lists the net functions LookupCNAME, Resolver.LookupCNAME and cgoResSearch. We downloaded every alertmanager-dev package listed in the Alpine 3.23 index of the DHI Alpine repository, for x86_64 and aarch64, and checked each download against the index checksum: 37 builds, 0.31.1-r0 to the current 0.35.1-r0. The Go programs in the packages are /usr/bin/alertmanager and /usr/bin/amtool. For every Go program in every build we read the Go build information, the function table (pclntab) and the bytes of the file. Every Go program records CGO_ENABLED=0 in its Go build settings, and every one is a statically linked ELF file with no program interpreter and no dynamic section. No Go program's function table has any net function whose name starts with cgo (neither cgoResSearch nor cgoLookupCNAME nor any other), and none has a runtime/cgo or _Cfunc_ function. A byte search for net.cgoResSearch finds it in no ELF file of any build. runtime.main is in the function table of every Go program. net.(*Resolver).LookupCNAME is in the function table of /usr/bin/alertmanager and /usr/bin/amtool in every build, so a function the advisory lists is linked; with cgo disabled it runs Go's own DNS resolver. As a positive control, we built a program with the vulnerable Go 1.26.2 for linux/amd64 and linux/arm64 that calls LookupCNAME and Resolver.LookupCNAME, once with CGO_ENABLED=1 and once with CGO_ENABLED=0. With cgo, the same function-table reader finds net.cgoResSearch and net.cgoLookupCNAME and the byte search finds net.cgoResSearch. Without cgo, the reader finds net.(*Resolver).LookupCNAME but no net cgo function, and the byte search finds no net.cgoResSearch. All Go programs in one build use the same Go release: 0.31.1-r0 Go 1.25.7; 0.31.1-r1 to 0.31.1-r4 Go 1.26.1; 0.31.1-r5 to 0.32.1-r0 Go 1.26.2; 0.32.1-r1 to 0.32.1-r2 Go 1.26.3; 0.32.1-r3 to 0.33.1-r0 Go 1.26.4; 0.33.1-r1 to 0.33.1-r3 Go 1.26.5; 0.33.1-r5 to 0.34.0-r0 Go 1.26.6; 0.34.0-r1 Go 1.26.7; 0.34.0-r2 to 0.34.1-r1 Go 1.26.8; 0.34.1-r2 to 0.34.1-r3 Go 1.26.9; 0.34.1-r4 to 0.35.0-r0 Go 1.26.10; 0.35.0-r1 to 0.35.1-r0 Go 1.26.11. The builds before 0.32.1-r1 use Go releases inside the affected range, but the vulnerable cgo resolver code is not compiled into any build of this package. Builds from 0.32.1-r1 on also use a Go release that carries the fix."
     },
     {
       "vulnerability": {
@@ -249,7 +251,9 @@
           "@id": "pkg:apk/dhi/alertmanager-fips-dev@0.35.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-33811 (GO-2026-4981): with Go's cgo DNS resolver, LookupCNAME on a very long CNAME response can free C memory twice in cgoResSearch and crash. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. The fix, https://github.com/golang/go/commit/ab2c7eb1c43011dda118282c1e757d8c27cd7d4f and its release-branch.go1.26 backport https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92 (first in go1.26.3), each change only src/net/cgo_unix.go, the file that holds cgoResSearch. That file is compiled only when cgo is enabled and the netgo build tag is not set; its build constraint is !netgo && ((cgo && unix) || darwin): https://go.googlesource.com/go/+/refs/tags/go1.26.2/src/net/cgo_unix.go . The Go vulnerability database lists the net functions LookupCNAME, Resolver.LookupCNAME and cgoResSearch. We downloaded every alertmanager-fips-dev package listed in the Alpine 3.23 index of the DHI Alpine security repository, where the FIPS packages are published and which requires authentication, for x86_64 and aarch64, and checked each download against the index checksum: 37 builds, 0.31.1-r0 to the current 0.35.1-r0. The Go programs in the packages are /usr/bin/alertmanager and /usr/bin/amtool. For every Go program in every build we read the Go build information, the function table (pclntab) and the bytes of the file. Every Go program records CGO_ENABLED=0 in its Go build settings, and every one is a statically linked ELF file with no program interpreter and no dynamic section. No Go program's function table has any net function whose name starts with cgo (neither cgoResSearch nor cgoLookupCNAME nor any other), and none has a runtime/cgo or _Cfunc_ function. A byte search for net.cgoResSearch finds it in no ELF file of any build. runtime.main is in the function table of every Go program. net.(*Resolver).LookupCNAME is in the function table of /usr/bin/alertmanager and /usr/bin/amtool in every build, so a function the advisory lists is linked; with cgo disabled it runs Go's own DNS resolver. As a positive control, we built a program with the vulnerable Go 1.26.2 for linux/amd64 and linux/arm64 that calls LookupCNAME and Resolver.LookupCNAME, once with CGO_ENABLED=1 and once with CGO_ENABLED=0. With cgo, the same function-table reader finds net.cgoResSearch and net.cgoLookupCNAME and the byte search finds net.cgoResSearch. Without cgo, the reader finds net.(*Resolver).LookupCNAME but no net cgo function, and the byte search finds no net.cgoResSearch. All Go programs in one build use the same Go release: 0.31.1-r0 Go 1.25.7; 0.31.1-r1 to 0.31.1-r4 Go 1.26.1; 0.31.1-r5 to 0.32.1-r0 Go 1.26.2; 0.32.1-r1 to 0.32.1-r2 Go 1.26.3; 0.32.1-r3 to 0.33.1-r0 Go 1.26.4; 0.33.1-r1 to 0.33.1-r3 Go 1.26.5; 0.33.1-r5 to 0.34.0-r0 Go 1.26.6; 0.34.0-r1 Go 1.26.7; 0.34.0-r2 to 0.34.1-r1 Go 1.26.8; 0.34.1-r2 to 0.34.1-r3 Go 1.26.9; 0.34.1-r4 to 0.35.0-r0 Go 1.26.10; 0.35.0-r1 to 0.35.1-r0 Go 1.26.11. The builds before 0.32.1-r1 use Go releases inside the affected range, but the vulnerable cgo resolver code is not compiled into any build of this package. Builds from 0.32.1-r1 on also use a Go release that carries the fix."
     },
     {
       "vulnerability": {
@@ -371,7 +375,9 @@
           "@id": "pkg:apk/dhi/alertmanager-fips@0.35.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-33811 (GO-2026-4981): with Go's cgo DNS resolver, LookupCNAME on a very long CNAME response can free C memory twice in cgoResSearch and crash. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. The fix, https://github.com/golang/go/commit/ab2c7eb1c43011dda118282c1e757d8c27cd7d4f and its release-branch.go1.26 backport https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92 (first in go1.26.3), each change only src/net/cgo_unix.go, the file that holds cgoResSearch. That file is compiled only when cgo is enabled and the netgo build tag is not set; its build constraint is !netgo && ((cgo && unix) || darwin): https://go.googlesource.com/go/+/refs/tags/go1.26.2/src/net/cgo_unix.go . The Go vulnerability database lists the net functions LookupCNAME, Resolver.LookupCNAME and cgoResSearch. We downloaded every alertmanager-fips package listed in the Alpine 3.23 index of the DHI Alpine security repository, where the FIPS packages are published and which requires authentication, for x86_64 and aarch64, and checked each download against the index checksum: 37 builds, 0.31.1-r0 to the current 0.35.1-r0. The Go programs in the packages are /usr/bin/alertmanager and /usr/bin/amtool. For every Go program in every build we read the Go build information, the function table (pclntab) and the bytes of the file. Every Go program records CGO_ENABLED=0 in its Go build settings, and every one is a statically linked ELF file with no program interpreter and no dynamic section. No Go program's function table has any net function whose name starts with cgo (neither cgoResSearch nor cgoLookupCNAME nor any other), and none has a runtime/cgo or _Cfunc_ function. A byte search for net.cgoResSearch finds it in no ELF file of any build. runtime.main is in the function table of every Go program. net.(*Resolver).LookupCNAME is in the function table of /usr/bin/alertmanager and /usr/bin/amtool in every build, so a function the advisory lists is linked; with cgo disabled it runs Go's own DNS resolver. As a positive control, we built a program with the vulnerable Go 1.26.2 for linux/amd64 and linux/arm64 that calls LookupCNAME and Resolver.LookupCNAME, once with CGO_ENABLED=1 and once with CGO_ENABLED=0. With cgo, the same function-table reader finds net.cgoResSearch and net.cgoLookupCNAME and the byte search finds net.cgoResSearch. Without cgo, the reader finds net.(*Resolver).LookupCNAME but no net cgo function, and the byte search finds no net.cgoResSearch. All Go programs in one build use the same Go release: 0.31.1-r0 Go 1.25.7; 0.31.1-r1 to 0.31.1-r4 Go 1.26.1; 0.31.1-r5 to 0.32.1-r0 Go 1.26.2; 0.32.1-r1 to 0.32.1-r2 Go 1.26.3; 0.32.1-r3 to 0.33.1-r0 Go 1.26.4; 0.33.1-r1 to 0.33.1-r3 Go 1.26.5; 0.33.1-r5 to 0.34.0-r0 Go 1.26.6; 0.34.0-r1 Go 1.26.7; 0.34.0-r2 to 0.34.1-r1 Go 1.26.8; 0.34.1-r2 to 0.34.1-r3 Go 1.26.9; 0.34.1-r4 to 0.35.0-r0 Go 1.26.10; 0.35.0-r1 to 0.35.1-r0 Go 1.26.11. The builds before 0.32.1-r1 use Go releases inside the affected range, but the vulnerable cgo resolver code is not compiled into any build of this package. Builds from 0.32.1-r1 on also use a Go release that carries the fix."
     },
     {
       "vulnerability": {
@@ -493,7 +499,9 @@
           "@id": "pkg:apk/dhi/alertmanager@0.35.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-33811 (GO-2026-4981): with Go's cgo DNS resolver, LookupCNAME on a very long CNAME response can free C memory twice in cgoResSearch and crash. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. The fix, https://github.com/golang/go/commit/ab2c7eb1c43011dda118282c1e757d8c27cd7d4f and its release-branch.go1.26 backport https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92 (first in go1.26.3), each change only src/net/cgo_unix.go, the file that holds cgoResSearch. That file is compiled only when cgo is enabled and the netgo build tag is not set; its build constraint is !netgo && ((cgo && unix) || darwin): https://go.googlesource.com/go/+/refs/tags/go1.26.2/src/net/cgo_unix.go . The Go vulnerability database lists the net functions LookupCNAME, Resolver.LookupCNAME and cgoResSearch. We downloaded every alertmanager package listed in the Alpine 3.23 index of the DHI Alpine repository, for x86_64 and aarch64, and checked each download against the index checksum: 37 builds, 0.31.1-r0 to the current 0.35.1-r0. The Go programs in the packages are /usr/bin/alertmanager and /usr/bin/amtool. For every Go program in every build we read the Go build information, the function table (pclntab) and the bytes of the file. Every Go program records CGO_ENABLED=0 in its Go build settings, and every one is a statically linked ELF file with no program interpreter and no dynamic section. No Go program's function table has any net function whose name starts with cgo (neither cgoResSearch nor cgoLookupCNAME nor any other), and none has a runtime/cgo or _Cfunc_ function. A byte search for net.cgoResSearch finds it in no ELF file of any build. runtime.main is in the function table of every Go program. net.(*Resolver).LookupCNAME is in the function table of /usr/bin/alertmanager and /usr/bin/amtool in every build, so a function the advisory lists is linked; with cgo disabled it runs Go's own DNS resolver. As a positive control, we built a program with the vulnerable Go 1.26.2 for linux/amd64 and linux/arm64 that calls LookupCNAME and Resolver.LookupCNAME, once with CGO_ENABLED=1 and once with CGO_ENABLED=0. With cgo, the same function-table reader finds net.cgoResSearch and net.cgoLookupCNAME and the byte search finds net.cgoResSearch. Without cgo, the reader finds net.(*Resolver).LookupCNAME but no net cgo function, and the byte search finds no net.cgoResSearch. All Go programs in one build use the same Go release: 0.31.1-r0 Go 1.25.7; 0.31.1-r1 to 0.31.1-r4 Go 1.26.1; 0.31.1-r5 to 0.32.1-r0 Go 1.26.2; 0.32.1-r1 to 0.32.1-r2 Go 1.26.3; 0.32.1-r3 to 0.33.1-r0 Go 1.26.4; 0.33.1-r1 to 0.33.1-r3 Go 1.26.5; 0.33.1-r5 to 0.34.0-r0 Go 1.26.6; 0.34.0-r1 Go 1.26.7; 0.34.0-r2 to 0.34.1-r1 Go 1.26.8; 0.34.1-r2 to 0.34.1-r3 Go 1.26.9; 0.34.1-r4 to 0.35.0-r0 Go 1.26.10; 0.35.0-r1 to 0.35.1-r0 Go 1.26.11. The builds before 0.32.1-r1 use Go releases inside the affected range, but the vulnerable cgo resolver code is not compiled into any build of this package. Builds from 0.32.1-r1 on also use a Go release that carries the fix."
     },
     {
       "vulnerability": {
@@ -3995,6 +4003,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-dev@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-dev@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4120,6 +4131,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips-dev@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips-dev@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4245,6 +4259,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3-fips@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3-fips@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -4370,6 +4387,9 @@
         },
         {
           "@id": "pkg:apk/dhi/cosign-3@3.1.5-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/cosign-3@3.1.6-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -7671,6 +7691,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend-dev@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend-dev@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -7769,6 +7792,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend-fips-dev@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend-fips-dev@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -7867,6 +7893,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend-fips@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend-fips@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -7965,6 +7994,9 @@
         },
         {
           "@id": "pkg:apk/dhi/hubble-ui-backend@0.13.6-r8?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/hubble-ui-backend@0.13.7-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -19911,7 +19943,9 @@
           "@id": "pkg:deb/dhi/alertmanager-dev@0.35.1-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-33811 (GO-2026-4981): with Go's cgo DNS resolver, LookupCNAME on a very long CNAME response can free C memory twice in cgoResSearch and crash. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. The fix, https://github.com/golang/go/commit/ab2c7eb1c43011dda118282c1e757d8c27cd7d4f and its release-branch.go1.26 backport https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92 (first in go1.26.3), each change only src/net/cgo_unix.go, the file that holds cgoResSearch. That file is compiled only when cgo is enabled and the netgo build tag is not set; its build constraint is !netgo && ((cgo && unix) || darwin): https://go.googlesource.com/go/+/refs/tags/go1.26.2/src/net/cgo_unix.go . The Go vulnerability database lists the net functions LookupCNAME, Resolver.LookupCNAME and cgoResSearch. We downloaded every alertmanager-dev package listed in the Debian 13 index of the DHI Debian repository, for amd64 and arm64, and checked each download against the index checksum: 31 builds, 0.31.1-6 to the current 0.35.1-0. The Go programs in the packages are /usr/bin/alertmanager and /usr/bin/amtool. For every Go program in every build we read the Go build information, the function table (pclntab) and the bytes of the file. Every Go program records CGO_ENABLED=0 in its Go build settings, and every one is a statically linked ELF file with no program interpreter and no dynamic section. No Go program's function table has any net function whose name starts with cgo (neither cgoResSearch nor cgoLookupCNAME nor any other), and none has a runtime/cgo or _Cfunc_ function. A byte search for net.cgoResSearch finds it in no ELF file of any build. runtime.main is in the function table of every Go program. net.(*Resolver).LookupCNAME is in the function table of /usr/bin/alertmanager and /usr/bin/amtool in every build, so a function the advisory lists is linked; with cgo disabled it runs Go's own DNS resolver. As a positive control, we built a program with the vulnerable Go 1.26.2 for linux/amd64 and linux/arm64 that calls LookupCNAME and Resolver.LookupCNAME, once with CGO_ENABLED=1 and once with CGO_ENABLED=0. With cgo, the same function-table reader finds net.cgoResSearch and net.cgoLookupCNAME and the byte search finds net.cgoResSearch. Without cgo, the reader finds net.(*Resolver).LookupCNAME but no net cgo function, and the byte search finds no net.cgoResSearch. All Go programs in one build use the same Go release: 0.31.1-6 to 0.32.1-0 Go 1.26.2; 0.32.1-1 to 0.32.1-2 Go 1.26.3; 0.32.1-3 to 0.33.1-0 Go 1.26.4; 0.33.1-1 to 0.33.1-3 Go 1.26.5; 0.33.1-5 to 0.34.0-0 Go 1.26.6; 0.34.0-1 Go 1.26.7; 0.34.0-2 to 0.34.1-1 Go 1.26.8; 0.34.1-2 to 0.34.1-3 Go 1.26.9; 0.34.1-4 to 0.35.0-0 Go 1.26.10; 0.35.0-1 to 0.35.1-0 Go 1.26.11. The builds before 0.32.1-1 use Go releases inside the affected range, but the vulnerable cgo resolver code is not compiled into any build of this package. Builds from 0.32.1-1 on also use a Go release that carries the fix."
     },
     {
       "vulnerability": {
@@ -20015,7 +20049,9 @@
           "@id": "pkg:deb/dhi/alertmanager-fips-dev@0.35.1-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-33811 (GO-2026-4981): with Go's cgo DNS resolver, LookupCNAME on a very long CNAME response can free C memory twice in cgoResSearch and crash. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. The fix, https://github.com/golang/go/commit/ab2c7eb1c43011dda118282c1e757d8c27cd7d4f and its release-branch.go1.26 backport https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92 (first in go1.26.3), each change only src/net/cgo_unix.go, the file that holds cgoResSearch. That file is compiled only when cgo is enabled and the netgo build tag is not set; its build constraint is !netgo && ((cgo && unix) || darwin): https://go.googlesource.com/go/+/refs/tags/go1.26.2/src/net/cgo_unix.go . The Go vulnerability database lists the net functions LookupCNAME, Resolver.LookupCNAME and cgoResSearch. We downloaded every alertmanager-fips-dev package listed in the Debian 13 index of the DHI Debian security repository, where the FIPS packages are published and which requires authentication, for amd64 and arm64, and checked each download against the index checksum: 31 builds, 0.31.1-6 to the current 0.35.1-0. The Go programs in the packages are /usr/bin/alertmanager and /usr/bin/amtool. For every Go program in every build we read the Go build information, the function table (pclntab) and the bytes of the file. Every Go program records CGO_ENABLED=0 in its Go build settings, and every one is a statically linked ELF file with no program interpreter and no dynamic section. No Go program's function table has any net function whose name starts with cgo (neither cgoResSearch nor cgoLookupCNAME nor any other), and none has a runtime/cgo or _Cfunc_ function. A byte search for net.cgoResSearch finds it in no ELF file of any build. runtime.main is in the function table of every Go program. net.(*Resolver).LookupCNAME is in the function table of /usr/bin/alertmanager and /usr/bin/amtool in every build, so a function the advisory lists is linked; with cgo disabled it runs Go's own DNS resolver. As a positive control, we built a program with the vulnerable Go 1.26.2 for linux/amd64 and linux/arm64 that calls LookupCNAME and Resolver.LookupCNAME, once with CGO_ENABLED=1 and once with CGO_ENABLED=0. With cgo, the same function-table reader finds net.cgoResSearch and net.cgoLookupCNAME and the byte search finds net.cgoResSearch. Without cgo, the reader finds net.(*Resolver).LookupCNAME but no net cgo function, and the byte search finds no net.cgoResSearch. All Go programs in one build use the same Go release: 0.31.1-6 to 0.32.1-0 Go 1.26.2; 0.32.1-1 to 0.32.1-2 Go 1.26.3; 0.32.1-3 to 0.33.1-0 Go 1.26.4; 0.33.1-1 to 0.33.1-3 Go 1.26.5; 0.33.1-5 to 0.34.0-0 Go 1.26.6; 0.34.0-1 Go 1.26.7; 0.34.0-2 to 0.34.1-1 Go 1.26.8; 0.34.1-2 to 0.34.1-3 Go 1.26.9; 0.34.1-4 to 0.35.0-0 Go 1.26.10; 0.35.0-1 to 0.35.1-0 Go 1.26.11. The builds before 0.32.1-1 use Go releases inside the affected range, but the vulnerable cgo resolver code is not compiled into any build of this package. Builds from 0.32.1-1 on also use a Go release that carries the fix."
     },
     {
       "vulnerability": {
@@ -20119,7 +20155,9 @@
           "@id": "pkg:deb/dhi/alertmanager-fips@0.35.1-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-33811 (GO-2026-4981): with Go's cgo DNS resolver, LookupCNAME on a very long CNAME response can free C memory twice in cgoResSearch and crash. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. The fix, https://github.com/golang/go/commit/ab2c7eb1c43011dda118282c1e757d8c27cd7d4f and its release-branch.go1.26 backport https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92 (first in go1.26.3), each change only src/net/cgo_unix.go, the file that holds cgoResSearch. That file is compiled only when cgo is enabled and the netgo build tag is not set; its build constraint is !netgo && ((cgo && unix) || darwin): https://go.googlesource.com/go/+/refs/tags/go1.26.2/src/net/cgo_unix.go . The Go vulnerability database lists the net functions LookupCNAME, Resolver.LookupCNAME and cgoResSearch. We downloaded every alertmanager-fips package listed in the Debian 13 index of the DHI Debian security repository, where the FIPS packages are published and which requires authentication, for amd64 and arm64, and checked each download against the index checksum: 31 builds, 0.31.1-6 to the current 0.35.1-0. The Go programs in the packages are /usr/bin/alertmanager and /usr/bin/amtool. For every Go program in every build we read the Go build information, the function table (pclntab) and the bytes of the file. Every Go program records CGO_ENABLED=0 in its Go build settings, and every one is a statically linked ELF file with no program interpreter and no dynamic section. No Go program's function table has any net function whose name starts with cgo (neither cgoResSearch nor cgoLookupCNAME nor any other), and none has a runtime/cgo or _Cfunc_ function. A byte search for net.cgoResSearch finds it in no ELF file of any build. runtime.main is in the function table of every Go program. net.(*Resolver).LookupCNAME is in the function table of /usr/bin/alertmanager and /usr/bin/amtool in every build, so a function the advisory lists is linked; with cgo disabled it runs Go's own DNS resolver. As a positive control, we built a program with the vulnerable Go 1.26.2 for linux/amd64 and linux/arm64 that calls LookupCNAME and Resolver.LookupCNAME, once with CGO_ENABLED=1 and once with CGO_ENABLED=0. With cgo, the same function-table reader finds net.cgoResSearch and net.cgoLookupCNAME and the byte search finds net.cgoResSearch. Without cgo, the reader finds net.(*Resolver).LookupCNAME but no net cgo function, and the byte search finds no net.cgoResSearch. All Go programs in one build use the same Go release: 0.31.1-6 to 0.32.1-0 Go 1.26.2; 0.32.1-1 to 0.32.1-2 Go 1.26.3; 0.32.1-3 to 0.33.1-0 Go 1.26.4; 0.33.1-1 to 0.33.1-3 Go 1.26.5; 0.33.1-5 to 0.34.0-0 Go 1.26.6; 0.34.0-1 Go 1.26.7; 0.34.0-2 to 0.34.1-1 Go 1.26.8; 0.34.1-2 to 0.34.1-3 Go 1.26.9; 0.34.1-4 to 0.35.0-0 Go 1.26.10; 0.35.0-1 to 0.35.1-0 Go 1.26.11. The builds before 0.32.1-1 use Go releases inside the affected range, but the vulnerable cgo resolver code is not compiled into any build of this package. Builds from 0.32.1-1 on also use a Go release that carries the fix."
     },
     {
       "vulnerability": {
@@ -20223,7 +20261,9 @@
           "@id": "pkg:deb/dhi/alertmanager@0.35.1-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-33811 (GO-2026-4981): with Go's cgo DNS resolver, LookupCNAME on a very long CNAME response can free C memory twice in cgoResSearch and crash. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. The fix, https://github.com/golang/go/commit/ab2c7eb1c43011dda118282c1e757d8c27cd7d4f and its release-branch.go1.26 backport https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92 (first in go1.26.3), each change only src/net/cgo_unix.go, the file that holds cgoResSearch. That file is compiled only when cgo is enabled and the netgo build tag is not set; its build constraint is !netgo && ((cgo && unix) || darwin): https://go.googlesource.com/go/+/refs/tags/go1.26.2/src/net/cgo_unix.go . The Go vulnerability database lists the net functions LookupCNAME, Resolver.LookupCNAME and cgoResSearch. We downloaded every alertmanager package listed in the Debian 13 index of the DHI Debian repository, for amd64 and arm64, and checked each download against the index checksum: 31 builds, 0.31.1-6 to the current 0.35.1-0. The Go programs in the packages are /usr/bin/alertmanager and /usr/bin/amtool. For every Go program in every build we read the Go build information, the function table (pclntab) and the bytes of the file. Every Go program records CGO_ENABLED=0 in its Go build settings, and every one is a statically linked ELF file with no program interpreter and no dynamic section. No Go program's function table has any net function whose name starts with cgo (neither cgoResSearch nor cgoLookupCNAME nor any other), and none has a runtime/cgo or _Cfunc_ function. A byte search for net.cgoResSearch finds it in no ELF file of any build. runtime.main is in the function table of every Go program. net.(*Resolver).LookupCNAME is in the function table of /usr/bin/alertmanager and /usr/bin/amtool in every build, so a function the advisory lists is linked; with cgo disabled it runs Go's own DNS resolver. As a positive control, we built a program with the vulnerable Go 1.26.2 for linux/amd64 and linux/arm64 that calls LookupCNAME and Resolver.LookupCNAME, once with CGO_ENABLED=1 and once with CGO_ENABLED=0. With cgo, the same function-table reader finds net.cgoResSearch and net.cgoLookupCNAME and the byte search finds net.cgoResSearch. Without cgo, the reader finds net.(*Resolver).LookupCNAME but no net cgo function, and the byte search finds no net.cgoResSearch. All Go programs in one build use the same Go release: 0.31.1-6 to 0.32.1-0 Go 1.26.2; 0.32.1-1 to 0.32.1-2 Go 1.26.3; 0.32.1-3 to 0.33.1-0 Go 1.26.4; 0.33.1-1 to 0.33.1-3 Go 1.26.5; 0.33.1-5 to 0.34.0-0 Go 1.26.6; 0.34.0-1 Go 1.26.7; 0.34.0-2 to 0.34.1-1 Go 1.26.8; 0.34.1-2 to 0.34.1-3 Go 1.26.9; 0.34.1-4 to 0.35.0-0 Go 1.26.10; 0.35.0-1 to 0.35.1-0 Go 1.26.11. The builds before 0.32.1-1 use Go releases inside the affected range, but the vulnerable cgo resolver code is not compiled into any build of this package. Builds from 0.32.1-1 on also use a Go release that carries the fix."
     },
     {
       "vulnerability": {
@@ -22934,6 +22974,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-dev@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-dev@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -23035,6 +23078,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips-dev@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -23136,6 +23182,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3-fips@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3-fips@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -23237,6 +23286,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cosign-3@3.1.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cosign-3@3.1.6-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -25530,6 +25582,9 @@
         },
         {
           "@id": "pkg:deb/dhi/hubble-ui-backend-dev@0.13.6-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/hubble-ui-backend-dev@0.13.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -25610,6 +25665,9 @@
         },
         {
           "@id": "pkg:deb/dhi/hubble-ui-backend-fips-dev@0.13.6-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/hubble-ui-backend-fips-dev@0.13.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -25690,6 +25748,9 @@
         },
         {
           "@id": "pkg:deb/dhi/hubble-ui-backend-fips@0.13.6-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/hubble-ui-backend-fips@0.13.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -25770,6 +25831,9 @@
         },
         {
           "@id": "pkg:deb/dhi/hubble-ui-backend@0.13.6-8?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/hubble-ui-backend@0.13.7-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
