@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T18:46:52Z",
-  "last_updated": "2026-11-27T03:51:33Z",
-  "version": 23,
+  "last_updated": "2026-11-27T14:08:36Z",
+  "version": 24,
   "statements": [
     {
       "vulnerability": {
@@ -32905,7 +32905,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-dev@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. We checked every scout-sbom-indexer-dev package published for Alpine 3.23 in the DHI Alpine repository as of 27 November 2026: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, on x86_64 and aarch64 (50 packages). Each package holds one file, /sbom-indexer, a statically linked Go program for Linux built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). We read the program in full from every package, except 1.26.0-r3, whose program has the same SHA-1 checksum, recorded in its package header, as the 1.26.0-r2 program we read. Its Go build information lists oras.land/oras-go/v2, with no replacement and the same on both architectures: v2.6.0 in 1.20.4-r1 to 1.23.1-r0, v2.6.2 in 1.23.1-r1 to 1.30.0-r0. The Go function table of every build holds oras-go code only from the root package, content, content/memory, errdef, registry, registry/remote and its subpackages, and internal packages; nothing from oras.land/oras-go/v2/content/file, the package that holds the file store and its tar extraction, is present, and a byte search of every program finds neither oras.land/oras-go/v2/content/file nor pushDir. As a control, the same searches find runtime.main and oras.land/oras-go/v2/content/memory in every build, and find oras.land/oras-go/v2/content/file (12 times) and pushDir in a test program we built with the same Go release (go1.27.1, CGO_ENABLED=0, linux/amd64 and linux/arm64) against oras-go v2.6.0 that creates a file.Store. The vulnerable extraction code is therefore not present in this package, including in the builds that carry oras-go v2.6.0."
     },
     {
       "vulnerability": {
@@ -32976,7 +32978,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-dev@1.30.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. We checked every scout-sbom-indexer-dev package published for Alpine 3.24 in the DHI Alpine repository as of 27 November 2026: 20 builds, 1.21.0-r0 to the current 1.30.0-r0, on x86_64 and aarch64 (40 packages). Each package holds one file, /sbom-indexer, a statically linked Go program for Linux built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). The SHA-1 checksum of /sbom-indexer recorded in each package's header equals that of the program we read in full from the Alpine 3.23 package of the same version, revision and architecture, so these packages carry the same programs. Its Go build information lists oras.land/oras-go/v2, with no replacement and the same on both architectures: v2.6.0 in 1.21.0-r0 to 1.23.1-r0, v2.6.2 in 1.23.1-r1 to 1.30.0-r0. The Go function table of every build holds oras-go code only from the root package, content, content/memory, errdef, registry, registry/remote and its subpackages, and internal packages; nothing from oras.land/oras-go/v2/content/file, the package that holds the file store and its tar extraction, is present, and a byte search of every program finds neither oras.land/oras-go/v2/content/file nor pushDir. As a control, the same searches find runtime.main and oras.land/oras-go/v2/content/memory in every build, and find oras.land/oras-go/v2/content/file (12 times) and pushDir in a test program we built with the same Go release (go1.27.1, CGO_ENABLED=0, linux/amd64 and linux/arm64) against oras-go v2.6.0 that creates a file.Store. The vulnerable extraction code is therefore not present in this package, including in the builds that carry oras-go v2.6.0."
     },
     {
       "vulnerability": {
@@ -33062,7 +33066,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips-dev@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. The scout-sbom-indexer-fips-dev packages for Alpine 3.23 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information, function table and a byte search, as done for the scout-sbom-indexer packages) to establish which oras.land/oras-go/v2 version each build carries and whether its content/file package is linked. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -33133,7 +33138,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips-dev@1.30.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. The scout-sbom-indexer-fips-dev packages for Alpine 3.24 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information, function table and a byte search, as done for the scout-sbom-indexer packages) to establish which oras.land/oras-go/v2 version each build carries and whether its content/file package is linked. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -33219,7 +33225,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips-oci-config@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. The scout-sbom-indexer-fips-oci-config packages for Alpine 3.23 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of every published build of this package, to confirm that, like scout-sbom-indexer-oci-config, it holds only a YAML configuration file and no program. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -33290,7 +33297,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips-oci-config@1.30.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. The scout-sbom-indexer-fips-oci-config packages for Alpine 3.24 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of every published build of this package, to confirm that, like scout-sbom-indexer-oci-config, it holds only a YAML configuration file and no program. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -33376,7 +33384,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. The scout-sbom-indexer-fips packages for Alpine 3.23 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information, function table and a byte search, as done for the scout-sbom-indexer packages) to establish which oras.land/oras-go/v2 version each build carries and whether its content/file package is linked. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -33447,7 +33456,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips@1.30.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. The scout-sbom-indexer-fips packages for Alpine 3.24 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information, function table and a byte search, as done for the scout-sbom-indexer packages) to establish which oras.land/oras-go/v2 version each build carries and whether its content/file package is linked. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -33533,7 +33543,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-oci-config@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. We checked every scout-sbom-indexer-oci-config package published for Alpine 3.23 in the DHI Alpine repository as of 27 November 2026: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, on both architectures (50 packages). Each package holds a single 180-byte file, /opt/docker/config/scout-sbom-indexer.yaml, a YAML configuration file that sets SBOM cataloger options for the image. It contains no program, library or Go code, so oras-go is not part of this package. The program ships in the scout-sbom-indexer and scout-sbom-indexer-dev packages, which have their own decisions."
     },
     {
       "vulnerability": {
@@ -33604,7 +33616,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-oci-config@1.30.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. We checked every scout-sbom-indexer-oci-config package published for Alpine 3.24 in the DHI Alpine repository as of 27 November 2026: 20 builds, 1.21.0-r0 to the current 1.30.0-r0, on both architectures (40 packages). Each package holds a single 180-byte file, /opt/docker/config/scout-sbom-indexer.yaml, a YAML configuration file that sets SBOM cataloger options for the image. It contains no program, library or Go code, so oras-go is not part of this package. The program ships in the scout-sbom-indexer and scout-sbom-indexer-dev packages, which have their own decisions."
     },
     {
       "vulnerability": {
@@ -33690,7 +33704,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. We checked every scout-sbom-indexer package published for Alpine 3.23 in the DHI Alpine repository as of 27 November 2026: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, on x86_64 and aarch64 (50 packages). Each package holds one file, /sbom-indexer, a statically linked Go program for Linux built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). We read the program in full from every package, except 1.26.0-r3, whose program has the same SHA-1 checksum, recorded in its package header, as the 1.26.0-r2 program we read. Its Go build information lists oras.land/oras-go/v2, with no replacement and the same on both architectures: v2.6.0 in 1.20.4-r1 to 1.23.1-r0, v2.6.2 in 1.23.1-r1 to 1.30.0-r0. The Go function table of every build holds oras-go code only from the root package, content, content/memory, errdef, registry, registry/remote and its subpackages, and internal packages; nothing from oras.land/oras-go/v2/content/file, the package that holds the file store and its tar extraction, is present, and a byte search of every program finds neither oras.land/oras-go/v2/content/file nor pushDir. As a control, the same searches find runtime.main and oras.land/oras-go/v2/content/memory in every build, and find oras.land/oras-go/v2/content/file (12 times) and pushDir in a test program we built with the same Go release (go1.27.1, CGO_ENABLED=0, linux/amd64 and linux/arm64) against oras-go v2.6.0 that creates a file.Store. The vulnerable extraction code is therefore not present in this package, including in the builds that carry oras-go v2.6.0."
     },
     {
       "vulnerability": {
@@ -33761,7 +33777,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer@1.30.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. We checked every scout-sbom-indexer package published for Alpine 3.24 in the DHI Alpine repository as of 27 November 2026: 20 builds, 1.21.0-r0 to the current 1.30.0-r0, on x86_64 and aarch64 (40 packages). Each package holds one file, /sbom-indexer, a statically linked Go program for Linux built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). The SHA-1 checksum of /sbom-indexer recorded in each package's header equals that of the program we read in full from the Alpine 3.23 package of the same version, revision and architecture, so these packages carry the same programs. Its Go build information lists oras.land/oras-go/v2, with no replacement and the same on both architectures: v2.6.0 in 1.21.0-r0 to 1.23.1-r0, v2.6.2 in 1.23.1-r1 to 1.30.0-r0. The Go function table of every build holds oras-go code only from the root package, content, content/memory, errdef, registry, registry/remote and its subpackages, and internal packages; nothing from oras.land/oras-go/v2/content/file, the package that holds the file store and its tar extraction, is present, and a byte search of every program finds neither oras.land/oras-go/v2/content/file nor pushDir. As a control, the same searches find runtime.main and oras.land/oras-go/v2/content/memory in every build, and find oras.land/oras-go/v2/content/file (12 times) and pushDir in a test program we built with the same Go release (go1.27.1, CGO_ENABLED=0, linux/amd64 and linux/arm64) against oras-go v2.6.0 that creates a file.Store. The vulnerable extraction code is therefore not present in this package, including in the builds that carry oras-go v2.6.0."
     },
     {
       "vulnerability": {
@@ -54755,7 +54773,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-dev@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. We checked every scout-sbom-indexer-dev package published for Debian 13 in the DHI Debian repository as of 27 November 2026: 25 builds, 1.20.4-1 to the current 1.30.0-0, on amd64 and arm64 (50 packages). Each package installs one file, /sbom-indexer, as listed in the md5sums manifest of its control archive, and the MD5 checksum recorded there equals that of the program we read in full from the Alpine 3.23 package of the same version, revision number and architecture (for example 1.20.4-5 matches 1.20.4-r5), so these packages carry the same statically linked Go programs, built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). Its Go build information lists oras.land/oras-go/v2, with no replacement and the same on both architectures: v2.6.0 in 1.20.4-1 to 1.23.1-0, v2.6.2 in 1.23.1-1 to 1.30.0-0. The Go function table of every build holds oras-go code only from the root package, content, content/memory, errdef, registry, registry/remote and its subpackages, and internal packages; nothing from oras.land/oras-go/v2/content/file, the package that holds the file store and its tar extraction, is present, and a byte search of every program finds neither oras.land/oras-go/v2/content/file nor pushDir. As a control, the same searches find runtime.main and oras.land/oras-go/v2/content/memory in every build, and find oras.land/oras-go/v2/content/file (12 times) and pushDir in a test program we built with the same Go release (go1.27.1, CGO_ENABLED=0, linux/amd64 and linux/arm64) against oras-go v2.6.0 that creates a file.Store. The vulnerable extraction code is therefore not present in this package, including in the builds that carry oras-go v2.6.0."
     },
     {
       "vulnerability": {
@@ -54841,7 +54861,8 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-fips-dev@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. The scout-sbom-indexer-fips-dev packages for Debian 13 are published in the DHI Debian security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information, function table and a byte search, as done for the scout-sbom-indexer packages) to establish which oras.land/oras-go/v2 version each build carries and whether its content/file package is linked. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -54927,7 +54948,8 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-fips-oci-config@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. The scout-sbom-indexer-fips-oci-config packages for Debian 13 are published in the DHI Debian security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of every published build of this package, to confirm that, like scout-sbom-indexer-oci-config, it holds only a YAML configuration file and no program. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -55013,7 +55035,8 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-fips@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. The scout-sbom-indexer-fips packages for Debian 13 are published in the DHI Debian security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information, function table and a byte search, as done for the scout-sbom-indexer packages) to establish which oras.land/oras-go/v2 version each build carries and whether its content/file package is linked. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -55099,7 +55122,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-oci-config@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. We checked every scout-sbom-indexer-oci-config package published for Debian 13 in the DHI Debian repository as of 27 November 2026: 25 builds, 1.20.4-1 to the current 1.30.0-0, on both architectures (50 packages). The md5sums manifest in each package's control archive lists a single file, /opt/docker/config/scout-sbom-indexer.yaml, whose MD5 checksum is that of the 180-byte YAML configuration file shipped in the Alpine packages (it sets SBOM cataloger options for the image); we also unpacked two of the packages in full (1.20.4-1 for amd64 and 1.23.1-5 for arm64) and found only that file. It contains no program, library or Go code, so oras-go is not part of this package. The program ships in the scout-sbom-indexer and scout-sbom-indexer-dev packages, which have their own decisions."
     },
     {
       "vulnerability": {
@@ -55185,7 +55210,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-85731 (GHSA-m37j-52j7-pjw7, GO-2026-6499): the file store in oras.land/oras-go/v2 (content/file.Store) unpacks layer tarballs annotated for unpacking with a symlink check that was only lexical, so a crafted tarball with a chain of symbolic links could write files outside the store's directory (the extraction routine (*Store).pushDir). It affects oras.land/oras-go/v2 before 2.6.2. Upstream fixed it in commit adab2f25ea95 (https://github.com/oras-project/oras-go/commit/adab2f25ea95ef4e6e41f50db9266a6701399422), released in v2.6.2. Sources: https://github.com/oras-project/oras-go/security/advisories/GHSA-m37j-52j7-pjw7, https://pkg.go.dev/vuln/GO-2026-6499 and https://github.com/oras-project/oras-go/releases/tag/v2.6.2. Debian has not fixed it in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-85731), so this decision rests on our own inspection of the programs. We checked every scout-sbom-indexer package published for Debian 13 in the DHI Debian repository as of 27 November 2026: 25 builds, 1.20.4-1 to the current 1.30.0-0, on amd64 and arm64 (50 packages). Each package installs one file, /sbom-indexer, as listed in the md5sums manifest of its control archive, and the MD5 checksum recorded there equals that of the program we read in full from the Alpine 3.23 package of the same version, revision number and architecture (for example 1.20.4-5 matches 1.20.4-r5), so these packages carry the same statically linked Go programs, built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). Its Go build information lists oras.land/oras-go/v2, with no replacement and the same on both architectures: v2.6.0 in 1.20.4-1 to 1.23.1-0, v2.6.2 in 1.23.1-1 to 1.30.0-0. The Go function table of every build holds oras-go code only from the root package, content, content/memory, errdef, registry, registry/remote and its subpackages, and internal packages; nothing from oras.land/oras-go/v2/content/file, the package that holds the file store and its tar extraction, is present, and a byte search of every program finds neither oras.land/oras-go/v2/content/file nor pushDir. As a control, the same searches find runtime.main and oras.land/oras-go/v2/content/memory in every build, and find oras.land/oras-go/v2/content/file (12 times) and pushDir in a test program we built with the same Go release (go1.27.1, CGO_ENABLED=0, linux/amd64 and linux/arm64) against oras-go v2.6.0 that creates a file.Store. The vulnerable extraction code is therefore not present in this package, including in the builds that carry oras-go v2.6.0."
     },
     {
       "vulnerability": {
