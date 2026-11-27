@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.8.0",
+  "id": "DHI-nrvh-n2ev-dmup-v32t",
+  "modified": "2026-11-27T12:09:54Z",
+  "published": "2026-11-27T12:09:54Z",
+  "upstream": [
+    "GHSA-4965-vg44-xv63"
+  ],
+  "summary": "### Summary",
+  "details": "### Summary\n\nAn authenticated AMQP 1.0 client that can consume from a quorum queue can settle a message with the `modified` outcome and an `x-` message annotation of type `double`, `float` or `null`. From then on, each AMQP 1.0 consumer that the message is delivered to has its connection closed with `amqp:internal-error`. If the queue dead-letters into a stream, the message is lost (`at-most-once`), or at-least-once dead-lettering stops for all virtual hosts on the node (`at-least-once`).\n\nDiscovered by Anthropic's OSS Scanner, as vulnerability ANT-2026-ZALIFH8F.\n\n### Details\n\n`settle_op_from_outcome/1` in `deps/rabbit/src/rabbit_amqp_session.erl` removes the AMQP type from the values of `x-` annotations of the `modified` outcome. A quorum queue stores these values in the message header, which is part of its Raft log and snapshots. When the message is later converted to AMQP 1.0, `mc_util:infer_type/1` adds the type back, but it has no clause for floats and `null` and fails with `function_clause`. This happens in:\n\n- The session process of each AMQP 1.0 consumer that the message is delivered to. The session crashes, and the queue offers the message to the next consumer, up to the delivery limit (20 by default). This continues after a node restart\n- The Ra server of the queue, when the message is dead-lettered into a stream with the `at-most-once` strategy. The Ra server is restarted, and the message is neither in the queue nor in the stream\n- The `rabbit_fifo_dlx_worker` of the queue, when the message is dead-lettered into a stream with the `at-least-once` strategy. The worker is restarted, receives the same message and crashes again, until `rabbit_fifo_dlx_sup` reaches its restart intensity and terminates. `rabbit_sup` doesn't restart it, because it's a `transient` child\n- In `4.4.0` only, the same `rabbit_fifo_dlx_worker` path with a quorum queue as the `at-least-once` dead-letter target, when the annotation is `x-opt-delivery-time`\n\nAMQP 0-9-1 consumers aren't affected, because only integer, binary and boolean annotations are converted to AMQP 0-9-1 headers. Classic queues discard `modified` annotations.\n\n### Impact\n\nA user who can consume from a quorum queue can close the connections of the other AMQP 1.0 consumers of that queue, up to 21 times per message with the default delivery limit. If the queue dead-letters, the message reaches the target with the annotation and does the same to the AMQP 1.0 consumers there.\n\nA user with full permissions in a virtual host of their own can declare a quorum queue there that dead-letters into a stream with the `at-least-once` strategy, and stop at-least-once dead-lettering for all virtual hosts on the node. Dead letters of other users then stay in their source queues, and declaring a new at-least-once quorum queue fails. Because the message stays in the source queue, this happens again after a node restart, until that queue is deleted.\n\nThere's no disclosure of data and no access beyond the user's own permissions.\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "rabbitmq-4.3",
+        "purl": "pkg:deb/dhi/rabbitmq-4.3"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.3.5-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "4.3.5-0",
+        "4.3.5-1",
+        "4.3.6-0",
+        "4.3.6-1",
+        "4.3.6-2"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Docker Hardened Images:Debian:13",
+        "name": "rabbitmq-4.4",
+        "purl": "pkg:deb/dhi/rabbitmq-4.4"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.4.0-0"
+            }
+          ]
+        }
+      ],
+      "versions": [
+        "4.4.0-0",
+        "4.4.1-0",
+        "4.4.1-1",
+        "4.4.1-2",
+        "4.4.1-3"
+      ],
+      "database_specific": {
+        "owner_kind": "HSP"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://scout.docker.com/v/DHI-nrvh-n2ev-dmup-v32t"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-4965-vg44-xv63"
+    }
+  ]
+}
