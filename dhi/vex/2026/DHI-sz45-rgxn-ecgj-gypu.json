@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T22:20:27Z",
-  "last_updated": "2026-11-26T21:00:28Z",
-  "version": 8,
+  "last_updated": "2026-11-27T02:29:13Z",
+  "version": 9,
   "statements": [
     {
       "vulnerability": {
@@ -94,7 +94,9 @@
           "@id": "pkg:apk/dhi/python-3.10@3.10.22-r8?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "CVE-2026-3087: shutil.unpack_archive() could extract a ZIP member whose name is a Windows absolute path with a drive letter (C:\\...) outside the target directory; the CVE record states that only Windows is affected. Upstream fixed it in https://github.com/python/cpython/issues/146581 (3.10 commit https://github.com/python/cpython/commit/1071290169f85c09cf767c1099564a9426cdc7e8), first released in CPython 3.10.21; see https://www.cve.org/CVERecord?id=CVE-2026-3087 and the advisory https://mail.python.org/archives/list/security-announce@python.org/thread/X6FXE5C6KDKOVNX3EC3DWD5RUPFWOZA4/. Debian likewise marks its CPython source packages not affected as Windows-specific: https://security-tracker.debian.org/tracker/CVE-2026-3087. The DHI Alpine 3.23 python-3.10 package is a Linux build of CPython. On Linux os.path is posixpath. Before the fix, shutil._unpack_zipfile() skips member names that start with '/' or contain '..' and writes the rest to os.path.join(extract_dir, *name.split('/')); posixpath.join restarts only at a component that begins with '/', splitting on '/' leaves no such component, and a drive letter, colon or backslash is an ordinary filename character. A member named C:\\evil or C:/evil is therefore written inside the target directory (as a file named 'C:\\evil', or under a directory named 'C:'), and the Windows-only behaviour cannot occur. Reproduced on a POSIX system with the unmodified CPython 3.10.20 shutil.py that the unfixed builds ship: members named C:\\evil1, C:/evil2, D:evil3 and \\\\server\\share\\evil4 were all extracted inside the target directory. Compared Lib/shutil.py and Lib/zipfile.py in the python-3.10 package in every build published by 2026-11-26 on x86_64 and aarch64 (3.10.19-r0 to 3.10.22-r8) with the upstream CPython files: 3.10.19-r0 to 3.10.20-r13 ship a shutil.py and zipfile.py byte-identical to upstream CPython 3.10.20's, without the fix; 3.10.21-r1 and later ship the fixed shutil.py, which extracts through ZipFile.extractall() and skips invalid names, so they also carry the upstream fix."
     },
     {
       "vulnerability": {
@@ -156,7 +158,9 @@
           "@id": "pkg:apk/dhi/python-3.10@3.10.22-r8?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "CVE-2026-3087: shutil.unpack_archive() could extract a ZIP member whose name is a Windows absolute path with a drive letter (C:\\...) outside the target directory; the CVE record states that only Windows is affected. Upstream fixed it in https://github.com/python/cpython/issues/146581 (3.10 commit https://github.com/python/cpython/commit/1071290169f85c09cf767c1099564a9426cdc7e8), first released in CPython 3.10.21; see https://www.cve.org/CVERecord?id=CVE-2026-3087 and the advisory https://mail.python.org/archives/list/security-announce@python.org/thread/X6FXE5C6KDKOVNX3EC3DWD5RUPFWOZA4/. Debian likewise marks its CPython source packages not affected as Windows-specific: https://security-tracker.debian.org/tracker/CVE-2026-3087. The DHI Alpine 3.24 python-3.10 package is a Linux build of CPython. On Linux os.path is posixpath. Before the fix, shutil._unpack_zipfile() skips member names that start with '/' or contain '..' and writes the rest to os.path.join(extract_dir, *name.split('/')); posixpath.join restarts only at a component that begins with '/', splitting on '/' leaves no such component, and a drive letter, colon or backslash is an ordinary filename character. A member named C:\\evil or C:/evil is therefore written inside the target directory (as a file named 'C:\\evil', or under a directory named 'C:'), and the Windows-only behaviour cannot occur. Reproduced on a POSIX system with the unmodified CPython 3.10.20 shutil.py that the unfixed builds ship: members named C:\\evil1, C:/evil2, D:evil3 and \\\\server\\share\\evil4 were all extracted inside the target directory. Compared Lib/shutil.py and Lib/zipfile.py in the python-3.10 package in every build published by 2026-11-26 on x86_64 and aarch64 (3.10.20-r0 to 3.10.22-r8) with the upstream CPython files: 3.10.20-r0 to 3.10.20-r5 ship a shutil.py and zipfile.py byte-identical to upstream CPython 3.10.20's, without the fix; 3.10.21-r1 and later ship the fixed shutil.py, which extracts through ZipFile.extractall() and skips invalid names, so they also carry the upstream fix."
     },
     {
       "vulnerability": {
@@ -849,7 +853,9 @@
           "@id": "pkg:deb/dhi/python-3.10@3.10.22-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "CVE-2026-3087: shutil.unpack_archive() could extract a ZIP member whose name is a Windows absolute path with a drive letter (C:\\...) outside the target directory; the CVE record states that only Windows is affected. Upstream fixed it in https://github.com/python/cpython/issues/146581 (3.10 commit https://github.com/python/cpython/commit/1071290169f85c09cf767c1099564a9426cdc7e8), first released in CPython 3.10.21; see https://www.cve.org/CVERecord?id=CVE-2026-3087 and the advisory https://mail.python.org/archives/list/security-announce@python.org/thread/X6FXE5C6KDKOVNX3EC3DWD5RUPFWOZA4/. Debian likewise marks its CPython source packages not affected as Windows-specific: https://security-tracker.debian.org/tracker/CVE-2026-3087. The DHI Debian 13 python-3.10 packages are a Linux build of CPython. On Linux os.path is posixpath. Before the fix, shutil._unpack_zipfile() skips member names that start with '/' or contain '..' and writes the rest to os.path.join(extract_dir, *name.split('/')); posixpath.join restarts only at a component that begins with '/', splitting on '/' leaves no such component, and a drive letter, colon or backslash is an ordinary filename character. A member named C:\\evil or C:/evil is therefore written inside the target directory (as a file named 'C:\\evil', or under a directory named 'C:'), and the Windows-only behaviour cannot occur. Reproduced on a POSIX system with the unmodified CPython 3.10.20 shutil.py that the unfixed builds ship: members named C:\\evil1, C:/evil2, D:evil3 and \\\\server\\share\\evil4 were all extracted inside the target directory. Compared Lib/shutil.py and Lib/zipfile.py in the standard library shipped by these packages in every build published by 2026-11-26 on amd64 and arm64 (3.10.20-0 to 3.10.22-10) with the upstream CPython files: 3.10.20-0 to 3.10.20-13 ship a shutil.py and zipfile.py byte-identical to upstream CPython 3.10.20's, without the fix; 3.10.21-0 and later ship the fixed shutil.py, which extracts through ZipFile.extractall() and skips invalid names, so they also carry the upstream fix."
     },
     {
       "vulnerability": {
