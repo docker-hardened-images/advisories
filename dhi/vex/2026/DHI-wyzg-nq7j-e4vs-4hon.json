@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:02:28Z",
-  "last_updated": "2026-11-24T17:42:48Z",
-  "version": 13,
+  "last_updated": "2026-11-27T04:25:44Z",
+  "version": 14,
   "statements": [
     {
       "vulnerability": {
@@ -498,7 +498,20 @@
         },
         {
           "@id": "pkg:deb/dhi/dotnet-sdk-8@8.0.425-1?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update dotnet-sdk-8 to 8.0.426-0 or later.",
+      "status_notes": "CVE-2026-96225 (GHSA-w6wh-p4g7-mpj2) is a .NET elevation of privilege issue in the runtime (Microsoft.NETCore.App): on Unix, the named-mutex and shared-memory paths can be manipulated through insecure global directories, symbolic-link races and unsafe permission changes, so a local attacker can truncate or overwrite files, widen directory permissions or elevate privileges. Microsoft lists the .NET 8.0 runtime packs, including linux-x64 and linux-arm64, as affected from 8.0.0 through 8.0.31 and fixed in 8.0.32: https://github.com/advisories/GHSA-w6wh-p4g7-mpj2, https://github.com/dotnet/announcements/issues/476, https://github.com/dotnet/runtime/issues/135706, https://github.com/dotnet/core/blob/main/release-notes/8.0/8.0.32/8.0.32.md. The .NET 8 fix is dotnet/runtime commit 3928fdb88d27fbbd7591f558bcf90b12624944a4 on release/8.0 (\"Fixes for Shared Mutex privileges/permissions\"), which changes the CoreCLR PAL shared-memory and named-mutex code; it is in the v8.0.32 tag and not in v8.0.31: https://github.com/dotnet/runtime/commit/3928fdb88d27fbbd7591f558bcf90b12624944a4. DHI dotnet-sdk-8 for Debian 13 packages Microsoft's .NET 8 SDK for Linux, which includes the .NET runtime and the ASP.NET Core shared framework. We scanned every package built from this source that the DHI Debian repository had published by 2026-11-27, 8.0.422-0, 8.0.423-0, 8.0.423-1, 8.0.424-1, 8.0.425-0, 8.0.425-1, 8.0.426-0, 8.0.427-0, 8.0.428-0 and 8.0.428-1, for amd64 and arm64 (the dotnet-sdk-8 and dotnet-sdk-8-oci-config packages; no debug-symbol packages are published), after verifying each against its index checksum and including the files inside the nupkg archives they hold. The dotnet-sdk-8-oci-config packages hold only an image configuration YAML file and a changelog. Every dotnet-sdk-8 build carries one System.Private.CoreLib.dll, in the .NET runtime shared framework under /usr/lib/dotnet/shared/Microsoft.NETCore.App/<version>. The PAL code the fix changes is compiled into native ELF files, so we searched the strings of all 19 ELF files in each build, including those inside the nupkg archives (none are), for the PAL's SharedMemoryException marker. It appears in four files in every build: libcoreclr.so, libclrjit.so and libmscordaccore.so in that shared framework directory, and singlefilehost in the Microsoft.NETCore.App.Host pack, the host that single-file apps are published with. The other 15 ELF files, including createdump and libmscordbi.so, do not contain it. The version of the runtime files is 8.0.28 in 8.0.422-0, 8.0.29 in 8.0.423-0 and 8.0.423-1, 8.0.30 in 8.0.424-1, 8.0.31 in 8.0.425-0 and 8.0.425-1, 8.0.32 in 8.0.426-0, 8.0.33 in 8.0.427-0 and 8.0.34 in 8.0.428-0 and 8.0.428-1, the same on both architectures (for example, 8.0.3126.42015 in 8.0.425-1 and 8.0.3226.50405 in 8.0.426-0). Every one of these files records the dotnet/runtime commit it was built from: the v8.0.28 to v8.0.31 tags in the builds up to 8.0.425-1, and the v8.0.32, v8.0.33 and v8.0.34 tags from 8.0.426-0 on, all three of which contain the fix commit. The range ends at 8.0.426-0 because it is the first published build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wyzg-nq7j-e4vs-4hon",
+        "aliases": [
+          "CVE-2026-96225"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/dotnet-sdk-8@8.0.426-0?distro=dhi-13"
         },
@@ -512,7 +525,8 @@
           "@id": "pkg:deb/dhi/dotnet-sdk-8@8.0.428-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-96225 (GHSA-w6wh-p4g7-mpj2) is a .NET elevation of privilege issue in the runtime (Microsoft.NETCore.App): on Unix, the named-mutex and shared-memory paths can be manipulated through insecure global directories, symbolic-link races and unsafe permission changes, so a local attacker can truncate or overwrite files, widen directory permissions or elevate privileges. Microsoft lists the .NET 8.0 runtime packs, including linux-x64 and linux-arm64, as affected from 8.0.0 through 8.0.31 and fixed in 8.0.32: https://github.com/advisories/GHSA-w6wh-p4g7-mpj2, https://github.com/dotnet/announcements/issues/476, https://github.com/dotnet/runtime/issues/135706, https://github.com/dotnet/core/blob/main/release-notes/8.0/8.0.32/8.0.32.md. The .NET 8 fix is dotnet/runtime commit 3928fdb88d27fbbd7591f558bcf90b12624944a4 on release/8.0 (\"Fixes for Shared Mutex privileges/permissions\"), which changes the CoreCLR PAL shared-memory and named-mutex code; it is in the v8.0.32 tag and not in v8.0.31: https://github.com/dotnet/runtime/commit/3928fdb88d27fbbd7591f558bcf90b12624944a4. DHI dotnet-sdk-8 for Debian 13 packages Microsoft's .NET 8 SDK for Linux, which includes the .NET runtime and the ASP.NET Core shared framework. We scanned every package built from this source that the DHI Debian repository had published by 2026-11-27, 8.0.422-0, 8.0.423-0, 8.0.423-1, 8.0.424-1, 8.0.425-0, 8.0.425-1, 8.0.426-0, 8.0.427-0, 8.0.428-0 and 8.0.428-1, for amd64 and arm64 (the dotnet-sdk-8 and dotnet-sdk-8-oci-config packages; no debug-symbol packages are published), after verifying each against its index checksum and including the files inside the nupkg archives they hold. The dotnet-sdk-8-oci-config packages hold only an image configuration YAML file and a changelog. Every dotnet-sdk-8 build carries one System.Private.CoreLib.dll, in the .NET runtime shared framework under /usr/lib/dotnet/shared/Microsoft.NETCore.App/<version>. The PAL code the fix changes is compiled into native ELF files, so we searched the strings of all 19 ELF files in each build, including those inside the nupkg archives (none are), for the PAL's SharedMemoryException marker. It appears in four files in every build: libcoreclr.so, libclrjit.so and libmscordaccore.so in that shared framework directory, and singlefilehost in the Microsoft.NETCore.App.Host pack, the host that single-file apps are published with. The other 15 ELF files, including createdump and libmscordbi.so, do not contain it. The version of the runtime files is 8.0.28 in 8.0.422-0, 8.0.29 in 8.0.423-0 and 8.0.423-1, 8.0.30 in 8.0.424-1, 8.0.31 in 8.0.425-0 and 8.0.425-1, 8.0.32 in 8.0.426-0, 8.0.33 in 8.0.427-0 and 8.0.34 in 8.0.428-0 and 8.0.428-1, the same on both architectures (for example, 8.0.3126.42015 in 8.0.425-1 and 8.0.3226.50405 in 8.0.426-0). Every one of these files records the dotnet/runtime commit it was built from: the v8.0.28 to v8.0.31 tags in the builds up to 8.0.425-1, and the v8.0.32, v8.0.33 and v8.0.34 tags from 8.0.426-0 on, all three of which contain the fix commit. The range ends at 8.0.426-0 because it is the first published build with the fix."
     },
     {
       "vulnerability": {
