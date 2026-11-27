@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T15:57:18Z",
-  "last_updated": "2026-11-27T08:37:29Z",
-  "version": 42,
+  "last_updated": "2026-11-27T13:00:13Z",
+  "version": 43,
   "statements": [
     {
       "vulnerability": {
@@ -103,7 +103,9 @@
           "@id": "pkg:apk/dhi/metrics-server-dev@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-42151 (GHSA-wg65-39gg-5wfj, GO-2026-5710): in Prometheus's Azure AD remote write support (the storage/remote/azuread package), the OAuth client_secret was a plain string rather than a Secret, so the Prometheus server's /-/config HTTP endpoint served it unredacted. github.com/prometheus/prometheus 0.45.2 to before 0.311.3 is affected; it is fixed in Prometheus 3.5.3 and 3.11.3: https://github.com/prometheus/prometheus/security/advisories/GHSA-wg65-39gg-5wfj, https://pkg.go.dev/vuln/GO-2026-5710, https://github.com/prometheus/prometheus/pull/18587, https://github.com/prometheus/prometheus/pull/18590, which change only storage/remote/azuread/azuread.go and its test. We read every published metrics-server-dev package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 29 builds, 0.8.1-r0 to the current 0.9.1-r2, each for x86_64 and aarch64 (58 packages), each download checked against the size and control checksum in the package index. Each package installs one file, /usr/bin/metrics-server, a statically linked Go program (no ELF interpreter and no dynamic section) built with GOOS=linux and CGO_ENABLED=0, which, unlike metrics-server, also carries DWARF debug sections; both architectures record the same Go toolchain and module versions in every build. The github.com/prometheus/prometheus version in the Go build information, with no replace directive for that module, is: 0.8.1-r0 to 0.8.1-r12 with v0.304.2; 0.9.0-r0 to 0.9.0-r12 with v0.313.0; 0.9.1-r0 to 0.9.1-r2 with v0.314.0. We read the function names in each program's Go line table (pclntab) and searched each program's bytes, which also finds the names of inlined functions. In every build the only github.com/prometheus/prometheus packages with functions in the program are model/exemplar, model/histogram, model/labels, model/textparse, model/timestamp and prompb/io/prometheus/client, plus schema, util/convertnhcb and util/kahansum from 0.9.0 on: the Prometheus metric data model and its text and protobuf exposition-format parsers. No build contains a function from github.com/prometheus/prometheus/storage/remote or its azuread subpackage, or from github.com/prometheus/prometheus/web, which serves the /-/config endpoint, and the byte search finds no github.com/prometheus/prometheus/storage/remote name and no azuread string at all. As a check, the same reads find runtime.main and model/textparse functions in every program, and the byte search finds more than a thousand github.com/prometheus/prometheus names in each. The vulnerable code is not compiled into any published build of this package."
     },
     {
       "vulnerability": {
@@ -171,7 +173,9 @@
           "@id": "pkg:apk/dhi/metrics-server-dev@0.9.1-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-42151 (GHSA-wg65-39gg-5wfj, GO-2026-5710): in Prometheus's Azure AD remote write support (the storage/remote/azuread package), the OAuth client_secret was a plain string rather than a Secret, so the Prometheus server's /-/config HTTP endpoint served it unredacted. github.com/prometheus/prometheus 0.45.2 to before 0.311.3 is affected; it is fixed in Prometheus 3.5.3 and 3.11.3: https://github.com/prometheus/prometheus/security/advisories/GHSA-wg65-39gg-5wfj, https://pkg.go.dev/vuln/GO-2026-5710, https://github.com/prometheus/prometheus/pull/18587, https://github.com/prometheus/prometheus/pull/18590, which change only storage/remote/azuread/azuread.go and its test. The Alpine 3.24 index of the DHI Alpine repository lists 19 metrics-server-dev builds as of 2026-11-27, 0.8.1-r10 to the current 0.9.1-r2, for x86_64 and aarch64 (38 packages). Each has the same control checksum in the index as the Alpine 3.23 metrics-server-dev package of the same version and architecture, so it is the same package, and every one of those Alpine 3.23 packages was downloaded, checked against the index and read. Each package installs one file, /usr/bin/metrics-server, a statically linked Go program (no ELF interpreter and no dynamic section) built with GOOS=linux and CGO_ENABLED=0, which, unlike metrics-server, also carries DWARF debug sections; both architectures record the same Go toolchain and module versions in every build. The github.com/prometheus/prometheus version in the Go build information, with no replace directive for that module, is: 0.8.1-r10 to 0.8.1-r12 with v0.304.2; 0.9.0-r0 to 0.9.0-r12 with v0.313.0; 0.9.1-r0 to 0.9.1-r2 with v0.314.0. We read the function names in each program's Go line table (pclntab) and searched each program's bytes, which also finds the names of inlined functions. In every build the only github.com/prometheus/prometheus packages with functions in the program are model/exemplar, model/histogram, model/labels, model/textparse, model/timestamp and prompb/io/prometheus/client, plus schema, util/convertnhcb and util/kahansum from 0.9.0 on: the Prometheus metric data model and its text and protobuf exposition-format parsers. No build contains a function from github.com/prometheus/prometheus/storage/remote or its azuread subpackage, or from github.com/prometheus/prometheus/web, which serves the /-/config endpoint, and the byte search finds no github.com/prometheus/prometheus/storage/remote name and no azuread string at all. As a check, the same reads find runtime.main and model/textparse functions in every program, and the byte search finds more than a thousand github.com/prometheus/prometheus names in each. The vulnerable code is not compiled into any published build of this package."
     },
     {
       "vulnerability": {
@@ -269,7 +273,8 @@
           "@id": "pkg:apk/dhi/metrics-server-fips-dev@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-42151 (GHSA-wg65-39gg-5wfj, GO-2026-5710): in Prometheus's Azure AD remote write support (the storage/remote/azuread package), the OAuth client_secret was a plain string rather than a Secret, so the Prometheus server's /-/config HTTP endpoint served it unredacted. github.com/prometheus/prometheus 0.45.2 to before 0.311.3 is affected; it is fixed in Prometheus 3.5.3 and 3.11.3. It is fixed in github.com/prometheus/prometheus 0.311.3 (https://github.com/prometheus/prometheus/security/advisories/GHSA-wg65-39gg-5wfj). The metrics-server-fips-dev packages for Alpine 3.23 are the FIPS variant of metrics-server-dev, built from the same metrics-server source, but they are published in the DHI security repository, which has not been read for this assessment, so no metrics-server-fips-dev build has been inspected for this advisory. Pending: which github.com/prometheus/prometheus version and packages each build links, to establish whether the vulnerable code is present, in every published metrics-server-fips-dev build for Alpine 3.23 (x86_64 and aarch64)."
     },
     {
       "vulnerability": {
@@ -337,7 +342,8 @@
           "@id": "pkg:apk/dhi/metrics-server-fips-dev@0.9.1-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-42151 (GHSA-wg65-39gg-5wfj, GO-2026-5710): in Prometheus's Azure AD remote write support (the storage/remote/azuread package), the OAuth client_secret was a plain string rather than a Secret, so the Prometheus server's /-/config HTTP endpoint served it unredacted. github.com/prometheus/prometheus 0.45.2 to before 0.311.3 is affected; it is fixed in Prometheus 3.5.3 and 3.11.3. It is fixed in github.com/prometheus/prometheus 0.311.3 (https://github.com/prometheus/prometheus/security/advisories/GHSA-wg65-39gg-5wfj). The metrics-server-fips-dev packages for Alpine 3.24 are the FIPS variant of metrics-server-dev, built from the same metrics-server source, but they are published in the DHI security repository, which has not been read for this assessment, so no metrics-server-fips-dev build has been inspected for this advisory. Pending: which github.com/prometheus/prometheus version and packages each build links, to establish whether the vulnerable code is present, in every published metrics-server-fips-dev build for Alpine 3.24 (x86_64 and aarch64)."
     },
     {
       "vulnerability": {
@@ -435,7 +441,8 @@
           "@id": "pkg:apk/dhi/metrics-server-fips@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-42151 (GHSA-wg65-39gg-5wfj, GO-2026-5710): in Prometheus's Azure AD remote write support (the storage/remote/azuread package), the OAuth client_secret was a plain string rather than a Secret, so the Prometheus server's /-/config HTTP endpoint served it unredacted. github.com/prometheus/prometheus 0.45.2 to before 0.311.3 is affected; it is fixed in Prometheus 3.5.3 and 3.11.3. It is fixed in github.com/prometheus/prometheus 0.311.3 (https://github.com/prometheus/prometheus/security/advisories/GHSA-wg65-39gg-5wfj). The metrics-server-fips packages for Alpine 3.23 are the FIPS variant of metrics-server, built from the same metrics-server source, but they are published in the DHI security repository, which has not been read for this assessment, so no metrics-server-fips build has been inspected for this advisory. Pending: which github.com/prometheus/prometheus version and packages each build links, to establish whether the vulnerable code is present, in every published metrics-server-fips build for Alpine 3.23 (x86_64 and aarch64)."
     },
     {
       "vulnerability": {
@@ -503,7 +510,8 @@
           "@id": "pkg:apk/dhi/metrics-server-fips@0.9.1-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-42151 (GHSA-wg65-39gg-5wfj, GO-2026-5710): in Prometheus's Azure AD remote write support (the storage/remote/azuread package), the OAuth client_secret was a plain string rather than a Secret, so the Prometheus server's /-/config HTTP endpoint served it unredacted. github.com/prometheus/prometheus 0.45.2 to before 0.311.3 is affected; it is fixed in Prometheus 3.5.3 and 3.11.3. It is fixed in github.com/prometheus/prometheus 0.311.3 (https://github.com/prometheus/prometheus/security/advisories/GHSA-wg65-39gg-5wfj). The metrics-server-fips packages for Alpine 3.24 are the FIPS variant of metrics-server, built from the same metrics-server source, but they are published in the DHI security repository, which has not been read for this assessment, so no metrics-server-fips build has been inspected for this advisory. Pending: which github.com/prometheus/prometheus version and packages each build links, to establish whether the vulnerable code is present, in every published metrics-server-fips build for Alpine 3.24 (x86_64 and aarch64)."
     },
     {
       "vulnerability": {
@@ -601,7 +609,9 @@
           "@id": "pkg:apk/dhi/metrics-server@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-42151 (GHSA-wg65-39gg-5wfj, GO-2026-5710): in Prometheus's Azure AD remote write support (the storage/remote/azuread package), the OAuth client_secret was a plain string rather than a Secret, so the Prometheus server's /-/config HTTP endpoint served it unredacted. github.com/prometheus/prometheus 0.45.2 to before 0.311.3 is affected; it is fixed in Prometheus 3.5.3 and 3.11.3: https://github.com/prometheus/prometheus/security/advisories/GHSA-wg65-39gg-5wfj, https://pkg.go.dev/vuln/GO-2026-5710, https://github.com/prometheus/prometheus/pull/18587, https://github.com/prometheus/prometheus/pull/18590, which change only storage/remote/azuread/azuread.go and its test. We read every published metrics-server package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 29 builds, 0.8.1-r0 to the current 0.9.1-r2, each for x86_64 and aarch64 (58 packages), each download checked against the size and control checksum in the package index. Each package installs one file, /usr/bin/metrics-server, a statically linked Go program (no ELF interpreter and no dynamic section) built with GOOS=linux and CGO_ENABLED=0; both architectures record the same Go toolchain and module versions in every build. The github.com/prometheus/prometheus version in the Go build information, with no replace directive for that module, is: 0.8.1-r0 to 0.8.1-r12 with v0.304.2; 0.9.0-r0 to 0.9.0-r12 with v0.313.0; 0.9.1-r0 to 0.9.1-r2 with v0.314.0. We read the function names in each program's Go line table (pclntab) and searched each program's bytes, which also finds the names of inlined functions. In every build the only github.com/prometheus/prometheus packages with functions in the program are model/exemplar, model/histogram, model/labels, model/textparse, model/timestamp and prompb/io/prometheus/client, plus schema, util/convertnhcb and util/kahansum from 0.9.0 on: the Prometheus metric data model and its text and protobuf exposition-format parsers. No build contains a function from github.com/prometheus/prometheus/storage/remote or its azuread subpackage, or from github.com/prometheus/prometheus/web, which serves the /-/config endpoint, and the byte search finds no github.com/prometheus/prometheus/storage/remote name and no azuread string at all. As a check, the same reads find runtime.main and model/textparse functions in every program, and the byte search finds more than a thousand github.com/prometheus/prometheus names in each. The vulnerable code is not compiled into any published build of this package."
     },
     {
       "vulnerability": {
@@ -669,7 +679,9 @@
           "@id": "pkg:apk/dhi/metrics-server@0.9.1-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-42151 (GHSA-wg65-39gg-5wfj, GO-2026-5710): in Prometheus's Azure AD remote write support (the storage/remote/azuread package), the OAuth client_secret was a plain string rather than a Secret, so the Prometheus server's /-/config HTTP endpoint served it unredacted. github.com/prometheus/prometheus 0.45.2 to before 0.311.3 is affected; it is fixed in Prometheus 3.5.3 and 3.11.3: https://github.com/prometheus/prometheus/security/advisories/GHSA-wg65-39gg-5wfj, https://pkg.go.dev/vuln/GO-2026-5710, https://github.com/prometheus/prometheus/pull/18587, https://github.com/prometheus/prometheus/pull/18590, which change only storage/remote/azuread/azuread.go and its test. The Alpine 3.24 index of the DHI Alpine repository lists 19 metrics-server builds as of 2026-11-27, 0.8.1-r10 to the current 0.9.1-r2, for x86_64 and aarch64 (38 packages). Each has the same control checksum in the index as the Alpine 3.23 metrics-server package of the same version and architecture, so it is the same package, and every one of those Alpine 3.23 packages was downloaded, checked against the index and read. Each package installs one file, /usr/bin/metrics-server, a statically linked Go program (no ELF interpreter and no dynamic section) built with GOOS=linux and CGO_ENABLED=0; both architectures record the same Go toolchain and module versions in every build. The github.com/prometheus/prometheus version in the Go build information, with no replace directive for that module, is: 0.8.1-r10 to 0.8.1-r12 with v0.304.2; 0.9.0-r0 to 0.9.0-r12 with v0.313.0; 0.9.1-r0 to 0.9.1-r2 with v0.314.0. We read the function names in each program's Go line table (pclntab) and searched each program's bytes, which also finds the names of inlined functions. In every build the only github.com/prometheus/prometheus packages with functions in the program are model/exemplar, model/histogram, model/labels, model/textparse, model/timestamp and prompb/io/prometheus/client, plus schema, util/convertnhcb and util/kahansum from 0.9.0 on: the Prometheus metric data model and its text and protobuf exposition-format parsers. No build contains a function from github.com/prometheus/prometheus/storage/remote or its azuread subpackage, or from github.com/prometheus/prometheus/web, which serves the /-/config endpoint, and the byte search finds no github.com/prometheus/prometheus/storage/remote name and no azuread string at all. As a check, the same reads find runtime.main and model/textparse functions in every program, and the byte search finds more than a thousand github.com/prometheus/prometheus names in each. The vulnerable code is not compiled into any published build of this package."
     },
     {
       "vulnerability": {
@@ -4069,7 +4081,9 @@
           "@id": "pkg:deb/dhi/metrics-server-dev@0.9.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-42151 (GHSA-wg65-39gg-5wfj, GO-2026-5710): in Prometheus's Azure AD remote write support (the storage/remote/azuread package), the OAuth client_secret was a plain string rather than a Secret, so the Prometheus server's /-/config HTTP endpoint served it unredacted. github.com/prometheus/prometheus 0.45.2 to before 0.311.3 is affected; it is fixed in Prometheus 3.5.3 and 3.11.3: https://github.com/prometheus/prometheus/security/advisories/GHSA-wg65-39gg-5wfj, https://pkg.go.dev/vuln/GO-2026-5710, https://github.com/prometheus/prometheus/pull/18587, https://github.com/prometheus/prometheus/pull/18590, which change only storage/remote/azuread/azuread.go and its test. We read every published metrics-server-dev package for Debian 13 in the DHI Debian repository as of 2026-11-27: 23 builds, 0.8.1-6 to the current 0.9.1-2, amd64 and arm64 (46 packages). The checksum of /usr/bin/metrics-server recorded in each package's control archive equals that of the program in the Alpine 3.23 metrics-server-dev package of the same version and architecture (Debian 0.8.1-6 is Alpine 0.8.1-r6), and every one of those Alpine packages was downloaded, checked against the index and read. Each package installs one file, /usr/bin/metrics-server, a statically linked Go program (no ELF interpreter and no dynamic section) built with GOOS=linux and CGO_ENABLED=0, which, unlike metrics-server, also carries DWARF debug sections; both architectures record the same Go toolchain and module versions in every build. The github.com/prometheus/prometheus version in the Go build information, with no replace directive for that module, is: 0.8.1-6 to 0.8.1-12 with v0.304.2; 0.9.0-0 to 0.9.0-12 with v0.313.0; 0.9.1-0 to 0.9.1-2 with v0.314.0. We read the function names in each program's Go line table (pclntab) and searched each program's bytes, which also finds the names of inlined functions. In every build the only github.com/prometheus/prometheus packages with functions in the program are model/exemplar, model/histogram, model/labels, model/textparse, model/timestamp and prompb/io/prometheus/client, plus schema, util/convertnhcb and util/kahansum from 0.9.0 on: the Prometheus metric data model and its text and protobuf exposition-format parsers. No build contains a function from github.com/prometheus/prometheus/storage/remote or its azuread subpackage, or from github.com/prometheus/prometheus/web, which serves the /-/config endpoint, and the byte search finds no github.com/prometheus/prometheus/storage/remote name and no azuread string at all. As a check, the same reads find runtime.main and model/textparse functions in every program, and the byte search finds more than a thousand github.com/prometheus/prometheus names in each. The vulnerable code is not compiled into any published build of this package."
     },
     {
       "vulnerability": {
@@ -4149,7 +4163,8 @@
           "@id": "pkg:deb/dhi/metrics-server-fips-dev@0.9.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-42151 (GHSA-wg65-39gg-5wfj, GO-2026-5710): in Prometheus's Azure AD remote write support (the storage/remote/azuread package), the OAuth client_secret was a plain string rather than a Secret, so the Prometheus server's /-/config HTTP endpoint served it unredacted. github.com/prometheus/prometheus 0.45.2 to before 0.311.3 is affected; it is fixed in Prometheus 3.5.3 and 3.11.3. It is fixed in github.com/prometheus/prometheus 0.311.3 (https://github.com/prometheus/prometheus/security/advisories/GHSA-wg65-39gg-5wfj). The metrics-server-fips-dev packages for Debian 13 are the FIPS variant of metrics-server-dev, built from the same metrics-server source, but they are published in the DHI security repository, which has not been read for this assessment, so no metrics-server-fips-dev build has been inspected for this advisory. Pending: which github.com/prometheus/prometheus version and packages each build links, to establish whether the vulnerable code is present, in every published metrics-server-fips-dev build for Debian 13 (amd64 and arm64)."
     },
     {
       "vulnerability": {
@@ -4229,7 +4244,8 @@
           "@id": "pkg:deb/dhi/metrics-server-fips@0.9.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-42151 (GHSA-wg65-39gg-5wfj, GO-2026-5710): in Prometheus's Azure AD remote write support (the storage/remote/azuread package), the OAuth client_secret was a plain string rather than a Secret, so the Prometheus server's /-/config HTTP endpoint served it unredacted. github.com/prometheus/prometheus 0.45.2 to before 0.311.3 is affected; it is fixed in Prometheus 3.5.3 and 3.11.3. It is fixed in github.com/prometheus/prometheus 0.311.3 (https://github.com/prometheus/prometheus/security/advisories/GHSA-wg65-39gg-5wfj). The metrics-server-fips packages for Debian 13 are the FIPS variant of metrics-server, built from the same metrics-server source, but they are published in the DHI security repository, which has not been read for this assessment, so no metrics-server-fips build has been inspected for this advisory. Pending: which github.com/prometheus/prometheus version and packages each build links, to establish whether the vulnerable code is present, in every published metrics-server-fips build for Debian 13 (amd64 and arm64)."
     },
     {
       "vulnerability": {
@@ -4309,7 +4325,9 @@
           "@id": "pkg:deb/dhi/metrics-server@0.9.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-42151 (GHSA-wg65-39gg-5wfj, GO-2026-5710): in Prometheus's Azure AD remote write support (the storage/remote/azuread package), the OAuth client_secret was a plain string rather than a Secret, so the Prometheus server's /-/config HTTP endpoint served it unredacted. github.com/prometheus/prometheus 0.45.2 to before 0.311.3 is affected; it is fixed in Prometheus 3.5.3 and 3.11.3: https://github.com/prometheus/prometheus/security/advisories/GHSA-wg65-39gg-5wfj, https://pkg.go.dev/vuln/GO-2026-5710, https://github.com/prometheus/prometheus/pull/18587, https://github.com/prometheus/prometheus/pull/18590, which change only storage/remote/azuread/azuread.go and its test. We read every published metrics-server package for Debian 13 in the DHI Debian repository as of 2026-11-27: 23 builds, 0.8.1-6 to the current 0.9.1-2, amd64 and arm64 (46 packages). The checksum of /usr/bin/metrics-server recorded in each package's control archive equals that of the program in the Alpine 3.23 metrics-server package of the same version and architecture (Debian 0.8.1-6 is Alpine 0.8.1-r6), and every one of those Alpine packages was downloaded, checked against the index and read. Each package installs one file, /usr/bin/metrics-server, a statically linked Go program (no ELF interpreter and no dynamic section) built with GOOS=linux and CGO_ENABLED=0; both architectures record the same Go toolchain and module versions in every build. The github.com/prometheus/prometheus version in the Go build information, with no replace directive for that module, is: 0.8.1-6 to 0.8.1-12 with v0.304.2; 0.9.0-0 to 0.9.0-12 with v0.313.0; 0.9.1-0 to 0.9.1-2 with v0.314.0. We read the function names in each program's Go line table (pclntab) and searched each program's bytes, which also finds the names of inlined functions. In every build the only github.com/prometheus/prometheus packages with functions in the program are model/exemplar, model/histogram, model/labels, model/textparse, model/timestamp and prompb/io/prometheus/client, plus schema, util/convertnhcb and util/kahansum from 0.9.0 on: the Prometheus metric data model and its text and protobuf exposition-format parsers. No build contains a function from github.com/prometheus/prometheus/storage/remote or its azuread subpackage, or from github.com/prometheus/prometheus/web, which serves the /-/config endpoint, and the byte search finds no github.com/prometheus/prometheus/storage/remote name and no azuread string at all. As a check, the same reads find runtime.main and model/textparse functions in every program, and the byte search finds more than a thousand github.com/prometheus/prometheus names in each. The vulnerable code is not compiled into any published build of this package."
     },
     {
       "vulnerability": {

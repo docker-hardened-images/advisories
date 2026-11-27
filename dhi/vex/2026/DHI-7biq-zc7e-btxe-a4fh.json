@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T14:21:12Z",
-  "last_updated": "2026-11-26T04:36:18Z",
-  "version": 7,
+  "last_updated": "2026-11-27T13:00:26Z",
+  "version": 8,
   "statements": [
     {
       "vulnerability": {
@@ -600,7 +600,8 @@
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GO-2026-4559 (CVE-2026-27141): golang.org/x/net/http2 0.50.0 panics when it reads an HTTP/2 frame of type 0x0a to 0x0f, because of a missing nil check on the frame parser (https://go.dev/issue/77652, https://go.dev/cl/746180). It was introduced in x/net 0.50.0 and fixed in 0.51.0. The trivy-fips packages for Alpine 3.23 are published in the DHI security repository, which requires authentication, and their Go build information has not been read build by build for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to find the first build that embeds golang.org/x/net 0.51.0 or newer. The non-FIPS trivy package of the same releases embeds it from 0.69.2-r0 on."
     },
     {
       "vulnerability": {
@@ -612,7 +613,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/trivy@0.69.1-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update trivy to 0.69.2-r0 or later.",
+      "status_notes": "GO-2026-4559 (CVE-2026-27141): golang.org/x/net/http2 0.50.0 panics when it reads an HTTP/2 frame of type 0x0a to 0x0f, because of a missing nil check on the frame parser (https://go.dev/issue/77652, https://go.dev/cl/746180). It was introduced in x/net 0.50.0 and fixed in 0.51.0. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). We read the Go build information (go version -m) and the function table (go tool nm) of /usr/bin/trivy in all 38 trivy builds published for Alpine 3.23 as of 2026-11-27 (0.69.1-r0 to 0.74.0-r12), on both x86_64 and aarch64. Every build links the http2 frame reader ((*Framer).ReadFrame). 0.69.1-r0, the first published build, embeds golang.org/x/net 0.50.0 and is affected. 0.69.2-r0 is the first build with x/net 0.51.0, and every later build embeds 0.51.0 or newer, up to 0.63.0 in 0.74.0-r12."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7biq-zc7e-btxe-a4fh",
+        "aliases": [
+          "CVE-2026-27141"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/trivy@0.69.2-r0?distro=dhi-3.23"
         },
@@ -725,7 +739,8 @@
           "@id": "pkg:apk/dhi/trivy@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GO-2026-4559 (CVE-2026-27141): golang.org/x/net/http2 0.50.0 panics when it reads an HTTP/2 frame of type 0x0a to 0x0f, because of a missing nil check on the frame parser (https://go.dev/issue/77652, https://go.dev/cl/746180). It was introduced in x/net 0.50.0 and fixed in 0.51.0. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). We read the Go build information (go version -m) and the function table (go tool nm) of /usr/bin/trivy in all 38 trivy builds published for Alpine 3.23 as of 2026-11-27 (0.69.1-r0 to 0.74.0-r12), on both x86_64 and aarch64. Every build links the http2 frame reader ((*Framer).ReadFrame). 0.69.1-r0, the first published build, embeds golang.org/x/net 0.50.0 and is affected. 0.69.2-r0 is the first build with x/net 0.51.0, and every later build embeds 0.51.0 or newer, up to 0.63.0 in 0.74.0-r12."
     },
     {
       "vulnerability": {
