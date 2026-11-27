@@ -4,9 +4,25 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:54:50Z",
-  "last_updated": "2026-11-20T20:33:11Z",
-  "version": 4,
+  "last_updated": "2026-11-27T08:25:54Z",
+  "version": 5,
   "statements": [
+    {
+      "vulnerability": {
+        "name": "DHI-5nyb-e6z4-ljf2-o7fn",
+        "aliases": [
+          "CVE-2026-2006"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.8-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-2006 (PostgreSQL missing validation of multibyte character length executes arbitrary code) in 17.8 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-2006/ lists 17.8 as the fixed release for major version 17, and the 17.8 release notes, https://www.postgresql.org/docs/release/17.8/, list this CVE. The fix is four commits on the REL_17_STABLE branch: https://github.com/postgres/postgres/commit/319e8a64419aee3ecc0b39b52abcc28b2a3fe2d0, 'Replace pg_mblen() with bounds-checked versions.', which changes the server and several contrib modules; https://github.com/postgres/postgres/commit/7a522039f7010ea9ec45dcbf11a4038dce240bb3, 'Fix mb2wchar functions on short input.', which changes src/common/wchar.c; https://github.com/postgres/postgres/commit/838248b1bf6b20762d13878006a404c27189f326, 'Fix encoding length for EUC_CN.', which changes src/common/wchar.c; https://github.com/postgres/postgres/commit/dc072a09ad6a0b89d021047b2418f517a430966d, 'Require PGP-decrypted text to pass encoding validation.', which changes contrib/pgcrypto/pgp-pgsql.c. Each commit is tagged Security: CVE-2026-2006, and each is in the REL_17_8 release tag and not in REL_17_7. The affected code is in the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package, and in contrib modules in the postgresql17-contrib package (among them pg_trgm, hstore, ltree and pgcrypto), all of which ship in every published build on both architectures. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes. We checked every published postgresql17 build for Alpine 3.23 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0) on both x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.7, 17.8, 17.9, 17.10, 17.11 and 17.12). Of these, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0 carry the fix, and 17.7-r0 is affected. Commit 319e8a6 adds the bounds-checked functions pg_mblen_range, pg_mblen_cstr and pg_mblen_with_len to the server, and contrib modules call them: all three names appear in the server binary, and pg_mblen_range in pg_trgm.so, of every build from 17.8-r0 to 17.12-r0 on both architectures, while none of them appears in the 17.7-r0 server binary or pg_trgm.so. The 17.9 release notes, https://www.postgresql.org/docs/release/17.9/, fix an over-strict error raised by this CVE's fix, a regression rather than a further security fix, which is why Alpine lists this CVE again under 17.9-r0; 17.8-r0 already carries the security fix. 17.8-r0 is the first published build for Alpine 3.23 that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-2006 under its 17.8-r0 secfixes."
+    },
     {
       "vulnerability": {
         "name": "DHI-5nyb-e6z4-ljf2-o7fn",
@@ -25,16 +41,14 @@
           "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.8-r0?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-2006 (PostgreSQL missing validation of multibyte character length executes arbitrary code) in 17.8 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-2006/ lists 17.8 as the fixed release for major version 17, and the 17.8 release notes, https://www.postgresql.org/docs/release/17.8/, list this CVE. The fix is four commits on the REL_17_STABLE branch: https://github.com/postgres/postgres/commit/319e8a64419aee3ecc0b39b52abcc28b2a3fe2d0, 'Replace pg_mblen() with bounds-checked versions.', which changes the server and several contrib modules; https://github.com/postgres/postgres/commit/7a522039f7010ea9ec45dcbf11a4038dce240bb3, 'Fix mb2wchar functions on short input.', which changes src/common/wchar.c; https://github.com/postgres/postgres/commit/838248b1bf6b20762d13878006a404c27189f326, 'Fix encoding length for EUC_CN.', which changes src/common/wchar.c; https://github.com/postgres/postgres/commit/dc072a09ad6a0b89d021047b2418f517a430966d, 'Require PGP-decrypted text to pass encoding validation.', which changes contrib/pgcrypto/pgp-pgsql.c. Each commit is tagged Security: CVE-2026-2006, and each is in the REL_17_8 release tag and not in REL_17_7. The affected code is in the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package, and in contrib modules in the postgresql17-contrib package (among them pg_trgm, hstore, ltree and pgcrypto), all of which ship in every published build on both architectures. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes. We checked every published postgresql17 build for Alpine 3.23 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0) on both x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.7, 17.8, 17.9, 17.10, 17.11 and 17.12). Of these, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0 carry the fix, and 17.7-r0 is affected. Commit 319e8a6 adds the bounds-checked functions pg_mblen_range, pg_mblen_cstr and pg_mblen_with_len to the server, and contrib modules call them: all three names appear in the server binary, and pg_mblen_range in pg_trgm.so, of every build from 17.8-r0 to 17.12-r0 on both architectures, while none of them appears in the 17.7-r0 server binary or pg_trgm.so. The 17.9 release notes, https://www.postgresql.org/docs/release/17.9/, fix an over-strict error raised by this CVE's fix, a regression rather than a further security fix, which is why Alpine lists this CVE again under 17.9-r0; 17.8-r0 already carries the security fix. 17.8-r0 is the first published build for Alpine 3.23 that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-2006 under its 17.8-r0 secfixes."
     },
     {
       "vulnerability": {
