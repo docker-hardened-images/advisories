@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T05:56:16Z",
-  "last_updated": "2026-11-26T10:34:07Z",
-  "version": 11,
+  "last_updated": "2026-11-27T04:06:16Z",
+  "version": 12,
   "statements": [
     {
       "vulnerability": {
@@ -437,7 +437,20 @@
         },
         {
           "@id": "pkg:deb/dhi/dotnet-sdk-9@9.0.319-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update dotnet-sdk-9 to 9.0.320-0 or later.",
+      "status_notes": "GHSA-p3jp-9v83-76w9 (CVE-2026-111497) is an out-of-bounds write in the Brotli decoder of the .NET runtime, fixed in .NET runtime 9.0.22, shipped with SDK 9.0.320: https://github.com/dotnet/announcements/issues/494 and the 9.0.22 entry of https://github.com/dotnet/core/blob/main/release-notes/9.0/releases.json, which lists CVE-2026-111497. This package repackages the Microsoft .NET SDK tarball, which includes the shared runtime under /usr/lib/dotnet/shared/Microsoft.NETCore.App/<version>/. We read the file manifest (md5sums) of every dotnet-sdk-9 build in the Debian 13 index of the DHI Debian repository on 2026-11-27, for amd64 and arm64: 9.0.315-0 ships runtime 9.0.17, 9.0.316-0 and 9.0.316-1 ship 9.0.18, 9.0.317-1 ships 9.0.19, 9.0.318-0 and 9.0.318-1 ship 9.0.20, 9.0.319-0 ships 9.0.21, 9.0.320-0 ships 9.0.22, and 9.0.321-0 and 9.0.321-1 ship 9.0.23. Each build carries the Brotli decoder in two places, both from the same .NET runtime release: libSystem.IO.Compression.Native.so in the shared runtime (with its managed wrapper System.IO.Compression.Brotli.dll), and statically linked into singlefilehost in the Microsoft.NETCore.App.Host pack, the host used to publish single-file applications. There is no NativeAOT or ILCompiler package. The singlefilehost in 9.0.320-0 has the same MD5 as the one in Microsoft's Microsoft.NETCore.App.Host.linux-x64 and linux-arm64 9.0.22 NuGet packages. The libSystem.IO.Compression.Native.so in 9.0.320-0 has the same MD5 as the one in Microsoft's dotnet-runtime-9.0.22 tarball on each architecture (tarballs checked against the SHA-512 in releases.json), and the one in 9.0.319-0 matches the 9.0.21 tarball. The first fixed build is therefore 9.0.320-0, and every earlier build is affected. Exposure needs an application that decompresses attacker-controlled Brotli data, as the advisory describes; ASP.NET Core request decompression and HttpClient automatic decompression are off by default."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-jrxo-grnj-rzll-7s64",
+        "aliases": [
+          "GHSA-p3jp-9v83-76w9"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/dotnet-sdk-9@9.0.320-0?distro=dhi-13"
         },
@@ -448,7 +461,8 @@
           "@id": "pkg:deb/dhi/dotnet-sdk-9@9.0.321-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-p3jp-9v83-76w9 (CVE-2026-111497) is an out-of-bounds write in the Brotli decoder of the .NET runtime, fixed in .NET runtime 9.0.22, shipped with SDK 9.0.320: https://github.com/dotnet/announcements/issues/494 and the 9.0.22 entry of https://github.com/dotnet/core/blob/main/release-notes/9.0/releases.json, which lists CVE-2026-111497. This package repackages the Microsoft .NET SDK tarball, which includes the shared runtime under /usr/lib/dotnet/shared/Microsoft.NETCore.App/<version>/. We read the file manifest (md5sums) of every dotnet-sdk-9 build in the Debian 13 index of the DHI Debian repository on 2026-11-27, for amd64 and arm64: 9.0.315-0 ships runtime 9.0.17, 9.0.316-0 and 9.0.316-1 ship 9.0.18, 9.0.317-1 ships 9.0.19, 9.0.318-0 and 9.0.318-1 ship 9.0.20, 9.0.319-0 ships 9.0.21, 9.0.320-0 ships 9.0.22, and 9.0.321-0 and 9.0.321-1 ship 9.0.23. Each build carries the Brotli decoder in two places, both from the same .NET runtime release: libSystem.IO.Compression.Native.so in the shared runtime (with its managed wrapper System.IO.Compression.Brotli.dll), and statically linked into singlefilehost in the Microsoft.NETCore.App.Host pack, the host used to publish single-file applications. There is no NativeAOT or ILCompiler package. The singlefilehost in 9.0.320-0 has the same MD5 as the one in Microsoft's Microsoft.NETCore.App.Host.linux-x64 and linux-arm64 9.0.22 NuGet packages. The libSystem.IO.Compression.Native.so in 9.0.320-0 has the same MD5 as the one in Microsoft's dotnet-runtime-9.0.22 tarball on each architecture (tarballs checked against the SHA-512 in releases.json), and the one in 9.0.319-0 matches the 9.0.21 tarball. The first fixed build is therefore 9.0.320-0, and every earlier build is affected. Exposure needs an application that decompresses attacker-controlled Brotli data, as the advisory describes; ASP.NET Core request decompression and HttpClient automatic decompression are off by default."
     }
   ]
 }
