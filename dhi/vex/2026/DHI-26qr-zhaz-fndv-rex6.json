@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T01:49:34Z",
-  "last_updated": "2026-11-27T11:08:20Z",
-  "version": 58,
+  "last_updated": "2026-11-27T21:22:27Z",
+  "version": 59,
   "statements": [
     {
       "vulnerability": {
@@ -3413,7 +3413,9 @@
           "@id": "pkg:deb/dhi/uv@0.13.9-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-h2v8-394m-p7vv (RUSTSEC-2026-0348): in rustls before 0.23.46 the built-in Brotli certificate decompression, which is off by default, accepts a Brotli stream that selects a history window of up to 1 GiB, so before authentication a peer can make a client that enables Brotli, or a server that enables it and requests client certificates, abort on memory exhaustion. Fixed in rustls 0.23.46: https://github.com/rustls/rustls/security/advisories/GHSA-h2v8-394m-p7vv, https://rustsec.org/advisories/RUSTSEC-2026-0348.html. The decompression code exists only when rustls is built with its brotli feature, which is not a default feature and adds the brotli and brotli-decompressor crates as rustls dependencies: https://github.com/rustls/rustls/blob/v/0.23.45/rustls/Cargo.toml. Read all 94 uv packages in the DHI Debian repository as of 2026-11-27: every published build, 0.11.22-0 to the current 0.13.10-4, on amd64 and arm64 (47 per architecture), each checked against the checksum in the package index; no debug-symbol packages are listed for this source. Each package holds two dynamically linked ELF programs, /usr/bin/uv and /usr/bin/uvx, plus shell completions, man pages and documentation; no package holds a static archive, PE or Mach-O file. For each program I read the crate list that cargo-auditable embeds and searched the program for the crates' source paths. Every build's list names rustls (0.23.40 to 0.23.46), and no build's list names a brotli or brotli-decompressor crate. In every build, /usr/bin/uv contains rustls source paths but no brotli or brotli-decompressor source paths; the only Brotli text in it, in the 40 builds from 0.12.4-0 on, is the name of the CertificateCompressionAlgorithm value, and /usr/bin/uvx contains no Brotli text at all. So the Brotli decompression path is not compiled into any build of this owner."
     },
     {
       "vulnerability": {
