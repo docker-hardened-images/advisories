@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T02:56:30Z",
-  "last_updated": "2026-11-25T02:33:30Z",
-  "version": 2,
+  "last_updated": "2026-11-27T16:17:50Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -17,7 +17,20 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update mariadb to 1:11.8.6-0+deb13u1+dhi1 or later.",
+      "status_notes": "CVE-2026-85745 is MariaDB advisory GHSA-p7v9-24h4-mch8 (MDEV-40328): https://github.com/MariaDB/server/security/advisories/GHSA-p7v9-24h4-mch8 . When ST_Area processed invalid WKB for a MultiPolygon, the parser advanced past a nested geometry header without checking that enough input remained, so it read beyond the allocated buffer; a low-privileged user can use malformed spatial data to disclose memory. MariaDB fixed it in 11.8.9 (and 10.6.28, 10.11.19, 11.4.13, 12.3.3 and 13.0.2) with commit https://github.com/MariaDB/server/commit/2bf355e361db85153fdfba7b8a0f0d114d6a26ce , which in sql/spatial.cc checks the remaining length before each nested header in Gis_multi_polygon::area, Gis_multi_polygon::centroid and Gis_multi_line_string::geom_length. Debian's mariadb 1:11.8.6-0+deb13u1 does not include it; Debian fixes trixie in 1:11.8.9+ds-0+deb13u1 (https://security-tracker.debian.org/tracker/CVE-2026-85745). DHI backports the commit's sql/spatial.cc change unmodified, and the fixed version is the second build, the first that carries it. We compared all four published builds of Debian's mariadb 1:11.8.6-0+deb13u1 in the DHI Debian repository (called the first to fourth build below; the fourth is the current build) on amd64 and arm64; each package we read was verified against the repository index checksum, reading function sizes from the dynamic symbol tables of /usr/sbin/mariadbd (mariadb-server-core) and of the embedded server library libmariadbd.so.19 (libmariadbd19t64). Between the first and second builds, Gis_multi_polygon::area changes from 280 to 258 bytes, Gis_multi_polygon::centroid from 416 to 396 and Gis_multi_line_string::geom_length from 272 to 256 on amd64 (328 to 336, 400 to 408 and 312 to 320 on arm64), the same in both files, and the third and fourth builds keep the second build's sizes. From the second build on, mysql-test/main/gis.result in mariadb-test-data carries the upstream MDEV-40328 regression test, which the first build lacks, and the shipped changelog lists this CVE."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-2apn-hwss-6a6p-za2t",
+        "aliases": [
+          "CVE-2026-85745"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi1?distro=dhi-13"
         },
@@ -28,7 +41,8 @@
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-85745 is MariaDB advisory GHSA-p7v9-24h4-mch8 (MDEV-40328): https://github.com/MariaDB/server/security/advisories/GHSA-p7v9-24h4-mch8 . When ST_Area processed invalid WKB for a MultiPolygon, the parser advanced past a nested geometry header without checking that enough input remained, so it read beyond the allocated buffer; a low-privileged user can use malformed spatial data to disclose memory. MariaDB fixed it in 11.8.9 (and 10.6.28, 10.11.19, 11.4.13, 12.3.3 and 13.0.2) with commit https://github.com/MariaDB/server/commit/2bf355e361db85153fdfba7b8a0f0d114d6a26ce , which in sql/spatial.cc checks the remaining length before each nested header in Gis_multi_polygon::area, Gis_multi_polygon::centroid and Gis_multi_line_string::geom_length. Debian's mariadb 1:11.8.6-0+deb13u1 does not include it; Debian fixes trixie in 1:11.8.9+ds-0+deb13u1 (https://security-tracker.debian.org/tracker/CVE-2026-85745). DHI backports the commit's sql/spatial.cc change unmodified, and the fixed version is the second build, the first that carries it. We compared all four published builds of Debian's mariadb 1:11.8.6-0+deb13u1 in the DHI Debian repository (called the first to fourth build below; the fourth is the current build) on amd64 and arm64; each package we read was verified against the repository index checksum, reading function sizes from the dynamic symbol tables of /usr/sbin/mariadbd (mariadb-server-core) and of the embedded server library libmariadbd.so.19 (libmariadbd19t64). Between the first and second builds, Gis_multi_polygon::area changes from 280 to 258 bytes, Gis_multi_polygon::centroid from 416 to 396 and Gis_multi_line_string::geom_length from 272 to 256 on amd64 (328 to 336, 400 to 408 and 312 to 320 on arm64), the same in both files, and the third and fourth builds keep the second build's sizes. From the second build on, mysql-test/main/gis.result in mariadb-test-data carries the upstream MDEV-40328 regression test, which the first build lacks, and the shipped changelog lists this CVE."
     }
   ]
 }
