@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-26T12:39:30Z",
-  "version": 1,
+  "last_updated": "2026-11-27T22:17:30Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -36,7 +37,9 @@
           "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-137074: in libxml2 2.12.6 through 2.15.4, xmlTextReaderConstEncoding() on a reader reset with xmlReaderNewWalker() calls xmlGetActualEncoding(), which reads ctxt->input->flags while ctxt->input is NULL after xmlCtxtReset(), a NULL pointer dereference (https://www.cve.org/CVERecord?id=CVE-2026-137074, https://gitlab.gnome.org/GNOME/libxml2/-/issues/1212). Debian's tracker lists trixie as vulnerable and has no fix (https://security-tracker.debian.org/tracker/CVE-2026-137074); that entry covers the source package, not this code path. The DHI Debian libxml2 package is built from Debian's trixie source 2.12.7+dfsg+really2.9.14-2.1+deb13u3, which is libxml2 2.9.14 with Debian's patches. The DHI Debian repository currently publishes one libxml2 build, a DHI rebuild of that Debian version, for amd64 and arm64 (libxml2, libxml2-dev, libxml2-utils, python3-libxml2 and their -dbgsym packages); earlier DHI builds are no longer published and sort below it. The source was checked against Debian's trixie source package 2.12.7+dfsg+really2.9.14-2.1+deb13u3 with Debian's patches and DHI's patches for this package applied; DHI's own patches do not touch xmlreader.c or parserInternals.c. In libxml2 2.9.14, xmlTextReaderConstEncoding takes the document from reader->doc or reader->ctxt->myDoc, returns NULL when there is none, and otherwise returns the document's encoding field; it never reads the parser input. xmlGetActualEncoding does not exist in that source, and its name does not appear in libxml2.so.2.9.14 of the published build on amd64 or arm64, where the same search finds xmlTextReaderConstEncoding. The vulnerable code was added after 2.9.14, matching the advisory's affected range, so it is not present in the published build."
     }
   ]
 }

@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-26T12:39:30Z",
-  "version": 1,
+  "last_updated": "2026-11-27T22:17:39Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -36,7 +37,9 @@
           "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-137082: in libxml2 through 2.15.4, reusing a parser context for a SAX2 parse after a SAX1 parse (XML_PARSE_SAX1) leaves ctxt->atts allocated while ctxt->attallocs is NULL, so xmlParseStartTag2() skips growing the attribute arrays and writes through the NULL attallocs pointer, crashing the application (https://www.cve.org/CVERecord?id=CVE-2026-137082, https://gitlab.gnome.org/GNOME/libxml2/-/issues/1177). The upstream issue is open and no upstream release carries a fix; Debian's tracker lists every release, unstable included, as vulnerable (https://security-tracker.debian.org/tracker/CVE-2026-137082). The DHI Debian libxml2 package is built from Debian's trixie source 2.12.7+dfsg+really2.9.14-2.1+deb13u3, which is libxml2 2.9.14 with Debian's patches. The DHI Debian repository currently publishes one libxml2 build, a DHI rebuild of that Debian version, for amd64 and arm64 (libxml2, libxml2-dev, libxml2-utils, python3-libxml2 and their -dbgsym packages); earlier DHI builds are no longer published and sort below it. The source was checked against Debian's trixie source package 2.12.7+dfsg+really2.9.14-2.1+deb13u3 with Debian's patches and DHI's patches for this package applied; Debian's patches change parser.c for other issues but not this path. In libxml2 2.9.14, the SAX1 xmlParseStartTag allocates ctxt->atts and sets ctxt->maxatts without allocating ctxt->attallocs, xmlCtxtReset keeps atts, maxatts and attallocs, and xmlParseStartTag2 calls xmlCtxtGrowAttrs only when atts is NULL or nbatts + 5 exceeds maxatts before writing ctxt->attallocs[nratts], the same sequence as in the report. The vulnerable code is present in the published build, so it is affected; no fixed build has been published."
     }
   ]
 }

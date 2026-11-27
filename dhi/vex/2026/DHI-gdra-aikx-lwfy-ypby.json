@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-26T12:39:30Z",
-  "version": 1,
+  "last_updated": "2026-11-27T22:17:34Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -36,7 +37,9 @@
           "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-137075: in libxml2 2.14.0 through 2.15.4, xmlBufferAddHead() in buf.c grows a buffer that has no storage (after xmlBufferDetach() or from xmlBufferCreateSize(0)), moves the old content and writes the new content in front without writing a terminating NUL, so later xmlStrlen() and xmlBufferCat() calls read past the data (https://www.cve.org/CVERecord?id=CVE-2026-137075, https://gitlab.gnome.org/GNOME/libxml2/-/issues/1213). Debian's tracker lists trixie as vulnerable and has no fix (https://security-tracker.debian.org/tracker/CVE-2026-137075); that entry covers the source package, not this code path. The DHI Debian libxml2 package is built from Debian's trixie source 2.12.7+dfsg+really2.9.14-2.1+deb13u3, which is libxml2 2.9.14 with Debian's patches. The DHI Debian repository currently publishes one libxml2 build, a DHI rebuild of that Debian version, for amd64 and arm64 (libxml2, libxml2-dev, libxml2-utils, python3-libxml2 and their -dbgsym packages); earlier DHI builds are no longer published and sort below it. The source was checked against Debian's trixie source package 2.12.7+dfsg+really2.9.14-2.1+deb13u3 with Debian's patches and DHI's patches for this package applied; DHI's own patches do not touch tree.c or buf.c. In libxml2 2.9.14 the public xmlBufferAddHead is in tree.c, and on the grow path it sets buf->content[buf->use] = 0 after copying, so the result is always terminated; the internal xmlBufAddHead in buf.c does the same. The missing terminator came with the xmlBuffer rewrite in libxml2 2.14.0, matching the advisory's affected range, so the vulnerable code is not present in the published build."
     }
   ]
 }
