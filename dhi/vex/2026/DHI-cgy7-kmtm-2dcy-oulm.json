@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:45:21Z",
-  "last_updated": "2026-11-27T08:19:37Z",
-  "version": 37,
+  "last_updated": "2026-11-27T15:02:50Z",
+  "version": 38,
   "statements": [
     {
       "vulnerability": {
@@ -81553,7 +81553,20 @@
         },
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer-dev@5.10.2-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update grafana-image-renderer-dev to 5.10.3-r0 or later.",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. We read the Go build information of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer-dev package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64, each checked against its index checksum. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, without -trimpath and without the -s and -w linker flags, so it keeps its ELF symbol table. Their build information lists google.golang.org/grpc 1.81.0 in 5.10.1-r0 and 5.10.2-r0, 1.82.1 in 5.10.3-r0 to 5.12.2-r1, 1.83.1 in 5.12.2-r2 and 5.12.3-r0, and 1.83.2 from 5.12.3-r1 to 5.12.11-r2 (from 5.12.3-r2 on through a replace directive that pins a newer required version to 1.83.2), the same on both architectures and in the base and -dev packages. We also downloaded five Alpine 3.23 packages, checked each against its index size and the program's MD5 in the full scan, and searched their programs byte by byte: grafana-image-renderer 5.10.1-r0 and 5.12.10-r1 for x86_64, 5.12.6-r0 and 5.12.11-r2 for aarch64, and grafana-image-renderer-dev 5.12.1-r1 for x86_64. The Alpine 3.24 and Debian packages of the same version and architecture carry the same program. The HTTP/2 transport server is linked: the five programs above contain google.golang.org/grpc/internal/transport.(*http2Server) methods; no build's Go function table has a function of the grpc xDS packages. The control-buffer limit the fix adds (GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT in internal/envconfig/envconfig.go) is in the grpc-go 1.82.1, 1.83.1 and 1.83.2 sources and not in 1.81.0. We set the fixed boundary at 5.10.3-r0, the first build with grpc 1.82.1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cgy7-kmtm-2dcy-oulm",
+        "aliases": [
+          "GHSA-hrxh-6v49-42gf"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer-dev@5.10.3-r0?distro=dhi-3.23"
         },
@@ -81627,7 +81640,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer-dev@5.12.9-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. We read the Go build information of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer-dev package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64, each checked against its index checksum. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, without -trimpath and without the -s and -w linker flags, so it keeps its ELF symbol table. Their build information lists google.golang.org/grpc 1.81.0 in 5.10.1-r0 and 5.10.2-r0, 1.82.1 in 5.10.3-r0 to 5.12.2-r1, 1.83.1 in 5.12.2-r2 and 5.12.3-r0, and 1.83.2 from 5.12.3-r1 to 5.12.11-r2 (from 5.12.3-r2 on through a replace directive that pins a newer required version to 1.83.2), the same on both architectures and in the base and -dev packages. We also downloaded five Alpine 3.23 packages, checked each against its index size and the program's MD5 in the full scan, and searched their programs byte by byte: grafana-image-renderer 5.10.1-r0 and 5.12.10-r1 for x86_64, 5.12.6-r0 and 5.12.11-r2 for aarch64, and grafana-image-renderer-dev 5.12.1-r1 for x86_64. The Alpine 3.24 and Debian packages of the same version and architecture carry the same program. The HTTP/2 transport server is linked: the five programs above contain google.golang.org/grpc/internal/transport.(*http2Server) methods; no build's Go function table has a function of the grpc xDS packages. The control-buffer limit the fix adds (GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT in internal/envconfig/envconfig.go) is in the grpc-go 1.82.1, 1.83.1 and 1.83.2 sources and not in 1.81.0. We set the fixed boundary at 5.10.3-r0, the first build with grpc 1.82.1."
     },
     {
       "vulnerability": {
@@ -81642,7 +81656,20 @@
         },
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer-dev@5.10.2-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update grafana-image-renderer-dev to 5.10.3-r0 or later.",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. We read the Go build information of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer-dev package for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64, each checked against its index checksum. We read the Alpine 3.23 packages: every Alpine 3.24 index entry for this package has the same package checksum as the 3.23 entry of the same version and architecture, and two 3.24 packages we downloaded were byte-identical to their 3.23 counterparts. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, without -trimpath and without the -s and -w linker flags, so it keeps its ELF symbol table. Their build information lists google.golang.org/grpc 1.81.0 in 5.10.1-r0 and 5.10.2-r0, 1.82.1 in 5.10.3-r0 to 5.12.2-r1, 1.83.1 in 5.12.2-r2 and 5.12.3-r0, and 1.83.2 from 5.12.3-r1 to 5.12.11-r2 (from 5.12.3-r2 on through a replace directive that pins a newer required version to 1.83.2), the same on both architectures and in the base and -dev packages. We also downloaded five Alpine 3.23 packages, checked each against its index size and the program's MD5 in the full scan, and searched their programs byte by byte: grafana-image-renderer 5.10.1-r0 and 5.12.10-r1 for x86_64, 5.12.6-r0 and 5.12.11-r2 for aarch64, and grafana-image-renderer-dev 5.12.1-r1 for x86_64. The Alpine 3.24 and Debian packages of the same version and architecture carry the same program. The HTTP/2 transport server is linked: the five programs above contain google.golang.org/grpc/internal/transport.(*http2Server) methods; no build's Go function table has a function of the grpc xDS packages. The control-buffer limit the fix adds (GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT in internal/envconfig/envconfig.go) is in the grpc-go 1.82.1, 1.83.1 and 1.83.2 sources and not in 1.81.0. We set the fixed boundary at 5.10.3-r0, the first build with grpc 1.82.1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cgy7-kmtm-2dcy-oulm",
+        "aliases": [
+          "GHSA-hrxh-6v49-42gf"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer-dev@5.10.3-r0?distro=dhi-3.24"
         },
@@ -81716,7 +81743,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer-dev@5.12.9-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. We read the Go build information of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer-dev package for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64, each checked against its index checksum. We read the Alpine 3.23 packages: every Alpine 3.24 index entry for this package has the same package checksum as the 3.23 entry of the same version and architecture, and two 3.24 packages we downloaded were byte-identical to their 3.23 counterparts. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, without -trimpath and without the -s and -w linker flags, so it keeps its ELF symbol table. Their build information lists google.golang.org/grpc 1.81.0 in 5.10.1-r0 and 5.10.2-r0, 1.82.1 in 5.10.3-r0 to 5.12.2-r1, 1.83.1 in 5.12.2-r2 and 5.12.3-r0, and 1.83.2 from 5.12.3-r1 to 5.12.11-r2 (from 5.12.3-r2 on through a replace directive that pins a newer required version to 1.83.2), the same on both architectures and in the base and -dev packages. We also downloaded five Alpine 3.23 packages, checked each against its index size and the program's MD5 in the full scan, and searched their programs byte by byte: grafana-image-renderer 5.10.1-r0 and 5.12.10-r1 for x86_64, 5.12.6-r0 and 5.12.11-r2 for aarch64, and grafana-image-renderer-dev 5.12.1-r1 for x86_64. The Alpine 3.24 and Debian packages of the same version and architecture carry the same program. The HTTP/2 transport server is linked: the five programs above contain google.golang.org/grpc/internal/transport.(*http2Server) methods; no build's Go function table has a function of the grpc xDS packages. The control-buffer limit the fix adds (GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT in internal/envconfig/envconfig.go) is in the grpc-go 1.82.1, 1.83.1 and 1.83.2 sources and not in 1.81.0. We set the fixed boundary at 5.10.3-r0, the first build with grpc 1.82.1."
     },
     {
       "vulnerability": {
@@ -81805,7 +81833,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer-fips-dev@5.12.9-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. The grafana-image-renderer-fips-dev packages for Alpine 3.23 in the DHI Alpine security repository, which requires authentication, are built separately from the non-FIPS grafana-image-renderer packages, and we have not yet read the Go build information of every published grafana-image-renderer-fips-dev build. Pending: that per-build read on both architectures, to establish which google.golang.org/grpc version each FIPS build ships, after any replace directive, and so where its fixed boundary falls. For comparison, every non-FIPS grafana-image-renderer build from 5.10.3-r0 on uses grpc 1.82.1 or later. That does not establish the same of the FIPS builds."
     },
     {
       "vulnerability": {
@@ -81894,7 +81923,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer-fips-dev@5.12.9-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. The grafana-image-renderer-fips-dev packages for Alpine 3.24 in the DHI Alpine security repository, which requires authentication, are built separately from the non-FIPS grafana-image-renderer packages, and we have not yet read the Go build information of every published grafana-image-renderer-fips-dev build. Pending: that per-build read on both architectures, to establish which google.golang.org/grpc version each FIPS build ships, after any replace directive, and so where its fixed boundary falls. For comparison, every non-FIPS grafana-image-renderer build from 5.10.3-r0 on uses grpc 1.82.1 or later. That does not establish the same of the FIPS builds."
     },
     {
       "vulnerability": {
@@ -81983,7 +82013,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer-fips@5.12.9-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. The grafana-image-renderer-fips packages for Alpine 3.23 in the DHI Alpine security repository, which requires authentication, are built separately from the non-FIPS grafana-image-renderer packages, and we have not yet read the Go build information of every published grafana-image-renderer-fips build. Pending: that per-build read on both architectures, to establish which google.golang.org/grpc version each FIPS build ships, after any replace directive, and so where its fixed boundary falls. For comparison, every non-FIPS grafana-image-renderer build from 5.10.3-r0 on uses grpc 1.82.1 or later. That does not establish the same of the FIPS builds."
     },
     {
       "vulnerability": {
@@ -82072,7 +82103,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer-fips@5.12.9-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. The grafana-image-renderer-fips packages for Alpine 3.24 in the DHI Alpine security repository, which requires authentication, are built separately from the non-FIPS grafana-image-renderer packages, and we have not yet read the Go build information of every published grafana-image-renderer-fips build. Pending: that per-build read on both architectures, to establish which google.golang.org/grpc version each FIPS build ships, after any replace directive, and so where its fixed boundary falls. For comparison, every non-FIPS grafana-image-renderer build from 5.10.3-r0 on uses grpc 1.82.1 or later. That does not establish the same of the FIPS builds."
     },
     {
       "vulnerability": {
@@ -82087,7 +82119,20 @@
         },
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer@5.10.2-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update grafana-image-renderer to 5.10.3-r0 or later.",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. We read the Go build information of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64, each checked against its index checksum. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, stripped of its ELF symbol table; the Go function table is kept. Their build information lists google.golang.org/grpc 1.81.0 in 5.10.1-r0 and 5.10.2-r0, 1.82.1 in 5.10.3-r0 to 5.12.2-r1, 1.83.1 in 5.12.2-r2 and 5.12.3-r0, and 1.83.2 from 5.12.3-r1 to 5.12.11-r2 (from 5.12.3-r2 on through a replace directive that pins a newer required version to 1.83.2), the same on both architectures and in the base and -dev packages. We also downloaded five Alpine 3.23 packages, checked each against its index size and the program's MD5 in the full scan, and searched their programs byte by byte: grafana-image-renderer 5.10.1-r0 and 5.12.10-r1 for x86_64, 5.12.6-r0 and 5.12.11-r2 for aarch64, and grafana-image-renderer-dev 5.12.1-r1 for x86_64. The Alpine 3.24 and Debian packages of the same version and architecture carry the same program. The HTTP/2 transport server is linked: the five programs above contain google.golang.org/grpc/internal/transport.(*http2Server) methods; no build's Go function table has a function of the grpc xDS packages. The control-buffer limit the fix adds (GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT in internal/envconfig/envconfig.go) is in the grpc-go 1.82.1, 1.83.1 and 1.83.2 sources and not in 1.81.0. We set the fixed boundary at 5.10.3-r0, the first build with grpc 1.82.1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cgy7-kmtm-2dcy-oulm",
+        "aliases": [
+          "GHSA-hrxh-6v49-42gf"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer@5.10.3-r0?distro=dhi-3.23"
         },
@@ -82161,7 +82206,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer@5.12.9-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. We read the Go build information of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64, each checked against its index checksum. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, stripped of its ELF symbol table; the Go function table is kept. Their build information lists google.golang.org/grpc 1.81.0 in 5.10.1-r0 and 5.10.2-r0, 1.82.1 in 5.10.3-r0 to 5.12.2-r1, 1.83.1 in 5.12.2-r2 and 5.12.3-r0, and 1.83.2 from 5.12.3-r1 to 5.12.11-r2 (from 5.12.3-r2 on through a replace directive that pins a newer required version to 1.83.2), the same on both architectures and in the base and -dev packages. We also downloaded five Alpine 3.23 packages, checked each against its index size and the program's MD5 in the full scan, and searched their programs byte by byte: grafana-image-renderer 5.10.1-r0 and 5.12.10-r1 for x86_64, 5.12.6-r0 and 5.12.11-r2 for aarch64, and grafana-image-renderer-dev 5.12.1-r1 for x86_64. The Alpine 3.24 and Debian packages of the same version and architecture carry the same program. The HTTP/2 transport server is linked: the five programs above contain google.golang.org/grpc/internal/transport.(*http2Server) methods; no build's Go function table has a function of the grpc xDS packages. The control-buffer limit the fix adds (GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT in internal/envconfig/envconfig.go) is in the grpc-go 1.82.1, 1.83.1 and 1.83.2 sources and not in 1.81.0. We set the fixed boundary at 5.10.3-r0, the first build with grpc 1.82.1."
     },
     {
       "vulnerability": {
@@ -82176,7 +82222,20 @@
         },
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer@5.10.2-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update grafana-image-renderer to 5.10.3-r0 or later.",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. We read the Go build information of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer package for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64, each checked against its index checksum. We read the Alpine 3.23 packages: every Alpine 3.24 index entry for this package has the same package checksum as the 3.23 entry of the same version and architecture, and two 3.24 packages we downloaded were byte-identical to their 3.23 counterparts. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, stripped of its ELF symbol table; the Go function table is kept. Their build information lists google.golang.org/grpc 1.81.0 in 5.10.1-r0 and 5.10.2-r0, 1.82.1 in 5.10.3-r0 to 5.12.2-r1, 1.83.1 in 5.12.2-r2 and 5.12.3-r0, and 1.83.2 from 5.12.3-r1 to 5.12.11-r2 (from 5.12.3-r2 on through a replace directive that pins a newer required version to 1.83.2), the same on both architectures and in the base and -dev packages. We also downloaded five Alpine 3.23 packages, checked each against its index size and the program's MD5 in the full scan, and searched their programs byte by byte: grafana-image-renderer 5.10.1-r0 and 5.12.10-r1 for x86_64, 5.12.6-r0 and 5.12.11-r2 for aarch64, and grafana-image-renderer-dev 5.12.1-r1 for x86_64. The Alpine 3.24 and Debian packages of the same version and architecture carry the same program. The HTTP/2 transport server is linked: the five programs above contain google.golang.org/grpc/internal/transport.(*http2Server) methods; no build's Go function table has a function of the grpc xDS packages. The control-buffer limit the fix adds (GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT in internal/envconfig/envconfig.go) is in the grpc-go 1.82.1, 1.83.1 and 1.83.2 sources and not in 1.81.0. We set the fixed boundary at 5.10.3-r0, the first build with grpc 1.82.1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cgy7-kmtm-2dcy-oulm",
+        "aliases": [
+          "GHSA-hrxh-6v49-42gf"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer@5.10.3-r0?distro=dhi-3.24"
         },
@@ -82250,7 +82309,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer@5.12.9-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. We read the Go build information of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer package for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64, each checked against its index checksum. We read the Alpine 3.23 packages: every Alpine 3.24 index entry for this package has the same package checksum as the 3.23 entry of the same version and architecture, and two 3.24 packages we downloaded were byte-identical to their 3.23 counterparts. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, stripped of its ELF symbol table; the Go function table is kept. Their build information lists google.golang.org/grpc 1.81.0 in 5.10.1-r0 and 5.10.2-r0, 1.82.1 in 5.10.3-r0 to 5.12.2-r1, 1.83.1 in 5.12.2-r2 and 5.12.3-r0, and 1.83.2 from 5.12.3-r1 to 5.12.11-r2 (from 5.12.3-r2 on through a replace directive that pins a newer required version to 1.83.2), the same on both architectures and in the base and -dev packages. We also downloaded five Alpine 3.23 packages, checked each against its index size and the program's MD5 in the full scan, and searched their programs byte by byte: grafana-image-renderer 5.10.1-r0 and 5.12.10-r1 for x86_64, 5.12.6-r0 and 5.12.11-r2 for aarch64, and grafana-image-renderer-dev 5.12.1-r1 for x86_64. The Alpine 3.24 and Debian packages of the same version and architecture carry the same program. The HTTP/2 transport server is linked: the five programs above contain google.golang.org/grpc/internal/transport.(*http2Server) methods; no build's Go function table has a function of the grpc xDS packages. The control-buffer limit the fix adds (GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT in internal/envconfig/envconfig.go) is in the grpc-go 1.82.1, 1.83.1 and 1.83.2 sources and not in 1.81.0. We set the fixed boundary at 5.10.3-r0, the first build with grpc 1.82.1."
     },
     {
       "vulnerability": {
@@ -219353,7 +219413,20 @@
         },
         {
           "@id": "pkg:deb/dhi/grafana-image-renderer-dev@5.10.2-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update grafana-image-renderer-dev to 5.10.3-0 or later.",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. We read the Go build information of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer-dev package for Debian 13 in the DHI Debian repository as of 2026-11-27: 26 builds from 5.10.1-0 to the current 5.12.11-2, for both amd64 and arm64. Each Debian package's MD5 manifest lists only that file, with the same MD5 as the Alpine 3.23 package of the same version and architecture (Debian 5.12.1-1 is Alpine 5.12.1-r1, and so on), which we read directly; two Debian packages downloaded in full matched their index SHA-256 and that MD5. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, without -trimpath and without the -s and -w linker flags, so it keeps its ELF symbol table. Their build information lists google.golang.org/grpc 1.81.0 in 5.10.1-0 and 5.10.2-0, 1.82.1 in 5.10.3-0 to 5.12.2-1, 1.83.1 in 5.12.2-2 and 5.12.3-0, and 1.83.2 from 5.12.3-1 to 5.12.11-2 (from 5.12.3-2 on through a replace directive that pins a newer required version to 1.83.2), the same on both architectures and in the base and -dev packages. We also downloaded five Alpine 3.23 packages, checked each against its index size and the program's MD5 in the full scan, and searched their programs byte by byte: grafana-image-renderer 5.10.1-r0 and 5.12.10-r1 for x86_64, 5.12.6-r0 and 5.12.11-r2 for aarch64, and grafana-image-renderer-dev 5.12.1-r1 for x86_64. The Alpine 3.24 and Debian packages of the same version and architecture carry the same program. The HTTP/2 transport server is linked: the five programs above contain google.golang.org/grpc/internal/transport.(*http2Server) methods; no build's Go function table has a function of the grpc xDS packages. The control-buffer limit the fix adds (GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT in internal/envconfig/envconfig.go) is in the grpc-go 1.82.1, 1.83.1 and 1.83.2 sources and not in 1.81.0. We set the fixed boundary at 5.10.3-0, the first build with grpc 1.82.1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cgy7-kmtm-2dcy-oulm",
+        "aliases": [
+          "GHSA-hrxh-6v49-42gf"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/grafana-image-renderer-dev@5.10.3-0?distro=dhi-13"
         },
@@ -219427,7 +219500,8 @@
           "@id": "pkg:deb/dhi/grafana-image-renderer-dev@5.12.9-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. We read the Go build information of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer-dev package for Debian 13 in the DHI Debian repository as of 2026-11-27: 26 builds from 5.10.1-0 to the current 5.12.11-2, for both amd64 and arm64. Each Debian package's MD5 manifest lists only that file, with the same MD5 as the Alpine 3.23 package of the same version and architecture (Debian 5.12.1-1 is Alpine 5.12.1-r1, and so on), which we read directly; two Debian packages downloaded in full matched their index SHA-256 and that MD5. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, without -trimpath and without the -s and -w linker flags, so it keeps its ELF symbol table. Their build information lists google.golang.org/grpc 1.81.0 in 5.10.1-0 and 5.10.2-0, 1.82.1 in 5.10.3-0 to 5.12.2-1, 1.83.1 in 5.12.2-2 and 5.12.3-0, and 1.83.2 from 5.12.3-1 to 5.12.11-2 (from 5.12.3-2 on through a replace directive that pins a newer required version to 1.83.2), the same on both architectures and in the base and -dev packages. We also downloaded five Alpine 3.23 packages, checked each against its index size and the program's MD5 in the full scan, and searched their programs byte by byte: grafana-image-renderer 5.10.1-r0 and 5.12.10-r1 for x86_64, 5.12.6-r0 and 5.12.11-r2 for aarch64, and grafana-image-renderer-dev 5.12.1-r1 for x86_64. The Alpine 3.24 and Debian packages of the same version and architecture carry the same program. The HTTP/2 transport server is linked: the five programs above contain google.golang.org/grpc/internal/transport.(*http2Server) methods; no build's Go function table has a function of the grpc xDS packages. The control-buffer limit the fix adds (GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT in internal/envconfig/envconfig.go) is in the grpc-go 1.82.1, 1.83.1 and 1.83.2 sources and not in 1.81.0. We set the fixed boundary at 5.10.3-0, the first build with grpc 1.82.1."
     },
     {
       "vulnerability": {
@@ -219516,7 +219590,8 @@
           "@id": "pkg:deb/dhi/grafana-image-renderer-fips-dev@5.12.9-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. The grafana-image-renderer-fips-dev packages for Debian 13 in the DHI Debian security repository, which requires authentication, are built separately from the non-FIPS grafana-image-renderer packages, and we have not yet read the Go build information of every published grafana-image-renderer-fips-dev build. Pending: that per-build read on both architectures, to establish which google.golang.org/grpc version each FIPS build ships, after any replace directive, and so where its fixed boundary falls. For comparison, every non-FIPS grafana-image-renderer build from 5.10.3-0 on uses grpc 1.82.1 or later. That does not establish the same of the FIPS builds."
     },
     {
       "vulnerability": {
@@ -219605,7 +219680,8 @@
           "@id": "pkg:deb/dhi/grafana-image-renderer-fips@5.12.9-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. The grafana-image-renderer-fips packages for Debian 13 in the DHI Debian security repository, which requires authentication, are built separately from the non-FIPS grafana-image-renderer packages, and we have not yet read the Go build information of every published grafana-image-renderer-fips build. Pending: that per-build read on both architectures, to establish which google.golang.org/grpc version each FIPS build ships, after any replace directive, and so where its fixed boundary falls. For comparison, every non-FIPS grafana-image-renderer build from 5.10.3-0 on uses grpc 1.82.1 or later. That does not establish the same of the FIPS builds."
     },
     {
       "vulnerability": {
@@ -219620,7 +219696,20 @@
         },
         {
           "@id": "pkg:deb/dhi/grafana-image-renderer@5.10.2-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update grafana-image-renderer to 5.10.3-0 or later.",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. We read the Go build information of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer package for Debian 13 in the DHI Debian repository as of 2026-11-27: 26 builds from 5.10.1-0 to the current 5.12.11-2, for both amd64 and arm64. Each Debian package's MD5 manifest lists only that file, with the same MD5 as the Alpine 3.23 package of the same version and architecture (Debian 5.12.1-1 is Alpine 5.12.1-r1, and so on), which we read directly; two Debian packages downloaded in full matched their index SHA-256 and that MD5. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, stripped of its ELF symbol table; the Go function table is kept. Their build information lists google.golang.org/grpc 1.81.0 in 5.10.1-0 and 5.10.2-0, 1.82.1 in 5.10.3-0 to 5.12.2-1, 1.83.1 in 5.12.2-2 and 5.12.3-0, and 1.83.2 from 5.12.3-1 to 5.12.11-2 (from 5.12.3-2 on through a replace directive that pins a newer required version to 1.83.2), the same on both architectures and in the base and -dev packages. We also downloaded five Alpine 3.23 packages, checked each against its index size and the program's MD5 in the full scan, and searched their programs byte by byte: grafana-image-renderer 5.10.1-r0 and 5.12.10-r1 for x86_64, 5.12.6-r0 and 5.12.11-r2 for aarch64, and grafana-image-renderer-dev 5.12.1-r1 for x86_64. The Alpine 3.24 and Debian packages of the same version and architecture carry the same program. The HTTP/2 transport server is linked: the five programs above contain google.golang.org/grpc/internal/transport.(*http2Server) methods; no build's Go function table has a function of the grpc xDS packages. The control-buffer limit the fix adds (GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT in internal/envconfig/envconfig.go) is in the grpc-go 1.82.1, 1.83.1 and 1.83.2 sources and not in 1.81.0. We set the fixed boundary at 5.10.3-0, the first build with grpc 1.82.1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cgy7-kmtm-2dcy-oulm",
+        "aliases": [
+          "GHSA-hrxh-6v49-42gf"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/grafana-image-renderer@5.10.3-0?distro=dhi-13"
         },
@@ -219694,7 +219783,8 @@
           "@id": "pkg:deb/dhi/grafana-image-renderer@5.12.9-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061): google.golang.org/grpc before 1.82.1 has three issues: xDS RBAC policies with Metadata or RequestedServerName rules can fail open, xDS RBAC NOT rules around unsupported fields can make the server panic, and a flood of client-created streams that are reset at once bypasses the HTTP/2 server's rapid-reset mitigation and drives up CPU use. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/commit/4ea465d4ab98013f72a142fe0fc89c19770b2935, https://github.com/grpc/grpc-go/pull/9236): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf, https://github.com/grpc/grpc-go/releases/tag/v1.82.1. We read the Go build information of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer package for Debian 13 in the DHI Debian repository as of 2026-11-27: 26 builds from 5.10.1-0 to the current 5.12.11-2, for both amd64 and arm64. Each Debian package's MD5 manifest lists only that file, with the same MD5 as the Alpine 3.23 package of the same version and architecture (Debian 5.12.1-1 is Alpine 5.12.1-r1, and so on), which we read directly; two Debian packages downloaded in full matched their index SHA-256 and that MD5. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, stripped of its ELF symbol table; the Go function table is kept. Their build information lists google.golang.org/grpc 1.81.0 in 5.10.1-0 and 5.10.2-0, 1.82.1 in 5.10.3-0 to 5.12.2-1, 1.83.1 in 5.12.2-2 and 5.12.3-0, and 1.83.2 from 5.12.3-1 to 5.12.11-2 (from 5.12.3-2 on through a replace directive that pins a newer required version to 1.83.2), the same on both architectures and in the base and -dev packages. We also downloaded five Alpine 3.23 packages, checked each against its index size and the program's MD5 in the full scan, and searched their programs byte by byte: grafana-image-renderer 5.10.1-r0 and 5.12.10-r1 for x86_64, 5.12.6-r0 and 5.12.11-r2 for aarch64, and grafana-image-renderer-dev 5.12.1-r1 for x86_64. The Alpine 3.24 and Debian packages of the same version and architecture carry the same program. The HTTP/2 transport server is linked: the five programs above contain google.golang.org/grpc/internal/transport.(*http2Server) methods; no build's Go function table has a function of the grpc xDS packages. The control-buffer limit the fix adds (GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT in internal/envconfig/envconfig.go) is in the grpc-go 1.82.1, 1.83.1 and 1.83.2 sources and not in 1.81.0. We set the fixed boundary at 5.10.3-0, the first build with grpc 1.82.1."
     },
     {
       "vulnerability": {
