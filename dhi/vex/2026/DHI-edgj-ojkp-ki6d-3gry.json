@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:53:03Z",
-  "last_updated": "2026-11-27T02:17:36Z",
-  "version": 8,
+  "last_updated": "2026-11-27T08:58:50Z",
+  "version": 9,
   "statements": [
     {
       "vulnerability": {
@@ -90,12 +90,6 @@
           "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
         },
         {
@@ -105,7 +99,27 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.11-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-15742 (PostgreSQL fuzzystrmatch writes effectively-arbitrary addresses, via integer wraparound) in 17.11 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-15742/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/c4d51b62748fd697e5ef4c1108dc77396ba39475 on the REL_17_STABLE branch, 'Avoid overflow in Levenshtein distance calculations.', which changes src/backend/utils/adt/levenshtein.c and src/backend/utils/adt/varlena.c; it is tagged Security: CVE-2026-15742, and it is in the REL_17_11 release tag and not in REL_17_10. The affected code is in the Levenshtein distance code compiled into the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package, which the fuzzystrmatch extension's levenshtein() and levenshtein_less_equal() call through varstr_levenshtein; fuzzystrmatch.so ships in the postgresql17-contrib package and references varstr_levenshtein in every published build, and the server ships in every published build, on both architectures. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes. We checked every published postgresql17 build for Alpine 3.23 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0) on both x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.7, 17.8, 17.9, 17.10, 17.11 and 17.12). Of these, 17.11-r0 and 17.12-r0 carry the fix, and 17.7-r0, 17.8-r0, 17.9-r0 and 17.10-r0 are affected. The fix adds the error message 'levenshtein distance out of range' to the server; it appears in the server binary of the 17.11-r0 and 17.12-r0 builds and in none of the earlier builds, while the string PostgresMain, our control, is present in every build. fuzzystrmatch.so itself does not carry the fixed code, so the check is made on the server binary. 17.11-r0 is the first published build for Alpine 3.23 that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-15742 under its 17.11-r0 secfixes."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-edgj-ojkp-ki6d-3gry",
+        "aliases": [
+          "CVE-2026-15742"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-15742 (PostgreSQL fuzzystrmatch writes effectively-arbitrary addresses, via integer wraparound) in 17.11 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-15742/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/c4d51b62748fd697e5ef4c1108dc77396ba39475 on the REL_17_STABLE branch, 'Avoid overflow in Levenshtein distance calculations.', which changes src/backend/utils/adt/levenshtein.c and src/backend/utils/adt/varlena.c; it is tagged Security: CVE-2026-15742, and it is in the REL_17_11 release tag and not in REL_17_10. The affected code is in the Levenshtein distance code compiled into the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package, which the fuzzystrmatch extension's levenshtein() and levenshtein_less_equal() call through varstr_levenshtein; fuzzystrmatch.so ships in the postgresql17-contrib package and references varstr_levenshtein in every published build, and the server ships in every published build, on both architectures. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes. We checked every published postgresql17 build for Alpine 3.23 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0) on both x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.7, 17.8, 17.9, 17.10, 17.11 and 17.12). Of these, 17.11-r0 and 17.12-r0 carry the fix, and 17.7-r0, 17.8-r0, 17.9-r0 and 17.10-r0 are affected. The fix adds the error message 'levenshtein distance out of range' to the server; it appears in the server binary of the 17.11-r0 and 17.12-r0 builds and in none of the earlier builds, while the string PostgresMain, our control, is present in every build. fuzzystrmatch.so itself does not carry the fixed code, so the check is made on the server binary. 17.11-r0 is the first published build for Alpine 3.23 that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-15742 under its 17.11-r0 secfixes."
     },
     {
       "vulnerability": {
@@ -117,7 +131,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.11-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-15742 (PostgreSQL fuzzystrmatch writes effectively-arbitrary addresses, via integer wraparound) in 17.11 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-15742/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/c4d51b62748fd697e5ef4c1108dc77396ba39475 on the REL_17_STABLE branch, 'Avoid overflow in Levenshtein distance calculations.', which changes src/backend/utils/adt/levenshtein.c and src/backend/utils/adt/varlena.c; it is tagged Security: CVE-2026-15742, and it is in the REL_17_11 release tag and not in REL_17_10. The affected code is in the Levenshtein distance code compiled into the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package, which the fuzzystrmatch extension's levenshtein() and levenshtein_less_equal() call through varstr_levenshtein; fuzzystrmatch.so ships in the postgresql17-contrib package and references varstr_levenshtein in every published build, and the server ships in every published build, on both architectures. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes. We checked every published postgresql17 build for Alpine 3.24 (17.10-r0, 17.11-r0 and 17.12-r0) on both x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.10, 17.11 and 17.12). Of these, 17.11-r0 and 17.12-r0 carry the fix, and 17.10-r0 is affected. The fix adds the error message 'levenshtein distance out of range' to the server; it appears in the server binary of the 17.11-r0 and 17.12-r0 builds and in none of the earlier builds, while the string PostgresMain, our control, is present in every build. fuzzystrmatch.so itself does not carry the fixed code, so the check is made on the server binary. 17.11-r0 is the first published build for Alpine 3.24 that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-15742 under its 17.11-r0 secfixes."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-edgj-ojkp-ki6d-3gry",
+        "aliases": [
+          "CVE-2026-15742"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.24"
         },
@@ -125,7 +152,8 @@
           "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-15742 (PostgreSQL fuzzystrmatch writes effectively-arbitrary addresses, via integer wraparound) in 17.11 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-15742/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix is commit https://github.com/postgres/postgres/commit/c4d51b62748fd697e5ef4c1108dc77396ba39475 on the REL_17_STABLE branch, 'Avoid overflow in Levenshtein distance calculations.', which changes src/backend/utils/adt/levenshtein.c and src/backend/utils/adt/varlena.c; it is tagged Security: CVE-2026-15742, and it is in the REL_17_11 release tag and not in REL_17_10. The affected code is in the Levenshtein distance code compiled into the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package, which the fuzzystrmatch extension's levenshtein() and levenshtein_less_equal() call through varstr_levenshtein; fuzzystrmatch.so ships in the postgresql17-contrib package and references varstr_levenshtein in every published build, and the server ships in every published build, on both architectures. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes. We checked every published postgresql17 build for Alpine 3.24 (17.10-r0, 17.11-r0 and 17.12-r0) on both x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.10, 17.11 and 17.12). Of these, 17.11-r0 and 17.12-r0 carry the fix, and 17.10-r0 is affected. The fix adds the error message 'levenshtein distance out of range' to the server; it appears in the server binary of the 17.11-r0 and 17.12-r0 builds and in none of the earlier builds, while the string PostgresMain, our control, is present in every build. fuzzystrmatch.so itself does not carry the fixed code, so the check is made on the server binary. 17.11-r0 is the first published build for Alpine 3.24 that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-15742 under its 17.11-r0 secfixes."
     },
     {
       "vulnerability": {

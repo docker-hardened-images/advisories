@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:30:35Z",
-  "last_updated": "2026-11-27T07:19:47Z",
-  "version": 40,
+  "last_updated": "2026-11-27T08:58:44Z",
+  "version": 42,
   "statements": [
     {
       "vulnerability": {
@@ -89942,7 +89942,9 @@
           "@id": "pkg:apk/dhi/envoy-gateway-dev@1.9.4-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser, both in golang.org/x/net/dns/dnsmessage (fixed in 0.56.0) and in the Go standard library's copy that package net uses for LookupCNAME (fixed in Go 1.26.6 and 1.27.0-rc.3; Go 1.25 is not affected). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345. We read every envoy-gateway-dev package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 67 builds, 1.7.5-r0 to 1.10.0-r2, each for x86_64 and aarch64 (134 packages), each checked against its index checksum; the Alpine 3.24 repository publishes the same 134 packages with identical index checksums. Each package installs one file, /usr/bin/envoy-gateway, a statically linked Go program with no ELF interpreter (the package's installed size equals that file's size). For every build we read the program's Go function table (runtime.main found in every build as a control) and the Go toolchain version, from the Go version string the linker embeds in the program, which matched the Go build information in every build where we read both. Module versions come from the module paths of the source files in the function table, which matched the build information where we read both. Both architectures of every build gave the same result. No build has any function from the golang.org/x/net/dns/dnsmessage package of the golang.org/x/net module (golang.org/x/net per build: 1.7.5-r0: 0.56.0; 1.7.5-r1: 0.57.0; 1.7.5-r2 to 1.7.5-r10: 0.58.0; 1.7.5-r11 to 1.7.5-r14: 0.59.0; 1.7.5-r15 to 1.7.5-r16: 0.61.0; 1.7.5-r17 to 1.7.5-r20: 0.62.0; 1.8.2-r0: 0.55.0; 1.8.3-r0 to 1.8.3-r6: 0.57.0; 1.8.4-r0 to 1.8.4-r3: 0.58.0; 1.8.4-r4 to 1.8.5-r2: 0.59.0; 1.8.5-r3 to 1.8.6-r0: 0.61.0; 1.8.6-r1 to 1.8.6-r4: 0.62.0; 1.9.0-r0 to 1.9.0-r2: 0.57.0; 1.9.1-r0 to 1.9.1-r2: 0.58.0; 1.9.1-r3 to 1.9.2-r2: 0.59.0; 1.9.2-r3 to 1.9.2-r4: 0.61.0; 1.9.3-r0: 0.60.0; 1.9.3-r1 to 1.10.0-r2: 0.62.0), so the module half of the advisory, including the matched golang.org/x/net 0.55.0, does not apply. The standard library half: in Go 1.26 the vulnerable parser (unpackSVCBResource in the standard library's copy of dnsmessage) is reached from LookupCNAME only through the cgo resolver, cgoLookupCNAME and cgoResSearch calling Parser.AllAnswers (src/net/cgo_unix.go, built only with cgo); the pure-Go resolver only skips answers. These programs are statically linked with no ELF interpreter, and in every build the function table has net.(*Resolver).LookupCNAME and the standard library's dnsmessage parser (a positive control) but no cgoResSearch, Parser.AllAnswers, Parser.Answer or unpackSVCBResource, and a byte search of each program's code, read-only data and function table finds no unpackSVCBResource. Go toolchain per build: 1.7.5-r0 to 1.7.5-r1: go1.26.5; 1.7.5-r2: go1.26.6; 1.7.5-r3 to 1.7.5-r7: go1.26.7; 1.7.5-r8 to 1.7.5-r14: go1.26.8; 1.7.5-r15: go1.26.9; 1.7.5-r16 to 1.7.5-r18: go1.26.10; 1.7.5-r19 to 1.7.5-r20: go1.26.11; 1.8.2-r0 to 1.8.3-r1: go1.26.5; 1.8.3-r2 to 1.8.3-r3: go1.26.6; 1.8.3-r4 to 1.8.4-r1: go1.26.7; 1.8.4-r2 to 1.8.5-r2: go1.26.8; 1.8.5-r3: go1.26.9; 1.8.5-r4 to 1.8.6-r2: go1.26.10; 1.8.6-r3 to 1.8.6-r4: go1.26.11; 1.9.0-r0: go1.26.6; 1.9.0-r1 to 1.9.1-r0: go1.26.7; 1.9.1-r1 to 1.9.2-r2: go1.26.8; 1.9.2-r3: go1.26.9; 1.9.2-r4 to 1.9.3-r2: go1.26.10; 1.9.3-r3 to 1.9.4-r0: go1.26.11; 1.10.0-r0: go1.27.3; 1.10.0-r1 to 1.10.0-r2: go1.27.4. So the vulnerable code is not present in any published build, whichever Go toolchain compiled it."
     },
     {
       "vulnerability": {
@@ -90154,7 +90156,9 @@
           "@id": "pkg:apk/dhi/envoy-gateway-dev@1.9.4-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser, both in golang.org/x/net/dns/dnsmessage (fixed in 0.56.0) and in the Go standard library's copy that package net uses for LookupCNAME (fixed in Go 1.26.6 and 1.27.0-rc.3; Go 1.25 is not affected). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345. We read every envoy-gateway-dev package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 67 builds, 1.7.5-r0 to 1.10.0-r2, each for x86_64 and aarch64 (134 packages), each checked against its index checksum; the Alpine 3.24 repository publishes the same 134 packages with identical index checksums. Each package installs one file, /usr/bin/envoy-gateway, a statically linked Go program with no ELF interpreter (the package's installed size equals that file's size). For every build we read the program's Go function table (runtime.main found in every build as a control) and the Go toolchain version, from the Go version string the linker embeds in the program, which matched the Go build information in every build where we read both. Module versions come from the module paths of the source files in the function table, which matched the build information where we read both. Both architectures of every build gave the same result. No build has any function from the golang.org/x/net/dns/dnsmessage package of the golang.org/x/net module (golang.org/x/net per build: 1.7.5-r0: 0.56.0; 1.7.5-r1: 0.57.0; 1.7.5-r2 to 1.7.5-r10: 0.58.0; 1.7.5-r11 to 1.7.5-r14: 0.59.0; 1.7.5-r15 to 1.7.5-r16: 0.61.0; 1.7.5-r17 to 1.7.5-r20: 0.62.0; 1.8.2-r0: 0.55.0; 1.8.3-r0 to 1.8.3-r6: 0.57.0; 1.8.4-r0 to 1.8.4-r3: 0.58.0; 1.8.4-r4 to 1.8.5-r2: 0.59.0; 1.8.5-r3 to 1.8.6-r0: 0.61.0; 1.8.6-r1 to 1.8.6-r4: 0.62.0; 1.9.0-r0 to 1.9.0-r2: 0.57.0; 1.9.1-r0 to 1.9.1-r2: 0.58.0; 1.9.1-r3 to 1.9.2-r2: 0.59.0; 1.9.2-r3 to 1.9.2-r4: 0.61.0; 1.9.3-r0: 0.60.0; 1.9.3-r1 to 1.10.0-r2: 0.62.0), so the module half of the advisory, including the matched golang.org/x/net 0.55.0, does not apply. The standard library half: in Go 1.26 the vulnerable parser (unpackSVCBResource in the standard library's copy of dnsmessage) is reached from LookupCNAME only through the cgo resolver, cgoLookupCNAME and cgoResSearch calling Parser.AllAnswers (src/net/cgo_unix.go, built only with cgo); the pure-Go resolver only skips answers. These programs are statically linked with no ELF interpreter, and in every build the function table has net.(*Resolver).LookupCNAME and the standard library's dnsmessage parser (a positive control) but no cgoResSearch, Parser.AllAnswers, Parser.Answer or unpackSVCBResource, and a byte search of each program's code, read-only data and function table finds no unpackSVCBResource. Go toolchain per build: 1.7.5-r0 to 1.7.5-r1: go1.26.5; 1.7.5-r2: go1.26.6; 1.7.5-r3 to 1.7.5-r7: go1.26.7; 1.7.5-r8 to 1.7.5-r14: go1.26.8; 1.7.5-r15: go1.26.9; 1.7.5-r16 to 1.7.5-r18: go1.26.10; 1.7.5-r19 to 1.7.5-r20: go1.26.11; 1.8.2-r0 to 1.8.3-r1: go1.26.5; 1.8.3-r2 to 1.8.3-r3: go1.26.6; 1.8.3-r4 to 1.8.4-r1: go1.26.7; 1.8.4-r2 to 1.8.5-r2: go1.26.8; 1.8.5-r3: go1.26.9; 1.8.5-r4 to 1.8.6-r2: go1.26.10; 1.8.6-r3 to 1.8.6-r4: go1.26.11; 1.9.0-r0: go1.26.6; 1.9.0-r1 to 1.9.1-r0: go1.26.7; 1.9.1-r1 to 1.9.2-r2: go1.26.8; 1.9.2-r3: go1.26.9; 1.9.2-r4 to 1.9.3-r2: go1.26.10; 1.9.3-r3 to 1.9.4-r0: go1.26.11; 1.10.0-r0: go1.27.3; 1.10.0-r1 to 1.10.0-r2: go1.27.4. So the vulnerable code is not present in any published build, whichever Go toolchain compiled it."
     },
     {
       "vulnerability": {
@@ -90366,7 +90370,8 @@
           "@id": "pkg:apk/dhi/envoy-gateway-fips-dev@1.9.4-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser, both in golang.org/x/net/dns/dnsmessage (fixed in 0.56.0) and in the Go standard library's copy that package net uses for LookupCNAME (fixed in Go 1.26.6 and 1.27.0-rc.3; Go 1.25 is not affected). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345. Pending: a per-build read of every published envoy-gateway-fips-dev package in the DHI Alpine security repository to establish the Go toolchain version each build was compiled with and whether it links golang.org/x/net/dns/dnsmessage. The result for the non-FIPS envoy-gateway packages is not carried over to the FIPS packages, which are built separately."
     },
     {
       "vulnerability": {
@@ -90578,7 +90583,8 @@
           "@id": "pkg:apk/dhi/envoy-gateway-fips-dev@1.9.4-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser, both in golang.org/x/net/dns/dnsmessage (fixed in 0.56.0) and in the Go standard library's copy that package net uses for LookupCNAME (fixed in Go 1.26.6 and 1.27.0-rc.3; Go 1.25 is not affected). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345. Pending: a per-build read of every published envoy-gateway-fips-dev package in the DHI Alpine security repository to establish the Go toolchain version each build was compiled with and whether it links golang.org/x/net/dns/dnsmessage. The result for the non-FIPS envoy-gateway packages is not carried over to the FIPS packages, which are built separately."
     },
     {
       "vulnerability": {
@@ -90790,7 +90796,8 @@
           "@id": "pkg:apk/dhi/envoy-gateway-fips@1.9.4-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser, both in golang.org/x/net/dns/dnsmessage (fixed in 0.56.0) and in the Go standard library's copy that package net uses for LookupCNAME (fixed in Go 1.26.6 and 1.27.0-rc.3; Go 1.25 is not affected). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345. Pending: a per-build read of every published envoy-gateway-fips package in the DHI Alpine security repository to establish the Go toolchain version each build was compiled with and whether it links golang.org/x/net/dns/dnsmessage. The result for the non-FIPS envoy-gateway packages is not carried over to the FIPS packages, which are built separately."
     },
     {
       "vulnerability": {
@@ -91002,7 +91009,8 @@
           "@id": "pkg:apk/dhi/envoy-gateway-fips@1.9.4-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser, both in golang.org/x/net/dns/dnsmessage (fixed in 0.56.0) and in the Go standard library's copy that package net uses for LookupCNAME (fixed in Go 1.26.6 and 1.27.0-rc.3; Go 1.25 is not affected). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345. Pending: a per-build read of every published envoy-gateway-fips package in the DHI Alpine security repository to establish the Go toolchain version each build was compiled with and whether it links golang.org/x/net/dns/dnsmessage. The result for the non-FIPS envoy-gateway packages is not carried over to the FIPS packages, which are built separately."
     },
     {
       "vulnerability": {
@@ -91214,7 +91222,9 @@
           "@id": "pkg:apk/dhi/envoy-gateway@1.9.4-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser, both in golang.org/x/net/dns/dnsmessage (fixed in 0.56.0) and in the Go standard library's copy that package net uses for LookupCNAME (fixed in Go 1.26.6 and 1.27.0-rc.3; Go 1.25 is not affected). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345. We read every envoy-gateway package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 67 builds, 1.7.5-r0 to 1.10.0-r2, each for x86_64 and aarch64 (134 packages), each checked against its index checksum; the Alpine 3.24 repository publishes the same 134 packages with identical index checksums. Each package installs one file, /usr/bin/envoy-gateway, a statically linked Go program with no ELF interpreter (the package's installed size equals that file's size). For every build we read the program's Go function table (runtime.main found in every build as a control) and the Go toolchain version, from the Go version string the linker embeds in the program, which matched the Go build information in every build where we read both. Module versions come from the module paths of the source files in the function table, which matched the build information where we read both. Both architectures of every build gave the same result. No build has any function from the golang.org/x/net/dns/dnsmessage package of the golang.org/x/net module (golang.org/x/net per build: 1.7.5-r0: 0.56.0; 1.7.5-r1: 0.57.0; 1.7.5-r2 to 1.7.5-r10: 0.58.0; 1.7.5-r11 to 1.7.5-r14: 0.59.0; 1.7.5-r15 to 1.7.5-r16: 0.61.0; 1.7.5-r17 to 1.7.5-r20: 0.62.0; 1.8.2-r0: 0.55.0; 1.8.3-r0 to 1.8.3-r6: 0.57.0; 1.8.4-r0 to 1.8.4-r3: 0.58.0; 1.8.4-r4 to 1.8.5-r2: 0.59.0; 1.8.5-r3 to 1.8.6-r0: 0.61.0; 1.8.6-r1 to 1.8.6-r4: 0.62.0; 1.9.0-r0 to 1.9.0-r2: 0.57.0; 1.9.1-r0 to 1.9.1-r2: 0.58.0; 1.9.1-r3 to 1.9.2-r2: 0.59.0; 1.9.2-r3 to 1.9.2-r4: 0.61.0; 1.9.3-r0: 0.60.0; 1.9.3-r1 to 1.10.0-r2: 0.62.0), so the module half of the advisory, including the matched golang.org/x/net 0.55.0, does not apply. The standard library half: in Go 1.26 the vulnerable parser (unpackSVCBResource in the standard library's copy of dnsmessage) is reached from LookupCNAME only through the cgo resolver, cgoLookupCNAME and cgoResSearch calling Parser.AllAnswers (src/net/cgo_unix.go, built only with cgo); the pure-Go resolver only skips answers. These programs are statically linked with no ELF interpreter, and in every build the function table has net.(*Resolver).LookupCNAME and the standard library's dnsmessage parser (a positive control) but no cgoResSearch, Parser.AllAnswers, Parser.Answer or unpackSVCBResource, and a byte search of each program's code, read-only data and function table finds no unpackSVCBResource. Go toolchain per build: 1.7.5-r0 to 1.7.5-r1: go1.26.5; 1.7.5-r2: go1.26.6; 1.7.5-r3 to 1.7.5-r7: go1.26.7; 1.7.5-r8 to 1.7.5-r14: go1.26.8; 1.7.5-r15: go1.26.9; 1.7.5-r16 to 1.7.5-r18: go1.26.10; 1.7.5-r19 to 1.7.5-r20: go1.26.11; 1.8.2-r0 to 1.8.3-r1: go1.26.5; 1.8.3-r2 to 1.8.3-r3: go1.26.6; 1.8.3-r4 to 1.8.4-r1: go1.26.7; 1.8.4-r2 to 1.8.5-r2: go1.26.8; 1.8.5-r3: go1.26.9; 1.8.5-r4 to 1.8.6-r2: go1.26.10; 1.8.6-r3 to 1.8.6-r4: go1.26.11; 1.9.0-r0: go1.26.6; 1.9.0-r1 to 1.9.1-r0: go1.26.7; 1.9.1-r1 to 1.9.2-r2: go1.26.8; 1.9.2-r3: go1.26.9; 1.9.2-r4 to 1.9.3-r2: go1.26.10; 1.9.3-r3 to 1.9.4-r0: go1.26.11; 1.10.0-r0: go1.27.3; 1.10.0-r1 to 1.10.0-r2: go1.27.4. So the vulnerable code is not present in any published build, whichever Go toolchain compiled it."
     },
     {
       "vulnerability": {
@@ -91426,7 +91436,9 @@
           "@id": "pkg:apk/dhi/envoy-gateway@1.9.4-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser, both in golang.org/x/net/dns/dnsmessage (fixed in 0.56.0) and in the Go standard library's copy that package net uses for LookupCNAME (fixed in Go 1.26.6 and 1.27.0-rc.3; Go 1.25 is not affected). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345. We read every envoy-gateway package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 67 builds, 1.7.5-r0 to 1.10.0-r2, each for x86_64 and aarch64 (134 packages), each checked against its index checksum; the Alpine 3.24 repository publishes the same 134 packages with identical index checksums. Each package installs one file, /usr/bin/envoy-gateway, a statically linked Go program with no ELF interpreter (the package's installed size equals that file's size). For every build we read the program's Go function table (runtime.main found in every build as a control) and the Go toolchain version, from the Go version string the linker embeds in the program, which matched the Go build information in every build where we read both. Module versions come from the module paths of the source files in the function table, which matched the build information where we read both. Both architectures of every build gave the same result. No build has any function from the golang.org/x/net/dns/dnsmessage package of the golang.org/x/net module (golang.org/x/net per build: 1.7.5-r0: 0.56.0; 1.7.5-r1: 0.57.0; 1.7.5-r2 to 1.7.5-r10: 0.58.0; 1.7.5-r11 to 1.7.5-r14: 0.59.0; 1.7.5-r15 to 1.7.5-r16: 0.61.0; 1.7.5-r17 to 1.7.5-r20: 0.62.0; 1.8.2-r0: 0.55.0; 1.8.3-r0 to 1.8.3-r6: 0.57.0; 1.8.4-r0 to 1.8.4-r3: 0.58.0; 1.8.4-r4 to 1.8.5-r2: 0.59.0; 1.8.5-r3 to 1.8.6-r0: 0.61.0; 1.8.6-r1 to 1.8.6-r4: 0.62.0; 1.9.0-r0 to 1.9.0-r2: 0.57.0; 1.9.1-r0 to 1.9.1-r2: 0.58.0; 1.9.1-r3 to 1.9.2-r2: 0.59.0; 1.9.2-r3 to 1.9.2-r4: 0.61.0; 1.9.3-r0: 0.60.0; 1.9.3-r1 to 1.10.0-r2: 0.62.0), so the module half of the advisory, including the matched golang.org/x/net 0.55.0, does not apply. The standard library half: in Go 1.26 the vulnerable parser (unpackSVCBResource in the standard library's copy of dnsmessage) is reached from LookupCNAME only through the cgo resolver, cgoLookupCNAME and cgoResSearch calling Parser.AllAnswers (src/net/cgo_unix.go, built only with cgo); the pure-Go resolver only skips answers. These programs are statically linked with no ELF interpreter, and in every build the function table has net.(*Resolver).LookupCNAME and the standard library's dnsmessage parser (a positive control) but no cgoResSearch, Parser.AllAnswers, Parser.Answer or unpackSVCBResource, and a byte search of each program's code, read-only data and function table finds no unpackSVCBResource. Go toolchain per build: 1.7.5-r0 to 1.7.5-r1: go1.26.5; 1.7.5-r2: go1.26.6; 1.7.5-r3 to 1.7.5-r7: go1.26.7; 1.7.5-r8 to 1.7.5-r14: go1.26.8; 1.7.5-r15: go1.26.9; 1.7.5-r16 to 1.7.5-r18: go1.26.10; 1.7.5-r19 to 1.7.5-r20: go1.26.11; 1.8.2-r0 to 1.8.3-r1: go1.26.5; 1.8.3-r2 to 1.8.3-r3: go1.26.6; 1.8.3-r4 to 1.8.4-r1: go1.26.7; 1.8.4-r2 to 1.8.5-r2: go1.26.8; 1.8.5-r3: go1.26.9; 1.8.5-r4 to 1.8.6-r2: go1.26.10; 1.8.6-r3 to 1.8.6-r4: go1.26.11; 1.9.0-r0: go1.26.6; 1.9.0-r1 to 1.9.1-r0: go1.26.7; 1.9.1-r1 to 1.9.2-r2: go1.26.8; 1.9.2-r3: go1.26.9; 1.9.2-r4 to 1.9.3-r2: go1.26.10; 1.9.3-r3 to 1.9.4-r0: go1.26.11; 1.10.0-r0: go1.27.3; 1.10.0-r1 to 1.10.0-r2: go1.27.4. So the vulnerable code is not present in any published build, whichever Go toolchain compiled it."
     },
     {
       "vulnerability": {
@@ -211286,6 +211298,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -211366,6 +211381,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -211446,6 +211464,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -211526,6 +211547,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -211606,6 +211630,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -211686,6 +211713,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -211766,6 +211796,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -211846,6 +211879,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -211926,6 +211962,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -212006,6 +212045,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -212086,6 +212128,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -212166,6 +212211,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -212246,6 +212294,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -212326,6 +212377,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -212406,6 +212460,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -212486,6 +212543,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -303614,7 +303674,9 @@
           "@id": "pkg:deb/dhi/envoy-gateway-dev@1.9.4-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser, both in golang.org/x/net/dns/dnsmessage (fixed in 0.56.0) and in the Go standard library's copy that package net uses for LookupCNAME (fixed in Go 1.26.6 and 1.27.0-rc.3; Go 1.25 is not affected). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345. We read every envoy-gateway-dev package published for Debian 13 in the DHI Debian repository by 2026-11-27: 67 builds, 1.7.5-0 to 1.10.0-2, each for amd64 and arm64 (134 packages). Each package's file manifest lists one file, /usr/bin/envoy-gateway, and that program is the same as the one in the Alpine package of the same build (identical Go build ID and size in all 134 pairs), so the facts below, read from the Alpine packages, apply to it. For every build we read the program's Go function table (runtime.main found in every build as a control) and the Go toolchain version, from the Go version string the linker embeds in the program, which matched the Go build information in every build where we read both. Module versions come from the module paths of the source files in the function table, which matched the build information where we read both. Both architectures of every build gave the same result. No build has any function from the golang.org/x/net/dns/dnsmessage package of the golang.org/x/net module (golang.org/x/net per build: 1.7.5-0: 0.56.0; 1.7.5-1: 0.57.0; 1.7.5-2 to 1.7.5-10: 0.58.0; 1.7.5-11 to 1.7.5-14: 0.59.0; 1.7.5-15 to 1.7.5-16: 0.61.0; 1.7.5-17 to 1.7.5-20: 0.62.0; 1.8.2-0: 0.55.0; 1.8.3-0 to 1.8.3-6: 0.57.0; 1.8.4-0 to 1.8.4-3: 0.58.0; 1.8.4-4 to 1.8.5-2: 0.59.0; 1.8.5-3 to 1.8.6-0: 0.61.0; 1.8.6-1 to 1.8.6-4: 0.62.0; 1.9.0-0 to 1.9.0-2: 0.57.0; 1.9.1-0 to 1.9.1-2: 0.58.0; 1.9.1-3 to 1.9.2-2: 0.59.0; 1.9.2-3 to 1.9.2-4: 0.61.0; 1.9.3-0: 0.60.0; 1.9.3-1 to 1.10.0-2: 0.62.0), so the module half of the advisory, including the matched golang.org/x/net 0.55.0, does not apply. The standard library half: in Go 1.26 the vulnerable parser (unpackSVCBResource in the standard library's copy of dnsmessage) is reached from LookupCNAME only through the cgo resolver, cgoLookupCNAME and cgoResSearch calling Parser.AllAnswers (src/net/cgo_unix.go, built only with cgo); the pure-Go resolver only skips answers. These programs are statically linked with no ELF interpreter, and in every build the function table has net.(*Resolver).LookupCNAME and the standard library's dnsmessage parser (a positive control) but no cgoResSearch, Parser.AllAnswers, Parser.Answer or unpackSVCBResource, and a byte search of each program's code, read-only data and function table finds no unpackSVCBResource. Go toolchain per build: 1.7.5-0 to 1.7.5-1: go1.26.5; 1.7.5-2: go1.26.6; 1.7.5-3 to 1.7.5-7: go1.26.7; 1.7.5-8 to 1.7.5-14: go1.26.8; 1.7.5-15: go1.26.9; 1.7.5-16 to 1.7.5-18: go1.26.10; 1.7.5-19 to 1.7.5-20: go1.26.11; 1.8.2-0 to 1.8.3-1: go1.26.5; 1.8.3-2 to 1.8.3-3: go1.26.6; 1.8.3-4 to 1.8.4-1: go1.26.7; 1.8.4-2 to 1.8.5-2: go1.26.8; 1.8.5-3: go1.26.9; 1.8.5-4 to 1.8.6-2: go1.26.10; 1.8.6-3 to 1.8.6-4: go1.26.11; 1.9.0-0: go1.26.6; 1.9.0-1 to 1.9.1-0: go1.26.7; 1.9.1-1 to 1.9.2-2: go1.26.8; 1.9.2-3: go1.26.9; 1.9.2-4 to 1.9.3-2: go1.26.10; 1.9.3-3 to 1.9.4-0: go1.26.11; 1.10.0-0: go1.27.3; 1.10.0-1 to 1.10.0-2: go1.27.4. So the vulnerable code is not present in any published build, whichever Go toolchain compiled it."
     },
     {
       "vulnerability": {
@@ -303826,7 +303888,8 @@
           "@id": "pkg:deb/dhi/envoy-gateway-fips-dev@1.9.4-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser, both in golang.org/x/net/dns/dnsmessage (fixed in 0.56.0) and in the Go standard library's copy that package net uses for LookupCNAME (fixed in Go 1.26.6 and 1.27.0-rc.3; Go 1.25 is not affected). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345. Pending: a per-build read of every published envoy-gateway-fips-dev package in the DHI Debian security repository to establish the Go toolchain version each build was compiled with and whether it links golang.org/x/net/dns/dnsmessage. The result for the non-FIPS envoy-gateway packages is not carried over to the FIPS packages, which are built separately."
     },
     {
       "vulnerability": {
@@ -304038,7 +304101,8 @@
           "@id": "pkg:deb/dhi/envoy-gateway-fips@1.9.4-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser, both in golang.org/x/net/dns/dnsmessage (fixed in 0.56.0) and in the Go standard library's copy that package net uses for LookupCNAME (fixed in Go 1.26.6 and 1.27.0-rc.3; Go 1.25 is not affected). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345. Pending: a per-build read of every published envoy-gateway-fips package in the DHI Debian security repository to establish the Go toolchain version each build was compiled with and whether it links golang.org/x/net/dns/dnsmessage. The result for the non-FIPS envoy-gateway packages is not carried over to the FIPS packages, which are built separately."
     },
     {
       "vulnerability": {
@@ -304250,7 +304314,9 @@
           "@id": "pkg:deb/dhi/envoy-gateway@1.9.4-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser, both in golang.org/x/net/dns/dnsmessage (fixed in 0.56.0) and in the Go standard library's copy that package net uses for LookupCNAME (fixed in Go 1.26.6 and 1.27.0-rc.3; Go 1.25 is not affected). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345. We read every envoy-gateway package published for Debian 13 in the DHI Debian repository by 2026-11-27: 67 builds, 1.7.5-0 to 1.10.0-2, each for amd64 and arm64 (134 packages). Each package's file manifest lists one file, /usr/bin/envoy-gateway, and that program is the same as the one in the Alpine package of the same build (identical Go build ID and size in all 134 pairs), so the facts below, read from the Alpine packages, apply to it. For every build we read the program's Go function table (runtime.main found in every build as a control) and the Go toolchain version, from the Go version string the linker embeds in the program, which matched the Go build information in every build where we read both. Module versions come from the module paths of the source files in the function table, which matched the build information where we read both. Both architectures of every build gave the same result. No build has any function from the golang.org/x/net/dns/dnsmessage package of the golang.org/x/net module (golang.org/x/net per build: 1.7.5-0: 0.56.0; 1.7.5-1: 0.57.0; 1.7.5-2 to 1.7.5-10: 0.58.0; 1.7.5-11 to 1.7.5-14: 0.59.0; 1.7.5-15 to 1.7.5-16: 0.61.0; 1.7.5-17 to 1.7.5-20: 0.62.0; 1.8.2-0: 0.55.0; 1.8.3-0 to 1.8.3-6: 0.57.0; 1.8.4-0 to 1.8.4-3: 0.58.0; 1.8.4-4 to 1.8.5-2: 0.59.0; 1.8.5-3 to 1.8.6-0: 0.61.0; 1.8.6-1 to 1.8.6-4: 0.62.0; 1.9.0-0 to 1.9.0-2: 0.57.0; 1.9.1-0 to 1.9.1-2: 0.58.0; 1.9.1-3 to 1.9.2-2: 0.59.0; 1.9.2-3 to 1.9.2-4: 0.61.0; 1.9.3-0: 0.60.0; 1.9.3-1 to 1.10.0-2: 0.62.0), so the module half of the advisory, including the matched golang.org/x/net 0.55.0, does not apply. The standard library half: in Go 1.26 the vulnerable parser (unpackSVCBResource in the standard library's copy of dnsmessage) is reached from LookupCNAME only through the cgo resolver, cgoLookupCNAME and cgoResSearch calling Parser.AllAnswers (src/net/cgo_unix.go, built only with cgo); the pure-Go resolver only skips answers. These programs are statically linked with no ELF interpreter, and in every build the function table has net.(*Resolver).LookupCNAME and the standard library's dnsmessage parser (a positive control) but no cgoResSearch, Parser.AllAnswers, Parser.Answer or unpackSVCBResource, and a byte search of each program's code, read-only data and function table finds no unpackSVCBResource. Go toolchain per build: 1.7.5-0 to 1.7.5-1: go1.26.5; 1.7.5-2: go1.26.6; 1.7.5-3 to 1.7.5-7: go1.26.7; 1.7.5-8 to 1.7.5-14: go1.26.8; 1.7.5-15: go1.26.9; 1.7.5-16 to 1.7.5-18: go1.26.10; 1.7.5-19 to 1.7.5-20: go1.26.11; 1.8.2-0 to 1.8.3-1: go1.26.5; 1.8.3-2 to 1.8.3-3: go1.26.6; 1.8.3-4 to 1.8.4-1: go1.26.7; 1.8.4-2 to 1.8.5-2: go1.26.8; 1.8.5-3: go1.26.9; 1.8.5-4 to 1.8.6-2: go1.26.10; 1.8.6-3 to 1.8.6-4: go1.26.11; 1.9.0-0: go1.26.6; 1.9.0-1 to 1.9.1-0: go1.26.7; 1.9.1-1 to 1.9.2-2: go1.26.8; 1.9.2-3: go1.26.9; 1.9.2-4 to 1.9.3-2: go1.26.10; 1.9.3-3 to 1.9.4-0: go1.26.11; 1.10.0-0: go1.27.3; 1.10.0-1 to 1.10.0-2: go1.27.4. So the vulnerable code is not present in any published build, whichever Go toolchain compiled it."
     },
     {
       "vulnerability": {
@@ -368113,6 +368179,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -368193,6 +368262,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -368273,6 +368345,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -368353,6 +368428,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -368433,6 +368511,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-dev@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-dev@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -368513,6 +368594,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips-dev@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-fips-dev@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -368593,6 +368677,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-fips@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -368673,6 +368760,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"

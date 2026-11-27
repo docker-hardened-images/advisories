@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:53:03Z",
-  "last_updated": "2026-11-24T22:11:59Z",
-  "version": 7,
+  "last_updated": "2026-11-27T08:58:12Z",
+  "version": 9,
   "statements": [
     {
       "vulnerability": {
@@ -90,12 +90,6 @@
           "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
         },
         {
@@ -105,7 +99,27 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.11-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-14679 (PostgreSQL stack buffer overflow in argument match writes 0x0 and 0x1 to server memory) in 17.11 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-14679/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix is two commits on the REL_17_STABLE branch: https://github.com/postgres/postgres/commit/797e3cc4c41b70eea75f4063713988c09edf6007, 'Replace fixed-size, too-short array with a palloc'd one.', which changes src/backend/catalog/namespace.c; https://github.com/postgres/postgres/commit/8a40f4b092987f735e712b789d8acbe3b3af8274, 'Protect some fixed-size arrays that have FUNC_MAX_ARGS elements.', which changes src/backend/executor/nodeWindowAgg.c, src/backend/parser/parse_agg.c, src/backend/parser/parse_func.c, src/backend/utils/fmgr/funcapi.c, src/pl/plpgsql/src/pl_comp.c and src/pl/tcl/pltcl.c. Each commit is tagged Security: CVE-2026-14679, and each is in the REL_17_11 release tag and not in REL_17_10. The affected code is in the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package, in PL/pgSQL, /usr/lib/postgresql17/plpgsql.so, in the same package, and in PL/Tcl, /usr/lib/postgresql17/pltcl.so, in the postgresql17-pltcl package; all three ship in every published build on both architectures. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes. We checked every published postgresql17 build for Alpine 3.23 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0) on both x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.7, 17.8, 17.9, 17.10, 17.11 and 17.12). Of these, 17.11-r0 and 17.12-r0 carry the fix, and 17.7-r0, 17.8-r0, 17.9-r0 and 17.10-r0 are affected. Commit 8a40f4b adds the check 'cannot pass more than %d argument to a function' to PL/pgSQL; it appears in plpgsql.so of the 17.11-r0 and 17.12-r0 builds and in none of the earlier builds, while plpgsql_call_handler, our control, is present in every build. The server already carried the messages this fix reuses, so for the server and PL/Tcl the per-build evidence is the version each server binary reports. 17.11-r0 is the first published build for Alpine 3.23 that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-14679 under its 17.11-r0 secfixes."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-qxhl-unfb-x6km-zbvk",
+        "aliases": [
+          "CVE-2026-14679"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-14679 (PostgreSQL stack buffer overflow in argument match writes 0x0 and 0x1 to server memory) in 17.11 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-14679/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix is two commits on the REL_17_STABLE branch: https://github.com/postgres/postgres/commit/797e3cc4c41b70eea75f4063713988c09edf6007, 'Replace fixed-size, too-short array with a palloc'd one.', which changes src/backend/catalog/namespace.c; https://github.com/postgres/postgres/commit/8a40f4b092987f735e712b789d8acbe3b3af8274, 'Protect some fixed-size arrays that have FUNC_MAX_ARGS elements.', which changes src/backend/executor/nodeWindowAgg.c, src/backend/parser/parse_agg.c, src/backend/parser/parse_func.c, src/backend/utils/fmgr/funcapi.c, src/pl/plpgsql/src/pl_comp.c and src/pl/tcl/pltcl.c. Each commit is tagged Security: CVE-2026-14679, and each is in the REL_17_11 release tag and not in REL_17_10. The affected code is in the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package, in PL/pgSQL, /usr/lib/postgresql17/plpgsql.so, in the same package, and in PL/Tcl, /usr/lib/postgresql17/pltcl.so, in the postgresql17-pltcl package; all three ship in every published build on both architectures. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes. We checked every published postgresql17 build for Alpine 3.23 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0) on both x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.7, 17.8, 17.9, 17.10, 17.11 and 17.12). Of these, 17.11-r0 and 17.12-r0 carry the fix, and 17.7-r0, 17.8-r0, 17.9-r0 and 17.10-r0 are affected. Commit 8a40f4b adds the check 'cannot pass more than %d argument to a function' to PL/pgSQL; it appears in plpgsql.so of the 17.11-r0 and 17.12-r0 builds and in none of the earlier builds, while plpgsql_call_handler, our control, is present in every build. The server already carried the messages this fix reuses, so for the server and PL/Tcl the per-build evidence is the version each server binary reports. 17.11-r0 is the first published build for Alpine 3.23 that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-14679 under its 17.11-r0 secfixes."
     },
     {
       "vulnerability": {
@@ -117,7 +131,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.11-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-14679 (PostgreSQL stack buffer overflow in argument match writes 0x0 and 0x1 to server memory) in 17.11 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-14679/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix is two commits on the REL_17_STABLE branch: https://github.com/postgres/postgres/commit/797e3cc4c41b70eea75f4063713988c09edf6007, 'Replace fixed-size, too-short array with a palloc'd one.', which changes src/backend/catalog/namespace.c; https://github.com/postgres/postgres/commit/8a40f4b092987f735e712b789d8acbe3b3af8274, 'Protect some fixed-size arrays that have FUNC_MAX_ARGS elements.', which changes src/backend/executor/nodeWindowAgg.c, src/backend/parser/parse_agg.c, src/backend/parser/parse_func.c, src/backend/utils/fmgr/funcapi.c, src/pl/plpgsql/src/pl_comp.c and src/pl/tcl/pltcl.c. Each commit is tagged Security: CVE-2026-14679, and each is in the REL_17_11 release tag and not in REL_17_10. The affected code is in the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package, in PL/pgSQL, /usr/lib/postgresql17/plpgsql.so, in the same package, and in PL/Tcl, /usr/lib/postgresql17/pltcl.so, in the postgresql17-pltcl package; all three ship in every published build on both architectures. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes. We checked every published postgresql17 build for Alpine 3.24 (17.10-r0, 17.11-r0 and 17.12-r0) on both x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.10, 17.11 and 17.12). Of these, 17.11-r0 and 17.12-r0 carry the fix, and 17.10-r0 is affected. Commit 8a40f4b adds the check 'cannot pass more than %d argument to a function' to PL/pgSQL; it appears in plpgsql.so of the 17.11-r0 and 17.12-r0 builds and in none of the earlier builds, while plpgsql_call_handler, our control, is present in every build. The server already carried the messages this fix reuses, so for the server and PL/Tcl the per-build evidence is the version each server binary reports. 17.11-r0 is the first published build for Alpine 3.24 that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-14679 under its 17.11-r0 secfixes."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-qxhl-unfb-x6km-zbvk",
+        "aliases": [
+          "CVE-2026-14679"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.24"
         },
@@ -125,7 +152,8 @@
           "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-14679 (PostgreSQL stack buffer overflow in argument match writes 0x0 and 0x1 to server memory) in 17.11 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-14679/ lists 17.11 as the fixed release for major version 17, and the 17.11 release notes, https://www.postgresql.org/docs/release/17.11/, list this CVE. The fix is two commits on the REL_17_STABLE branch: https://github.com/postgres/postgres/commit/797e3cc4c41b70eea75f4063713988c09edf6007, 'Replace fixed-size, too-short array with a palloc'd one.', which changes src/backend/catalog/namespace.c; https://github.com/postgres/postgres/commit/8a40f4b092987f735e712b789d8acbe3b3af8274, 'Protect some fixed-size arrays that have FUNC_MAX_ARGS elements.', which changes src/backend/executor/nodeWindowAgg.c, src/backend/parser/parse_agg.c, src/backend/parser/parse_func.c, src/backend/utils/fmgr/funcapi.c, src/pl/plpgsql/src/pl_comp.c and src/pl/tcl/pltcl.c. Each commit is tagged Security: CVE-2026-14679, and each is in the REL_17_11 release tag and not in REL_17_10. The affected code is in the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package, in PL/pgSQL, /usr/lib/postgresql17/plpgsql.so, in the same package, and in PL/Tcl, /usr/lib/postgresql17/pltcl.so, in the postgresql17-pltcl package; all three ship in every published build on both architectures. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes. We checked every published postgresql17 build for Alpine 3.24 (17.10-r0, 17.11-r0 and 17.12-r0) on both x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.10, 17.11 and 17.12). Of these, 17.11-r0 and 17.12-r0 carry the fix, and 17.10-r0 is affected. Commit 8a40f4b adds the check 'cannot pass more than %d argument to a function' to PL/pgSQL; it appears in plpgsql.so of the 17.11-r0 and 17.12-r0 builds and in none of the earlier builds, while plpgsql_call_handler, our control, is present in every build. The server already carried the messages this fix reuses, so for the server and PL/Tcl the per-build evidence is the version each server binary reports. 17.11-r0 is the first published build for Alpine 3.24 that carries the fix. Alpine's postgresql17 APKBUILD lists CVE-2026-14679 under its 17.11-r0 secfixes."
     },
     {
       "vulnerability": {
@@ -146,7 +174,20 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql18@18.4-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql18 to 18.6-r0 or later.",
+      "status_notes": "CVE-2026-14679 (PostgreSQL stack buffer overflow in argument match writes 0x0 and 0x1 to server memory) affects PostgreSQL 18 before 18.6 and is fixed upstream in PostgreSQL 18.6: https://www.postgresql.org/support/security/CVE-2026-14679/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list it. The fix is two commits on the REL_18_STABLE branch, both tagged Security: CVE-2026-14679, both in the REL_18_6 release tag and not in REL_18_4: https://github.com/postgres/postgres/commit/7f0e1aac7a7b54b6b575a3b4d6c90088dd90c38b and https://github.com/postgres/postgres/commit/2a03f21daf59c6d00a01d553b75bb74448a9593d; the first replaces the fixed-size arggiven array in MatchNamedCall() (src/backend/catalog/namespace.c) with one sized to the function's argument count, and the second adds argument-count checks in the parser, executor and function cache and replaces a fixed-size buffer in src/pl/tcl/pltcl.c. PostgreSQL 18.5 was never released (the 18.6 release notes say so), so although Alpine's postgresql18 APKBUILD, https://github.com/alpinelinux/aports/blob/59a1f1d230675807d5a95a0c1e57ba5d640ba039/main/postgresql18/APKBUILD, lists CVE-2026-14679 under an 18.5-r0 secfixes entry, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.23 are built with Alpine's postgresql18 APKBUILD from the upstream PostgreSQL source release of the same version. As of 2026-11-27 the DHI Alpine 3.23 package repository publishes builds of source postgresql18 at 18.1-r0, 18.2-r0, 18.3-r0, 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64, and we checked every one of them on both architectures, with package checksums verified against the repository index. The vulnerable code is in the server binary /usr/libexec/postgresql18/postgres in the postgresql18 package, and the PL/Tcl part in /usr/lib/postgresql18/pltcl.so in the postgresql18-pltcl package, in every one of those builds on both architectures. In each build the version strings of the postgres server binary and of the client programs (psql, pg_dump, pg_dumpall, pg_restore, pg_basebackup and pg_config) report the PostgreSQL release that matches the package version (18.1, 18.2, 18.3, 18.4, 18.6 and 18.7 respectively). The fix adds no message text that marks it in the binaries, so the boundary rests on the release each build reports. 18.6-r0 is the first published build carrying the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published builds (18.1-r0, 18.2-r0, 18.3-r0 and 18.4-r0) are built from PostgreSQL releases before 18.6 and are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-qxhl-unfb-x6km-zbvk",
+        "aliases": [
+          "CVE-2026-14679"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.6-r0?distro=dhi-3.23"
         },
@@ -154,7 +195,8 @@
           "@id": "pkg:apk/dhi/postgresql18@18.7-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14679 (PostgreSQL stack buffer overflow in argument match writes 0x0 and 0x1 to server memory) affects PostgreSQL 18 before 18.6 and is fixed upstream in PostgreSQL 18.6: https://www.postgresql.org/support/security/CVE-2026-14679/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list it. The fix is two commits on the REL_18_STABLE branch, both tagged Security: CVE-2026-14679, both in the REL_18_6 release tag and not in REL_18_4: https://github.com/postgres/postgres/commit/7f0e1aac7a7b54b6b575a3b4d6c90088dd90c38b and https://github.com/postgres/postgres/commit/2a03f21daf59c6d00a01d553b75bb74448a9593d; the first replaces the fixed-size arggiven array in MatchNamedCall() (src/backend/catalog/namespace.c) with one sized to the function's argument count, and the second adds argument-count checks in the parser, executor and function cache and replaces a fixed-size buffer in src/pl/tcl/pltcl.c. PostgreSQL 18.5 was never released (the 18.6 release notes say so), so although Alpine's postgresql18 APKBUILD, https://github.com/alpinelinux/aports/blob/59a1f1d230675807d5a95a0c1e57ba5d640ba039/main/postgresql18/APKBUILD, lists CVE-2026-14679 under an 18.5-r0 secfixes entry, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.23 are built with Alpine's postgresql18 APKBUILD from the upstream PostgreSQL source release of the same version. As of 2026-11-27 the DHI Alpine 3.23 package repository publishes builds of source postgresql18 at 18.1-r0, 18.2-r0, 18.3-r0, 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64, and we checked every one of them on both architectures, with package checksums verified against the repository index. The vulnerable code is in the server binary /usr/libexec/postgresql18/postgres in the postgresql18 package, and the PL/Tcl part in /usr/lib/postgresql18/pltcl.so in the postgresql18-pltcl package, in every one of those builds on both architectures. In each build the version strings of the postgres server binary and of the client programs (psql, pg_dump, pg_dumpall, pg_restore, pg_basebackup and pg_config) report the PostgreSQL release that matches the package version (18.1, 18.2, 18.3, 18.4, 18.6 and 18.7 respectively). The fix adds no message text that marks it in the binaries, so the boundary rests on the release each build reports. 18.6-r0 is the first published build carrying the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published builds (18.1-r0, 18.2-r0, 18.3-r0 and 18.4-r0) are built from PostgreSQL releases before 18.6 and are affected."
     },
     {
       "vulnerability": {
@@ -166,7 +208,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.4-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql18 to 18.6-r0 or later.",
+      "status_notes": "CVE-2026-14679 (PostgreSQL stack buffer overflow in argument match writes 0x0 and 0x1 to server memory) affects PostgreSQL 18 before 18.6 and is fixed upstream in PostgreSQL 18.6: https://www.postgresql.org/support/security/CVE-2026-14679/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list it. The fix is two commits on the REL_18_STABLE branch, both tagged Security: CVE-2026-14679, both in the REL_18_6 release tag and not in REL_18_4: https://github.com/postgres/postgres/commit/7f0e1aac7a7b54b6b575a3b4d6c90088dd90c38b and https://github.com/postgres/postgres/commit/2a03f21daf59c6d00a01d553b75bb74448a9593d; the first replaces the fixed-size arggiven array in MatchNamedCall() (src/backend/catalog/namespace.c) with one sized to the function's argument count, and the second adds argument-count checks in the parser, executor and function cache and replaces a fixed-size buffer in src/pl/tcl/pltcl.c. PostgreSQL 18.5 was never released (the 18.6 release notes say so), so although Alpine's postgresql18 APKBUILD, https://github.com/alpinelinux/aports/blob/33a57d3919ee0227231f5a3e599540514584e309/main/postgresql18/APKBUILD, lists CVE-2026-14679 under an 18.5-r0 secfixes entry, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.24 are built with Alpine's postgresql18 APKBUILD from the upstream PostgreSQL source release of the same version. As of 2026-11-27 the DHI Alpine 3.24 package repository publishes builds of source postgresql18 at 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64, and we checked every one of them on both architectures, with package checksums verified against the repository index. The vulnerable code is in the server binary /usr/libexec/postgresql18/postgres in the postgresql18 package, and the PL/Tcl part in /usr/lib/postgresql18/pltcl.so in the postgresql18-pltcl package, in every one of those builds on both architectures. In each build the version strings of the postgres server binary and of the client programs (psql, pg_dump, pg_dumpall, pg_restore, pg_basebackup and pg_config) report the PostgreSQL release that matches the package version (18.4, 18.6 and 18.7 respectively). The fix adds no message text that marks it in the binaries, so the boundary rests on the release each build reports. 18.6-r0 is the first published build carrying the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published build (18.4-r0) is built from a PostgreSQL release before 18.6 and is affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-qxhl-unfb-x6km-zbvk",
+        "aliases": [
+          "CVE-2026-14679"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.6-r0?distro=dhi-3.24"
         },
@@ -174,7 +229,8 @@
           "@id": "pkg:apk/dhi/postgresql18@18.7-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14679 (PostgreSQL stack buffer overflow in argument match writes 0x0 and 0x1 to server memory) affects PostgreSQL 18 before 18.6 and is fixed upstream in PostgreSQL 18.6: https://www.postgresql.org/support/security/CVE-2026-14679/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list it. The fix is two commits on the REL_18_STABLE branch, both tagged Security: CVE-2026-14679, both in the REL_18_6 release tag and not in REL_18_4: https://github.com/postgres/postgres/commit/7f0e1aac7a7b54b6b575a3b4d6c90088dd90c38b and https://github.com/postgres/postgres/commit/2a03f21daf59c6d00a01d553b75bb74448a9593d; the first replaces the fixed-size arggiven array in MatchNamedCall() (src/backend/catalog/namespace.c) with one sized to the function's argument count, and the second adds argument-count checks in the parser, executor and function cache and replaces a fixed-size buffer in src/pl/tcl/pltcl.c. PostgreSQL 18.5 was never released (the 18.6 release notes say so), so although Alpine's postgresql18 APKBUILD, https://github.com/alpinelinux/aports/blob/33a57d3919ee0227231f5a3e599540514584e309/main/postgresql18/APKBUILD, lists CVE-2026-14679 under an 18.5-r0 secfixes entry, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.24 are built with Alpine's postgresql18 APKBUILD from the upstream PostgreSQL source release of the same version. As of 2026-11-27 the DHI Alpine 3.24 package repository publishes builds of source postgresql18 at 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64, and we checked every one of them on both architectures, with package checksums verified against the repository index. The vulnerable code is in the server binary /usr/libexec/postgresql18/postgres in the postgresql18 package, and the PL/Tcl part in /usr/lib/postgresql18/pltcl.so in the postgresql18-pltcl package, in every one of those builds on both architectures. In each build the version strings of the postgres server binary and of the client programs (psql, pg_dump, pg_dumpall, pg_restore, pg_basebackup and pg_config) report the PostgreSQL release that matches the package version (18.4, 18.6 and 18.7 respectively). The fix adds no message text that marks it in the binaries, so the boundary rests on the release each build reports. 18.6-r0 is the first published build carrying the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published build (18.4-r0) is built from a PostgreSQL release before 18.6 and is affected."
     },
     {
       "vulnerability": {
