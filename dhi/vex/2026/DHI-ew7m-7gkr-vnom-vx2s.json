@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-26T19:34:06Z",
-  "version": 24,
+  "last_updated": "2026-11-27T13:14:30Z",
+  "version": 25,
   "statements": [
     {
       "vulnerability": {
@@ -7537,7 +7537,8 @@
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GO-2026-4947 (CVE-2026-32280): crypto/x509 could do unexpected work while building a certificate chain from a large number of intermediates that appear to sign each other, which also affects crypto/tls clients and servers that verify certificates. Fixed in Go 1.25.9 and 1.26.2 (release-branch.go1.26 commit https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2); see https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320 and https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU. The trivy-fips packages for Alpine 3.23 are published in the DHI security repository, which requires authentication, and their builds have not been read for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to find the first build that embeds Go 1.26.2 or newer, so that a fixed boundary can be set from what each build ships. The non-FIPS trivy package of the same releases embeds it from 0.69.3-r5 on."
     },
     {
       "vulnerability": {
@@ -7567,7 +7568,20 @@
         },
         {
           "@id": "pkg:apk/dhi/trivy@0.69.3-r4?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update trivy to 0.69.3-r5 or later.",
+      "status_notes": "GO-2026-4947 (CVE-2026-32280): crypto/x509 could do unexpected work while building a certificate chain from a large number of intermediates that appear to sign each other, which also affects crypto/tls clients and servers that verify certificates. Fixed in Go 1.25.9 and 1.26.2 (release-branch.go1.26 commit https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2); see https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320 and https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU. Each trivy package installs one file, /usr/bin/trivy, a Go program for Linux whose build information (go version -m) records CGO_ENABLED=0. We read every trivy build published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 38 builds, 0.69.1-r0 to 0.74.0-r12, each on x86_64 and aarch64 (76 packages), each checked against its index entry. We read the Go build information of every package, and both architectures of each build report the same Go release. We listed the program's function names from its symbol table (go tool nm); runtime.main is among them in every package. Every build links the affected code: crypto/x509 (*Certificate).Verify and (*Certificate).buildChains are in every build's function names. The Go release by build: 0.69.1-r0 to 0.69.3-r0 with Go 1.25.7; 0.69.3-r1 to 0.69.3-r4 with Go 1.26.1; 0.69.3-r5 to 0.70.0-r0 with Go 1.26.2; 0.70.0-r1 to 0.70.0-r5 with Go 1.26.3; 0.70.0-r6 to 0.71.2-r1 with Go 1.26.4; 0.71.2-r2 to 0.73.0-r0 with Go 1.26.5; 0.73.0-r2 to 0.74.0-r0 with Go 1.26.6; 0.74.0-r1 with Go 1.26.7; 0.74.0-r2 to 0.74.0-r6 with Go 1.26.8; 0.74.0-r7 to 0.74.0-r8 with Go 1.26.9; 0.74.0-r9 to 0.74.0-r12 with Go 1.26.10. 0.69.3-r5 is the first build made with Go 1.26.2, the first fixed Go 1.26 release, and every later build uses Go 1.26.2 or newer; the earlier builds are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ew7m-7gkr-vnom-vx2s",
+        "aliases": [
+          "CVE-2026-32280"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/trivy@0.69.3-r5?distro=dhi-3.23"
         },
@@ -7662,7 +7676,8 @@
           "@id": "pkg:apk/dhi/trivy@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GO-2026-4947 (CVE-2026-32280): crypto/x509 could do unexpected work while building a certificate chain from a large number of intermediates that appear to sign each other, which also affects crypto/tls clients and servers that verify certificates. Fixed in Go 1.25.9 and 1.26.2 (release-branch.go1.26 commit https://github.com/golang/go/commit/7b4ed1d7d91316b2b52ca61c891d75840febd3f2); see https://pkg.go.dev/vuln/GO-2026-4947, https://go.dev/issue/78282, https://go.dev/cl/758320 and https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU. Each trivy package installs one file, /usr/bin/trivy, a Go program for Linux whose build information (go version -m) records CGO_ENABLED=0. We read every trivy build published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 38 builds, 0.69.1-r0 to 0.74.0-r12, each on x86_64 and aarch64 (76 packages), each checked against its index entry. We read the Go build information of every package, and both architectures of each build report the same Go release. We listed the program's function names from its symbol table (go tool nm); runtime.main is among them in every package. Every build links the affected code: crypto/x509 (*Certificate).Verify and (*Certificate).buildChains are in every build's function names. The Go release by build: 0.69.1-r0 to 0.69.3-r0 with Go 1.25.7; 0.69.3-r1 to 0.69.3-r4 with Go 1.26.1; 0.69.3-r5 to 0.70.0-r0 with Go 1.26.2; 0.70.0-r1 to 0.70.0-r5 with Go 1.26.3; 0.70.0-r6 to 0.71.2-r1 with Go 1.26.4; 0.71.2-r2 to 0.73.0-r0 with Go 1.26.5; 0.73.0-r2 to 0.74.0-r0 with Go 1.26.6; 0.74.0-r1 with Go 1.26.7; 0.74.0-r2 to 0.74.0-r6 with Go 1.26.8; 0.74.0-r7 to 0.74.0-r8 with Go 1.26.9; 0.74.0-r9 to 0.74.0-r12 with Go 1.26.10. 0.69.3-r5 is the first build made with Go 1.26.2, the first fixed Go 1.26 release, and every later build uses Go 1.26.2 or newer; the earlier builds are affected."
     },
     {
       "vulnerability": {

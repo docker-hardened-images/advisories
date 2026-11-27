@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:34:52Z",
-  "last_updated": "2026-11-24T23:15:56Z",
-  "version": 5,
+  "last_updated": "2026-11-27T13:14:52Z",
+  "version": 6,
   "statements": [
     {
       "vulnerability": {
@@ -47,7 +47,20 @@
         },
         {
           "@id": "pkg:apk/dhi/caddy-dev@2.11.4-r9?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update caddy-dev to 2.11.7-r0 or later.",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. Checked every published caddy-dev package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 23 builds, 2.11.4-r0 to 2.11.9-r5, each for x86_64 and aarch64. The Alpine 3.24 packages have the same index checksums as the Alpine 3.23 ones, and each package was downloaded, matched to its index checksum and read. Each package installs one file, /usr/bin/caddy, a Go program built for GOOS=linux with no program interpreter or shared-library dependencies. We read each program's Go build information and its full function table from the Go line table, with runtime.main as a control. Every build contains the reverse proxy's (*Handler).finalizeResponse and (*Handler).handleUpgradeResponse. The link flags in each build's Go build information name the caddy source commit it was built from. Every 2.11.4 build (2.11.4-r0 to 2.11.4-r10) was built from e2eee6a7fce366321294c9c2a79f3146891dcbdf, the v2.11.4 release commit, which does not contain the fix, and finalizeResponse has the same size in every 2.11.4 build of an architecture (4640 bytes on x86_64 and 3568 on aarch64, measured as the distance between function entries in the Go line table, which includes alignment padding), so none of them carries a backport. The 2.11.7, 2.11.8 and 2.11.9 builds were built from the v2.11.7 (72dd0fb067f6d7826c7f79907670ba4a713bfe37), v2.11.8 (55996dfe05c10bb616ccdcc9bf5b8407a5be75b7) and v2.11.9 (0d98caea58f794f88e709b1bef2880996a471bca) release commits, which all contain the fix, and their finalizeResponse is larger (5600 or 5440 bytes on x86_64, 4320 or 4096 on aarch64, measured the same way). So 2.11.7-r0, the first build after 2.11.4-r10, is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lq5z-sh6a-7cth-dolo",
+        "aliases": [
+          "CVE-2026-55458"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/caddy-dev@2.11.7-r0?distro=dhi-3.23"
         },
@@ -85,7 +98,8 @@
           "@id": "pkg:apk/dhi/caddy-dev@2.11.9-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. Checked every published caddy-dev package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 23 builds, 2.11.4-r0 to 2.11.9-r5, each for x86_64 and aarch64. The Alpine 3.24 packages have the same index checksums as the Alpine 3.23 ones, and each package was downloaded, matched to its index checksum and read. Each package installs one file, /usr/bin/caddy, a Go program built for GOOS=linux with no program interpreter or shared-library dependencies. We read each program's Go build information and its full function table from the Go line table, with runtime.main as a control. Every build contains the reverse proxy's (*Handler).finalizeResponse and (*Handler).handleUpgradeResponse. The link flags in each build's Go build information name the caddy source commit it was built from. Every 2.11.4 build (2.11.4-r0 to 2.11.4-r10) was built from e2eee6a7fce366321294c9c2a79f3146891dcbdf, the v2.11.4 release commit, which does not contain the fix, and finalizeResponse has the same size in every 2.11.4 build of an architecture (4640 bytes on x86_64 and 3568 on aarch64, measured as the distance between function entries in the Go line table, which includes alignment padding), so none of them carries a backport. The 2.11.7, 2.11.8 and 2.11.9 builds were built from the v2.11.7 (72dd0fb067f6d7826c7f79907670ba4a713bfe37), v2.11.8 (55996dfe05c10bb616ccdcc9bf5b8407a5be75b7) and v2.11.9 (0d98caea58f794f88e709b1bef2880996a471bca) release commits, which all contain the fix, and their finalizeResponse is larger (5600 or 5440 bytes on x86_64, 4320 or 4096 on aarch64, measured the same way). So 2.11.7-r0, the first build after 2.11.4-r10, is the first fixed build."
     },
     {
       "vulnerability": {
@@ -127,7 +141,20 @@
         },
         {
           "@id": "pkg:apk/dhi/caddy-dev@2.11.4-r9?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update caddy-dev to 2.11.7-r0 or later.",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. Checked every published caddy-dev package for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 23 builds, 2.11.4-r0 to 2.11.9-r5, each for x86_64 and aarch64. The Alpine 3.24 packages have the same index checksums as the Alpine 3.23 ones, and each package was downloaded, matched to its index checksum and read. Each package installs one file, /usr/bin/caddy, a Go program built for GOOS=linux with no program interpreter or shared-library dependencies. We read each program's Go build information and its full function table from the Go line table, with runtime.main as a control. Every build contains the reverse proxy's (*Handler).finalizeResponse and (*Handler).handleUpgradeResponse. The link flags in each build's Go build information name the caddy source commit it was built from. Every 2.11.4 build (2.11.4-r0 to 2.11.4-r10) was built from e2eee6a7fce366321294c9c2a79f3146891dcbdf, the v2.11.4 release commit, which does not contain the fix, and finalizeResponse has the same size in every 2.11.4 build of an architecture (4640 bytes on x86_64 and 3568 on aarch64, measured as the distance between function entries in the Go line table, which includes alignment padding), so none of them carries a backport. The 2.11.7, 2.11.8 and 2.11.9 builds were built from the v2.11.7 (72dd0fb067f6d7826c7f79907670ba4a713bfe37), v2.11.8 (55996dfe05c10bb616ccdcc9bf5b8407a5be75b7) and v2.11.9 (0d98caea58f794f88e709b1bef2880996a471bca) release commits, which all contain the fix, and their finalizeResponse is larger (5600 or 5440 bytes on x86_64, 4320 or 4096 on aarch64, measured the same way). So 2.11.7-r0, the first build after 2.11.4-r10, is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lq5z-sh6a-7cth-dolo",
+        "aliases": [
+          "CVE-2026-55458"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/caddy-dev@2.11.7-r0?distro=dhi-3.24"
         },
@@ -165,7 +192,8 @@
           "@id": "pkg:apk/dhi/caddy-dev@2.11.9-r5?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. Checked every published caddy-dev package for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 23 builds, 2.11.4-r0 to 2.11.9-r5, each for x86_64 and aarch64. The Alpine 3.24 packages have the same index checksums as the Alpine 3.23 ones, and each package was downloaded, matched to its index checksum and read. Each package installs one file, /usr/bin/caddy, a Go program built for GOOS=linux with no program interpreter or shared-library dependencies. We read each program's Go build information and its full function table from the Go line table, with runtime.main as a control. Every build contains the reverse proxy's (*Handler).finalizeResponse and (*Handler).handleUpgradeResponse. The link flags in each build's Go build information name the caddy source commit it was built from. Every 2.11.4 build (2.11.4-r0 to 2.11.4-r10) was built from e2eee6a7fce366321294c9c2a79f3146891dcbdf, the v2.11.4 release commit, which does not contain the fix, and finalizeResponse has the same size in every 2.11.4 build of an architecture (4640 bytes on x86_64 and 3568 on aarch64, measured as the distance between function entries in the Go line table, which includes alignment padding), so none of them carries a backport. The 2.11.7, 2.11.8 and 2.11.9 builds were built from the v2.11.7 (72dd0fb067f6d7826c7f79907670ba4a713bfe37), v2.11.8 (55996dfe05c10bb616ccdcc9bf5b8407a5be75b7) and v2.11.9 (0d98caea58f794f88e709b1bef2880996a471bca) release commits, which all contain the fix, and their finalizeResponse is larger (5600 or 5440 bytes on x86_64, 4320 or 4096 on aarch64, measured the same way). So 2.11.7-r0, the first build after 2.11.4-r10, is the first fixed build."
     },
     {
       "vulnerability": {
@@ -245,7 +273,8 @@
           "@id": "pkg:apk/dhi/caddy-fips-dev@2.11.9-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. The caddy-fips-dev packages for Alpine 3.23 are built from the same caddy source as caddy, with Go's FIPS 140-3 mode enabled, but the published caddy-fips-dev builds have not been inspected for this advisory yet. Pending: reading the Go build information and function table of every published caddy-fips-dev build for Alpine 3.23 (2.11.4 to 2.11.9, on x86_64 and aarch64) to place each build against the fix, as was done for the caddy and caddy-dev packages."
     },
     {
       "vulnerability": {
@@ -325,7 +354,8 @@
           "@id": "pkg:apk/dhi/caddy-fips-dev@2.11.9-r5?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. The caddy-fips-dev packages for Alpine 3.24 are built from the same caddy source as caddy, with Go's FIPS 140-3 mode enabled, but the published caddy-fips-dev builds have not been inspected for this advisory yet. Pending: reading the Go build information and function table of every published caddy-fips-dev build for Alpine 3.24 (2.11.4 to 2.11.9, on x86_64 and aarch64) to place each build against the fix, as was done for the caddy and caddy-dev packages."
     },
     {
       "vulnerability": {
@@ -405,7 +435,8 @@
           "@id": "pkg:apk/dhi/caddy-fips@2.11.9-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. The caddy-fips packages for Alpine 3.23 are built from the same caddy source as caddy, with Go's FIPS 140-3 mode enabled, but the published caddy-fips builds have not been inspected for this advisory yet. Pending: reading the Go build information and function table of every published caddy-fips build for Alpine 3.23 (2.11.4 to 2.11.9, on x86_64 and aarch64) to place each build against the fix, as was done for the caddy and caddy-dev packages."
     },
     {
       "vulnerability": {
@@ -485,7 +516,8 @@
           "@id": "pkg:apk/dhi/caddy-fips@2.11.9-r5?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. The caddy-fips packages for Alpine 3.24 are built from the same caddy source as caddy, with Go's FIPS 140-3 mode enabled, but the published caddy-fips builds have not been inspected for this advisory yet. Pending: reading the Go build information and function table of every published caddy-fips build for Alpine 3.24 (2.11.4 to 2.11.9, on x86_64 and aarch64) to place each build against the fix, as was done for the caddy and caddy-dev packages."
     },
     {
       "vulnerability": {
@@ -527,7 +559,20 @@
         },
         {
           "@id": "pkg:apk/dhi/caddy@2.11.4-r9?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update caddy to 2.11.7-r0 or later.",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. Checked every published caddy package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 23 builds, 2.11.4-r0 to 2.11.9-r5, each for x86_64 and aarch64. The Alpine 3.24 packages have the same index checksums as the Alpine 3.23 ones, and each package was downloaded, matched to its index checksum and read. Each package installs one file, /usr/bin/caddy, a Go program built for GOOS=linux with no program interpreter or shared-library dependencies. We read each program's Go build information and its full function table from the Go line table, with runtime.main as a control. Every build contains the reverse proxy's (*Handler).finalizeResponse and (*Handler).handleUpgradeResponse. The link flags in each build's Go build information name the caddy source commit it was built from. Every 2.11.4 build (2.11.4-r0 to 2.11.4-r10) was built from e2eee6a7fce366321294c9c2a79f3146891dcbdf, the v2.11.4 release commit, which does not contain the fix, and finalizeResponse has the same size in every 2.11.4 build of an architecture (4640 bytes on x86_64 and 3568 on aarch64, measured as the distance between function entries in the Go line table, which includes alignment padding), so none of them carries a backport. The 2.11.7, 2.11.8 and 2.11.9 builds were built from the v2.11.7 (72dd0fb067f6d7826c7f79907670ba4a713bfe37), v2.11.8 (55996dfe05c10bb616ccdcc9bf5b8407a5be75b7) and v2.11.9 (0d98caea58f794f88e709b1bef2880996a471bca) release commits, which all contain the fix, and their finalizeResponse is larger (5600 or 5440 bytes on x86_64, 4320 or 4096 on aarch64, measured the same way). So 2.11.7-r0, the first build after 2.11.4-r10, is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lq5z-sh6a-7cth-dolo",
+        "aliases": [
+          "CVE-2026-55458"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/caddy@2.11.7-r0?distro=dhi-3.23"
         },
@@ -565,7 +610,8 @@
           "@id": "pkg:apk/dhi/caddy@2.11.9-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. Checked every published caddy package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 23 builds, 2.11.4-r0 to 2.11.9-r5, each for x86_64 and aarch64. The Alpine 3.24 packages have the same index checksums as the Alpine 3.23 ones, and each package was downloaded, matched to its index checksum and read. Each package installs one file, /usr/bin/caddy, a Go program built for GOOS=linux with no program interpreter or shared-library dependencies. We read each program's Go build information and its full function table from the Go line table, with runtime.main as a control. Every build contains the reverse proxy's (*Handler).finalizeResponse and (*Handler).handleUpgradeResponse. The link flags in each build's Go build information name the caddy source commit it was built from. Every 2.11.4 build (2.11.4-r0 to 2.11.4-r10) was built from e2eee6a7fce366321294c9c2a79f3146891dcbdf, the v2.11.4 release commit, which does not contain the fix, and finalizeResponse has the same size in every 2.11.4 build of an architecture (4640 bytes on x86_64 and 3568 on aarch64, measured as the distance between function entries in the Go line table, which includes alignment padding), so none of them carries a backport. The 2.11.7, 2.11.8 and 2.11.9 builds were built from the v2.11.7 (72dd0fb067f6d7826c7f79907670ba4a713bfe37), v2.11.8 (55996dfe05c10bb616ccdcc9bf5b8407a5be75b7) and v2.11.9 (0d98caea58f794f88e709b1bef2880996a471bca) release commits, which all contain the fix, and their finalizeResponse is larger (5600 or 5440 bytes on x86_64, 4320 or 4096 on aarch64, measured the same way). So 2.11.7-r0, the first build after 2.11.4-r10, is the first fixed build."
     },
     {
       "vulnerability": {
@@ -607,7 +653,20 @@
         },
         {
           "@id": "pkg:apk/dhi/caddy@2.11.4-r9?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update caddy to 2.11.7-r0 or later.",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. Checked every published caddy package for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 23 builds, 2.11.4-r0 to 2.11.9-r5, each for x86_64 and aarch64. The Alpine 3.24 packages have the same index checksums as the Alpine 3.23 ones, and each package was downloaded, matched to its index checksum and read. Each package installs one file, /usr/bin/caddy, a Go program built for GOOS=linux with no program interpreter or shared-library dependencies. We read each program's Go build information and its full function table from the Go line table, with runtime.main as a control. Every build contains the reverse proxy's (*Handler).finalizeResponse and (*Handler).handleUpgradeResponse. The link flags in each build's Go build information name the caddy source commit it was built from. Every 2.11.4 build (2.11.4-r0 to 2.11.4-r10) was built from e2eee6a7fce366321294c9c2a79f3146891dcbdf, the v2.11.4 release commit, which does not contain the fix, and finalizeResponse has the same size in every 2.11.4 build of an architecture (4640 bytes on x86_64 and 3568 on aarch64, measured as the distance between function entries in the Go line table, which includes alignment padding), so none of them carries a backport. The 2.11.7, 2.11.8 and 2.11.9 builds were built from the v2.11.7 (72dd0fb067f6d7826c7f79907670ba4a713bfe37), v2.11.8 (55996dfe05c10bb616ccdcc9bf5b8407a5be75b7) and v2.11.9 (0d98caea58f794f88e709b1bef2880996a471bca) release commits, which all contain the fix, and their finalizeResponse is larger (5600 or 5440 bytes on x86_64, 4320 or 4096 on aarch64, measured the same way). So 2.11.7-r0, the first build after 2.11.4-r10, is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lq5z-sh6a-7cth-dolo",
+        "aliases": [
+          "CVE-2026-55458"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/caddy@2.11.7-r0?distro=dhi-3.24"
         },
@@ -645,7 +704,8 @@
           "@id": "pkg:apk/dhi/caddy@2.11.9-r5?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. Checked every published caddy package for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 23 builds, 2.11.4-r0 to 2.11.9-r5, each for x86_64 and aarch64. The Alpine 3.24 packages have the same index checksums as the Alpine 3.23 ones, and each package was downloaded, matched to its index checksum and read. Each package installs one file, /usr/bin/caddy, a Go program built for GOOS=linux with no program interpreter or shared-library dependencies. We read each program's Go build information and its full function table from the Go line table, with runtime.main as a control. Every build contains the reverse proxy's (*Handler).finalizeResponse and (*Handler).handleUpgradeResponse. The link flags in each build's Go build information name the caddy source commit it was built from. Every 2.11.4 build (2.11.4-r0 to 2.11.4-r10) was built from e2eee6a7fce366321294c9c2a79f3146891dcbdf, the v2.11.4 release commit, which does not contain the fix, and finalizeResponse has the same size in every 2.11.4 build of an architecture (4640 bytes on x86_64 and 3568 on aarch64, measured as the distance between function entries in the Go line table, which includes alignment padding), so none of them carries a backport. The 2.11.7, 2.11.8 and 2.11.9 builds were built from the v2.11.7 (72dd0fb067f6d7826c7f79907670ba4a713bfe37), v2.11.8 (55996dfe05c10bb616ccdcc9bf5b8407a5be75b7) and v2.11.9 (0d98caea58f794f88e709b1bef2880996a471bca) release commits, which all contain the fix, and their finalizeResponse is larger (5600 or 5440 bytes on x86_64, 4320 or 4096 on aarch64, measured the same way). So 2.11.7-r0, the first build after 2.11.4-r10, is the first fixed build."
     },
     {
       "vulnerability": {
@@ -687,7 +747,20 @@
         },
         {
           "@id": "pkg:deb/dhi/caddy-dev@2.11.4-9?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update caddy-dev to 2.11.7-0 or later.",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. Checked every published caddy-dev package for Debian 13 in the DHI Debian repository as of 2026-11-27: 23 builds, 2.11.4-0 to 2.11.9-5, each for amd64 and arm64. Each package's md5sums manifest lists one file, /usr/bin/caddy, a Go program built for GOOS=linux with no program interpreter or shared-library dependencies. 27 of the 46 packages were downloaded, matched to their index checksums and read directly; in each of the other 19, the md5 digest of /usr/bin/caddy equals that of the DHI Alpine caddy-dev package of the same build and architecture, which was read. We read each program's Go build information and its full function table from the Go line table, with runtime.main as a control. Every build contains the reverse proxy's (*Handler).finalizeResponse and (*Handler).handleUpgradeResponse. The link flags in each build's Go build information name the caddy source commit it was built from. Every 2.11.4 build (2.11.4-0 to 2.11.4-10) was built from e2eee6a7fce366321294c9c2a79f3146891dcbdf, the v2.11.4 release commit, which does not contain the fix, and finalizeResponse has the same size in every 2.11.4 build of an architecture (4640 bytes on x86_64 and 3568 on aarch64, measured as the distance between function entries in the Go line table, which includes alignment padding), so none of them carries a backport. The 2.11.7, 2.11.8 and 2.11.9 builds were built from the v2.11.7 (72dd0fb067f6d7826c7f79907670ba4a713bfe37), v2.11.8 (55996dfe05c10bb616ccdcc9bf5b8407a5be75b7) and v2.11.9 (0d98caea58f794f88e709b1bef2880996a471bca) release commits, which all contain the fix, and their finalizeResponse is larger (5600 or 5440 bytes on x86_64, 4320 or 4096 on aarch64, measured the same way). So 2.11.7-0, the first build after 2.11.4-10, is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lq5z-sh6a-7cth-dolo",
+        "aliases": [
+          "CVE-2026-55458"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/caddy-dev@2.11.7-0?distro=dhi-13"
         },
@@ -725,7 +798,8 @@
           "@id": "pkg:deb/dhi/caddy-dev@2.11.9-5?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. Checked every published caddy-dev package for Debian 13 in the DHI Debian repository as of 2026-11-27: 23 builds, 2.11.4-0 to 2.11.9-5, each for amd64 and arm64. Each package's md5sums manifest lists one file, /usr/bin/caddy, a Go program built for GOOS=linux with no program interpreter or shared-library dependencies. 27 of the 46 packages were downloaded, matched to their index checksums and read directly; in each of the other 19, the md5 digest of /usr/bin/caddy equals that of the DHI Alpine caddy-dev package of the same build and architecture, which was read. We read each program's Go build information and its full function table from the Go line table, with runtime.main as a control. Every build contains the reverse proxy's (*Handler).finalizeResponse and (*Handler).handleUpgradeResponse. The link flags in each build's Go build information name the caddy source commit it was built from. Every 2.11.4 build (2.11.4-0 to 2.11.4-10) was built from e2eee6a7fce366321294c9c2a79f3146891dcbdf, the v2.11.4 release commit, which does not contain the fix, and finalizeResponse has the same size in every 2.11.4 build of an architecture (4640 bytes on x86_64 and 3568 on aarch64, measured as the distance between function entries in the Go line table, which includes alignment padding), so none of them carries a backport. The 2.11.7, 2.11.8 and 2.11.9 builds were built from the v2.11.7 (72dd0fb067f6d7826c7f79907670ba4a713bfe37), v2.11.8 (55996dfe05c10bb616ccdcc9bf5b8407a5be75b7) and v2.11.9 (0d98caea58f794f88e709b1bef2880996a471bca) release commits, which all contain the fix, and their finalizeResponse is larger (5600 or 5440 bytes on x86_64, 4320 or 4096 on aarch64, measured the same way). So 2.11.7-0, the first build after 2.11.4-10, is the first fixed build."
     },
     {
       "vulnerability": {
@@ -805,7 +879,8 @@
           "@id": "pkg:deb/dhi/caddy-fips-dev@2.11.9-5?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. The caddy-fips-dev packages for Debian 13 are built from the same caddy source as caddy, with Go's FIPS 140-3 mode enabled, but the published caddy-fips-dev builds have not been inspected for this advisory yet. Pending: reading the Go build information and function table of every published caddy-fips-dev build for Debian 13 (2.11.4 to 2.11.9, on amd64 and arm64) to place each build against the fix, as was done for the caddy and caddy-dev packages."
     },
     {
       "vulnerability": {
@@ -885,7 +960,8 @@
           "@id": "pkg:deb/dhi/caddy-fips@2.11.9-5?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. The caddy-fips packages for Debian 13 are built from the same caddy source as caddy, with Go's FIPS 140-3 mode enabled, but the published caddy-fips builds have not been inspected for this advisory yet. Pending: reading the Go build information and function table of every published caddy-fips build for Debian 13 (2.11.4 to 2.11.9, on amd64 and arm64) to place each build against the fix, as was done for the caddy and caddy-dev packages."
     },
     {
       "vulnerability": {
@@ -927,7 +1003,20 @@
         },
         {
           "@id": "pkg:deb/dhi/caddy@2.11.4-9?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update caddy to 2.11.7-0 or later.",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. Checked every published caddy package for Debian 13 in the DHI Debian repository as of 2026-11-27: 23 builds, 2.11.4-0 to 2.11.9-5, each for amd64 and arm64. Each package's md5sums manifest lists one file, /usr/bin/caddy, a Go program built for GOOS=linux with no program interpreter or shared-library dependencies. 30 of the 46 packages were downloaded, matched to their index checksums and read directly; in each of the other 16, the md5 digest of /usr/bin/caddy equals that of the DHI Alpine caddy package of the same build and architecture, which was read. We read each program's Go build information and its full function table from the Go line table, with runtime.main as a control. Every build contains the reverse proxy's (*Handler).finalizeResponse and (*Handler).handleUpgradeResponse. The link flags in each build's Go build information name the caddy source commit it was built from. Every 2.11.4 build (2.11.4-0 to 2.11.4-10) was built from e2eee6a7fce366321294c9c2a79f3146891dcbdf, the v2.11.4 release commit, which does not contain the fix, and finalizeResponse has the same size in every 2.11.4 build of an architecture (4640 bytes on x86_64 and 3568 on aarch64, measured as the distance between function entries in the Go line table, which includes alignment padding), so none of them carries a backport. The 2.11.7, 2.11.8 and 2.11.9 builds were built from the v2.11.7 (72dd0fb067f6d7826c7f79907670ba4a713bfe37), v2.11.8 (55996dfe05c10bb616ccdcc9bf5b8407a5be75b7) and v2.11.9 (0d98caea58f794f88e709b1bef2880996a471bca) release commits, which all contain the fix, and their finalizeResponse is larger (5600 or 5440 bytes on x86_64, 4320 or 4096 on aarch64, measured the same way). So 2.11.7-0, the first build after 2.11.4-10, is the first fixed build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lq5z-sh6a-7cth-dolo",
+        "aliases": [
+          "CVE-2026-55458"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/caddy@2.11.7-0?distro=dhi-13"
         },
@@ -965,7 +1054,8 @@
           "@id": "pkg:deb/dhi/caddy@2.11.9-5?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-55458 (GHSA-8qx7-j2v2-x6q5): Caddy's reverse proxy did not strip RFC 7230 hop-by-hop headers (such as Alt-Svc, Keep-Alive, Proxy-Authenticate, Transfer-Encoding and Trailer) from an upstream's 101 Switching Protocols response, because the 101 path in finalizeResponse returned before the stripping code, so a WebSocket upstream could pass those headers to clients. github.com/caddyserver/caddy/v2 is affected up to 2.11.4 and fixed in 2.11.5: https://github.com/caddyserver/caddy/security/advisories/GHSA-8qx7-j2v2-x6q5, https://github.com/caddyserver/caddy/releases/tag/v2.11.5 . The fix, https://github.com/caddyserver/caddy/commit/25b3eab6dbd8d2d2670711f26b774e0fd43e1179 (hop-by-hop header fix, contained in v2.11.5 and later and not in v2.11.4), moves the hop-by-hop stripping in modules/caddyhttp/reverseproxy/reverseproxy.go ahead of the 101 check in finalizeResponse. Checked every published caddy package for Debian 13 in the DHI Debian repository as of 2026-11-27: 23 builds, 2.11.4-0 to 2.11.9-5, each for amd64 and arm64. Each package's md5sums manifest lists one file, /usr/bin/caddy, a Go program built for GOOS=linux with no program interpreter or shared-library dependencies. 30 of the 46 packages were downloaded, matched to their index checksums and read directly; in each of the other 16, the md5 digest of /usr/bin/caddy equals that of the DHI Alpine caddy package of the same build and architecture, which was read. We read each program's Go build information and its full function table from the Go line table, with runtime.main as a control. Every build contains the reverse proxy's (*Handler).finalizeResponse and (*Handler).handleUpgradeResponse. The link flags in each build's Go build information name the caddy source commit it was built from. Every 2.11.4 build (2.11.4-0 to 2.11.4-10) was built from e2eee6a7fce366321294c9c2a79f3146891dcbdf, the v2.11.4 release commit, which does not contain the fix, and finalizeResponse has the same size in every 2.11.4 build of an architecture (4640 bytes on x86_64 and 3568 on aarch64, measured as the distance between function entries in the Go line table, which includes alignment padding), so none of them carries a backport. The 2.11.7, 2.11.8 and 2.11.9 builds were built from the v2.11.7 (72dd0fb067f6d7826c7f79907670ba4a713bfe37), v2.11.8 (55996dfe05c10bb616ccdcc9bf5b8407a5be75b7) and v2.11.9 (0d98caea58f794f88e709b1bef2880996a471bca) release commits, which all contain the fix, and their finalizeResponse is larger (5600 or 5440 bytes on x86_64, 4320 or 4096 on aarch64, measured the same way). So 2.11.7-0, the first build after 2.11.4-10, is the first fixed build."
     }
   ]
 }
