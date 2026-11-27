@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T20:11:11Z",
-  "last_updated": "2026-11-25T21:21:53Z",
-  "version": 20,
+  "last_updated": "2026-11-27T03:39:38Z",
+  "version": 21,
   "statements": [
     {
       "vulnerability": {
@@ -46,10 +46,23 @@
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.32.1.1-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.32.1.1-r1?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.32.9-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update eclipse-temurin-11-jdk to 11.0.32.9.1.1-r2 or later.",
+      "status_notes": "CVE-2026-13505 (GHSA-98j2-6v39-78w8): in Bouncy Castle for Java FIPS (bc-fips) before 2.1.3 in the 2.1 series, the AES and DESede engines, the SP 800-90A DRBGs, SymmetricSecretKey and the PBKD and scrypt parameter classes zeroise their key material through Object.finalize. Under load the single finalizer thread can fall behind, so key material stays in the heap while queued and the queue can contribute to an OutOfMemoryError. Bouncy Castle fixed it in bc-fips 2.1.3 (also 2.0.2 and 1.0.2.7), where disposal runs from a java.lang.ref.Cleaner in the jar's Java 9 multi-release classes: https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013505 and https://github.com/advisories/GHSA-98j2-6v39-78w8. Bouncy Castle lists Java 9 and later as the affected platform and says that in practice this did not bite on Java 8 or Java 11 and becomes a problem on later JVMs; this owner is a Java 11 JDK, so the practical impact is low, but the builds that ship bc-fips 2.1.2 still carry the finalizer-based code and are listed as affected. Checked every published eclipse-temurin-11-jdk-fips package for Alpine 3.23 in the DHI Alpine security repository, which is the package of this source that ships Bouncy Castle: for x86_64 (16 builds, 11.0.30.7-r0 to 11.0.33.10-r1) and aarch64 (8 builds, 11.0.30.7-r0 to 11.0.31.11-r6), where both architectures carry the same Bouncy Castle versions; each download matched the index checksum. Each ships five jars in /usr/lib/bouncycastle: bc-fips, bcpkix-fips, bcutil-fips, bctls-fips and bc-rng-jent. The AES, DRBG, SymmetricSecretKey and scrypt classes the advisory concerns (FipsAES, FipsDRBG and Scrypt in org.bouncycastle.crypto.fips, and org.bouncycastle.crypto.SymmetricSecretKey) are in the bc-fips jar; none of the other four jars contains a class of those names. The bc-fips version, read from each jar's manifest: 11.0.30.7-r0 to 11.0.32.1.1-r0 carry bc-fips 2.1.2; 11.0.32.1.1-r1 carries bc-fips 2.1.3; 11.0.32.9-r0 carries bc-fips 2.1.2; 11.0.32.9.1.1-r2 to 11.0.33.10-r1 carry bc-fips 2.1.3. In every 2.1.3 jar, seven Java 9 multi-release classes under META-INF/versions/9 (among them SymmetricSecretKey and the AES, DESede and DRBG working buffers) reference java.lang.ref.Cleaner; no class in the 2.1.2 jars does. Every published eclipse-temurin-11-jdk, eclipse-temurin-11-jdk-oci-config and eclipse-temurin-11-jdk-fips-oci-config package for Alpine 3.23 contains no Bouncy Castle jar or class file. Under apk ordering 11.0.32.9-r0 sorts above the fixed 11.0.32.1.1-r1 but ships bc-fips 2.1.2, so the range needs a second affected span: up to 11.0.32.1.1-r1, and from 11.0.32.9-r0 up to 11.0.32.9.1.1-r2."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-qkg2-gxz4-yad3-ltb7",
+        "aliases": [
+          "CVE-2026-13505"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.32.1.1-r1?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.32.9.1.1-r2?distro=dhi-3.23"
@@ -64,7 +77,8 @@
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.33.10-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-13505 (GHSA-98j2-6v39-78w8): in Bouncy Castle for Java FIPS (bc-fips) before 2.1.3 in the 2.1 series, the AES and DESede engines, the SP 800-90A DRBGs, SymmetricSecretKey and the PBKD and scrypt parameter classes zeroise their key material through Object.finalize. Under load the single finalizer thread can fall behind, so key material stays in the heap while queued and the queue can contribute to an OutOfMemoryError. Bouncy Castle fixed it in bc-fips 2.1.3 (also 2.0.2 and 1.0.2.7), where disposal runs from a java.lang.ref.Cleaner in the jar's Java 9 multi-release classes: https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013505 and https://github.com/advisories/GHSA-98j2-6v39-78w8. Bouncy Castle lists Java 9 and later as the affected platform and says that in practice this did not bite on Java 8 or Java 11 and becomes a problem on later JVMs; this owner is a Java 11 JDK, so the practical impact is low, but the builds that ship bc-fips 2.1.2 still carry the finalizer-based code and are listed as affected. Checked every published eclipse-temurin-11-jdk-fips package for Alpine 3.23 in the DHI Alpine security repository, which is the package of this source that ships Bouncy Castle: for x86_64 (16 builds, 11.0.30.7-r0 to 11.0.33.10-r1) and aarch64 (8 builds, 11.0.30.7-r0 to 11.0.31.11-r6), where both architectures carry the same Bouncy Castle versions; each download matched the index checksum. Each ships five jars in /usr/lib/bouncycastle: bc-fips, bcpkix-fips, bcutil-fips, bctls-fips and bc-rng-jent. The AES, DRBG, SymmetricSecretKey and scrypt classes the advisory concerns (FipsAES, FipsDRBG and Scrypt in org.bouncycastle.crypto.fips, and org.bouncycastle.crypto.SymmetricSecretKey) are in the bc-fips jar; none of the other four jars contains a class of those names. The bc-fips version, read from each jar's manifest: 11.0.30.7-r0 to 11.0.32.1.1-r0 carry bc-fips 2.1.2; 11.0.32.1.1-r1 carries bc-fips 2.1.3; 11.0.32.9-r0 carries bc-fips 2.1.2; 11.0.32.9.1.1-r2 to 11.0.33.10-r1 carry bc-fips 2.1.3. In every 2.1.3 jar, seven Java 9 multi-release classes under META-INF/versions/9 (among them SymmetricSecretKey and the AES, DESede and DRBG working buffers) reference java.lang.ref.Cleaner; no class in the 2.1.2 jars does. Every published eclipse-temurin-11-jdk, eclipse-temurin-11-jdk-oci-config and eclipse-temurin-11-jdk-fips-oci-config package for Alpine 3.23 contains no Bouncy Castle jar or class file. Under apk ordering 11.0.32.9-r0 sorts above the fixed 11.0.32.1.1-r1 but ships bc-fips 2.1.2, so the range needs a second affected span: up to 11.0.32.1.1-r1, and from 11.0.32.9-r0 up to 11.0.32.9.1.1-r2."
     },
     {
       "vulnerability": {
@@ -84,10 +98,23 @@
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.32.1.1-r0?distro=dhi-3.24"
         },
         {
-          "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.32.1.1-r1?distro=dhi-3.24"
-        },
-        {
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.32.9-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update eclipse-temurin-11-jdk to 11.0.32.9.1.1-r2 or later.",
+      "status_notes": "CVE-2026-13505 (GHSA-98j2-6v39-78w8): in Bouncy Castle for Java FIPS (bc-fips) before 2.1.3 in the 2.1 series, the AES and DESede engines, the SP 800-90A DRBGs, SymmetricSecretKey and the PBKD and scrypt parameter classes zeroise their key material through Object.finalize. Under load the single finalizer thread can fall behind, so key material stays in the heap while queued and the queue can contribute to an OutOfMemoryError. Bouncy Castle fixed it in bc-fips 2.1.3 (also 2.0.2 and 1.0.2.7), where disposal runs from a java.lang.ref.Cleaner in the jar's Java 9 multi-release classes: https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013505 and https://github.com/advisories/GHSA-98j2-6v39-78w8. Bouncy Castle lists Java 9 and later as the affected platform and says that in practice this did not bite on Java 8 or Java 11 and becomes a problem on later JVMs; this owner is a Java 11 JDK, so the practical impact is low, but the builds that ship bc-fips 2.1.2 still carry the finalizer-based code and are listed as affected. Checked every published eclipse-temurin-11-jdk-fips package for Alpine 3.24 in the DHI Alpine security repository, which is the package of this source that ships Bouncy Castle: for x86_64 (9 builds, 11.0.31.11-r6 to 11.0.33.10-r1) and aarch64 (1 build, 11.0.31.11-r6), where both architectures carry the same Bouncy Castle versions; each download matched the index checksum. Each ships five jars in /usr/lib/bouncycastle: bc-fips, bcpkix-fips, bcutil-fips, bctls-fips and bc-rng-jent. The AES, DRBG, SymmetricSecretKey and scrypt classes the advisory concerns (FipsAES, FipsDRBG and Scrypt in org.bouncycastle.crypto.fips, and org.bouncycastle.crypto.SymmetricSecretKey) are in the bc-fips jar; none of the other four jars contains a class of those names. The bc-fips version, read from each jar's manifest: 11.0.31.11-r6 to 11.0.32.1.1-r0 carry bc-fips 2.1.2; 11.0.32.1.1-r1 carries bc-fips 2.1.3; 11.0.32.9-r0 carries bc-fips 2.1.2; 11.0.32.9.1.1-r2 to 11.0.33.10-r1 carry bc-fips 2.1.3. In every 2.1.3 jar, seven Java 9 multi-release classes under META-INF/versions/9 (among them SymmetricSecretKey and the AES, DESede and DRBG working buffers) reference java.lang.ref.Cleaner; no class in the 2.1.2 jars does. Every published eclipse-temurin-11-jdk, eclipse-temurin-11-jdk-oci-config and eclipse-temurin-11-jdk-fips-oci-config package for Alpine 3.24 contains no Bouncy Castle jar or class file. Under apk ordering 11.0.32.9-r0 sorts above the fixed 11.0.32.1.1-r1 but ships bc-fips 2.1.2, so the range needs a second affected span: up to 11.0.32.1.1-r1, and from 11.0.32.9-r0 up to 11.0.32.9.1.1-r2."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-qkg2-gxz4-yad3-ltb7",
+        "aliases": [
+          "CVE-2026-13505"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.32.1.1-r1?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.32.9.1.1-r2?distro=dhi-3.24"
@@ -102,7 +129,8 @@
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.33.10-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-13505 (GHSA-98j2-6v39-78w8): in Bouncy Castle for Java FIPS (bc-fips) before 2.1.3 in the 2.1 series, the AES and DESede engines, the SP 800-90A DRBGs, SymmetricSecretKey and the PBKD and scrypt parameter classes zeroise their key material through Object.finalize. Under load the single finalizer thread can fall behind, so key material stays in the heap while queued and the queue can contribute to an OutOfMemoryError. Bouncy Castle fixed it in bc-fips 2.1.3 (also 2.0.2 and 1.0.2.7), where disposal runs from a java.lang.ref.Cleaner in the jar's Java 9 multi-release classes: https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013505 and https://github.com/advisories/GHSA-98j2-6v39-78w8. Bouncy Castle lists Java 9 and later as the affected platform and says that in practice this did not bite on Java 8 or Java 11 and becomes a problem on later JVMs; this owner is a Java 11 JDK, so the practical impact is low, but the builds that ship bc-fips 2.1.2 still carry the finalizer-based code and are listed as affected. Checked every published eclipse-temurin-11-jdk-fips package for Alpine 3.24 in the DHI Alpine security repository, which is the package of this source that ships Bouncy Castle: for x86_64 (9 builds, 11.0.31.11-r6 to 11.0.33.10-r1) and aarch64 (1 build, 11.0.31.11-r6), where both architectures carry the same Bouncy Castle versions; each download matched the index checksum. Each ships five jars in /usr/lib/bouncycastle: bc-fips, bcpkix-fips, bcutil-fips, bctls-fips and bc-rng-jent. The AES, DRBG, SymmetricSecretKey and scrypt classes the advisory concerns (FipsAES, FipsDRBG and Scrypt in org.bouncycastle.crypto.fips, and org.bouncycastle.crypto.SymmetricSecretKey) are in the bc-fips jar; none of the other four jars contains a class of those names. The bc-fips version, read from each jar's manifest: 11.0.31.11-r6 to 11.0.32.1.1-r0 carry bc-fips 2.1.2; 11.0.32.1.1-r1 carries bc-fips 2.1.3; 11.0.32.9-r0 carries bc-fips 2.1.2; 11.0.32.9.1.1-r2 to 11.0.33.10-r1 carry bc-fips 2.1.3. In every 2.1.3 jar, seven Java 9 multi-release classes under META-INF/versions/9 (among them SymmetricSecretKey and the AES, DESede and DRBG working buffers) reference java.lang.ref.Cleaner; no class in the 2.1.2 jars does. Every published eclipse-temurin-11-jdk, eclipse-temurin-11-jdk-oci-config and eclipse-temurin-11-jdk-fips-oci-config package for Alpine 3.24 contains no Bouncy Castle jar or class file. Under apk ordering 11.0.32.9-r0 sorts above the fixed 11.0.32.1.1-r1 but ships bc-fips 2.1.2, so the range needs a second affected span: up to 11.0.32.1.1-r1, and from 11.0.32.9-r0 up to 11.0.32.9.1.1-r2."
     },
     {
       "vulnerability": {
@@ -1351,10 +1379,23 @@
           "@id": "pkg:deb/dhi/eclipse-temurin-11-jdk@11.0.32.1.1-0?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/eclipse-temurin-11-jdk@11.0.32.1.1-1?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/eclipse-temurin-11-jdk@11.0.32.9-0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update eclipse-temurin-11-jdk to 1:11.0.32.1+1-2 or later.",
+      "status_notes": "CVE-2026-13505 (GHSA-98j2-6v39-78w8): in Bouncy Castle for Java FIPS (bc-fips) before 2.1.3 in the 2.1 series, the AES and DESede engines, the SP 800-90A DRBGs, SymmetricSecretKey and the PBKD and scrypt parameter classes zeroise their key material through Object.finalize. Under load the single finalizer thread can fall behind, so key material stays in the heap while queued and the queue can contribute to an OutOfMemoryError. Bouncy Castle fixed it in bc-fips 2.1.3 (also 2.0.2 and 1.0.2.7), where disposal runs from a java.lang.ref.Cleaner in the jar's Java 9 multi-release classes: https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013505 and https://github.com/advisories/GHSA-98j2-6v39-78w8. Bouncy Castle lists Java 9 and later as the affected platform and says that in practice this did not bite on Java 8 or Java 11 and becomes a problem on later JVMs; this owner is a Java 11 JDK, so the practical impact is low, but the builds that ship bc-fips 2.1.2 still carry the finalizer-based code and are listed as affected. Checked every published eclipse-temurin-11-jdk-fips package for Debian 13 in the DHI Debian security repository, which is the package of this source that ships Bouncy Castle: 13 builds, 11.0.31.11-0 to 1:11.0.33.1+1-0, as architecture-independent packages listed for amd64 and arm64; each download matched the index checksum. Each ships five jars in /usr/lib/bouncycastle: bc-fips, bcpkix-fips, bcutil-fips, bctls-fips and bc-rng-jent. The AES, DRBG, SymmetricSecretKey and scrypt classes the advisory concerns (FipsAES, FipsDRBG and Scrypt in org.bouncycastle.crypto.fips, and org.bouncycastle.crypto.SymmetricSecretKey) are in the bc-fips jar; none of the other four jars contains a class of those names. The bc-fips version, read from each jar's manifest: 11.0.31.11-0 to 11.0.32.1.1-0 carry bc-fips 2.1.2; 11.0.32.1.1-1 carries bc-fips 2.1.3; 11.0.32.9-0 carries bc-fips 2.1.2; 1:11.0.32.1+1-2 to 1:11.0.33.1+1-0 carry bc-fips 2.1.3. In every 2.1.3 jar, seven Java 9 multi-release classes under META-INF/versions/9 (among them SymmetricSecretKey and the AES, DESede and DRBG working buffers) reference java.lang.ref.Cleaner; no class in the 2.1.2 jars does. Every published eclipse-temurin-11-jdk, eclipse-temurin-11-jdk-oci-config and eclipse-temurin-11-jdk-fips-oci-config package for Debian 13 contains no Bouncy Castle jar or class file (the two 1:11.0.32.1+1-4 oci-config packages were checked as served, because the served files differ from the index checksum). Under dpkg ordering 11.0.32.9-0 sorts above the fixed 11.0.32.1.1-1 but ships bc-fips 2.1.2, so the range needs a second affected span: up to 11.0.32.1.1-1, and from 11.0.32.9-0 up to 1:11.0.32.1+1-2."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-qkg2-gxz4-yad3-ltb7",
+        "aliases": [
+          "CVE-2026-13505"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/eclipse-temurin-11-jdk@11.0.32.1.1-1?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/eclipse-temurin-11-jdk@1:11.0.32.1%2B1-2?distro=dhi-13"
@@ -1381,7 +1422,8 @@
           "@id": "pkg:deb/dhi/eclipse-temurin-11-jdk@1:11.0.33.1%2B1-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-13505 (GHSA-98j2-6v39-78w8): in Bouncy Castle for Java FIPS (bc-fips) before 2.1.3 in the 2.1 series, the AES and DESede engines, the SP 800-90A DRBGs, SymmetricSecretKey and the PBKD and scrypt parameter classes zeroise their key material through Object.finalize. Under load the single finalizer thread can fall behind, so key material stays in the heap while queued and the queue can contribute to an OutOfMemoryError. Bouncy Castle fixed it in bc-fips 2.1.3 (also 2.0.2 and 1.0.2.7), where disposal runs from a java.lang.ref.Cleaner in the jar's Java 9 multi-release classes: https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013505 and https://github.com/advisories/GHSA-98j2-6v39-78w8. Bouncy Castle lists Java 9 and later as the affected platform and says that in practice this did not bite on Java 8 or Java 11 and becomes a problem on later JVMs; this owner is a Java 11 JDK, so the practical impact is low, but the builds that ship bc-fips 2.1.2 still carry the finalizer-based code and are listed as affected. Checked every published eclipse-temurin-11-jdk-fips package for Debian 13 in the DHI Debian security repository, which is the package of this source that ships Bouncy Castle: 13 builds, 11.0.31.11-0 to 1:11.0.33.1+1-0, as architecture-independent packages listed for amd64 and arm64; each download matched the index checksum. Each ships five jars in /usr/lib/bouncycastle: bc-fips, bcpkix-fips, bcutil-fips, bctls-fips and bc-rng-jent. The AES, DRBG, SymmetricSecretKey and scrypt classes the advisory concerns (FipsAES, FipsDRBG and Scrypt in org.bouncycastle.crypto.fips, and org.bouncycastle.crypto.SymmetricSecretKey) are in the bc-fips jar; none of the other four jars contains a class of those names. The bc-fips version, read from each jar's manifest: 11.0.31.11-0 to 11.0.32.1.1-0 carry bc-fips 2.1.2; 11.0.32.1.1-1 carries bc-fips 2.1.3; 11.0.32.9-0 carries bc-fips 2.1.2; 1:11.0.32.1+1-2 to 1:11.0.33.1+1-0 carry bc-fips 2.1.3. In every 2.1.3 jar, seven Java 9 multi-release classes under META-INF/versions/9 (among them SymmetricSecretKey and the AES, DESede and DRBG working buffers) reference java.lang.ref.Cleaner; no class in the 2.1.2 jars does. Every published eclipse-temurin-11-jdk, eclipse-temurin-11-jdk-oci-config and eclipse-temurin-11-jdk-fips-oci-config package for Debian 13 contains no Bouncy Castle jar or class file (the two 1:11.0.32.1+1-4 oci-config packages were checked as served, because the served files differ from the index checksum). Under dpkg ordering 11.0.32.9-0 sorts above the fixed 11.0.32.1.1-1 but ships bc-fips 2.1.2, so the range needs a second affected span: up to 11.0.32.1.1-1, and from 11.0.32.9-0 up to 1:11.0.32.1+1-2."
     },
     {
       "vulnerability": {
