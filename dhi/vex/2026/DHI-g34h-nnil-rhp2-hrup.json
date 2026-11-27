@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T22:21:39Z",
-  "last_updated": "2026-11-26T19:36:24Z",
-  "version": 34,
+  "last_updated": "2026-11-27T13:31:24Z",
+  "version": 36,
   "statements": [
     {
       "vulnerability": {
@@ -103663,7 +103663,9 @@
           "@id": "pkg:apk/dhi/mimir-dev@3.2.6-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-73500 (GHSA-6vch-q96h-7gc3, GO-2026-6107): TLS listeners created by NewListener, NewTLSListener and related functions in go.etcd.io/etcd/client/pkg/v3/transport enforce no handshake deadline, so an unauthenticated client that connects and never completes the TLS handshake pins a goroutine in tlsListener.acceptLoop indefinitely, and many such connections exhaust memory. It is fixed in go.etcd.io/etcd/client/pkg/v3 3.5.33, 3.6.14 and 3.7.1 (https://github.com/etcd-io/etcd/security/advisories/GHSA-6vch-q96h-7gc3, https://pkg.go.dev/vuln/GO-2026-6107, https://github.com/etcd-io/etcd/pull/22130, https://github.com/etcd-io/etcd/releases/tag/v3.6.14). We read every mimir-dev package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each package was downloaded and checked against its index checksum. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its DWARF debug information and Go symbol table. We read its Go build information and its Go function table (.gopclntab). mimir uses this module only as an etcd client. go.etcd.io/etcd/client/pkg/v3 is v3.6.9 in 3.1.4-r0 and 3.1.4-r1, v3.6.13 in 3.2.0-r0 and 3.2.0-r1 and the fixed v3.6.14 from 3.2.0-r2, but in every build the only functions linked from its transport package are the same 10 client TLS helpers, TLSInfo.ClientConfig and TLSInfo.baseConfig with their closures. None of the listener code the advisory names is in any build's function table: no NewListener, NewListenerWithOpts, NewTLSListener, NewTimeoutListener or tlsListener method, including (*tlsListener).acceptLoop, which runs as its own goroutine and so cannot be inlined away, and the string tlsListener occurs nowhere in any of the programs. As a positive control, a stripped linux/amd64 and linux/arm64 program built against v3.6.13 that calls transport.NewListener shows (*tlsListener).acceptLoop and the other tlsListener methods in the same table and 11 occurrences of the string. The vulnerable listener is not present, so no build is affected, whatever its module version."
     },
     {
       "vulnerability": {
@@ -103737,7 +103739,9 @@
           "@id": "pkg:apk/dhi/mimir-dev@3.2.6-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-73500 (GHSA-6vch-q96h-7gc3, GO-2026-6107): TLS listeners created by NewListener, NewTLSListener and related functions in go.etcd.io/etcd/client/pkg/v3/transport enforce no handshake deadline, so an unauthenticated client that connects and never completes the TLS handshake pins a goroutine in tlsListener.acceptLoop indefinitely, and many such connections exhaust memory. It is fixed in go.etcd.io/etcd/client/pkg/v3 3.5.33, 3.6.14 and 3.7.1 (https://github.com/etcd-io/etcd/security/advisories/GHSA-6vch-q96h-7gc3, https://pkg.go.dev/vuln/GO-2026-6107, https://github.com/etcd-io/etcd/pull/22130, https://github.com/etcd-io/etcd/releases/tag/v3.6.14). We read every mimir-dev package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same name, version and architecture, which we downloaded, checked against that checksum and read. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its DWARF debug information and Go symbol table. We read its Go build information and its Go function table (.gopclntab). mimir uses this module only as an etcd client. go.etcd.io/etcd/client/pkg/v3 is v3.6.9 in 3.1.4-r0 and 3.1.4-r1, v3.6.13 in 3.2.0-r0 and 3.2.0-r1 and the fixed v3.6.14 from 3.2.0-r2, but in every build the only functions linked from its transport package are the same 10 client TLS helpers, TLSInfo.ClientConfig and TLSInfo.baseConfig with their closures. None of the listener code the advisory names is in any build's function table: no NewListener, NewListenerWithOpts, NewTLSListener, NewTimeoutListener or tlsListener method, including (*tlsListener).acceptLoop, which runs as its own goroutine and so cannot be inlined away, and the string tlsListener occurs nowhere in any of the programs. As a positive control, a stripped linux/amd64 and linux/arm64 program built against v3.6.13 that calls transport.NewListener shows (*tlsListener).acceptLoop and the other tlsListener methods in the same table and 11 occurrences of the string. The vulnerable listener is not present, so no build is affected, whatever its module version."
     },
     {
       "vulnerability": {
@@ -103811,7 +103815,8 @@
           "@id": "pkg:apk/dhi/mimir-fips-dev@3.2.6-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-73500 (GHSA-6vch-q96h-7gc3, GO-2026-6107): TLS listeners created by NewListener, NewTLSListener and related functions in go.etcd.io/etcd/client/pkg/v3/transport enforce no handshake deadline, so an unauthenticated client that connects and never completes the TLS handshake pins a goroutine in tlsListener.acceptLoop indefinitely, and many such connections exhaust memory. It is fixed in go.etcd.io/etcd/client/pkg/v3 3.5.33, 3.6.14 and 3.7.1 (https://github.com/etcd-io/etcd/security/advisories/GHSA-6vch-q96h-7gc3, https://pkg.go.dev/vuln/GO-2026-6107, https://github.com/etcd-io/etcd/pull/22130, https://github.com/etcd-io/etcd/releases/tag/v3.6.14). The mimir-fips-dev packages for Alpine 3.23 are published only in the DHI security repository, which this review could not read, so no mimir-fips-dev build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips-dev build, to establish whether the vulnerable code is linked, as it is not in the non-FIPS mimir packages of the same versions."
     },
     {
       "vulnerability": {
@@ -103885,7 +103890,8 @@
           "@id": "pkg:apk/dhi/mimir-fips-dev@3.2.6-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-73500 (GHSA-6vch-q96h-7gc3, GO-2026-6107): TLS listeners created by NewListener, NewTLSListener and related functions in go.etcd.io/etcd/client/pkg/v3/transport enforce no handshake deadline, so an unauthenticated client that connects and never completes the TLS handshake pins a goroutine in tlsListener.acceptLoop indefinitely, and many such connections exhaust memory. It is fixed in go.etcd.io/etcd/client/pkg/v3 3.5.33, 3.6.14 and 3.7.1 (https://github.com/etcd-io/etcd/security/advisories/GHSA-6vch-q96h-7gc3, https://pkg.go.dev/vuln/GO-2026-6107, https://github.com/etcd-io/etcd/pull/22130, https://github.com/etcd-io/etcd/releases/tag/v3.6.14). The mimir-fips-dev packages for Alpine 3.24 are published only in the DHI security repository, which this review could not read, so no mimir-fips-dev build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips-dev build, to establish whether the vulnerable code is linked, as it is not in the non-FIPS mimir packages of the same versions."
     },
     {
       "vulnerability": {
@@ -103959,7 +103965,8 @@
           "@id": "pkg:apk/dhi/mimir-fips@3.2.6-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-73500 (GHSA-6vch-q96h-7gc3, GO-2026-6107): TLS listeners created by NewListener, NewTLSListener and related functions in go.etcd.io/etcd/client/pkg/v3/transport enforce no handshake deadline, so an unauthenticated client that connects and never completes the TLS handshake pins a goroutine in tlsListener.acceptLoop indefinitely, and many such connections exhaust memory. It is fixed in go.etcd.io/etcd/client/pkg/v3 3.5.33, 3.6.14 and 3.7.1 (https://github.com/etcd-io/etcd/security/advisories/GHSA-6vch-q96h-7gc3, https://pkg.go.dev/vuln/GO-2026-6107, https://github.com/etcd-io/etcd/pull/22130, https://github.com/etcd-io/etcd/releases/tag/v3.6.14). The mimir-fips packages for Alpine 3.23 are published only in the DHI security repository, which this review could not read, so no mimir-fips build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips build, to establish whether the vulnerable code is linked, as it is not in the non-FIPS mimir packages of the same versions."
     },
     {
       "vulnerability": {
@@ -104033,7 +104040,8 @@
           "@id": "pkg:apk/dhi/mimir-fips@3.2.6-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-73500 (GHSA-6vch-q96h-7gc3, GO-2026-6107): TLS listeners created by NewListener, NewTLSListener and related functions in go.etcd.io/etcd/client/pkg/v3/transport enforce no handshake deadline, so an unauthenticated client that connects and never completes the TLS handshake pins a goroutine in tlsListener.acceptLoop indefinitely, and many such connections exhaust memory. It is fixed in go.etcd.io/etcd/client/pkg/v3 3.5.33, 3.6.14 and 3.7.1 (https://github.com/etcd-io/etcd/security/advisories/GHSA-6vch-q96h-7gc3, https://pkg.go.dev/vuln/GO-2026-6107, https://github.com/etcd-io/etcd/pull/22130, https://github.com/etcd-io/etcd/releases/tag/v3.6.14). The mimir-fips packages for Alpine 3.24 are published only in the DHI security repository, which this review could not read, so no mimir-fips build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips build, to establish whether the vulnerable code is linked, as it is not in the non-FIPS mimir packages of the same versions."
     },
     {
       "vulnerability": {
@@ -104107,7 +104115,9 @@
           "@id": "pkg:apk/dhi/mimir@3.2.6-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-73500 (GHSA-6vch-q96h-7gc3, GO-2026-6107): TLS listeners created by NewListener, NewTLSListener and related functions in go.etcd.io/etcd/client/pkg/v3/transport enforce no handshake deadline, so an unauthenticated client that connects and never completes the TLS handshake pins a goroutine in tlsListener.acceptLoop indefinitely, and many such connections exhaust memory. It is fixed in go.etcd.io/etcd/client/pkg/v3 3.5.33, 3.6.14 and 3.7.1 (https://github.com/etcd-io/etcd/security/advisories/GHSA-6vch-q96h-7gc3, https://pkg.go.dev/vuln/GO-2026-6107, https://github.com/etcd-io/etcd/pull/22130, https://github.com/etcd-io/etcd/releases/tag/v3.6.14). We read every mimir package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each package was downloaded and checked against its index checksum. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its Go symbol table but no DWARF debug information. We read its Go build information and its Go function table (.gopclntab). mimir uses this module only as an etcd client. go.etcd.io/etcd/client/pkg/v3 is v3.6.9 in 3.1.4-r0 and 3.1.4-r1, v3.6.13 in 3.2.0-r0 and 3.2.0-r1 and the fixed v3.6.14 from 3.2.0-r2, but in every build the only functions linked from its transport package are the same 10 client TLS helpers, TLSInfo.ClientConfig and TLSInfo.baseConfig with their closures. None of the listener code the advisory names is in any build's function table: no NewListener, NewListenerWithOpts, NewTLSListener, NewTimeoutListener or tlsListener method, including (*tlsListener).acceptLoop, which runs as its own goroutine and so cannot be inlined away, and the string tlsListener occurs nowhere in any of the programs. As a positive control, a stripped linux/amd64 and linux/arm64 program built against v3.6.13 that calls transport.NewListener shows (*tlsListener).acceptLoop and the other tlsListener methods in the same table and 11 occurrences of the string. The vulnerable listener is not present, so no build is affected, whatever its module version."
     },
     {
       "vulnerability": {
@@ -104181,7 +104191,9 @@
           "@id": "pkg:apk/dhi/mimir@3.2.6-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-73500 (GHSA-6vch-q96h-7gc3, GO-2026-6107): TLS listeners created by NewListener, NewTLSListener and related functions in go.etcd.io/etcd/client/pkg/v3/transport enforce no handshake deadline, so an unauthenticated client that connects and never completes the TLS handshake pins a goroutine in tlsListener.acceptLoop indefinitely, and many such connections exhaust memory. It is fixed in go.etcd.io/etcd/client/pkg/v3 3.5.33, 3.6.14 and 3.7.1 (https://github.com/etcd-io/etcd/security/advisories/GHSA-6vch-q96h-7gc3, https://pkg.go.dev/vuln/GO-2026-6107, https://github.com/etcd-io/etcd/pull/22130, https://github.com/etcd-io/etcd/releases/tag/v3.6.14). We read every mimir package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same name, version and architecture, which we downloaded, checked against that checksum and read. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its Go symbol table but no DWARF debug information. We read its Go build information and its Go function table (.gopclntab). mimir uses this module only as an etcd client. go.etcd.io/etcd/client/pkg/v3 is v3.6.9 in 3.1.4-r0 and 3.1.4-r1, v3.6.13 in 3.2.0-r0 and 3.2.0-r1 and the fixed v3.6.14 from 3.2.0-r2, but in every build the only functions linked from its transport package are the same 10 client TLS helpers, TLSInfo.ClientConfig and TLSInfo.baseConfig with their closures. None of the listener code the advisory names is in any build's function table: no NewListener, NewListenerWithOpts, NewTLSListener, NewTimeoutListener or tlsListener method, including (*tlsListener).acceptLoop, which runs as its own goroutine and so cannot be inlined away, and the string tlsListener occurs nowhere in any of the programs. As a positive control, a stripped linux/amd64 and linux/arm64 program built against v3.6.13 that calls transport.NewListener shows (*tlsListener).acceptLoop and the other tlsListener methods in the same table and 11 occurrences of the string. The vulnerable listener is not present, so no build is affected, whatever its module version."
     },
     {
       "vulnerability": {
@@ -138720,6 +138732,9 @@
         },
         {
           "@id": "pkg:deb/dhi/datadog-agent-dev@7.86.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/datadog-agent-dev@7.86.0-3?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -138860,6 +138875,9 @@
         },
         {
           "@id": "pkg:deb/dhi/datadog-agent-fips-dev@7.86.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/datadog-agent-fips-dev@7.86.0-3?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -139000,6 +139018,9 @@
         },
         {
           "@id": "pkg:deb/dhi/datadog-agent-fips@7.86.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/datadog-agent-fips@7.86.0-3?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -139143,6 +139164,9 @@
         },
         {
           "@id": "pkg:deb/dhi/datadog-agent@7.86.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/datadog-agent@7.86.0-3?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -171343,7 +171367,9 @@
           "@id": "pkg:deb/dhi/mimir-dev@3.2.6-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-73500 (GHSA-6vch-q96h-7gc3, GO-2026-6107): TLS listeners created by NewListener, NewTLSListener and related functions in go.etcd.io/etcd/client/pkg/v3/transport enforce no handshake deadline, so an unauthenticated client that connects and never completes the TLS handshake pins a goroutine in tlsListener.acceptLoop indefinitely, and many such connections exhaust memory. It is fixed in go.etcd.io/etcd/client/pkg/v3 3.5.33, 3.6.14 and 3.7.1 (https://github.com/etcd-io/etcd/security/advisories/GHSA-6vch-q96h-7gc3, https://pkg.go.dev/vuln/GO-2026-6107, https://github.com/etcd-io/etcd/pull/22130, https://github.com/etcd-io/etcd/releases/tag/v3.6.14). We read every mimir-dev package published for Debian 13 in the DHI Debian repository as of 2026-11-27: 21 versions, 3.1.4-0 to 3.2.6-0, for amd64 and arm64 except 3.2.2-0, which is published for arm64 only. Each package lists one file, usr/bin/mimir, in its md5sums, and that checksum equals the md5 of usr/bin/mimir in the Alpine mimir-dev package of the same version and architecture (Debian 3.2.0-3 is Alpine 3.2.0-r3), which we downloaded, checked against its index checksum and read. The program is a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its DWARF debug information and Go symbol table. We read its Go build information and its Go function table (.gopclntab). mimir uses this module only as an etcd client. go.etcd.io/etcd/client/pkg/v3 is v3.6.9 in 3.1.4-0 and 3.1.4-1, v3.6.13 in 3.2.0-0 and 3.2.0-1 and the fixed v3.6.14 from 3.2.0-2, but in every build the only functions linked from its transport package are the same 10 client TLS helpers, TLSInfo.ClientConfig and TLSInfo.baseConfig with their closures. None of the listener code the advisory names is in any build's function table: no NewListener, NewListenerWithOpts, NewTLSListener, NewTimeoutListener or tlsListener method, including (*tlsListener).acceptLoop, which runs as its own goroutine and so cannot be inlined away, and the string tlsListener occurs nowhere in any of the programs. As a positive control, a stripped linux/amd64 and linux/arm64 program built against v3.6.13 that calls transport.NewListener shows (*tlsListener).acceptLoop and the other tlsListener methods in the same table and 11 occurrences of the string. The vulnerable listener is not present, so no build is affected, whatever its module version."
     },
     {
       "vulnerability": {
@@ -171417,7 +171443,8 @@
           "@id": "pkg:deb/dhi/mimir-fips-dev@3.2.6-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-73500 (GHSA-6vch-q96h-7gc3, GO-2026-6107): TLS listeners created by NewListener, NewTLSListener and related functions in go.etcd.io/etcd/client/pkg/v3/transport enforce no handshake deadline, so an unauthenticated client that connects and never completes the TLS handshake pins a goroutine in tlsListener.acceptLoop indefinitely, and many such connections exhaust memory. It is fixed in go.etcd.io/etcd/client/pkg/v3 3.5.33, 3.6.14 and 3.7.1 (https://github.com/etcd-io/etcd/security/advisories/GHSA-6vch-q96h-7gc3, https://pkg.go.dev/vuln/GO-2026-6107, https://github.com/etcd-io/etcd/pull/22130, https://github.com/etcd-io/etcd/releases/tag/v3.6.14). The mimir-fips-dev packages for Debian 13 are published only in the DHI security repository, which this review could not read, so no mimir-fips-dev build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips-dev build, to establish whether the vulnerable code is linked, as it is not in the non-FIPS mimir packages of the same versions."
     },
     {
       "vulnerability": {
@@ -171491,7 +171518,8 @@
           "@id": "pkg:deb/dhi/mimir-fips@3.2.6-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-73500 (GHSA-6vch-q96h-7gc3, GO-2026-6107): TLS listeners created by NewListener, NewTLSListener and related functions in go.etcd.io/etcd/client/pkg/v3/transport enforce no handshake deadline, so an unauthenticated client that connects and never completes the TLS handshake pins a goroutine in tlsListener.acceptLoop indefinitely, and many such connections exhaust memory. It is fixed in go.etcd.io/etcd/client/pkg/v3 3.5.33, 3.6.14 and 3.7.1 (https://github.com/etcd-io/etcd/security/advisories/GHSA-6vch-q96h-7gc3, https://pkg.go.dev/vuln/GO-2026-6107, https://github.com/etcd-io/etcd/pull/22130, https://github.com/etcd-io/etcd/releases/tag/v3.6.14). The mimir-fips packages for Debian 13 are published only in the DHI security repository, which this review could not read, so no mimir-fips build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips build, to establish whether the vulnerable code is linked, as it is not in the non-FIPS mimir packages of the same versions."
     },
     {
       "vulnerability": {
@@ -171565,7 +171593,9 @@
           "@id": "pkg:deb/dhi/mimir@3.2.6-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-73500 (GHSA-6vch-q96h-7gc3, GO-2026-6107): TLS listeners created by NewListener, NewTLSListener and related functions in go.etcd.io/etcd/client/pkg/v3/transport enforce no handshake deadline, so an unauthenticated client that connects and never completes the TLS handshake pins a goroutine in tlsListener.acceptLoop indefinitely, and many such connections exhaust memory. It is fixed in go.etcd.io/etcd/client/pkg/v3 3.5.33, 3.6.14 and 3.7.1 (https://github.com/etcd-io/etcd/security/advisories/GHSA-6vch-q96h-7gc3, https://pkg.go.dev/vuln/GO-2026-6107, https://github.com/etcd-io/etcd/pull/22130, https://github.com/etcd-io/etcd/releases/tag/v3.6.14). We read every mimir package published for Debian 13 in the DHI Debian repository as of 2026-11-27: 21 versions, 3.1.4-0 to 3.2.6-0, for amd64 and arm64 except 3.2.2-0, which is published for arm64 only. Each package lists one file, usr/bin/mimir, in its md5sums, and that checksum equals the md5 of usr/bin/mimir in the Alpine mimir package of the same version and architecture (Debian 3.2.0-3 is Alpine 3.2.0-r3), which we downloaded, checked against its index checksum and read. The program is a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its Go symbol table but no DWARF debug information. We read its Go build information and its Go function table (.gopclntab). mimir uses this module only as an etcd client. go.etcd.io/etcd/client/pkg/v3 is v3.6.9 in 3.1.4-0 and 3.1.4-1, v3.6.13 in 3.2.0-0 and 3.2.0-1 and the fixed v3.6.14 from 3.2.0-2, but in every build the only functions linked from its transport package are the same 10 client TLS helpers, TLSInfo.ClientConfig and TLSInfo.baseConfig with their closures. None of the listener code the advisory names is in any build's function table: no NewListener, NewListenerWithOpts, NewTLSListener, NewTimeoutListener or tlsListener method, including (*tlsListener).acceptLoop, which runs as its own goroutine and so cannot be inlined away, and the string tlsListener occurs nowhere in any of the programs. As a positive control, a stripped linux/amd64 and linux/arm64 program built against v3.6.13 that calls transport.NewListener shows (*tlsListener).acceptLoop and the other tlsListener methods in the same table and 11 occurrences of the string. The vulnerable listener is not present, so no build is affected, whatever its module version."
     },
     {
       "vulnerability": {
