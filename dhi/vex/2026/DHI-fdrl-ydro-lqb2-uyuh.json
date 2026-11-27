@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T04:19:04Z",
-  "last_updated": "2026-11-25T23:36:23Z",
-  "version": 23,
+  "last_updated": "2026-11-27T12:24:40Z",
+  "version": 24,
   "statements": [
     {
       "vulnerability": {
@@ -9983,7 +9983,9 @@
           "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before 0.4.1 does not limit entries when parsing user and group database files, so a crafted /etc/passwd or /etc/group can exhaust memory. Fixed in 0.4.1; see https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw and https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe. Debian marks the golang-github-moby-sys source no-dsa (minor issue) for trixie (https://security-tracker.debian.org/tracker/CVE-2026-61801), which says nothing about this package, so this decision rests on the binaries alone. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). We read the Go build information (go version -m) and the function table (go tool nm) of /usr/bin/trivy in all 38 trivy-dev builds published for Alpine 3.23 as of 2026-11-27 (0.69.1-r0 to 0.74.0-r12), on both x86_64 and aarch64. Builds embed github.com/moby/sys/user 0.4.0 up to 0.73.0-r2 and 0.4.1 from 0.74.0-r0 on, but the only function of that package linked in any build is its package initialiser (github.com/moby/sys/user.init); none of the parsing or lookup functions (ParsePasswd*, ParseGroup*, GetExecUser*, GetAdditionalGroups*, LookupGroup, LookupGid, CurrentGroup or the internal line parser) is linked, while runtime.main is found in every build by the same search. A byte search of /usr/bin/trivy in trivy 0.69.1-r0 (x86_64) and 0.74.0-r12 (aarch64) agrees: the strings github.com/moby/sys/user.Parse, user.GetExecUser, user.LookupG, user.CurrentGroup, user.GetAdditionalGroups and user.parseLine occur 0 times, including as inlined function names, while github.com/moby/sys/user.init occurs twice. The vulnerable parsing code is not in this package."
     },
     {
       "vulnerability": {
@@ -10063,7 +10065,9 @@
           "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r9?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before 0.4.1 does not limit entries when parsing user and group database files, so a crafted /etc/passwd or /etc/group can exhaust memory. Fixed in 0.4.1; see https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw and https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe. Debian marks the golang-github-moby-sys source no-dsa (minor issue) for trixie (https://security-tracker.debian.org/tracker/CVE-2026-61801), which says nothing about this package, so this decision rests on the binaries alone. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). The 23 trivy-dev builds published for Alpine 3.24 as of 2026-11-27 (0.70.0-r5 to 0.74.0-r12) have the same package checksums in the repository index as the Alpine 3.23 packages of the same version, and we read the Go build information (go version -m) and the function table (go tool nm) of /usr/bin/trivy in every one of those packages on both x86_64 and aarch64. Builds embed github.com/moby/sys/user 0.4.0 up to 0.73.0-r2 and 0.4.1 from 0.74.0-r0 on, but the only function of that package linked in any build is its package initialiser (github.com/moby/sys/user.init); none of the parsing or lookup functions (ParsePasswd*, ParseGroup*, GetExecUser*, GetAdditionalGroups*, LookupGroup, LookupGid, CurrentGroup or the internal line parser) is linked, while runtime.main is found in every build by the same search. A byte search of /usr/bin/trivy in trivy 0.69.1-r0 (x86_64) and 0.74.0-r12 (aarch64) agrees: the strings github.com/moby/sys/user.Parse, user.GetExecUser, user.LookupG, user.CurrentGroup, user.GetAdditionalGroups and user.parseLine occur 0 times, including as inlined function names, while github.com/moby/sys/user.init occurs twice. The vulnerable parsing code is not in this package."
     },
     {
       "vulnerability": {
@@ -10188,7 +10192,8 @@
           "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before 0.4.1 does not limit entries when parsing user and group database files, so a crafted /etc/passwd or /etc/group can exhaust memory. Fixed in 0.4.1; see https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw and https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe. Debian marks the golang-github-moby-sys source no-dsa (minor issue) for trixie (https://security-tracker.debian.org/tracker/CVE-2026-61801), which says nothing about this package, so this decision rests on the binaries alone. The trivy-fips-dev packages for Alpine 3.23 are published in the DHI security repository, which requires authentication, and their Go build information has not been read build by build for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to confirm that, as in the non-FIPS trivy-dev package of the same releases, no parsing or lookup function of github.com/moby/sys/user is linked."
     },
     {
       "vulnerability": {
@@ -10268,7 +10273,8 @@
           "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r9?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before 0.4.1 does not limit entries when parsing user and group database files, so a crafted /etc/passwd or /etc/group can exhaust memory. Fixed in 0.4.1; see https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw and https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe. Debian marks the golang-github-moby-sys source no-dsa (minor issue) for trixie (https://security-tracker.debian.org/tracker/CVE-2026-61801), which says nothing about this package, so this decision rests on the binaries alone. The trivy-fips-dev packages for Alpine 3.24 are published in the DHI security repository, which requires authentication, and their Go build information has not been read build by build for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to confirm that, as in the non-FIPS trivy-dev package of the same releases, no parsing or lookup function of github.com/moby/sys/user is linked."
     },
     {
       "vulnerability": {
@@ -10393,7 +10399,8 @@
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before 0.4.1 does not limit entries when parsing user and group database files, so a crafted /etc/passwd or /etc/group can exhaust memory. Fixed in 0.4.1; see https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw and https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe. Debian marks the golang-github-moby-sys source no-dsa (minor issue) for trixie (https://security-tracker.debian.org/tracker/CVE-2026-61801), which says nothing about this package, so this decision rests on the binaries alone. The trivy-fips packages for Alpine 3.23 are published in the DHI security repository, which requires authentication, and their Go build information has not been read build by build for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to confirm that, as in the non-FIPS trivy package of the same releases, no parsing or lookup function of github.com/moby/sys/user is linked."
     },
     {
       "vulnerability": {
@@ -10473,7 +10480,8 @@
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r9?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before 0.4.1 does not limit entries when parsing user and group database files, so a crafted /etc/passwd or /etc/group can exhaust memory. Fixed in 0.4.1; see https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw and https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe. Debian marks the golang-github-moby-sys source no-dsa (minor issue) for trixie (https://security-tracker.debian.org/tracker/CVE-2026-61801), which says nothing about this package, so this decision rests on the binaries alone. The trivy-fips packages for Alpine 3.24 are published in the DHI security repository, which requires authentication, and their Go build information has not been read build by build for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to confirm that, as in the non-FIPS trivy package of the same releases, no parsing or lookup function of github.com/moby/sys/user is linked."
     },
     {
       "vulnerability": {
@@ -11070,7 +11078,9 @@
           "@id": "pkg:apk/dhi/trivy@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before 0.4.1 does not limit entries when parsing user and group database files, so a crafted /etc/passwd or /etc/group can exhaust memory. Fixed in 0.4.1; see https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw and https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe. Debian marks the golang-github-moby-sys source no-dsa (minor issue) for trixie (https://security-tracker.debian.org/tracker/CVE-2026-61801), which says nothing about this package, so this decision rests on the binaries alone. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). We read the Go build information (go version -m) and the function table (go tool nm) of /usr/bin/trivy in all 38 trivy builds published for Alpine 3.23 as of 2026-11-27 (0.69.1-r0 to 0.74.0-r12), on both x86_64 and aarch64. Builds embed github.com/moby/sys/user 0.4.0 up to 0.73.0-r2 and 0.4.1 from 0.74.0-r0 on, but the only function of that package linked in any build is its package initialiser (github.com/moby/sys/user.init); none of the parsing or lookup functions (ParsePasswd*, ParseGroup*, GetExecUser*, GetAdditionalGroups*, LookupGroup, LookupGid, CurrentGroup or the internal line parser) is linked, while runtime.main is found in every build by the same search. A byte search of /usr/bin/trivy in trivy 0.69.1-r0 (x86_64) and 0.74.0-r12 (aarch64) agrees: the strings github.com/moby/sys/user.Parse, user.GetExecUser, user.LookupG, user.CurrentGroup, user.GetAdditionalGroups and user.parseLine occur 0 times, including as inlined function names, while github.com/moby/sys/user.init occurs twice. The vulnerable parsing code is not in this package."
     },
     {
       "vulnerability": {
@@ -11150,7 +11160,9 @@
           "@id": "pkg:apk/dhi/trivy@0.74.0-r9?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before 0.4.1 does not limit entries when parsing user and group database files, so a crafted /etc/passwd or /etc/group can exhaust memory. Fixed in 0.4.1; see https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw and https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe. Debian marks the golang-github-moby-sys source no-dsa (minor issue) for trixie (https://security-tracker.debian.org/tracker/CVE-2026-61801), which says nothing about this package, so this decision rests on the binaries alone. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). The 23 trivy builds published for Alpine 3.24 as of 2026-11-27 (0.70.0-r5 to 0.74.0-r12) have the same package checksums in the repository index as the Alpine 3.23 packages of the same version, and we read the Go build information (go version -m) and the function table (go tool nm) of /usr/bin/trivy in every one of those packages on both x86_64 and aarch64. Builds embed github.com/moby/sys/user 0.4.0 up to 0.73.0-r2 and 0.4.1 from 0.74.0-r0 on, but the only function of that package linked in any build is its package initialiser (github.com/moby/sys/user.init); none of the parsing or lookup functions (ParsePasswd*, ParseGroup*, GetExecUser*, GetAdditionalGroups*, LookupGroup, LookupGid, CurrentGroup or the internal line parser) is linked, while runtime.main is found in every build by the same search. A byte search of /usr/bin/trivy in trivy 0.69.1-r0 (x86_64) and 0.74.0-r12 (aarch64) agrees: the strings github.com/moby/sys/user.Parse, user.GetExecUser, user.LookupG, user.CurrentGroup, user.GetAdditionalGroups and user.parseLine occur 0 times, including as inlined function names, while github.com/moby/sys/user.init occurs twice. The vulnerable parsing code is not in this package."
     },
     {
       "vulnerability": {
@@ -23133,7 +23145,9 @@
           "@id": "pkg:deb/dhi/trivy-dev@0.74.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before 0.4.1 does not limit entries when parsing user and group database files, so a crafted /etc/passwd or /etc/group can exhaust memory. Fixed in 0.4.1; see https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw and https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe. Debian marks the golang-github-moby-sys source no-dsa (minor issue) for trixie (https://security-tracker.debian.org/tracker/CVE-2026-61801), which says nothing about this package, so this decision rests on the binaries alone. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). The 29 trivy-dev builds published in the DHI Debian repository for Debian 13 as of 2026-11-27 (0.69.3-7 to 0.74.0-12, amd64 and arm64) each list only /usr/bin/trivy in their md5sums, with the same MD5 as /usr/bin/trivy in the Alpine 3.23 trivy-dev package of the same version and revision on the matching architecture (for example 0.74.0-8 and 0.74.0-r8), and we read the Go build information (go version -m) and the function table (go tool nm) of every one of those Alpine binaries. Builds embed github.com/moby/sys/user 0.4.0 up to 0.73.0-2 and 0.4.1 from 0.74.0-0 on, but the only function of that package linked in any build is its package initialiser (github.com/moby/sys/user.init); none of the parsing or lookup functions (ParsePasswd*, ParseGroup*, GetExecUser*, GetAdditionalGroups*, LookupGroup, LookupGid, CurrentGroup or the internal line parser) is linked, while runtime.main is found in every build by the same search. A byte search of /usr/bin/trivy in trivy 0.69.1-r0 (x86_64) and 0.74.0-r12 (aarch64) agrees: the strings github.com/moby/sys/user.Parse, user.GetExecUser, user.LookupG, user.CurrentGroup, user.GetAdditionalGroups and user.parseLine occur 0 times, including as inlined function names, while github.com/moby/sys/user.init occurs twice. The vulnerable parsing code is not in this package."
     },
     {
       "vulnerability": {
@@ -23231,7 +23245,8 @@
           "@id": "pkg:deb/dhi/trivy-fips-dev@0.74.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before 0.4.1 does not limit entries when parsing user and group database files, so a crafted /etc/passwd or /etc/group can exhaust memory. Fixed in 0.4.1; see https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw and https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe. Debian marks the golang-github-moby-sys source no-dsa (minor issue) for trixie (https://security-tracker.debian.org/tracker/CVE-2026-61801), which says nothing about this package, so this decision rests on the binaries alone. The trivy-fips-dev packages for Debian 13 are published in the DHI security repository, which requires authentication, and their Go build information has not been read build by build for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to confirm that, as in the non-FIPS trivy-dev package of the same releases, no parsing or lookup function of github.com/moby/sys/user is linked."
     },
     {
       "vulnerability": {
@@ -23329,7 +23344,8 @@
           "@id": "pkg:deb/dhi/trivy-fips@0.74.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before 0.4.1 does not limit entries when parsing user and group database files, so a crafted /etc/passwd or /etc/group can exhaust memory. Fixed in 0.4.1; see https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw and https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe. Debian marks the golang-github-moby-sys source no-dsa (minor issue) for trixie (https://security-tracker.debian.org/tracker/CVE-2026-61801), which says nothing about this package, so this decision rests on the binaries alone. The trivy-fips packages for Debian 13 are published in the DHI security repository, which requires authentication, and their Go build information has not been read build by build for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to confirm that, as in the non-FIPS trivy package of the same releases, no parsing or lookup function of github.com/moby/sys/user is linked."
     },
     {
       "vulnerability": {
@@ -23663,7 +23679,9 @@
           "@id": "pkg:deb/dhi/trivy@0.74.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before 0.4.1 does not limit entries when parsing user and group database files, so a crafted /etc/passwd or /etc/group can exhaust memory. Fixed in 0.4.1; see https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw and https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe. Debian marks the golang-github-moby-sys source no-dsa (minor issue) for trixie (https://security-tracker.debian.org/tracker/CVE-2026-61801), which says nothing about this package, so this decision rests on the binaries alone. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). The 29 trivy builds published in the DHI Debian repository for Debian 13 as of 2026-11-27 (0.69.3-7 to 0.74.0-12, amd64 and arm64) each list only /usr/bin/trivy in their md5sums, with the same MD5 as /usr/bin/trivy in the Alpine 3.23 trivy package of the same version and revision on the matching architecture (for example 0.74.0-8 and 0.74.0-r8), and we read the Go build information (go version -m) and the function table (go tool nm) of every one of those Alpine binaries. Builds embed github.com/moby/sys/user 0.4.0 up to 0.73.0-2 and 0.4.1 from 0.74.0-0 on, but the only function of that package linked in any build is its package initialiser (github.com/moby/sys/user.init); none of the parsing or lookup functions (ParsePasswd*, ParseGroup*, GetExecUser*, GetAdditionalGroups*, LookupGroup, LookupGid, CurrentGroup or the internal line parser) is linked, while runtime.main is found in every build by the same search. A byte search of /usr/bin/trivy in trivy 0.69.1-r0 (x86_64) and 0.74.0-r12 (aarch64) agrees: the strings github.com/moby/sys/user.Parse, user.GetExecUser, user.LookupG, user.CurrentGroup, user.GetAdditionalGroups and user.parseLine occur 0 times, including as inlined function names, while github.com/moby/sys/user.init occurs twice. The vulnerable parsing code is not in this package."
     },
     {
       "vulnerability": {

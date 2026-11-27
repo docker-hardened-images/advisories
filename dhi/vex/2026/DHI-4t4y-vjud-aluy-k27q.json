@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T16:09:57Z",
-  "last_updated": "2026-11-27T00:48:20Z",
-  "version": 33,
+  "last_updated": "2026-11-27T12:24:34Z",
+  "version": 34,
   "statements": [
     {
       "vulnerability": {
@@ -5687,7 +5687,9 @@
           "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-7236-3392-c5c6 (CVE-2026-61711, GO-2026-6255): a custom BuildKit frontend could send an invalid SecurityMode in a build request, which the BuildKit executor (executor/oci/spec_linux.go) treated as a non-sandbox mode, disabling Seccomp and AppArmor for the build container. Fixed in BuildKit 0.31.1 by https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (validating exec security modes in executor/oci, solver/pb and client/llb); see https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). We read the Go build information (go version -m) and the function table (go tool nm) of /usr/bin/trivy in all 38 trivy-dev builds published for Alpine 3.23 as of 2026-11-27 (0.69.1-r0 to 0.74.0-r12), on both x86_64 and aarch64. trivy uses BuildKit only to parse Dockerfiles: the only github.com/moby/buildkit packages linked in any build are frontend/dockerfile/command, instructions, linter, parser and shell, util/stack and util/suggest. No build links any function from executor/oci, solver or client/llb, where build containers are created and their security mode is applied, while runtime.main and the frontend/dockerfile/parser functions are found in every build by the same search. A byte search of /usr/bin/trivy in trivy 0.69.1-r0 (x86_64) and 0.74.0-r12 (aarch64) agrees: github.com/moby/buildkit/executor, github.com/moby/buildkit/solver, github.com/moby/buildkit/client/llb and SecurityMode_INSECURE occur 0 times, while github.com/moby/buildkit/frontend/dockerfile/parser occurs over 100 times. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -5767,7 +5769,9 @@
           "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r9?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-7236-3392-c5c6 (CVE-2026-61711, GO-2026-6255): a custom BuildKit frontend could send an invalid SecurityMode in a build request, which the BuildKit executor (executor/oci/spec_linux.go) treated as a non-sandbox mode, disabling Seccomp and AppArmor for the build container. Fixed in BuildKit 0.31.1 by https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (validating exec security modes in executor/oci, solver/pb and client/llb); see https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). The 23 trivy-dev builds published for Alpine 3.24 as of 2026-11-27 (0.70.0-r5 to 0.74.0-r12) have the same package checksums in the repository index as the Alpine 3.23 packages of the same version, and we read the Go build information (go version -m) and the function table (go tool nm) of /usr/bin/trivy in every one of those packages on both x86_64 and aarch64. trivy uses BuildKit only to parse Dockerfiles: the only github.com/moby/buildkit packages linked in any build are frontend/dockerfile/command, instructions, linter, parser and shell, util/stack and util/suggest. No build links any function from executor/oci, solver or client/llb, where build containers are created and their security mode is applied, while runtime.main and the frontend/dockerfile/parser functions are found in every build by the same search. A byte search of /usr/bin/trivy in trivy 0.69.1-r0 (x86_64) and 0.74.0-r12 (aarch64) agrees: github.com/moby/buildkit/executor, github.com/moby/buildkit/solver, github.com/moby/buildkit/client/llb and SecurityMode_INSECURE occur 0 times, while github.com/moby/buildkit/frontend/dockerfile/parser occurs over 100 times. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -5892,7 +5896,8 @@
           "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-7236-3392-c5c6 (CVE-2026-61711, GO-2026-6255): a custom BuildKit frontend could send an invalid SecurityMode in a build request, which the BuildKit executor (executor/oci/spec_linux.go) treated as a non-sandbox mode, disabling Seccomp and AppArmor for the build container. Fixed in BuildKit 0.31.1 by https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (validating exec security modes in executor/oci, solver/pb and client/llb); see https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6. The trivy-fips-dev packages for Alpine 3.23 are published in the DHI security repository, which requires authentication, and their Go build information has not been read build by build for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to confirm that, as in the non-FIPS trivy-dev package of the same releases, no BuildKit package other than the Dockerfile frontend parser packages (and util/stack, util/suggest) is linked."
     },
     {
       "vulnerability": {
@@ -5972,7 +5977,8 @@
           "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r9?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-7236-3392-c5c6 (CVE-2026-61711, GO-2026-6255): a custom BuildKit frontend could send an invalid SecurityMode in a build request, which the BuildKit executor (executor/oci/spec_linux.go) treated as a non-sandbox mode, disabling Seccomp and AppArmor for the build container. Fixed in BuildKit 0.31.1 by https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (validating exec security modes in executor/oci, solver/pb and client/llb); see https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6. The trivy-fips-dev packages for Alpine 3.24 are published in the DHI security repository, which requires authentication, and their Go build information has not been read build by build for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to confirm that, as in the non-FIPS trivy-dev package of the same releases, no BuildKit package other than the Dockerfile frontend parser packages (and util/stack, util/suggest) is linked."
     },
     {
       "vulnerability": {
@@ -6097,7 +6103,8 @@
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-7236-3392-c5c6 (CVE-2026-61711, GO-2026-6255): a custom BuildKit frontend could send an invalid SecurityMode in a build request, which the BuildKit executor (executor/oci/spec_linux.go) treated as a non-sandbox mode, disabling Seccomp and AppArmor for the build container. Fixed in BuildKit 0.31.1 by https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (validating exec security modes in executor/oci, solver/pb and client/llb); see https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6. The trivy-fips packages for Alpine 3.23 are published in the DHI security repository, which requires authentication, and their Go build information has not been read build by build for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to confirm that, as in the non-FIPS trivy package of the same releases, no BuildKit package other than the Dockerfile frontend parser packages (and util/stack, util/suggest) is linked."
     },
     {
       "vulnerability": {
@@ -6177,7 +6184,8 @@
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r9?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-7236-3392-c5c6 (CVE-2026-61711, GO-2026-6255): a custom BuildKit frontend could send an invalid SecurityMode in a build request, which the BuildKit executor (executor/oci/spec_linux.go) treated as a non-sandbox mode, disabling Seccomp and AppArmor for the build container. Fixed in BuildKit 0.31.1 by https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (validating exec security modes in executor/oci, solver/pb and client/llb); see https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6. The trivy-fips packages for Alpine 3.24 are published in the DHI security repository, which requires authentication, and their Go build information has not been read build by build for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to confirm that, as in the non-FIPS trivy package of the same releases, no BuildKit package other than the Dockerfile frontend parser packages (and util/stack, util/suggest) is linked."
     },
     {
       "vulnerability": {
@@ -6774,7 +6782,9 @@
           "@id": "pkg:apk/dhi/trivy@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-7236-3392-c5c6 (CVE-2026-61711, GO-2026-6255): a custom BuildKit frontend could send an invalid SecurityMode in a build request, which the BuildKit executor (executor/oci/spec_linux.go) treated as a non-sandbox mode, disabling Seccomp and AppArmor for the build container. Fixed in BuildKit 0.31.1 by https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (validating exec security modes in executor/oci, solver/pb and client/llb); see https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). We read the Go build information (go version -m) and the function table (go tool nm) of /usr/bin/trivy in all 38 trivy builds published for Alpine 3.23 as of 2026-11-27 (0.69.1-r0 to 0.74.0-r12), on both x86_64 and aarch64. trivy uses BuildKit only to parse Dockerfiles: the only github.com/moby/buildkit packages linked in any build are frontend/dockerfile/command, instructions, linter, parser and shell, util/stack and util/suggest. No build links any function from executor/oci, solver or client/llb, where build containers are created and their security mode is applied, while runtime.main and the frontend/dockerfile/parser functions are found in every build by the same search. A byte search of /usr/bin/trivy in trivy 0.69.1-r0 (x86_64) and 0.74.0-r12 (aarch64) agrees: github.com/moby/buildkit/executor, github.com/moby/buildkit/solver, github.com/moby/buildkit/client/llb and SecurityMode_INSECURE occur 0 times, while github.com/moby/buildkit/frontend/dockerfile/parser occurs over 100 times. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -6854,7 +6864,9 @@
           "@id": "pkg:apk/dhi/trivy@0.74.0-r9?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-7236-3392-c5c6 (CVE-2026-61711, GO-2026-6255): a custom BuildKit frontend could send an invalid SecurityMode in a build request, which the BuildKit executor (executor/oci/spec_linux.go) treated as a non-sandbox mode, disabling Seccomp and AppArmor for the build container. Fixed in BuildKit 0.31.1 by https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (validating exec security modes in executor/oci, solver/pb and client/llb); see https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). The 23 trivy builds published for Alpine 3.24 as of 2026-11-27 (0.70.0-r5 to 0.74.0-r12) have the same package checksums in the repository index as the Alpine 3.23 packages of the same version, and we read the Go build information (go version -m) and the function table (go tool nm) of /usr/bin/trivy in every one of those packages on both x86_64 and aarch64. trivy uses BuildKit only to parse Dockerfiles: the only github.com/moby/buildkit packages linked in any build are frontend/dockerfile/command, instructions, linter, parser and shell, util/stack and util/suggest. No build links any function from executor/oci, solver or client/llb, where build containers are created and their security mode is applied, while runtime.main and the frontend/dockerfile/parser functions are found in every build by the same search. A byte search of /usr/bin/trivy in trivy 0.69.1-r0 (x86_64) and 0.74.0-r12 (aarch64) agrees: github.com/moby/buildkit/executor, github.com/moby/buildkit/solver, github.com/moby/buildkit/client/llb and SecurityMode_INSECURE occur 0 times, while github.com/moby/buildkit/frontend/dockerfile/parser occurs over 100 times. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -10384,7 +10396,9 @@
           "@id": "pkg:deb/dhi/trivy-dev@0.74.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-7236-3392-c5c6 (CVE-2026-61711, GO-2026-6255): a custom BuildKit frontend could send an invalid SecurityMode in a build request, which the BuildKit executor (executor/oci/spec_linux.go) treated as a non-sandbox mode, disabling Seccomp and AppArmor for the build container. Fixed in BuildKit 0.31.1 by https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (validating exec security modes in executor/oci, solver/pb and client/llb); see https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). The 29 trivy-dev builds published in the DHI Debian repository for Debian 13 as of 2026-11-27 (0.69.3-7 to 0.74.0-12, amd64 and arm64) each list only /usr/bin/trivy in their md5sums, with the same MD5 as /usr/bin/trivy in the Alpine 3.23 trivy-dev package of the same version and revision on the matching architecture (for example 0.74.0-8 and 0.74.0-r8), and we read the Go build information (go version -m) and the function table (go tool nm) of every one of those Alpine binaries. trivy uses BuildKit only to parse Dockerfiles: the only github.com/moby/buildkit packages linked in any build are frontend/dockerfile/command, instructions, linter, parser and shell, util/stack and util/suggest. No build links any function from executor/oci, solver or client/llb, where build containers are created and their security mode is applied, while runtime.main and the frontend/dockerfile/parser functions are found in every build by the same search. A byte search of /usr/bin/trivy in trivy 0.69.1-r0 (x86_64) and 0.74.0-r12 (aarch64) agrees: github.com/moby/buildkit/executor, github.com/moby/buildkit/solver, github.com/moby/buildkit/client/llb and SecurityMode_INSECURE occur 0 times, while github.com/moby/buildkit/frontend/dockerfile/parser occurs over 100 times. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
@@ -10482,7 +10496,8 @@
           "@id": "pkg:deb/dhi/trivy-fips-dev@0.74.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-7236-3392-c5c6 (CVE-2026-61711, GO-2026-6255): a custom BuildKit frontend could send an invalid SecurityMode in a build request, which the BuildKit executor (executor/oci/spec_linux.go) treated as a non-sandbox mode, disabling Seccomp and AppArmor for the build container. Fixed in BuildKit 0.31.1 by https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (validating exec security modes in executor/oci, solver/pb and client/llb); see https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6. The trivy-fips-dev packages for Debian 13 are published in the DHI security repository, which requires authentication, and their Go build information has not been read build by build for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to confirm that, as in the non-FIPS trivy-dev package of the same releases, no BuildKit package other than the Dockerfile frontend parser packages (and util/stack, util/suggest) is linked."
     },
     {
       "vulnerability": {
@@ -10580,7 +10595,8 @@
           "@id": "pkg:deb/dhi/trivy-fips@0.74.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-7236-3392-c5c6 (CVE-2026-61711, GO-2026-6255): a custom BuildKit frontend could send an invalid SecurityMode in a build request, which the BuildKit executor (executor/oci/spec_linux.go) treated as a non-sandbox mode, disabling Seccomp and AppArmor for the build container. Fixed in BuildKit 0.31.1 by https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (validating exec security modes in executor/oci, solver/pb and client/llb); see https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6. The trivy-fips packages for Debian 13 are published in the DHI security repository, which requires authentication, and their Go build information has not been read build by build for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to confirm that, as in the non-FIPS trivy package of the same releases, no BuildKit package other than the Dockerfile frontend parser packages (and util/stack, util/suggest) is linked."
     },
     {
       "vulnerability": {
@@ -10914,7 +10930,9 @@
           "@id": "pkg:deb/dhi/trivy@0.74.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-7236-3392-c5c6 (CVE-2026-61711, GO-2026-6255): a custom BuildKit frontend could send an invalid SecurityMode in a build request, which the BuildKit executor (executor/oci/spec_linux.go) treated as a non-sandbox mode, disabling Seccomp and AppArmor for the build container. Fixed in BuildKit 0.31.1 by https://github.com/moby/buildkit/commit/3ea6dd0ce7d269cdb8aa23348718e2c1bf64f109 (validating exec security modes in executor/oci, solver/pb and client/llb); see https://github.com/moby/buildkit/security/advisories/GHSA-7236-3392-c5c6. Each package installs one file, /usr/bin/trivy, a statically linked Go program for Linux (CGO_ENABLED=0 in every build). The 29 trivy builds published in the DHI Debian repository for Debian 13 as of 2026-11-27 (0.69.3-7 to 0.74.0-12, amd64 and arm64) each list only /usr/bin/trivy in their md5sums, with the same MD5 as /usr/bin/trivy in the Alpine 3.23 trivy package of the same version and revision on the matching architecture (for example 0.74.0-8 and 0.74.0-r8), and we read the Go build information (go version -m) and the function table (go tool nm) of every one of those Alpine binaries. trivy uses BuildKit only to parse Dockerfiles: the only github.com/moby/buildkit packages linked in any build are frontend/dockerfile/command, instructions, linter, parser and shell, util/stack and util/suggest. No build links any function from executor/oci, solver or client/llb, where build containers are created and their security mode is applied, while runtime.main and the frontend/dockerfile/parser functions are found in every build by the same search. A byte search of /usr/bin/trivy in trivy 0.69.1-r0 (x86_64) and 0.74.0-r12 (aarch64) agrees: github.com/moby/buildkit/executor, github.com/moby/buildkit/solver, github.com/moby/buildkit/client/llb and SecurityMode_INSECURE occur 0 times, while github.com/moby/buildkit/frontend/dockerfile/parser occurs over 100 times. The vulnerable code is not in this package."
     },
     {
       "vulnerability": {
