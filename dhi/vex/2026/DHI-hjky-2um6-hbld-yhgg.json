@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:00:00Z",
-  "last_updated": "2026-11-13T21:07:05Z",
-  "version": 3,
+  "last_updated": "2026-11-27T17:08:56Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -85,7 +85,20 @@
         },
         {
           "@id": "pkg:apk/dhi/nodejs-24@24.16.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nodejs-24 to 24.17.0-r0 or later.",
+      "status_notes": "CVE-2026-48617 is a Node.js Permission Model bypass: process.report.writeReport() did not check the fs.write permission for the file it writes, or for the current directory when no file name is given, so with --permission a script could write a diagnostic report outside the paths it was allowed to write. Node.js fixed it for 24.x in 24.17.0, released 2026-06-18: the June 2026 security release, https://nodejs.org/en/blog/vulnerability/june-2026-security-releases, lists 24.x among the affected release lines, and the 24.17.0 release notes, https://nodejs.org/en/blog/release/v24.17.0, list this CVE. The fix is commit https://github.com/nodejs/node/commit/a1bbc24f96 ('permission: handle process.chdir on writereport'), which carries CVE-ID: CVE-2026-48617 and is in the v24.17.0 tag and not in v24.16.0; outside tests it changes lib/internal/process/report.js. The CVE record, https://www.cve.org/CVERecord?id=CVE-2026-48617, lists Node.js 24 releases up to 24.16.0 as affected. The DHI nodejs-24 packages for Alpine 3.23 are built from the upstream Node.js release tarball for their version. Each published nodejs-24 package holds one file, /usr/bin/node, a dynamically linked musl program that carries the Node.js JavaScript library and the C++ runtime where this code lives; the nodejs-24-dev subpackages hold C and C++ header files and two .gypi build configuration files under /usr/include/node, and the nodejs-24-doc subpackages hold the node man page and two debugger helper files, gdbinit and lldb_commands.py, with no ELF, PE or Mach-O file in either. We checked the node binary, /usr/bin/node, in every nodejs-24 package for Alpine 3.23 published by 2026-11-27, on x86_64 and aarch64 (checksums verified against the package index): 24.17.0-r0, 24.18.0-r0, 24.18.1-r0, 24.19.0-r0, 24.20.0-r0, 24.21.0-r0, 24.22.0-r0, 24.22.1-r0, 24.22.1-r1, 24.22.2-r0 and 24.22.3-r0 report v24.17.0 through v24.22.3 and carry the fix, while the earlier builds 24.13.0-r0, 24.13.1-r0, 24.14.0-r0, 24.14.1-r0, 24.15.0-r0, 24.15.0-r1 and 24.16.0-r0 report v24.13.0 through v24.16.0 and are affected. As a check, the source of lib/internal/process/report.js embedded in the node binary contains the fs.write permission check this fix adds to writeReport() (permission.has('fs.write', resource), raising ERR_ACCESS_DENIED for FileSystemWrite) in 24.17.0-r0 and every later build on both architectures, and does not in any earlier build; from 24.18.1-r0 the same check also prefixes the file name with the report directory when one is set, a later hardening listed in the July 2026 security release as CVE-2026-58039. 24.17.0-r0 is the first published build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-hjky-2um6-hbld-yhgg",
+        "aliases": [
+          "CVE-2026-48617"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/nodejs-24@24.17.0-r0?distro=dhi-3.23"
         },
@@ -120,7 +133,8 @@
           "@id": "pkg:apk/dhi/nodejs-24@24.22.3-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-48617 is a Node.js Permission Model bypass: process.report.writeReport() did not check the fs.write permission for the file it writes, or for the current directory when no file name is given, so with --permission a script could write a diagnostic report outside the paths it was allowed to write. Node.js fixed it for 24.x in 24.17.0, released 2026-06-18: the June 2026 security release, https://nodejs.org/en/blog/vulnerability/june-2026-security-releases, lists 24.x among the affected release lines, and the 24.17.0 release notes, https://nodejs.org/en/blog/release/v24.17.0, list this CVE. The fix is commit https://github.com/nodejs/node/commit/a1bbc24f96 ('permission: handle process.chdir on writereport'), which carries CVE-ID: CVE-2026-48617 and is in the v24.17.0 tag and not in v24.16.0; outside tests it changes lib/internal/process/report.js. The CVE record, https://www.cve.org/CVERecord?id=CVE-2026-48617, lists Node.js 24 releases up to 24.16.0 as affected. The DHI nodejs-24 packages for Alpine 3.23 are built from the upstream Node.js release tarball for their version. Each published nodejs-24 package holds one file, /usr/bin/node, a dynamically linked musl program that carries the Node.js JavaScript library and the C++ runtime where this code lives; the nodejs-24-dev subpackages hold C and C++ header files and two .gypi build configuration files under /usr/include/node, and the nodejs-24-doc subpackages hold the node man page and two debugger helper files, gdbinit and lldb_commands.py, with no ELF, PE or Mach-O file in either. We checked the node binary, /usr/bin/node, in every nodejs-24 package for Alpine 3.23 published by 2026-11-27, on x86_64 and aarch64 (checksums verified against the package index): 24.17.0-r0, 24.18.0-r0, 24.18.1-r0, 24.19.0-r0, 24.20.0-r0, 24.21.0-r0, 24.22.0-r0, 24.22.1-r0, 24.22.1-r1, 24.22.2-r0 and 24.22.3-r0 report v24.17.0 through v24.22.3 and carry the fix, while the earlier builds 24.13.0-r0, 24.13.1-r0, 24.14.0-r0, 24.14.1-r0, 24.15.0-r0, 24.15.0-r1 and 24.16.0-r0 report v24.13.0 through v24.16.0 and are affected. As a check, the source of lib/internal/process/report.js embedded in the node binary contains the fs.write permission check this fix adds to writeReport() (permission.has('fs.write', resource), raising ERR_ACCESS_DENIED for FileSystemWrite) in 24.17.0-r0 and every later build on both architectures, and does not in any earlier build; from 24.18.1-r0 the same check also prefixes the file name with the report directory when one is set, a later hardening listed in the July 2026 security release as CVE-2026-58039. 24.17.0-r0 is the first published build that carries the fix."
     },
     {
       "vulnerability": {
