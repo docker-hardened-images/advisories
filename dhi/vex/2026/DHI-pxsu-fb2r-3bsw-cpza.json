@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T03:49:12Z",
-  "last_updated": "2026-11-25T02:33:30Z",
-  "version": 2,
+  "last_updated": "2026-11-27T23:41:50Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -17,7 +17,20 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update mariadb to 1:11.8.6-0+deb13u1+dhi1 or later.",
+      "status_notes": "CVE-2026-85746 is MariaDB advisory GHSA-8fvj-c57c-pggx (MDEV-40329): https://github.com/MariaDB/server/security/advisories/GHSA-8fvj-c57c-pggx . When ST_AsText converted deeply nested GeometryCollections to WKT, the recursive serializer did not reserve room for the bytes it appended, so it could write beyond its output buffer; a low-privileged user can submit a crafted GIS object to corrupt memory. MariaDB fixed it in 11.8.9 (and 10.6.28, 10.11.19, 11.4.13, 12.3.3 and 13.0.2) with commit https://github.com/MariaDB/server/commit/5c04ca5524385356ff7cf84974a7d491974c1f85 , which in sql/spatial.cc reserves the space in Geometry::as_wkt and Gis_geometry_collection::get_data_as_wkt before writing. Debian's mariadb 1:11.8.6-0+deb13u1 does not include it; Debian fixes trixie in 1:11.8.9+ds-0+deb13u1 (https://security-tracker.debian.org/tracker/CVE-2026-85746). DHI backports the commit's sql/spatial.cc change unmodified, and the fixed version is the second build, the first that carries it. We compared all four published builds of Debian's mariadb 1:11.8.6-0+deb13u1 in the DHI Debian repository (called the first to fourth build below; the fourth is the current build) on amd64 and arm64; each package we read was verified against the repository index checksum, reading function sizes from the dynamic symbol tables of /usr/sbin/mariadbd (mariadb-server-core) and of the embedded server library libmariadbd.so.19 (libmariadbd19t64). Between the first and second builds, Geometry::as_wkt changes from 208 to 252 bytes and Gis_geometry_collection::get_data_as_wkt from 466 to 450 on amd64 (332 to 364 and 572 to 548 on arm64), the same in both files, and the third and fourth builds keep the second build's sizes. From the second build on, mysql-test/main/gis.result in mariadb-test-data carries the upstream MDEV-40329 regression test, which the first build lacks, and the shipped changelog lists this CVE."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-pxsu-fb2r-3bsw-cpza",
+        "aliases": [
+          "CVE-2026-85746"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi1?distro=dhi-13"
         },
@@ -28,7 +41,8 @@
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-85746 is MariaDB advisory GHSA-8fvj-c57c-pggx (MDEV-40329): https://github.com/MariaDB/server/security/advisories/GHSA-8fvj-c57c-pggx . When ST_AsText converted deeply nested GeometryCollections to WKT, the recursive serializer did not reserve room for the bytes it appended, so it could write beyond its output buffer; a low-privileged user can submit a crafted GIS object to corrupt memory. MariaDB fixed it in 11.8.9 (and 10.6.28, 10.11.19, 11.4.13, 12.3.3 and 13.0.2) with commit https://github.com/MariaDB/server/commit/5c04ca5524385356ff7cf84974a7d491974c1f85 , which in sql/spatial.cc reserves the space in Geometry::as_wkt and Gis_geometry_collection::get_data_as_wkt before writing. Debian's mariadb 1:11.8.6-0+deb13u1 does not include it; Debian fixes trixie in 1:11.8.9+ds-0+deb13u1 (https://security-tracker.debian.org/tracker/CVE-2026-85746). DHI backports the commit's sql/spatial.cc change unmodified, and the fixed version is the second build, the first that carries it. We compared all four published builds of Debian's mariadb 1:11.8.6-0+deb13u1 in the DHI Debian repository (called the first to fourth build below; the fourth is the current build) on amd64 and arm64; each package we read was verified against the repository index checksum, reading function sizes from the dynamic symbol tables of /usr/sbin/mariadbd (mariadb-server-core) and of the embedded server library libmariadbd.so.19 (libmariadbd19t64). Between the first and second builds, Geometry::as_wkt changes from 208 to 252 bytes and Gis_geometry_collection::get_data_as_wkt from 466 to 450 on amd64 (332 to 364 and 572 to 548 on arm64), the same in both files, and the third and fourth builds keep the second build's sizes. From the second build on, mysql-test/main/gis.result in mariadb-test-data carries the upstream MDEV-40329 regression test, which the first build lacks, and the shipped changelog lists this CVE."
     }
   ]
 }
