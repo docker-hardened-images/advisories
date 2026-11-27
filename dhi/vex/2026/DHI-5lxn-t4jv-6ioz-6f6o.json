@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T15:57:48Z",
-  "last_updated": "2026-11-26T19:29:41Z",
-  "version": 34,
+  "last_updated": "2026-11-27T13:01:10Z",
+  "version": 35,
   "statements": [
     {
       "vulnerability": {
@@ -4248,7 +4248,9 @@
           "@id": "pkg:apk/dhi/scout-cli-dev@1.30.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46680 (GHSA-fqw6-gf59-qr4w, GO-2026-5378): containerd's oci.WithUser treated a numeric USER value that does not fit in 32 bits as a user name, so an image whose /etc/passwd maps that string to root could start as root despite the Kubernetes runAsNonRoot setting. Affected are github.com/containerd/containerd 1.7.27 before 1.7.32 and github.com/containerd/containerd/v2 2.0.4 before 2.0.9, 2.1.0-beta.0 before 2.2.4 and 2.3.0-beta.0 before 2.3.1; the fix changes oci.WithUser in spec_opts.go (https://github.com/containerd/containerd/security/advisories/GHSA-fqw6-gf59-qr4w, https://github.com/containerd/containerd/commit/85706b6d4416d93b47033ba345d7b885a75657b4, https://github.com/containerd/containerd/commit/6a05ddd119ec81beb36d504ce844bdd11bfcb22c). Checked every scout-cli-dev package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 25 builds, 1.20.4-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each holds /usr/bin/docker-scout, the -dev build of the Docker Scout CLI, a Go program built with CGO_ENABLED=0; we read its Go build information from every published package. github.com/containerd/containerd is v1.7.30 in 1.20.4-r1 to 1.20.4-r4, v1.7.32 in 1.21.0-r0 to 1.21.0-r2, v1.7.33 in 1.23.1-r0 to 1.23.1-r4, not in the module list in 1.23.1-r5 to 1.30.0-r1; github.com/containerd/containerd/v2 is v2.2.1 in 1.20.4-r1 to 1.20.4-r4, v2.2.4 in 1.21.0-r0 to 1.21.0-r2, v2.2.5 in 1.23.1-r0 to 1.23.1-r4, v2.3.2 in 1.23.1-r5 to 1.23.1-r8, v2.3.5 in 1.23.1-r9, v2.4.1 in 1.23.1-r10 to 1.30.0-r0, v2.4.2 in 1.30.0-r1; both architectures agree for every build. Only 1.20.4-r1 to 1.20.4-r4 carry affected releases (github.com/containerd/containerd v1.7.30 and github.com/containerd/containerd/v2 v2.2.1); every later build carries releases outside the affected ranges. We listed the symbols of the binaries for 1.20.4-r1 to 1.20.4-r4 on both architectures with go tool nm and searched each whole binary for the function names (the Go function name table also lists inlined functions): none contains oci.WithUser, oci.WithUserID or oci.WithUsername from either containerd module, and no function of the 1.7 oci package is linked at all, while the same search finds functions of github.com/containerd/containerd/v2/pkg/oci (DescriptorFromProto) and runtime.main in every one. The Docker Scout CLI links containerd code for registries and images, not the function that resolves an image USER for a container, so the vulnerable code is not present in any published build."
     },
     {
       "vulnerability": {
@@ -4334,7 +4336,8 @@
           "@id": "pkg:apk/dhi/scout-cli-fips-dev@1.30.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46680 (GHSA-fqw6-gf59-qr4w, GO-2026-5378): containerd's oci.WithUser treated a numeric USER value that does not fit in 32 bits as a user name, so an image whose /etc/passwd maps that string to root could start as root despite the Kubernetes runAsNonRoot setting. Affected are github.com/containerd/containerd 1.7.27 before 1.7.32 and github.com/containerd/containerd/v2 2.0.4 before 2.0.9, 2.1.0-beta.0 before 2.2.4 and 2.3.0-beta.0 before 2.3.1; the fix changes oci.WithUser in spec_opts.go (https://github.com/containerd/containerd/security/advisories/GHSA-fqw6-gf59-qr4w, https://github.com/containerd/containerd/commit/85706b6d4416d93b47033ba345d7b885a75657b4, https://github.com/containerd/containerd/commit/6a05ddd119ec81beb36d504ce844bdd11bfcb22c). The scout-cli-fips-dev packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository. Pending: a per-build reading of the Go build information and function table of every published scout-cli-fips-dev build for Alpine 3.23 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -4420,7 +4423,8 @@
           "@id": "pkg:apk/dhi/scout-cli-fips@1.30.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46680 (GHSA-fqw6-gf59-qr4w, GO-2026-5378): containerd's oci.WithUser treated a numeric USER value that does not fit in 32 bits as a user name, so an image whose /etc/passwd maps that string to root could start as root despite the Kubernetes runAsNonRoot setting. Affected are github.com/containerd/containerd 1.7.27 before 1.7.32 and github.com/containerd/containerd/v2 2.0.4 before 2.0.9, 2.1.0-beta.0 before 2.2.4 and 2.3.0-beta.0 before 2.3.1; the fix changes oci.WithUser in spec_opts.go (https://github.com/containerd/containerd/security/advisories/GHSA-fqw6-gf59-qr4w, https://github.com/containerd/containerd/commit/85706b6d4416d93b47033ba345d7b885a75657b4, https://github.com/containerd/containerd/commit/6a05ddd119ec81beb36d504ce844bdd11bfcb22c). The scout-cli-fips packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository. Pending: a per-build reading of the Go build information and function table of every published scout-cli-fips build for Alpine 3.23 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -4506,7 +4510,9 @@
           "@id": "pkg:apk/dhi/scout-cli@1.30.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46680 (GHSA-fqw6-gf59-qr4w, GO-2026-5378): containerd's oci.WithUser treated a numeric USER value that does not fit in 32 bits as a user name, so an image whose /etc/passwd maps that string to root could start as root despite the Kubernetes runAsNonRoot setting. Affected are github.com/containerd/containerd 1.7.27 before 1.7.32 and github.com/containerd/containerd/v2 2.0.4 before 2.0.9, 2.1.0-beta.0 before 2.2.4 and 2.3.0-beta.0 before 2.3.1; the fix changes oci.WithUser in spec_opts.go (https://github.com/containerd/containerd/security/advisories/GHSA-fqw6-gf59-qr4w, https://github.com/containerd/containerd/commit/85706b6d4416d93b47033ba345d7b885a75657b4, https://github.com/containerd/containerd/commit/6a05ddd119ec81beb36d504ce844bdd11bfcb22c). Checked every scout-cli package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 25 builds, 1.20.4-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each holds /usr/bin/docker-scout, the Docker Scout CLI, a Go program built with CGO_ENABLED=0; we read its Go build information from every published package. github.com/containerd/containerd is v1.7.30 in 1.20.4-r1 to 1.20.4-r4, v1.7.32 in 1.21.0-r0 to 1.21.0-r2, v1.7.33 in 1.23.1-r0 to 1.23.1-r4, not in the module list in 1.23.1-r5 to 1.30.0-r1; github.com/containerd/containerd/v2 is v2.2.1 in 1.20.4-r1 to 1.20.4-r4, v2.2.4 in 1.21.0-r0 to 1.21.0-r2, v2.2.5 in 1.23.1-r0 to 1.23.1-r4, v2.3.2 in 1.23.1-r5 to 1.23.1-r8, v2.3.5 in 1.23.1-r9, v2.4.1 in 1.23.1-r10 to 1.30.0-r0, v2.4.2 in 1.30.0-r1; both architectures agree for every build. Only 1.20.4-r1 to 1.20.4-r4 carry affected releases (github.com/containerd/containerd v1.7.30 and github.com/containerd/containerd/v2 v2.2.1); every later build carries releases outside the affected ranges. We listed the symbols of the binaries for 1.20.4-r1 to 1.20.4-r4 on both architectures with go tool nm and searched each whole binary for the function names (the Go function name table also lists inlined functions): none contains oci.WithUser, oci.WithUserID or oci.WithUsername from either containerd module, and no function of the 1.7 oci package is linked at all, while the same search finds functions of github.com/containerd/containerd/v2/pkg/oci (DescriptorFromProto) and runtime.main in every one. The Docker Scout CLI links containerd code for registries and images, not the function that resolves an image USER for a container, so the vulnerable code is not present in any published build."
     },
     {
       "vulnerability": {
@@ -9199,7 +9205,9 @@
           "@id": "pkg:deb/dhi/scout-cli-dev@1.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46680 (GHSA-fqw6-gf59-qr4w, GO-2026-5378): containerd's oci.WithUser treated a numeric USER value that does not fit in 32 bits as a user name, so an image whose /etc/passwd maps that string to root could start as root despite the Kubernetes runAsNonRoot setting. Affected are github.com/containerd/containerd 1.7.27 before 1.7.32 and github.com/containerd/containerd/v2 2.0.4 before 2.0.9, 2.1.0-beta.0 before 2.2.4 and 2.3.0-beta.0 before 2.3.1; the fix changes oci.WithUser in spec_opts.go (https://github.com/containerd/containerd/security/advisories/GHSA-fqw6-gf59-qr4w, https://github.com/containerd/containerd/commit/85706b6d4416d93b47033ba345d7b885a75657b4, https://github.com/containerd/containerd/commit/6a05ddd119ec81beb36d504ce844bdd11bfcb22c). Checked every scout-cli-dev package published for Debian 13 in the DHI Debian repository by 2026-11-27: 25 builds, 1.20.4-1 to 1.30.0-1, each for amd64 and arm64. Each installs one file, /usr/bin/docker-scout, the -dev build of the Docker Scout CLI; in every build that binary carries the same Go build ID (which includes a hash of the linked program) as the Alpine 3.23 scout-cli-dev build of the same version and architecture, a Go program built with CGO_ENABLED=0 whose Go build information we read. github.com/containerd/containerd is v1.7.30 in 1.20.4-1 to 1.20.4-4, v1.7.32 in 1.21.0-0 to 1.21.0-2, v1.7.33 in 1.23.1-0 to 1.23.1-4, not in the module list in 1.23.1-5 to 1.30.0-1; github.com/containerd/containerd/v2 is v2.2.1 in 1.20.4-1 to 1.20.4-4, v2.2.4 in 1.21.0-0 to 1.21.0-2, v2.2.5 in 1.23.1-0 to 1.23.1-4, v2.3.2 in 1.23.1-5 to 1.23.1-8, v2.3.5 in 1.23.1-9, v2.4.1 in 1.23.1-10 to 1.30.0-0, v2.4.2 in 1.30.0-1; both architectures agree for every build. Only 1.20.4-1 to 1.20.4-4 carry affected releases (github.com/containerd/containerd v1.7.30 and github.com/containerd/containerd/v2 v2.2.1); every later build carries releases outside the affected ranges. We listed the symbols of the Alpine 3.23 scout-cli-dev binaries that are byte-identical to the Debian ones (the same MD5 as the Debian package lists) for 1.20.4-1 to 1.20.4-4 on both architectures with go tool nm and searched each whole binary for the function names (the Go function name table also lists inlined functions): none contains oci.WithUser, oci.WithUserID or oci.WithUsername from either containerd module, and no function of the 1.7 oci package is linked at all, while the same search finds functions of github.com/containerd/containerd/v2/pkg/oci (DescriptorFromProto) and runtime.main in every one. The Docker Scout CLI links containerd code for registries and images, not the function that resolves an image USER for a container, so the vulnerable code is not present in any published build."
     },
     {
       "vulnerability": {
@@ -9285,7 +9293,8 @@
           "@id": "pkg:deb/dhi/scout-cli-fips-dev@1.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46680 (GHSA-fqw6-gf59-qr4w, GO-2026-5378): containerd's oci.WithUser treated a numeric USER value that does not fit in 32 bits as a user name, so an image whose /etc/passwd maps that string to root could start as root despite the Kubernetes runAsNonRoot setting. Affected are github.com/containerd/containerd 1.7.27 before 1.7.32 and github.com/containerd/containerd/v2 2.0.4 before 2.0.9, 2.1.0-beta.0 before 2.2.4 and 2.3.0-beta.0 before 2.3.1; the fix changes oci.WithUser in spec_opts.go (https://github.com/containerd/containerd/security/advisories/GHSA-fqw6-gf59-qr4w, https://github.com/containerd/containerd/commit/85706b6d4416d93b47033ba345d7b885a75657b4, https://github.com/containerd/containerd/commit/6a05ddd119ec81beb36d504ce844bdd11bfcb22c). The scout-cli-fips-dev packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository. Pending: a per-build reading of the Go build information and function table of every published scout-cli-fips-dev build for Debian 13 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -9371,7 +9380,8 @@
           "@id": "pkg:deb/dhi/scout-cli-fips@1.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46680 (GHSA-fqw6-gf59-qr4w, GO-2026-5378): containerd's oci.WithUser treated a numeric USER value that does not fit in 32 bits as a user name, so an image whose /etc/passwd maps that string to root could start as root despite the Kubernetes runAsNonRoot setting. Affected are github.com/containerd/containerd 1.7.27 before 1.7.32 and github.com/containerd/containerd/v2 2.0.4 before 2.0.9, 2.1.0-beta.0 before 2.2.4 and 2.3.0-beta.0 before 2.3.1; the fix changes oci.WithUser in spec_opts.go (https://github.com/containerd/containerd/security/advisories/GHSA-fqw6-gf59-qr4w, https://github.com/containerd/containerd/commit/85706b6d4416d93b47033ba345d7b885a75657b4, https://github.com/containerd/containerd/commit/6a05ddd119ec81beb36d504ce844bdd11bfcb22c). The scout-cli-fips packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository. Pending: a per-build reading of the Go build information and function table of every published scout-cli-fips build for Debian 13 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -9457,7 +9467,9 @@
           "@id": "pkg:deb/dhi/scout-cli@1.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46680 (GHSA-fqw6-gf59-qr4w, GO-2026-5378): containerd's oci.WithUser treated a numeric USER value that does not fit in 32 bits as a user name, so an image whose /etc/passwd maps that string to root could start as root despite the Kubernetes runAsNonRoot setting. Affected are github.com/containerd/containerd 1.7.27 before 1.7.32 and github.com/containerd/containerd/v2 2.0.4 before 2.0.9, 2.1.0-beta.0 before 2.2.4 and 2.3.0-beta.0 before 2.3.1; the fix changes oci.WithUser in spec_opts.go (https://github.com/containerd/containerd/security/advisories/GHSA-fqw6-gf59-qr4w, https://github.com/containerd/containerd/commit/85706b6d4416d93b47033ba345d7b885a75657b4, https://github.com/containerd/containerd/commit/6a05ddd119ec81beb36d504ce844bdd11bfcb22c). Checked every scout-cli package published for Debian 13 in the DHI Debian repository by 2026-11-27: 25 builds, 1.20.4-1 to 1.30.0-1, each for amd64 and arm64. Each installs one file, /usr/bin/docker-scout, the Docker Scout CLI; in every build that binary carries the same Go build ID (which includes a hash of the linked program) as the Alpine 3.23 scout-cli build of the same version and architecture, a Go program built with CGO_ENABLED=0 whose Go build information we read. github.com/containerd/containerd is v1.7.30 in 1.20.4-1 to 1.20.4-4, v1.7.32 in 1.21.0-0 to 1.21.0-2, v1.7.33 in 1.23.1-0 to 1.23.1-4, not in the module list in 1.23.1-5 to 1.30.0-1; github.com/containerd/containerd/v2 is v2.2.1 in 1.20.4-1 to 1.20.4-4, v2.2.4 in 1.21.0-0 to 1.21.0-2, v2.2.5 in 1.23.1-0 to 1.23.1-4, v2.3.2 in 1.23.1-5 to 1.23.1-8, v2.3.5 in 1.23.1-9, v2.4.1 in 1.23.1-10 to 1.30.0-0, v2.4.2 in 1.30.0-1; both architectures agree for every build. Only 1.20.4-1 to 1.20.4-4 carry affected releases (github.com/containerd/containerd v1.7.30 and github.com/containerd/containerd/v2 v2.2.1); every later build carries releases outside the affected ranges. We listed the symbols of the Alpine 3.23 scout-cli binaries that are byte-identical to the Debian ones (the same MD5 as the Debian package lists) for 1.20.4-1 to 1.20.4-4 on both architectures with go tool nm and searched each whole binary for the function names (the Go function name table also lists inlined functions): none contains oci.WithUser, oci.WithUserID or oci.WithUsername from either containerd module, and no function of the 1.7 oci package is linked at all, while the same search finds functions of github.com/containerd/containerd/v2/pkg/oci (DescriptorFromProto) and runtime.main in every one. The Docker Scout CLI links containerd code for registries and images, not the function that resolves an image USER for a container, so the vulnerable code is not present in any published build."
     },
     {
       "vulnerability": {
