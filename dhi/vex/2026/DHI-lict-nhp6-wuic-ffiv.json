@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:58:00Z",
-  "last_updated": "2026-11-27T00:30:03Z",
-  "version": 25,
+  "last_updated": "2026-11-27T21:41:44Z",
+  "version": 26,
   "statements": [
     {
       "vulnerability": {
@@ -42730,9 +42730,6 @@
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r10?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r1?distro=dhi-3.23"
         },
         {
@@ -42755,6 +42752,22 @@
         },
         {
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r8?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update scout-cli-dev to 1.23.1-r9 or later.",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). Checked every scout-cli-dev package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 25 builds, 1.20.4-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each holds one file, /usr/bin/docker-scout, the Docker Scout CLI, a Go program built with CGO_ENABLED=0 for GOOS=linux. The -dev build has the same Go release and module versions as the scout-cli build of the same version, built without the -w linker flag and without -trimpath. We downloaded all 50 of these packages (each matching its index checksum) and read the Go build information (go version -m) and the function table (go tool nm) of every program. The credential helper module is github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 in 1.20.4-r1 to 1.23.1-r8; github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 replaced by github.com/osscontainertools/docker-credential-acr v0.8.0 in 1.23.1-r9 to 1.30.0-r1. Every build links credhelper.isACRRegistry and ACRCredHelper.Get. Every program before 1.23.1-r9 contains the original unanchored ACR host pattern and not the anchored one; that build and every later one contain the anchored pattern from the fork (each alternative wrapped in ^ and $) and not the unanchored one. So every build before 1.23.1-r9 is affected and 1.23.1-r9 is the first build that carries the fixed host check; the range follows the code each build ships."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lict-nhp6-wuic-ffiv",
+        "aliases": [
+          "GO-2026-6225"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r10?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r9?distro=dhi-3.23"
@@ -42781,7 +42794,8 @@
           "@id": "pkg:apk/dhi/scout-cli-dev@1.30.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). Checked every scout-cli-dev package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 25 builds, 1.20.4-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each holds one file, /usr/bin/docker-scout, the Docker Scout CLI, a Go program built with CGO_ENABLED=0 for GOOS=linux. The -dev build has the same Go release and module versions as the scout-cli build of the same version, built without the -w linker flag and without -trimpath. We downloaded all 50 of these packages (each matching its index checksum) and read the Go build information (go version -m) and the function table (go tool nm) of every program. The credential helper module is github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 in 1.20.4-r1 to 1.23.1-r8; github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 replaced by github.com/osscontainertools/docker-credential-acr v0.8.0 in 1.23.1-r9 to 1.30.0-r1. Every build links credhelper.isACRRegistry and ACRCredHelper.Get. Every program before 1.23.1-r9 contains the original unanchored ACR host pattern and not the anchored one; that build and every later one contain the anchored pattern from the fork (each alternative wrapped in ^ and $) and not the unanchored one. So every build before 1.23.1-r9 is affected and 1.23.1-r9 is the first build that carries the fixed host check; the range follows the code each build ships."
     },
     {
       "vulnerability": {
@@ -42799,9 +42813,6 @@
         },
         {
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r10?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r1?distro=dhi-3.24"
@@ -42826,6 +42837,22 @@
         },
         {
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r8?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update scout-cli-dev to 1.23.1-r9 or later.",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). Checked every scout-cli-dev package published for Alpine 3.24 in the DHI Alpine repository by 2026-11-27: 20 builds, 1.21.0-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 scout-cli-dev package of the same version and architecture, so it is the same file: one file, /usr/bin/docker-scout, the Docker Scout CLI, a Go program built with CGO_ENABLED=0 for GOOS=linux. The -dev build has the same Go release and module versions as the scout-cli build of the same version, built without the -w linker flag and without -trimpath. We downloaded every Alpine 3.23 scout-cli-dev package (each matching its index checksum) and read the Go build information (go version -m) and the function table (go tool nm) of every program. The credential helper module is github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 in 1.21.0-r1 to 1.23.1-r8; github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 replaced by github.com/osscontainertools/docker-credential-acr v0.8.0 in 1.23.1-r9 to 1.30.0-r1. Every build links credhelper.isACRRegistry and ACRCredHelper.Get. Every program before 1.23.1-r9 contains the original unanchored ACR host pattern and not the anchored one; that build and every later one contain the anchored pattern from the fork (each alternative wrapped in ^ and $) and not the unanchored one. So every build before 1.23.1-r9 is affected and 1.23.1-r9 is the first build that carries the fixed host check; the range follows the code each build ships."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lict-nhp6-wuic-ffiv",
+        "aliases": [
+          "GO-2026-6225"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r10?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r9?distro=dhi-3.24"
@@ -42852,7 +42879,8 @@
           "@id": "pkg:apk/dhi/scout-cli-dev@1.30.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). Checked every scout-cli-dev package published for Alpine 3.24 in the DHI Alpine repository by 2026-11-27: 20 builds, 1.21.0-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 scout-cli-dev package of the same version and architecture, so it is the same file: one file, /usr/bin/docker-scout, the Docker Scout CLI, a Go program built with CGO_ENABLED=0 for GOOS=linux. The -dev build has the same Go release and module versions as the scout-cli build of the same version, built without the -w linker flag and without -trimpath. We downloaded every Alpine 3.23 scout-cli-dev package (each matching its index checksum) and read the Go build information (go version -m) and the function table (go tool nm) of every program. The credential helper module is github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 in 1.21.0-r1 to 1.23.1-r8; github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 replaced by github.com/osscontainertools/docker-credential-acr v0.8.0 in 1.23.1-r9 to 1.30.0-r1. Every build links credhelper.isACRRegistry and ACRCredHelper.Get. Every program before 1.23.1-r9 contains the original unanchored ACR host pattern and not the anchored one; that build and every later one contain the anchored pattern from the fork (each alternative wrapped in ^ and $) and not the unanchored one. So every build before 1.23.1-r9 is affected and 1.23.1-r9 is the first build that carries the fixed host check; the range follows the code each build ships."
     },
     {
       "vulnerability": {
@@ -42938,7 +42966,8 @@
           "@id": "pkg:apk/dhi/scout-cli-fips-dev@1.30.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). The scout-cli-fips-dev packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository, not in the repository we read for the other owners. Pending: a per-build reading of the Go build information (credential helper module and replace directive) and the host pattern each program carries of every published scout-cli-fips-dev build for Alpine 3.23 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -43009,7 +43038,8 @@
           "@id": "pkg:apk/dhi/scout-cli-fips-dev@1.30.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). The scout-cli-fips-dev packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository, not in the repository we read for the other owners. Pending: a per-build reading of the Go build information (credential helper module and replace directive) and the host pattern each program carries of every published scout-cli-fips-dev build for Alpine 3.24 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -43095,7 +43125,8 @@
           "@id": "pkg:apk/dhi/scout-cli-fips@1.30.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). The scout-cli-fips packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository, not in the repository we read for the other owners. Pending: a per-build reading of the Go build information (credential helper module and replace directive) and the host pattern each program carries of every published scout-cli-fips build for Alpine 3.23 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -43166,7 +43197,8 @@
           "@id": "pkg:apk/dhi/scout-cli-fips@1.30.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). The scout-cli-fips packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository, not in the repository we read for the other owners. Pending: a per-build reading of the Go build information (credential helper module and replace directive) and the host pattern each program carries of every published scout-cli-fips build for Alpine 3.24 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -43201,9 +43233,6 @@
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/scout-cli@1.23.1-r10?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r1?distro=dhi-3.23"
         },
         {
@@ -43226,6 +43255,22 @@
         },
         {
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r8?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update scout-cli to 1.23.1-r9 or later.",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). Checked every scout-cli package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 25 builds, 1.20.4-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each holds one file, /usr/bin/docker-scout, the Docker Scout CLI, a Go program built with CGO_ENABLED=0 for GOOS=linux. We downloaded all 50 of these packages (each matching its index checksum) and read the Go build information (go version -m) and the function table (go tool nm) of every program. The credential helper module is github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 in 1.20.4-r1 to 1.23.1-r8; github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 replaced by github.com/osscontainertools/docker-credential-acr v0.8.0 in 1.23.1-r9 to 1.30.0-r1. Every build links credhelper.isACRRegistry and ACRCredHelper.Get. Every program before 1.23.1-r9 contains the original unanchored ACR host pattern and not the anchored one; that build and every later one contain the anchored pattern from the fork (each alternative wrapped in ^ and $) and not the unanchored one. So every build before 1.23.1-r9 is affected and 1.23.1-r9 is the first build that carries the fixed host check; the range follows the code each build ships."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lict-nhp6-wuic-ffiv",
+        "aliases": [
+          "GO-2026-6225"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/scout-cli@1.23.1-r10?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r9?distro=dhi-3.23"
@@ -43252,7 +43297,8 @@
           "@id": "pkg:apk/dhi/scout-cli@1.30.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). Checked every scout-cli package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 25 builds, 1.20.4-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each holds one file, /usr/bin/docker-scout, the Docker Scout CLI, a Go program built with CGO_ENABLED=0 for GOOS=linux. We downloaded all 50 of these packages (each matching its index checksum) and read the Go build information (go version -m) and the function table (go tool nm) of every program. The credential helper module is github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 in 1.20.4-r1 to 1.23.1-r8; github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 replaced by github.com/osscontainertools/docker-credential-acr v0.8.0 in 1.23.1-r9 to 1.30.0-r1. Every build links credhelper.isACRRegistry and ACRCredHelper.Get. Every program before 1.23.1-r9 contains the original unanchored ACR host pattern and not the anchored one; that build and every later one contain the anchored pattern from the fork (each alternative wrapped in ^ and $) and not the unanchored one. So every build before 1.23.1-r9 is affected and 1.23.1-r9 is the first build that carries the fixed host check; the range follows the code each build ships."
     },
     {
       "vulnerability": {
@@ -43270,9 +43316,6 @@
         },
         {
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/scout-cli@1.23.1-r10?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r1?distro=dhi-3.24"
@@ -43297,6 +43340,22 @@
         },
         {
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r8?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update scout-cli to 1.23.1-r9 or later.",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). Checked every scout-cli package published for Alpine 3.24 in the DHI Alpine repository by 2026-11-27: 20 builds, 1.21.0-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 scout-cli package of the same version and architecture, so it is the same file: one file, /usr/bin/docker-scout, the Docker Scout CLI, a Go program built with CGO_ENABLED=0 for GOOS=linux. We downloaded every Alpine 3.23 scout-cli package (each matching its index checksum) and read the Go build information (go version -m) and the function table (go tool nm) of every program. The credential helper module is github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 in 1.21.0-r1 to 1.23.1-r8; github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 replaced by github.com/osscontainertools/docker-credential-acr v0.8.0 in 1.23.1-r9 to 1.30.0-r1. Every build links credhelper.isACRRegistry and ACRCredHelper.Get. Every program before 1.23.1-r9 contains the original unanchored ACR host pattern and not the anchored one; that build and every later one contain the anchored pattern from the fork (each alternative wrapped in ^ and $) and not the unanchored one. So every build before 1.23.1-r9 is affected and 1.23.1-r9 is the first build that carries the fixed host check; the range follows the code each build ships."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lict-nhp6-wuic-ffiv",
+        "aliases": [
+          "GO-2026-6225"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/scout-cli@1.23.1-r10?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r9?distro=dhi-3.24"
@@ -43323,7 +43382,8 @@
           "@id": "pkg:apk/dhi/scout-cli@1.30.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). Checked every scout-cli package published for Alpine 3.24 in the DHI Alpine repository by 2026-11-27: 20 builds, 1.21.0-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 scout-cli package of the same version and architecture, so it is the same file: one file, /usr/bin/docker-scout, the Docker Scout CLI, a Go program built with CGO_ENABLED=0 for GOOS=linux. We downloaded every Alpine 3.23 scout-cli package (each matching its index checksum) and read the Go build information (go version -m) and the function table (go tool nm) of every program. The credential helper module is github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 in 1.21.0-r1 to 1.23.1-r8; github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 replaced by github.com/osscontainertools/docker-credential-acr v0.8.0 in 1.23.1-r9 to 1.30.0-r1. Every build links credhelper.isACRRegistry and ACRCredHelper.Get. Every program before 1.23.1-r9 contains the original unanchored ACR host pattern and not the anchored one; that build and every later one contain the anchored pattern from the fork (each alternative wrapped in ^ and $) and not the unanchored one. So every build before 1.23.1-r9 is affected and 1.23.1-r9 is the first build that carries the fixed host check; the range follows the code each build ships."
     },
     {
       "vulnerability": {
@@ -67272,9 +67332,6 @@
           "@id": "pkg:deb/dhi/scout-cli-dev@1.23.1-0?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/scout-cli-dev@1.23.1-10?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/scout-cli-dev@1.23.1-1?distro=dhi-13"
         },
         {
@@ -67297,6 +67354,22 @@
         },
         {
           "@id": "pkg:deb/dhi/scout-cli-dev@1.23.1-8?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update scout-cli-dev to 1.23.1-9 or later.",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). Checked every scout-cli-dev package published for Debian 13 in the DHI Debian repository by 2026-11-27: 25 builds, 1.20.4-1 to 1.30.0-1, each for amd64 and arm64. Each package lists one file in its md5sums, /usr/bin/docker-scout, the Docker Scout CLI, a Go program built with CGO_ENABLED=0 for GOOS=linux. The -dev build has the same Go release and module versions as the scout-cli build of the same version, built without the -w linker flag and without -trimpath. For every build that file has the same md5 as /usr/bin/docker-scout in the Alpine 3.23 scout-cli-dev package of the same version and architecture (1.20.4-r1 for 1.20.4-1, and so on), so it is the same program; we downloaded every one of those Alpine packages (each matching its index checksum) and read the Go build information (go version -m) and the function table (go tool nm) of every program. The credential helper module is github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 in 1.20.4-1 to 1.23.1-8; github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 replaced by github.com/osscontainertools/docker-credential-acr v0.8.0 in 1.23.1-9 to 1.30.0-1. Every build links credhelper.isACRRegistry and ACRCredHelper.Get. Every program before 1.23.1-9 contains the original unanchored ACR host pattern and not the anchored one; that build and every later one contain the anchored pattern from the fork (each alternative wrapped in ^ and $) and not the unanchored one. So every build before 1.23.1-9 is affected and 1.23.1-9 is the first build that carries the fixed host check; the range follows the code each build ships."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lict-nhp6-wuic-ffiv",
+        "aliases": [
+          "GO-2026-6225"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/scout-cli-dev@1.23.1-10?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/scout-cli-dev@1.23.1-9?distro=dhi-13"
@@ -67323,7 +67396,8 @@
           "@id": "pkg:deb/dhi/scout-cli-dev@1.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). Checked every scout-cli-dev package published for Debian 13 in the DHI Debian repository by 2026-11-27: 25 builds, 1.20.4-1 to 1.30.0-1, each for amd64 and arm64. Each package lists one file in its md5sums, /usr/bin/docker-scout, the Docker Scout CLI, a Go program built with CGO_ENABLED=0 for GOOS=linux. The -dev build has the same Go release and module versions as the scout-cli build of the same version, built without the -w linker flag and without -trimpath. For every build that file has the same md5 as /usr/bin/docker-scout in the Alpine 3.23 scout-cli-dev package of the same version and architecture (1.20.4-r1 for 1.20.4-1, and so on), so it is the same program; we downloaded every one of those Alpine packages (each matching its index checksum) and read the Go build information (go version -m) and the function table (go tool nm) of every program. The credential helper module is github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 in 1.20.4-1 to 1.23.1-8; github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 replaced by github.com/osscontainertools/docker-credential-acr v0.8.0 in 1.23.1-9 to 1.30.0-1. Every build links credhelper.isACRRegistry and ACRCredHelper.Get. Every program before 1.23.1-9 contains the original unanchored ACR host pattern and not the anchored one; that build and every later one contain the anchored pattern from the fork (each alternative wrapped in ^ and $) and not the unanchored one. So every build before 1.23.1-9 is affected and 1.23.1-9 is the first build that carries the fixed host check; the range follows the code each build ships."
     },
     {
       "vulnerability": {
@@ -67409,7 +67483,8 @@
           "@id": "pkg:deb/dhi/scout-cli-fips-dev@1.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). The scout-cli-fips-dev packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository, not in the repository we read for the other owners. Pending: a per-build reading of the Go build information (credential helper module and replace directive) and the host pattern each program carries of every published scout-cli-fips-dev build for Debian 13 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -67495,7 +67570,8 @@
           "@id": "pkg:deb/dhi/scout-cli-fips@1.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). The scout-cli-fips packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository, not in the repository we read for the other owners. Pending: a per-build reading of the Go build information (credential helper module and replace directive) and the host pattern each program carries of every published scout-cli-fips build for Debian 13 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -67530,9 +67606,6 @@
           "@id": "pkg:deb/dhi/scout-cli@1.23.1-0?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/scout-cli@1.23.1-10?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/scout-cli@1.23.1-1?distro=dhi-13"
         },
         {
@@ -67555,6 +67628,22 @@
         },
         {
           "@id": "pkg:deb/dhi/scout-cli@1.23.1-8?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update scout-cli to 1.23.1-9 or later.",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). Checked every scout-cli package published for Debian 13 in the DHI Debian repository by 2026-11-27: 25 builds, 1.20.4-1 to 1.30.0-1, each for amd64 and arm64. Each package lists one file in its md5sums, /usr/bin/docker-scout, the Docker Scout CLI, a Go program built with CGO_ENABLED=0 for GOOS=linux. For every build that file has the same md5 as /usr/bin/docker-scout in the Alpine 3.23 scout-cli package of the same version and architecture (1.20.4-r1 for 1.20.4-1, and so on), so it is the same program; we downloaded every one of those Alpine packages (each matching its index checksum) and read the Go build information (go version -m) and the function table (go tool nm) of every program. The credential helper module is github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 in 1.20.4-1 to 1.23.1-8; github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 replaced by github.com/osscontainertools/docker-credential-acr v0.8.0 in 1.23.1-9 to 1.30.0-1. Every build links credhelper.isACRRegistry and ACRCredHelper.Get. Every program before 1.23.1-9 contains the original unanchored ACR host pattern and not the anchored one; that build and every later one contain the anchored pattern from the fork (each alternative wrapped in ^ and $) and not the unanchored one. So every build before 1.23.1-9 is affected and 1.23.1-9 is the first build that carries the fixed host check; the range follows the code each build ships."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-lict-nhp6-wuic-ffiv",
+        "aliases": [
+          "GO-2026-6225"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/scout-cli@1.23.1-10?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/scout-cli@1.23.1-9?distro=dhi-13"
@@ -67581,7 +67670,8 @@
           "@id": "pkg:deb/dhi/scout-cli@1.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GO-2026-6225 (no CVE id): in github.com/chrismellard/docker-credential-acr-env, the regular expression isACRRegistry uses to recognise Azure Container Registry hosts is not anchored, so a host such as evil.azurecr.io.attacker.com is treated as ACR and ACRCredHelper.Get sends it the Azure AD access token (https://pkg.go.dev/vuln/GO-2026-6225, https://github.com/chrismellard/docker-credential-acr-env/issues/21). The original module has no fixed release; the maintained fork https://github.com/osscontainertools/docker-credential-acr anchors every alternative of the pattern in v0.8.0 (commit https://github.com/osscontainertools/docker-credential-acr/commit/5ce8219311b6db99855036fbf27bedd35f38d250, pkg/credhelper/helper.go). Checked every scout-cli package published for Debian 13 in the DHI Debian repository by 2026-11-27: 25 builds, 1.20.4-1 to 1.30.0-1, each for amd64 and arm64. Each package lists one file in its md5sums, /usr/bin/docker-scout, the Docker Scout CLI, a Go program built with CGO_ENABLED=0 for GOOS=linux. For every build that file has the same md5 as /usr/bin/docker-scout in the Alpine 3.23 scout-cli package of the same version and architecture (1.20.4-r1 for 1.20.4-1, and so on), so it is the same program; we downloaded every one of those Alpine packages (each matching its index checksum) and read the Go build information (go version -m) and the function table (go tool nm) of every program. The credential helper module is github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 in 1.20.4-1 to 1.23.1-8; github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 replaced by github.com/osscontainertools/docker-credential-acr v0.8.0 in 1.23.1-9 to 1.30.0-1. Every build links credhelper.isACRRegistry and ACRCredHelper.Get. Every program before 1.23.1-9 contains the original unanchored ACR host pattern and not the anchored one; that build and every later one contain the anchored pattern from the fork (each alternative wrapped in ^ and $) and not the unanchored one. So every build before 1.23.1-9 is affected and 1.23.1-9 is the first build that carries the fixed host check; the range follows the code each build ships."
     },
     {
       "vulnerability": {
