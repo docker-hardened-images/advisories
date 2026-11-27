@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T02:27:28Z",
-  "last_updated": "2026-11-25T02:33:30Z",
-  "version": 2,
+  "last_updated": "2026-11-27T23:56:43Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -28,7 +28,9 @@
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-86047 is MariaDB advisory GHSA-wxr3-wm3p-7w6p: https://github.com/MariaDB/server/security/advisories/GHSA-wxr3-wm3p-7w6p . SHOW CREATE SERVER, SHOW CREATE USER and mariadb-dump did not consistently quote identifiers and values when they wrote SQL, so an object with a crafted name or value could inject statements that run when that output is applied. MariaDB fixed it in 11.8.9 (and 10.6.28, 10.11.19, 11.4.13, 12.3.3 and 13.0.2) with five commits, listed at https://security-tracker.debian.org/tracker/CVE-2026-86047 : 2b28d1c4 (MDEV-40311, mariadb-dump), 36465692 (MDEV-40308, SHOW CREATE USER), 9d4ffe23 (MDEV-40312, SHOW CREATE SERVER), 5acb4352 (MDEV-39818, foreign key names in SHOW CREATE TABLE) and d5d741a3 (MDEV-39776, quoted table options in SHOW CREATE TABLE). Debian's mariadb 1:11.8.6-0+deb13u1 includes none of them. Every mariadb build published in the DHI Debian repository as of 2026-11-27 is one of four DHI rebuilds of that Debian version (called the first to fourth build below; the fourth is the current build), and we compared all four on amd64 and arm64. From the second build on they backport only the mariadb-dump commit https://github.com/MariaDB/server/commit/2b28d1c424104429eeed43115ee6d8a803671d52 : the shipped changelog names it as the mariadb-dump part of the fix for this CVE, mariadb-dump in mariadb-client replaces its unquoted INSTALL PLUGIN ... SONAME '%s' and CHANGE MASTER '%.80s' output formats with quoted forms, and mariadb-test-data carries the MDEV-40311 regression test. No published build carries the four server-side commits: the changelogs name no such backport, and in /usr/sbin/mariadbd from mariadb-server-core mysql_show_create_server and mysql_show_create_user keep the same size in all four builds on both architectures. Every published build is therefore affected until the server-side fixes ship."
     }
   ]
 }

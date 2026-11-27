@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:00:00Z",
-  "last_updated": "2026-11-13T21:08:20Z",
-  "version": 3,
+  "last_updated": "2026-11-27T23:56:49Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -29,7 +29,20 @@
         },
         {
           "@id": "pkg:apk/dhi/nodejs-22@22.22.3-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nodejs-22 to 22.23.0-r0 or later.",
+      "status_notes": "CVE-2026-48933 is a denial of service in the Node.js WebCrypto AES implementation: the output buffer length in AES_Cipher() was computed in an int, so an input to subtle.encrypt() whose size is a multiple of 2 GiB overflowed it and the process aborted. Node.js fixed it for 22.x in 22.23.0, released 2026-06-18: the June 2026 security release, https://nodejs.org/en/blog/vulnerability/june-2026-security-releases, lists 22.x among the affected release lines, and the 22.23.0 release notes, https://nodejs.org/en/blog/release/v22.23.0, list this CVE. The fix is commit https://github.com/nodejs/node/commit/38b4c5ed51 ('crypto: guard WebCrypto cipher output length'), which carries CVE-ID: CVE-2026-48933 and is in the v22.23.0 tag and not in v22.22.3; outside tests it changes src/crypto/crypto_aes.cc and src/crypto/crypto_cipher.h. The CVE record, https://www.cve.org/CVERecord?id=CVE-2026-48933, lists Node.js 22 releases up to 22.22.3 as affected. The DHI nodejs-22 packages for Alpine 3.23 are built from the upstream Node.js release tarball for their version. Each published nodejs-22 package holds one file, /usr/bin/node, a dynamically linked musl program that carries the Node.js JavaScript library and the C++ runtime where this code lives; the nodejs-22-dev subpackages hold C and C++ header files and two .gypi build configuration files under /usr/include/node, and the nodejs-22-doc subpackages hold the node man page and two debugger helper files, gdbinit and lldb_commands.py, with no ELF, PE or Mach-O file in either. We checked the node binary, /usr/bin/node, in every nodejs-22 package for Alpine 3.23 published by 2026-11-27, on x86_64 and aarch64 (checksums verified against the package index): 22.23.0-r0, 22.23.1-r0, 22.23.2-r0, 22.23.3-r0, 22.23.4-r0, 22.23.4-r1, 22.23.4-r2 and 22.23.5-r0 report v22.23.0 through v22.23.5 and carry the fix, while the earlier builds 22.22.0-r0, 22.22.1-r0, 22.22.2-r0, 22.22.2-r1 and 22.22.3-r0 report v22.22.0 through v22.22.3 and are affected. As a check, this fix is C++ code with no new string, so we used the location string of the CHECK_LE(out_len, buf_len) assertion in AES_Cipher(), which the node binary embeds: the fix adds eight lines above it in src/crypto/crypto_aes.cc and is the only change to that file between v22.22.3 and v22.23.0, moving the assertion from line 137 to line 145. The binary names crypto_aes.cc:145 in 22.23.0-r0 and every later build on both architectures, and crypto_aes.cc:137 in every earlier build. 22.23.0-r0 is the first published build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-qdga-6a5l-cqqs-cnfh",
+        "aliases": [
+          "CVE-2026-48933"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/nodejs-22@22.23.0-r0?distro=dhi-3.23"
         },
@@ -55,7 +68,8 @@
           "@id": "pkg:apk/dhi/nodejs-22@22.23.5-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-48933 is a denial of service in the Node.js WebCrypto AES implementation: the output buffer length in AES_Cipher() was computed in an int, so an input to subtle.encrypt() whose size is a multiple of 2 GiB overflowed it and the process aborted. Node.js fixed it for 22.x in 22.23.0, released 2026-06-18: the June 2026 security release, https://nodejs.org/en/blog/vulnerability/june-2026-security-releases, lists 22.x among the affected release lines, and the 22.23.0 release notes, https://nodejs.org/en/blog/release/v22.23.0, list this CVE. The fix is commit https://github.com/nodejs/node/commit/38b4c5ed51 ('crypto: guard WebCrypto cipher output length'), which carries CVE-ID: CVE-2026-48933 and is in the v22.23.0 tag and not in v22.22.3; outside tests it changes src/crypto/crypto_aes.cc and src/crypto/crypto_cipher.h. The CVE record, https://www.cve.org/CVERecord?id=CVE-2026-48933, lists Node.js 22 releases up to 22.22.3 as affected. The DHI nodejs-22 packages for Alpine 3.23 are built from the upstream Node.js release tarball for their version. Each published nodejs-22 package holds one file, /usr/bin/node, a dynamically linked musl program that carries the Node.js JavaScript library and the C++ runtime where this code lives; the nodejs-22-dev subpackages hold C and C++ header files and two .gypi build configuration files under /usr/include/node, and the nodejs-22-doc subpackages hold the node man page and two debugger helper files, gdbinit and lldb_commands.py, with no ELF, PE or Mach-O file in either. We checked the node binary, /usr/bin/node, in every nodejs-22 package for Alpine 3.23 published by 2026-11-27, on x86_64 and aarch64 (checksums verified against the package index): 22.23.0-r0, 22.23.1-r0, 22.23.2-r0, 22.23.3-r0, 22.23.4-r0, 22.23.4-r1, 22.23.4-r2 and 22.23.5-r0 report v22.23.0 through v22.23.5 and carry the fix, while the earlier builds 22.22.0-r0, 22.22.1-r0, 22.22.2-r0, 22.22.2-r1 and 22.22.3-r0 report v22.22.0 through v22.22.3 and are affected. As a check, this fix is C++ code with no new string, so we used the location string of the CHECK_LE(out_len, buf_len) assertion in AES_Cipher(), which the node binary embeds: the fix adds eight lines above it in src/crypto/crypto_aes.cc and is the only change to that file between v22.22.3 and v22.23.0, moving the assertion from line 137 to line 145. The binary names crypto_aes.cc:145 in 22.23.0-r0 and every later build on both architectures, and crypto_aes.cc:137 in every earlier build. 22.23.0-r0 is the first published build that carries the fix."
     },
     {
       "vulnerability": {
