@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:54:50Z",
-  "last_updated": "2026-11-20T20:17:41Z",
-  "version": 4,
+  "last_updated": "2026-11-27T10:08:07Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -34,7 +34,9 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-2007 (PostgreSQL pg_trgm heap buffer overflow writes pattern onto server memory) affects only PostgreSQL 18.0 and 18.1: https://www.postgresql.org/support/security/CVE-2026-2007/ says PostgreSQL 18.1 and 18.0 are affected and lists a fix only for major version 18, and the PostgreSQL 17 release notes do not list it. The fix commits, https://github.com/postgres/postgres/commit/00896ddaf41fa7b725991120678d544c18c6af70 and https://github.com/postgres/postgres/commit/54598670fe0a191f49848d1a1a8ab09d99616e71, say they are backpatched to version 18 and no further because in earlier versions pg_trgm lower-cased a string one character at a time, so the lower-cased string never had more characters than the input; that changed in version 18 with commit https://github.com/postgres/postgres/commit/fb1a18810f07fc3b722392103d67ce8ed188b63d, which is not in the REL_17_12 release tag. The Debian tracker records postgresql-17 as not affected, vulnerable code not present: https://security-tracker.debian.org/tracker/CVE-2026-2007. We checked every published postgresql17 build for Alpine 3.23 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0) on both x86_64 and aarch64, with package checksums verified against the package index: each server binary reports the PostgreSQL 17 release of the same version, and pg_trgm.so in the postgresql17-contrib package of every build references lowerstr_with_len, the PostgreSQL 17 routine that lower-cases each character in place (src/backend/tsearch/ts_locale.c at REL_17_12), and not str_tolower, the routine version 18 switched to, while its own show_trgm, our control, is present in every build. Alpine's postgresql17 APKBUILD, https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, lists this CVE under its 17.8-r0 and 17.9-r0 secfixes, but no code change for this CVE was applied to the PostgreSQL 17 branch: the only REL_17_STABLE commit whose Security trailer names it, https://github.com/postgres/postgres/commit/a3acb409025a2f8e2cb93346bbc1d87281f861fc, changes only the 17.8 release notes and does not mention this CVE, and the 17.8 and 17.9 release notes do not list it."
     },
     {
       "vulnerability": {
