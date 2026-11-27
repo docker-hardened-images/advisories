@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-12T02:19:11Z",
-  "last_updated": "2026-11-26T04:35:39Z",
-  "version": 21,
+  "last_updated": "2026-11-27T17:25:50Z",
+  "version": 22,
   "statements": [
     {
       "vulnerability": {
@@ -23021,7 +23021,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-dev@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. We checked every scout-sbom-indexer-dev package published for Alpine 3.23 in the DHI Alpine repository as of 27 November 2026: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, on x86_64 and aarch64 (50 packages). Each package holds one file, /sbom-indexer, a statically linked Go program for Linux built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). We read the program in full from every package, except 1.26.0-r3, whose program has the same SHA-1 checksum, recorded in its package header, as the 1.26.0-r2 program we read. The -dev program is built without the -w linker flag and without -trimpath; its Go release and module versions are the same as those of the scout-sbom-indexer program of the same build. Its Go build information lists github.com/sigstore/timestamp-authority/v2, with no replacement and the same on both architectures: v2.0.6 in 1.20.4-r1 to 1.21.0-r3, v2.1.0 in 1.23.1-r0, v2.1.2 in 1.23.1-r1 to 1.30.0-r0. Reading the program's Go function table in every build (runtime.main found in every build as a control) shows that the only timestamp-authority function linked is the initializer of the client-side package pkg/verification (verification.init); no function from the server's pkg/generated/restapi package, including wrapMetrics, is in the function table of any build. A byte search of every build, which also finds the names of functions the compiler inlined, finds none of wrapMetrics or pkg/generated/restapi; the only timestamp-authority/v2/pkg/ names are verification..inittask and verification.init, while the same search finds runtime.main in every build. So the timestamp-authority server code this advisory concerns is not present in any build, whichever timestamp-authority version the build information names. Debian 13 marks its golang-github-sigstore-timestamp-authority package no-dsa for this CVE (https://security-tracker.debian.org/tracker/CVE-2026-49835); this decision rests on the code in these builds, not on that status."
     },
     {
       "vulnerability": {
@@ -23092,7 +23094,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-dev@1.30.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. We checked every scout-sbom-indexer-dev package published for Alpine 3.24 in the DHI Alpine repository as of 27 November 2026: 20 builds, 1.21.0-r0 to the current 1.30.0-r0, on x86_64 and aarch64 (40 packages). Each package holds one file, /sbom-indexer, a statically linked Go program for Linux built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). We did not unpack these packages: the SHA-1 checksum of /sbom-indexer recorded in each package's header equals that of the program we read in full from the Alpine 3.23 package of the same version, revision and architecture (for 1.26.0-r3, the 1.26.0-r2 program, which has the same checksum), so these packages carry the same programs. The -dev program is built without the -w linker flag and without -trimpath; its Go release and module versions are the same as those of the scout-sbom-indexer program of the same build. Its Go build information lists github.com/sigstore/timestamp-authority/v2, with no replacement and the same on both architectures: v2.0.6 in 1.21.0-r0 to 1.21.0-r3, v2.1.0 in 1.23.1-r0, v2.1.2 in 1.23.1-r1 to 1.30.0-r0. Reading the program's Go function table in every build (runtime.main found in every build as a control) shows that the only timestamp-authority function linked is the initializer of the client-side package pkg/verification (verification.init); no function from the server's pkg/generated/restapi package, including wrapMetrics, is in the function table of any build. A byte search of every build, which also finds the names of functions the compiler inlined, finds none of wrapMetrics or pkg/generated/restapi; the only timestamp-authority/v2/pkg/ names are verification..inittask and verification.init, while the same search finds runtime.main in every build. So the timestamp-authority server code this advisory concerns is not present in any build, whichever timestamp-authority version the build information names. Debian 13 marks its golang-github-sigstore-timestamp-authority package no-dsa for this CVE (https://security-tracker.debian.org/tracker/CVE-2026-49835); this decision rests on the code in these builds, not on that status."
     },
     {
       "vulnerability": {
@@ -23178,7 +23182,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips-dev@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. The scout-sbom-indexer-fips-dev packages for Alpine 3.23 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information and function table, as done for the scout-sbom-indexer packages) to establish which github.com/sigstore/timestamp-authority/v2 version each build carries. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -23249,7 +23254,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips-dev@1.30.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. The scout-sbom-indexer-fips-dev packages for Alpine 3.24 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information and function table, as done for the scout-sbom-indexer packages) to establish which github.com/sigstore/timestamp-authority/v2 version each build carries. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -23335,7 +23341,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips-oci-config@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. The scout-sbom-indexer-fips-oci-config packages for Alpine 3.23 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of every published build of this package, to confirm that, like scout-sbom-indexer-oci-config, it holds only a YAML configuration file and no program. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -23406,7 +23413,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips-oci-config@1.30.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. The scout-sbom-indexer-fips-oci-config packages for Alpine 3.24 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of every published build of this package, to confirm that, like scout-sbom-indexer-oci-config, it holds only a YAML configuration file and no program. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -23492,7 +23500,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. The scout-sbom-indexer-fips packages for Alpine 3.23 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information and function table, as done for the scout-sbom-indexer packages) to establish which github.com/sigstore/timestamp-authority/v2 version each build carries. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -23563,7 +23572,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips@1.30.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. The scout-sbom-indexer-fips packages for Alpine 3.24 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information and function table, as done for the scout-sbom-indexer packages) to establish which github.com/sigstore/timestamp-authority/v2 version each build carries. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -23649,7 +23659,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-oci-config@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. We checked every scout-sbom-indexer-oci-config package published for Alpine 3.23 in the DHI Alpine repository as of 27 November 2026: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, on both architectures (50 packages). Each package holds a single 180-byte file, /opt/docker/config/scout-sbom-indexer.yaml, a YAML configuration file that sets SBOM cataloger options for the image, with the same SHA-1 checksum in every build. It contains no program, library or Go code, so the Sigstore Timestamp Authority code is not part of this package. The program ships in the scout-sbom-indexer and scout-sbom-indexer-dev packages, which have their own decisions."
     },
     {
       "vulnerability": {
@@ -23720,7 +23732,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-oci-config@1.30.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. We checked every scout-sbom-indexer-oci-config package published for Alpine 3.24 in the DHI Alpine repository as of 27 November 2026: 20 builds, 1.21.0-r0 to the current 1.30.0-r0, on both architectures (40 packages). Each package holds a single 180-byte file, /opt/docker/config/scout-sbom-indexer.yaml, a YAML configuration file that sets SBOM cataloger options for the image, with the same SHA-1 checksum in every build. It contains no program, library or Go code, so the Sigstore Timestamp Authority code is not part of this package. The program ships in the scout-sbom-indexer and scout-sbom-indexer-dev packages, which have their own decisions."
     },
     {
       "vulnerability": {
@@ -23806,7 +23820,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. We checked every scout-sbom-indexer package published for Alpine 3.23 in the DHI Alpine repository as of 27 November 2026: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, on x86_64 and aarch64 (50 packages). Each package holds one file, /sbom-indexer, a statically linked Go program for Linux built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). We read the program in full from every package, except 1.26.0-r3, whose program has the same SHA-1 checksum, recorded in its package header, as the 1.26.0-r2 program we read. Its Go build information lists github.com/sigstore/timestamp-authority/v2, with no replacement and the same on both architectures: v2.0.6 in 1.20.4-r1 to 1.21.0-r3, v2.1.0 in 1.23.1-r0, v2.1.2 in 1.23.1-r1 to 1.30.0-r0. Reading the program's Go function table in every build (runtime.main found in every build as a control) shows that the only timestamp-authority function linked is the initializer of the client-side package pkg/verification (verification.init); no function from the server's pkg/generated/restapi package, including wrapMetrics, is in the function table of any build. A byte search of every build, which also finds the names of functions the compiler inlined, finds none of wrapMetrics or pkg/generated/restapi; the only timestamp-authority/v2/pkg/ names are verification..inittask and verification.init, while the same search finds runtime.main in every build. So the timestamp-authority server code this advisory concerns is not present in any build, whichever timestamp-authority version the build information names. Debian 13 marks its golang-github-sigstore-timestamp-authority package no-dsa for this CVE (https://security-tracker.debian.org/tracker/CVE-2026-49835); this decision rests on the code in these builds, not on that status."
     },
     {
       "vulnerability": {
@@ -23877,7 +23893,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer@1.30.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. We checked every scout-sbom-indexer package published for Alpine 3.24 in the DHI Alpine repository as of 27 November 2026: 20 builds, 1.21.0-r0 to the current 1.30.0-r0, on x86_64 and aarch64 (40 packages). Each package holds one file, /sbom-indexer, a statically linked Go program for Linux built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). We did not unpack these packages: the SHA-1 checksum of /sbom-indexer recorded in each package's header equals that of the program we read in full from the Alpine 3.23 package of the same version, revision and architecture (for 1.26.0-r3, the 1.26.0-r2 program, which has the same checksum), so these packages carry the same programs. Its Go build information lists github.com/sigstore/timestamp-authority/v2, with no replacement and the same on both architectures: v2.0.6 in 1.21.0-r0 to 1.21.0-r3, v2.1.0 in 1.23.1-r0, v2.1.2 in 1.23.1-r1 to 1.30.0-r0. Reading the program's Go function table in every build (runtime.main found in every build as a control) shows that the only timestamp-authority function linked is the initializer of the client-side package pkg/verification (verification.init); no function from the server's pkg/generated/restapi package, including wrapMetrics, is in the function table of any build. A byte search of every build, which also finds the names of functions the compiler inlined, finds none of wrapMetrics or pkg/generated/restapi; the only timestamp-authority/v2/pkg/ names are verification..inittask and verification.init, while the same search finds runtime.main in every build. So the timestamp-authority server code this advisory concerns is not present in any build, whichever timestamp-authority version the build information names. Debian 13 marks its golang-github-sigstore-timestamp-authority package no-dsa for this CVE (https://security-tracker.debian.org/tracker/CVE-2026-49835); this decision rests on the code in these builds, not on that status."
     },
     {
       "vulnerability": {
@@ -38391,7 +38409,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-dev@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. We checked every scout-sbom-indexer-dev package published for Debian 13 in the DHI Debian repository as of 27 November 2026: 25 builds, 1.20.4-1 to the current 1.30.0-0, on amd64 and arm64 (50 packages). Each package installs one file, /sbom-indexer, as listed in the md5sums manifest of its control archive, and the MD5 checksum recorded there equals that of the program we read in full from the Alpine 3.23 package of the same version and architecture with the matching revision (for example 1.20.4-5 matches 1.20.4-r5 and 1.21.0-0 matches 1.21.0-r0; 1.26.0-3 matches the 1.26.0-r2 program, which 1.26.0-r3 also carries), so these packages carry the same statically linked Go programs, built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). The -dev program is built without the -w linker flag and without -trimpath; its Go release and module versions are the same as those of the scout-sbom-indexer program of the same build. Its Go build information lists github.com/sigstore/timestamp-authority/v2, with no replacement and the same on both architectures: v2.0.6 in 1.20.4-1 to 1.21.0-3, v2.1.0 in 1.23.1-0, v2.1.2 in 1.23.1-1 to 1.30.0-0. Reading the program's Go function table in every build (runtime.main found in every build as a control) shows that the only timestamp-authority function linked is the initializer of the client-side package pkg/verification (verification.init); no function from the server's pkg/generated/restapi package, including wrapMetrics, is in the function table of any build. A byte search of every build, which also finds the names of functions the compiler inlined, finds none of wrapMetrics or pkg/generated/restapi; the only timestamp-authority/v2/pkg/ names are verification..inittask and verification.init, while the same search finds runtime.main in every build. So the timestamp-authority server code this advisory concerns is not present in any build, whichever timestamp-authority version the build information names. Debian 13 marks its golang-github-sigstore-timestamp-authority package no-dsa for this CVE (https://security-tracker.debian.org/tracker/CVE-2026-49835); this decision rests on the code in these builds, not on that status."
     },
     {
       "vulnerability": {
@@ -38477,7 +38497,8 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-fips-dev@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. The scout-sbom-indexer-fips-dev packages for Debian 13 are published in the DHI Debian security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information and function table, as done for the scout-sbom-indexer packages) to establish which github.com/sigstore/timestamp-authority/v2 version each build carries. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -38563,7 +38584,8 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-fips-oci-config@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. The scout-sbom-indexer-fips-oci-config packages for Debian 13 are published in the DHI Debian security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of every published build of this package, to confirm that, like scout-sbom-indexer-oci-config, it holds only a YAML configuration file and no program. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -38649,7 +38671,8 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-fips@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. The scout-sbom-indexer-fips packages for Debian 13 are published in the DHI Debian security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information and function table, as done for the scout-sbom-indexer packages) to establish which github.com/sigstore/timestamp-authority/v2 version each build carries. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -38735,7 +38758,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-oci-config@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. We checked every scout-sbom-indexer-oci-config package published for Debian 13 in the DHI Debian repository as of 27 November 2026: 25 builds, 1.20.4-1 to the current 1.30.0-0, on both architectures (50 packages). The md5sums manifest in each package's control archive lists a single file, /opt/docker/config/scout-sbom-indexer.yaml, whose MD5 checksum is that of the 180-byte YAML configuration file shipped in the Alpine packages (it sets SBOM cataloger options for the image); we also unpacked 1.29.0-1 for arm64 in full and found only that file. It contains no program, library or Go code, so the Sigstore Timestamp Authority code is not part of this package. The program ships in the scout-sbom-indexer and scout-sbom-indexer-dev packages, which have their own decisions."
     },
     {
       "vulnerability": {
@@ -38821,7 +38846,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-49835 (GHSA-9c54-x2g4-v92j, GO-2026-5851): the Sigstore Timestamp Authority server's wrapMetrics HTTP middleware recorded the raw request path and method as Prometheus metric labels, so an unauthenticated client sending requests with random paths or methods could make the server's memory grow without bound. It affects github.com/sigstore/timestamp-authority/v2 up to and including 2.0.6 and is fixed in 2.1.0 by commit 506ec57b (https://github.com/sigstore/timestamp-authority/commit/506ec57b6ac2ea1e4739322e47453469425b69b5), which changes only pkg/generated/restapi/configure_timestamp_server.go and its test. Sources: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-9c54-x2g4-v92j and https://pkg.go.dev/vuln/GO-2026-5851. We checked every scout-sbom-indexer package published for Debian 13 in the DHI Debian repository as of 27 November 2026: 25 builds, 1.20.4-1 to the current 1.30.0-0, on amd64 and arm64 (50 packages). Each package installs one file, /sbom-indexer, as listed in the md5sums manifest of its control archive, and the MD5 checksum recorded there equals that of the program we read in full from the Alpine 3.23 package of the same version and architecture with the matching revision (for example 1.20.4-5 matches 1.20.4-r5 and 1.21.0-0 matches 1.21.0-r0; 1.26.0-3 matches the 1.26.0-r2 program, which 1.26.0-r3 also carries), so these packages carry the same statically linked Go programs, built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). Its Go build information lists github.com/sigstore/timestamp-authority/v2, with no replacement and the same on both architectures: v2.0.6 in 1.20.4-1 to 1.21.0-3, v2.1.0 in 1.23.1-0, v2.1.2 in 1.23.1-1 to 1.30.0-0. Reading the program's Go function table in every build (runtime.main found in every build as a control) shows that the only timestamp-authority function linked is the initializer of the client-side package pkg/verification (verification.init); no function from the server's pkg/generated/restapi package, including wrapMetrics, is in the function table of any build. A byte search of every build, which also finds the names of functions the compiler inlined, finds none of wrapMetrics or pkg/generated/restapi; the only timestamp-authority/v2/pkg/ names are verification..inittask and verification.init, while the same search finds runtime.main in every build. So the timestamp-authority server code this advisory concerns is not present in any build, whichever timestamp-authority version the build information names. Debian 13 marks its golang-github-sigstore-timestamp-authority package no-dsa for this CVE (https://security-tracker.debian.org/tracker/CVE-2026-49835); this decision rests on the code in these builds, not on that status."
     },
     {
       "vulnerability": {
