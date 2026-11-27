@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-14T07:48:27Z",
-  "last_updated": "2026-11-27T01:53:20Z",
-  "version": 31,
+  "last_updated": "2026-11-27T02:48:53Z",
+  "version": 33,
   "statements": [
     {
       "vulnerability": {
@@ -2320,7 +2320,20 @@
         },
         {
           "@id": "pkg:deb/dhi/airflow@3.3.1-9?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update airflow to 3.3.2-0 or later.",
+      "status_notes": "GHSA-pxh4-856f-4h89: in PyJWT up to 2.13.0, HMACAlgorithm.from_jwk accepts a symmetric (kty oct) JWK whose k value is empty and returns a zero-length key, so an application that verifies tokens with a PyJWK, or one resolved by PyJWKSet or PyJWKClient, from such a key accepts any token an attacker signs with the empty key. PyJWT 2.14.0 fixes it with commit af8181c, 'fix: reject empty HMAC keys from JWKs', which makes from_jwk raise InvalidKeyError for an empty key: https://github.com/jpadilla/pyjwt/security/advisories/GHSA-pxh4-856f-4h89, https://github.com/jpadilla/pyjwt/commit/af8181ca0bec5e6b372fbba9afbe23702b787ceb, https://github.com/jpadilla/pyjwt/releases/tag/2.14.0 . The airflow package installs PyJWT in its Python environment under /usr/lib/airflow/lib/python3.13/site-packages. We read all 56 airflow packages for Debian 13 published in the DHI Debian repository by 2026-11-27, 3.3.0-0 to 3.4.0-15, amd64 and arm64 (112 package files). For 3.3.0-0 to 3.4.0-0 on amd64 we unpacked the whole package; for every package on both architectures we read its md5sums manifest, which lists every file the package installs with its digest, and matched those digests against the files in the matching wheels published on PyPI. Both methods agree wherever both were applied, and both architectures agree for every version. Each build has one copy of the jwt package. 3.3.0-0 to 3.3.1-15 ship PyJWT 2.13.0, whose from_jwk has no empty-key check. 3.3.2-0 to 3.3.2-3 ship PyJWT 2.14.0, 3.3.2-4 to 3.3.2-14 PyJWT 2.15.0 and 3.3.2-15 to 3.4.0-15 PyJWT 2.15.1; in all of them jwt/algorithms.py is byte for byte the file in the released wheel, and its from_jwk rejects an empty key. From 3.4.0-1 the package also carries wheels that virtualenv embeds: the setuptools wheel is identical to the PyPI release and holds no copy of PyJWT; the pip wheel is rebuilt during the build and, with the two Java jars under ray/jars (log4j-api and ray_dist), was not unpacked. The range ends at 3.3.2-0, the first build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-btap-xlno-bfd3-r6gl",
+        "aliases": [
+          "GHSA-pxh4-856f-4h89"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/airflow@3.3.2-0?distro=dhi-13"
         },
@@ -2430,7 +2443,8 @@
           "@id": "pkg:deb/dhi/airflow@3.4.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-pxh4-856f-4h89: in PyJWT up to 2.13.0, HMACAlgorithm.from_jwk accepts a symmetric (kty oct) JWK whose k value is empty and returns a zero-length key, so an application that verifies tokens with a PyJWK, or one resolved by PyJWKSet or PyJWKClient, from such a key accepts any token an attacker signs with the empty key. PyJWT 2.14.0 fixes it with commit af8181c, 'fix: reject empty HMAC keys from JWKs', which makes from_jwk raise InvalidKeyError for an empty key: https://github.com/jpadilla/pyjwt/security/advisories/GHSA-pxh4-856f-4h89, https://github.com/jpadilla/pyjwt/commit/af8181ca0bec5e6b372fbba9afbe23702b787ceb, https://github.com/jpadilla/pyjwt/releases/tag/2.14.0 . The airflow package installs PyJWT in its Python environment under /usr/lib/airflow/lib/python3.13/site-packages. We read all 56 airflow packages for Debian 13 published in the DHI Debian repository by 2026-11-27, 3.3.0-0 to 3.4.0-15, amd64 and arm64 (112 package files). For 3.3.0-0 to 3.4.0-0 on amd64 we unpacked the whole package; for every package on both architectures we read its md5sums manifest, which lists every file the package installs with its digest, and matched those digests against the files in the matching wheels published on PyPI. Both methods agree wherever both were applied, and both architectures agree for every version. Each build has one copy of the jwt package. 3.3.0-0 to 3.3.1-15 ship PyJWT 2.13.0, whose from_jwk has no empty-key check. 3.3.2-0 to 3.3.2-3 ship PyJWT 2.14.0, 3.3.2-4 to 3.3.2-14 PyJWT 2.15.0 and 3.3.2-15 to 3.4.0-15 PyJWT 2.15.1; in all of them jwt/algorithms.py is byte for byte the file in the released wheel, and its from_jwk rejects an empty key. From 3.4.0-1 the package also carries wheels that virtualenv embeds: the setuptools wheel is identical to the PyPI release and holds no copy of PyJWT; the pip wheel is rebuilt during the build and, with the two Java jars under ray/jars (log4j-api and ray_dist), was not unpacked. The range ends at 3.3.2-0, the first build with the fix."
     },
     {
       "vulnerability": {
@@ -4288,6 +4302,9 @@
           "@id": "pkg:deb/dhi/mcp-obsidian@0.2.2-33?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/mcp-obsidian@0.2.2-34?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/mcp-obsidian@0.2.2-3?distro=dhi-13"
         },
         {
@@ -4435,6 +4452,9 @@
         },
         {
           "@id": "pkg:deb/dhi/netbox@4.7.6-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/netbox@4.7.6-2?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -4525,6 +4545,9 @@
           "@id": "pkg:deb/dhi/redis-mcp@0.5.1-17?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/redis-mcp@0.5.1-18?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/redis-mcp@0.5.1-1?distro=dhi-13"
         },
         {
@@ -4602,6 +4625,9 @@
           "@id": "pkg:deb/dhi/scrapegraph-mcp@3.0.0-20?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/scrapegraph-mcp@3.0.0-21?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/scrapegraph-mcp@3.0.0-2?distro=dhi-13"
         },
         {
@@ -4671,6 +4697,9 @@
         },
         {
           "@id": "pkg:deb/dhi/stackhawk-mcp@1.2.4-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/stackhawk-mcp@1.2.4-20?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/stackhawk-mcp@1.2.4-2?distro=dhi-13"
@@ -4944,6 +4973,9 @@
           "@id": "pkg:deb/dhi/time-mcp@2026.8.31-2?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/time-mcp@2026.8.31-30?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/time-mcp@2026.8.31-3?distro=dhi-13"
         },
         {
@@ -5058,6 +5090,9 @@
         },
         {
           "@id": "pkg:deb/dhi/wikipedia-mcp@2.0.1-34?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/wikipedia-mcp@2.0.1-35?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/wikipedia-mcp@2.0.1-3?distro=dhi-13"
