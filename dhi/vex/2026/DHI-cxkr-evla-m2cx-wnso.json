@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-23T20:48:33Z",
-  "last_updated": "2026-11-27T08:19:37Z",
-  "version": 29,
+  "last_updated": "2026-11-27T11:36:22Z",
+  "version": 30,
   "statements": [
     {
       "vulnerability": {
@@ -45750,7 +45750,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . We read every opentelemetry-collector-contrib-dev package in the Alpine 3.23 index of the DHI Alpine repository: 24 builds published by 2026-11-27, 0.156.0-r0 to 0.166.0-r1, for x86_64 and aarch64. Each package holds one file, /usr/bin/otelcol-contrib, a Go program built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data; we read the Go release and module versions and every function name, and counted occurrences of the package paths in the bytes read, with runtime.main found the same way in every build as a control. 0.159.0-r3 and 0.162.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The Go build information lists golang.org/x/mod v0.37.0 in 0.156.0-r0; v0.38.0 in 0.157.0-r0 to 0.158.0-r0; v0.40.0 in 0.158.0-r2 to 0.160.0-r1; v0.41.0 in 0.161.0-r0 to 0.162.0-r3; v0.42.0 in 0.163.2-r0 to 0.165.0-r2; v0.43.0 in 0.166.0-r0 to 0.166.0-r1, the same on both architectures, but the only golang.org/x/mod code in any build is its semver package: 8 to 12 functions such as golang.org/x/mod/semver.Compare, and every occurrence of the string golang.org/x/mod/ in the bytes read is one of those function names. No build has a function from golang.org/x/mod/sumdb/tlog, which holds the vulnerable code, on either architecture. Debian tracks this CVE against its Go toolchain packages and has not fixed it in trixie (golang-1.24: no DSA, minor issue, https://security-tracker.debian.org/tracker/CVE-2026-56865), which says nothing about this package: the code is absent from every build. These packages do not ship the go command."
     },
     {
       "vulnerability": {
@@ -45833,7 +45835,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The Alpine 3.24 index of the DHI Alpine repository lists the same 24 opentelemetry-collector-contrib-dev builds published by 2026-11-27, 0.156.0-r0 to 0.166.0-r1, with the same package checksums as the Alpine 3.23 index on x86_64 and aarch64, so they are the same files; we read the Alpine 3.23 copies. Each package holds one file, /usr/bin/otelcol-contrib, a Go program built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data; we read the Go release and module versions and every function name, and counted occurrences of the package paths in the bytes read, with runtime.main found the same way in every build as a control. 0.159.0-r3 and 0.162.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The Go build information lists golang.org/x/mod v0.37.0 in 0.156.0-r0; v0.38.0 in 0.157.0-r0 to 0.158.0-r0; v0.40.0 in 0.158.0-r2 to 0.160.0-r1; v0.41.0 in 0.161.0-r0 to 0.162.0-r3; v0.42.0 in 0.163.2-r0 to 0.165.0-r2; v0.43.0 in 0.166.0-r0 to 0.166.0-r1, the same on both architectures, but the only golang.org/x/mod code in any build is its semver package: 8 to 12 functions such as golang.org/x/mod/semver.Compare, and every occurrence of the string golang.org/x/mod/ in the bytes read is one of those function names. No build has a function from golang.org/x/mod/sumdb/tlog, which holds the vulnerable code, on either architecture. Debian tracks this CVE against its Go toolchain packages and has not fixed it in trixie (golang-1.24: no DSA, minor issue, https://security-tracker.debian.org/tracker/CVE-2026-56865), which says nothing about this package: the code is absent from every build. These packages do not ship the go command."
     },
     {
       "vulnerability": {
@@ -45916,7 +45920,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The opentelemetry-collector-contrib-fips-dev packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips-dev build on both architectures, to establish which golang.org/x/mod packages, if any, each one links. The non-FIPS opentelemetry-collector-contrib-dev packages are built separately, so what they ship is not evidence for this owner."
     },
     {
       "vulnerability": {
@@ -45999,7 +46004,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The opentelemetry-collector-contrib-fips-dev packages for Alpine 3.24 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips-dev build on both architectures, to establish which golang.org/x/mod packages, if any, each one links. The non-FIPS opentelemetry-collector-contrib-dev packages are built separately, so what they ship is not evidence for this owner."
     },
     {
       "vulnerability": {
@@ -46082,7 +46088,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The opentelemetry-collector-contrib-fips packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips build on both architectures, to establish which golang.org/x/mod packages, if any, each one links. The non-FIPS opentelemetry-collector-contrib packages are built separately, so what they ship is not evidence for this owner."
     },
     {
       "vulnerability": {
@@ -46165,7 +46172,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The opentelemetry-collector-contrib-fips packages for Alpine 3.24 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips build on both architectures, to establish which golang.org/x/mod packages, if any, each one links. The non-FIPS opentelemetry-collector-contrib packages are built separately, so what they ship is not evidence for this owner."
     },
     {
       "vulnerability": {
@@ -46248,7 +46256,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . We read every opentelemetry-collector-contrib package in the Alpine 3.23 index of the DHI Alpine repository: 24 builds published by 2026-11-27, 0.156.0-r0 to 0.166.0-r1, for x86_64 and aarch64. Each package holds one file, /usr/bin/otelcol-contrib, a Go program built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data; we read the Go release and module versions and every function name, and counted occurrences of the package paths in the bytes read, with runtime.main found the same way in every build as a control. 0.159.0-r3 and 0.162.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The Go build information lists golang.org/x/mod v0.37.0 in 0.156.0-r0; v0.38.0 in 0.157.0-r0 to 0.158.0-r0; v0.40.0 in 0.158.0-r2 to 0.160.0-r1; v0.41.0 in 0.161.0-r0 to 0.162.0-r3; v0.42.0 in 0.163.2-r0 to 0.165.0-r2; v0.43.0 in 0.166.0-r0 to 0.166.0-r1, the same on both architectures, but the only golang.org/x/mod code in any build is its semver package: 8 to 12 functions such as golang.org/x/mod/semver.Compare, and every occurrence of the string golang.org/x/mod/ in the bytes read is one of those function names. No build has a function from golang.org/x/mod/sumdb/tlog, which holds the vulnerable code, on either architecture. Debian tracks this CVE against its Go toolchain packages and has not fixed it in trixie (golang-1.24: no DSA, minor issue, https://security-tracker.debian.org/tracker/CVE-2026-56865), which says nothing about this package: the code is absent from every build. These packages do not ship the go command."
     },
     {
       "vulnerability": {
@@ -46331,7 +46341,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The Alpine 3.24 index of the DHI Alpine repository lists the same 24 opentelemetry-collector-contrib builds published by 2026-11-27, 0.156.0-r0 to 0.166.0-r1, with the same package checksums as the Alpine 3.23 index on x86_64 and aarch64, so they are the same files; we read the Alpine 3.23 copies. Each package holds one file, /usr/bin/otelcol-contrib, a Go program built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data; we read the Go release and module versions and every function name, and counted occurrences of the package paths in the bytes read, with runtime.main found the same way in every build as a control. 0.159.0-r3 and 0.162.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The Go build information lists golang.org/x/mod v0.37.0 in 0.156.0-r0; v0.38.0 in 0.157.0-r0 to 0.158.0-r0; v0.40.0 in 0.158.0-r2 to 0.160.0-r1; v0.41.0 in 0.161.0-r0 to 0.162.0-r3; v0.42.0 in 0.163.2-r0 to 0.165.0-r2; v0.43.0 in 0.166.0-r0 to 0.166.0-r1, the same on both architectures, but the only golang.org/x/mod code in any build is its semver package: 8 to 12 functions such as golang.org/x/mod/semver.Compare, and every occurrence of the string golang.org/x/mod/ in the bytes read is one of those function names. No build has a function from golang.org/x/mod/sumdb/tlog, which holds the vulnerable code, on either architecture. Debian tracks this CVE against its Go toolchain packages and has not fixed it in trixie (golang-1.24: no DSA, minor issue, https://security-tracker.debian.org/tracker/CVE-2026-56865), which says nothing about this package: the code is absent from every build. These packages do not ship the go command."
     },
     {
       "vulnerability": {
@@ -46414,7 +46426,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . We read every opentelemetry-collector-dev package in the Alpine 3.23 index of the DHI Alpine repository: 24 builds published by 2026-11-27, 0.156.0-r0 to 0.166.0-r1, for x86_64 and aarch64. Each package holds one file, /usr/bin/otelcol, a Go program built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data; we read the Go release and module versions and every function name, and counted occurrences of the package paths in the bytes read, with runtime.main found the same way in every build as a control. 0.159.0-r2, 0.160.0-r1, 0.162.0-r1 and 0.164.0-r2 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, and 0.166.0-r1 the same as 0.166.0-r0, so they ship the same program. No build lists golang.org/x/mod in its Go build information, no build has a function from it, and the string golang.org/x/mod/ does not occur in the bytes read, on either architecture, while the same scan finds golang.org/x/mod/semver functions in every opentelemetry-collector-contrib-dev build. The vulnerable module is not part of this package. Debian tracks this CVE against its Go toolchain packages and has not fixed it in trixie (golang-1.24: no DSA, minor issue, https://security-tracker.debian.org/tracker/CVE-2026-56865), which says nothing about this package: the code is absent from every build. These packages do not ship the go command."
     },
     {
       "vulnerability": {
@@ -46497,7 +46511,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The Alpine 3.24 index of the DHI Alpine repository lists the same 24 opentelemetry-collector-dev builds published by 2026-11-27, 0.156.0-r0 to 0.166.0-r1, with the same package checksums as the Alpine 3.23 index on x86_64 and aarch64, so they are the same files; we read the Alpine 3.23 copies. Each package holds one file, /usr/bin/otelcol, a Go program built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data; we read the Go release and module versions and every function name, and counted occurrences of the package paths in the bytes read, with runtime.main found the same way in every build as a control. 0.159.0-r2, 0.160.0-r1, 0.162.0-r1 and 0.164.0-r2 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, and 0.166.0-r1 the same as 0.166.0-r0, so they ship the same program. No build lists golang.org/x/mod in its Go build information, no build has a function from it, and the string golang.org/x/mod/ does not occur in the bytes read, on either architecture, while the same scan finds golang.org/x/mod/semver functions in every opentelemetry-collector-contrib-dev build. The vulnerable module is not part of this package. Debian tracks this CVE against its Go toolchain packages and has not fixed it in trixie (golang-1.24: no DSA, minor issue, https://security-tracker.debian.org/tracker/CVE-2026-56865), which says nothing about this package: the code is absent from every build. These packages do not ship the go command."
     },
     {
       "vulnerability": {
@@ -46580,7 +46596,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The opentelemetry-collector-fips-dev packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips-dev build on both architectures, to establish which golang.org/x/mod packages, if any, each one links. The non-FIPS opentelemetry-collector-dev packages are built separately, so what they ship is not evidence for this owner."
     },
     {
       "vulnerability": {
@@ -46663,7 +46680,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The opentelemetry-collector-fips-dev packages for Alpine 3.24 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips-dev build on both architectures, to establish which golang.org/x/mod packages, if any, each one links. The non-FIPS opentelemetry-collector-dev packages are built separately, so what they ship is not evidence for this owner."
     },
     {
       "vulnerability": {
@@ -46746,7 +46764,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The opentelemetry-collector-fips packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips build on both architectures, to establish which golang.org/x/mod packages, if any, each one links. The non-FIPS opentelemetry-collector packages are built separately, so what they ship is not evidence for this owner."
     },
     {
       "vulnerability": {
@@ -46829,7 +46848,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The opentelemetry-collector-fips packages for Alpine 3.24 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips build on both architectures, to establish which golang.org/x/mod packages, if any, each one links. The non-FIPS opentelemetry-collector packages are built separately, so what they ship is not evidence for this owner."
     },
     {
       "vulnerability": {
@@ -46912,7 +46932,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . We read every opentelemetry-collector package in the Alpine 3.23 index of the DHI Alpine repository: 24 builds published by 2026-11-27, 0.156.0-r0 to 0.166.0-r1, for x86_64 and aarch64. Each package holds one file, /usr/bin/otelcol, a Go program built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data; we read the Go release and module versions and every function name, and counted occurrences of the package paths in the bytes read, with runtime.main found the same way in every build as a control. 0.159.0-r2, 0.160.0-r1, 0.162.0-r1 and 0.164.0-r2 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. No build lists golang.org/x/mod in its Go build information, no build has a function from it, and the string golang.org/x/mod/ does not occur in the bytes read, on either architecture, while the same scan finds golang.org/x/mod/semver functions in every opentelemetry-collector-contrib build. The vulnerable module is not part of this package. Debian tracks this CVE against its Go toolchain packages and has not fixed it in trixie (golang-1.24: no DSA, minor issue, https://security-tracker.debian.org/tracker/CVE-2026-56865), which says nothing about this package: the code is absent from every build. These packages do not ship the go command."
     },
     {
       "vulnerability": {
@@ -46995,7 +47017,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The Alpine 3.24 index of the DHI Alpine repository lists the same 24 opentelemetry-collector builds published by 2026-11-27, 0.156.0-r0 to 0.166.0-r1, with the same package checksums as the Alpine 3.23 index on x86_64 and aarch64, so they are the same files; we read the Alpine 3.23 copies. Each package holds one file, /usr/bin/otelcol, a Go program built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data; we read the Go release and module versions and every function name, and counted occurrences of the package paths in the bytes read, with runtime.main found the same way in every build as a control. 0.159.0-r2, 0.160.0-r1, 0.162.0-r1 and 0.164.0-r2 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. No build lists golang.org/x/mod in its Go build information, no build has a function from it, and the string golang.org/x/mod/ does not occur in the bytes read, on either architecture, while the same scan finds golang.org/x/mod/semver functions in every opentelemetry-collector-contrib build. The vulnerable module is not part of this package. Debian tracks this CVE against its Go toolchain packages and has not fixed it in trixie (golang-1.24: no DSA, minor issue, https://security-tracker.debian.org/tracker/CVE-2026-56865), which says nothing about this package: the code is absent from every build. These packages do not ship the go command."
     },
     {
       "vulnerability": {
@@ -83137,7 +83161,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The DHI Debian repository lists 24 opentelemetry-collector-contrib-dev builds published by 2026-11-27, 0.156.0-0 to 0.166.0-1, for amd64 and arm64. In each, the control archive file list names only /usr/bin/otelcol-contrib, and the Go build ID of that program, which ends in a hash of the program content, equals the one in the Alpine 3.23 package of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-1 and 0.166.0-r1), so each Debian build ships the same program as the Alpine build we read. In the Alpine packages: Each package holds one file, /usr/bin/otelcol-contrib, a Go program built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data; we read the Go release and module versions and every function name, and counted occurrences of the package paths in the bytes read, with runtime.main found the same way in every build as a control. 0.159.0-r3 and 0.162.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The Go build information lists golang.org/x/mod v0.37.0 in 0.156.0-0; v0.38.0 in 0.157.0-0 to 0.158.0-0; v0.40.0 in 0.158.0-2 to 0.160.0-1; v0.41.0 in 0.161.0-0 to 0.162.0-3; v0.42.0 in 0.163.2-0 to 0.165.0-2; v0.43.0 in 0.166.0-0 to 0.166.0-1, the same on both architectures, but the only golang.org/x/mod code in any build is its semver package: 8 to 12 functions such as golang.org/x/mod/semver.Compare, and every occurrence of the string golang.org/x/mod/ in the bytes read is one of those function names. No build has a function from golang.org/x/mod/sumdb/tlog, which holds the vulnerable code, on either architecture. Debian tracks this CVE against its Go toolchain packages and has not fixed it in trixie (golang-1.24: no DSA, minor issue, https://security-tracker.debian.org/tracker/CVE-2026-56865), which says nothing about this package: the code is absent from every build. These packages do not ship the go command."
     },
     {
       "vulnerability": {
@@ -83220,7 +83246,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The opentelemetry-collector-contrib-fips-dev packages are published only in the DHI Debian security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips-dev build on both architectures, to establish which golang.org/x/mod packages, if any, each one links. The non-FIPS opentelemetry-collector-contrib-dev packages are built separately, so what they ship is not evidence for this owner."
     },
     {
       "vulnerability": {
@@ -83303,7 +83330,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The opentelemetry-collector-contrib-fips packages are published only in the DHI Debian security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips build on both architectures, to establish which golang.org/x/mod packages, if any, each one links. The non-FIPS opentelemetry-collector-contrib packages are built separately, so what they ship is not evidence for this owner."
     },
     {
       "vulnerability": {
@@ -83386,7 +83414,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The DHI Debian repository lists 24 opentelemetry-collector-contrib builds published by 2026-11-27, 0.156.0-0 to 0.166.0-1, for amd64 and arm64. In each, the control archive file list names only /usr/bin/otelcol-contrib, and the Go build ID of that program, which ends in a hash of the program content, equals the one in the Alpine 3.23 package of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-1 and 0.166.0-r1), so each Debian build ships the same program as the Alpine build we read. In the Alpine packages: Each package holds one file, /usr/bin/otelcol-contrib, a Go program built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data; we read the Go release and module versions and every function name, and counted occurrences of the package paths in the bytes read, with runtime.main found the same way in every build as a control. 0.159.0-r3 and 0.162.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The Go build information lists golang.org/x/mod v0.37.0 in 0.156.0-0; v0.38.0 in 0.157.0-0 to 0.158.0-0; v0.40.0 in 0.158.0-2 to 0.160.0-1; v0.41.0 in 0.161.0-0 to 0.162.0-3; v0.42.0 in 0.163.2-0 to 0.165.0-2; v0.43.0 in 0.166.0-0 to 0.166.0-1, the same on both architectures, but the only golang.org/x/mod code in any build is its semver package: 8 to 12 functions such as golang.org/x/mod/semver.Compare, and every occurrence of the string golang.org/x/mod/ in the bytes read is one of those function names. No build has a function from golang.org/x/mod/sumdb/tlog, which holds the vulnerable code, on either architecture. Debian tracks this CVE against its Go toolchain packages and has not fixed it in trixie (golang-1.24: no DSA, minor issue, https://security-tracker.debian.org/tracker/CVE-2026-56865), which says nothing about this package: the code is absent from every build. These packages do not ship the go command."
     },
     {
       "vulnerability": {
@@ -83469,7 +83499,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-dev@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The DHI Debian repository lists 24 opentelemetry-collector-dev builds published by 2026-11-27, 0.156.0-0 to 0.166.0-1, for amd64 and arm64. In each, the control archive file list names only /usr/bin/otelcol, and the Go build ID of that program, which ends in a hash of the program content, equals the one in the Alpine 3.23 package of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-1 and 0.166.0-r1), so each Debian build ships the same program as the Alpine build we read. In the Alpine packages: Each package holds one file, /usr/bin/otelcol, a Go program built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data; we read the Go release and module versions and every function name, and counted occurrences of the package paths in the bytes read, with runtime.main found the same way in every build as a control. 0.159.0-r2, 0.160.0-r1, 0.162.0-r1 and 0.164.0-r2 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, and 0.166.0-r1 the same as 0.166.0-r0, so they ship the same program. No build lists golang.org/x/mod in its Go build information, no build has a function from it, and the string golang.org/x/mod/ does not occur in the bytes read, on either architecture, while the same scan finds golang.org/x/mod/semver functions in every opentelemetry-collector-contrib-dev build. The vulnerable module is not part of this package. Debian tracks this CVE against its Go toolchain packages and has not fixed it in trixie (golang-1.24: no DSA, minor issue, https://security-tracker.debian.org/tracker/CVE-2026-56865), which says nothing about this package: the code is absent from every build. These packages do not ship the go command."
     },
     {
       "vulnerability": {
@@ -83552,7 +83584,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips-dev@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The opentelemetry-collector-fips-dev packages are published only in the DHI Debian security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips-dev build on both architectures, to establish which golang.org/x/mod packages, if any, each one links. The non-FIPS opentelemetry-collector-dev packages are built separately, so what they ship is not evidence for this owner."
     },
     {
       "vulnerability": {
@@ -83635,7 +83668,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The opentelemetry-collector-fips packages are published only in the DHI Debian security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips build on both architectures, to establish which golang.org/x/mod packages, if any, each one links. The non-FIPS opentelemetry-collector packages are built separately, so what they ship is not evidence for this owner."
     },
     {
       "vulnerability": {
@@ -83718,7 +83752,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-56865 (GO-2026-6179): tile hash verification in golang.org/x/mod/sumdb/tlog (tileHashReader.ReadHashes) can be bypassed, so unauthenticated transparency-log hashes are accepted. It is fixed in golang.org/x/mod v0.40.0 by https://github.com/golang/mod/commit/96f62ae6e9cb1b123de383fa2542812c9ba3b7db ('sumdb/tlog: fix TileHashReader authentication bypass', which names this CVE and is in the v0.40.0 tag and not in v0.39.0), and in the go command of Go 1.25.13 and 1.26.6: https://pkg.go.dev/vuln/GO-2026-6179 , https://go.dev/issue/80744 . The DHI Debian repository lists 24 opentelemetry-collector builds published by 2026-11-27, 0.156.0-0 to 0.166.0-1, for amd64 and arm64. In each, the control archive file list names only /usr/bin/otelcol, and the Go build ID of that program, which ends in a hash of the program content, equals the one in the Alpine 3.23 package of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-1 and 0.166.0-r1), so each Debian build ships the same program as the Alpine build we read. In the Alpine packages: Each package holds one file, /usr/bin/otelcol, a Go program built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data; we read the Go release and module versions and every function name, and counted occurrences of the package paths in the bytes read, with runtime.main found the same way in every build as a control. 0.159.0-r2, 0.160.0-r1, 0.162.0-r1 and 0.164.0-r2 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. No build lists golang.org/x/mod in its Go build information, no build has a function from it, and the string golang.org/x/mod/ does not occur in the bytes read, on either architecture, while the same scan finds golang.org/x/mod/semver functions in every opentelemetry-collector-contrib build. The vulnerable module is not part of this package. Debian tracks this CVE against its Go toolchain packages and has not fixed it in trixie (golang-1.24: no DSA, minor issue, https://security-tracker.debian.org/tracker/CVE-2026-56865), which says nothing about this package: the code is absent from every build. These packages do not ship the go command."
     },
     {
       "vulnerability": {
