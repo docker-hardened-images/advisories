@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:35:42Z",
-  "last_updated": "2026-11-27T14:08:59Z",
-  "version": 37,
+  "last_updated": "2026-11-27T14:25:45Z",
+  "version": 38,
   "statements": [
     {
       "vulnerability": {
@@ -216924,9 +216924,6 @@
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r10?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r1?distro=dhi-3.23"
         },
         {
@@ -216934,6 +216931,22 @@
         },
         {
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r3?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update scout-cli-dev to 1.23.1-r4 or later.",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. Checked every scout-cli-dev package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 25 builds, 1.20.4-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each holds /usr/bin/docker-scout, the Docker Scout CLI Go program built with CGO_ENABLED=0 for GOOS=linux; the -dev build has the same Go release and module versions as the scout-cli build of the same version, built without the -w linker flag and without -trimpath. We read the Go build information (module versions and replace directives) of every build from the published packages, and re-read the 1.26.0-r3 scout-cli x86_64 and 1.20.4-r1 scout-cli-dev aarch64 Alpine 3.23 packages ourselves (checksums equal to the index). The relevant module is grpc v1.80.0 in 1.20.4-r1; grpc v1.81.0 in 1.20.4-r2 to 1.20.4-r4; grpc v1.81.1 in 1.21.0-r0 to 1.21.0-r2; grpc v1.82.0 in 1.23.1-r0; grpc v1.82.1 in 1.23.1-r1; grpc v1.83.0 in 1.23.1-r2 to 1.23.1-r3; grpc v1.83.1 in 1.23.1-r4 to 1.23.1-r5; grpc v1.83.2 in 1.23.1-r6 to 1.23.1-r9; grpc v1.84.0 replaced by v1.83.2 in 1.23.1-r10 to 1.26.0-r3; grpc v1.85.0 replaced by v1.83.2 in 1.26.0-r4 to 1.30.0-r1. From 1.23.1-r10 the build requires grpc 1.84.0 or 1.85.0 but a replace directive in the build information pins the code actually linked to 1.83.2, which descends from 1.83.1 on the same release branch and carries the fix. So the builds before 1.23.1-r4 link a grpc release before the fixed 1.83.1, and 1.23.1-r4 and every later build link 1.83.1 or 1.83.2. In the function tables of the two builds we re-read ourselves, internal/xds/httpfilter/rbac.parseConfig is linked, and the 1.26.0 build also links rbac.normalizeHeaderMatcher, the function the fix adds."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-xuwv-dhta-hya2-m377",
+        "aliases": [
+          "CVE-2026-84303"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r10?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r4?distro=dhi-3.23"
@@ -216975,7 +216988,8 @@
           "@id": "pkg:apk/dhi/scout-cli-dev@1.30.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. Checked every scout-cli-dev package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 25 builds, 1.20.4-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each holds /usr/bin/docker-scout, the Docker Scout CLI Go program built with CGO_ENABLED=0 for GOOS=linux; the -dev build has the same Go release and module versions as the scout-cli build of the same version, built without the -w linker flag and without -trimpath. We read the Go build information (module versions and replace directives) of every build from the published packages, and re-read the 1.26.0-r3 scout-cli x86_64 and 1.20.4-r1 scout-cli-dev aarch64 Alpine 3.23 packages ourselves (checksums equal to the index). The relevant module is grpc v1.80.0 in 1.20.4-r1; grpc v1.81.0 in 1.20.4-r2 to 1.20.4-r4; grpc v1.81.1 in 1.21.0-r0 to 1.21.0-r2; grpc v1.82.0 in 1.23.1-r0; grpc v1.82.1 in 1.23.1-r1; grpc v1.83.0 in 1.23.1-r2 to 1.23.1-r3; grpc v1.83.1 in 1.23.1-r4 to 1.23.1-r5; grpc v1.83.2 in 1.23.1-r6 to 1.23.1-r9; grpc v1.84.0 replaced by v1.83.2 in 1.23.1-r10 to 1.26.0-r3; grpc v1.85.0 replaced by v1.83.2 in 1.26.0-r4 to 1.30.0-r1. From 1.23.1-r10 the build requires grpc 1.84.0 or 1.85.0 but a replace directive in the build information pins the code actually linked to 1.83.2, which descends from 1.83.1 on the same release branch and carries the fix. So the builds before 1.23.1-r4 link a grpc release before the fixed 1.83.1, and 1.23.1-r4 and every later build link 1.83.1 or 1.83.2. In the function tables of the two builds we re-read ourselves, internal/xds/httpfilter/rbac.parseConfig is linked, and the 1.26.0 build also links rbac.normalizeHeaderMatcher, the function the fix adds."
     },
     {
       "vulnerability": {
@@ -216995,9 +217009,6 @@
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r0?distro=dhi-3.24"
         },
         {
-          "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r10?distro=dhi-3.24"
-        },
-        {
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r1?distro=dhi-3.24"
         },
         {
@@ -217005,6 +217016,22 @@
         },
         {
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r3?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update scout-cli-dev to 1.23.1-r4 or later.",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. Checked every scout-cli-dev package published for Alpine 3.24 in the DHI Alpine repository by 2026-11-27: 20 builds, 1.21.0-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same version and architecture, so it is the same file. Each holds /usr/bin/docker-scout, the Docker Scout CLI Go program built with CGO_ENABLED=0 for GOOS=linux; the -dev build has the same Go release and module versions as the scout-cli build of the same version, built without the -w linker flag and without -trimpath. We read the Go build information (module versions and replace directives) of every build from the published packages, and re-read the 1.26.0-r3 scout-cli x86_64 and 1.20.4-r1 scout-cli-dev aarch64 Alpine 3.23 packages ourselves (checksums equal to the index). The relevant module is grpc v1.81.1 in 1.21.0-r1 to 1.21.0-r2; grpc v1.82.0 in 1.23.1-r0; grpc v1.82.1 in 1.23.1-r1; grpc v1.83.0 in 1.23.1-r2 to 1.23.1-r3; grpc v1.83.1 in 1.23.1-r4 to 1.23.1-r5; grpc v1.83.2 in 1.23.1-r6 to 1.23.1-r9; grpc v1.84.0 replaced by v1.83.2 in 1.23.1-r10 to 1.26.0-r3; grpc v1.85.0 replaced by v1.83.2 in 1.26.0-r4 to 1.30.0-r1. From 1.23.1-r10 the build requires grpc 1.84.0 or 1.85.0 but a replace directive in the build information pins the code actually linked to 1.83.2, which descends from 1.83.1 on the same release branch and carries the fix. So the builds before 1.23.1-r4 link a grpc release before the fixed 1.83.1, and 1.23.1-r4 and every later build link 1.83.1 or 1.83.2. In the function tables of the two builds we re-read ourselves, internal/xds/httpfilter/rbac.parseConfig is linked, and the 1.26.0 build also links rbac.normalizeHeaderMatcher, the function the fix adds."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-xuwv-dhta-hya2-m377",
+        "aliases": [
+          "CVE-2026-84303"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r10?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/scout-cli-dev@1.23.1-r4?distro=dhi-3.24"
@@ -217046,7 +217073,8 @@
           "@id": "pkg:apk/dhi/scout-cli-dev@1.30.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. Checked every scout-cli-dev package published for Alpine 3.24 in the DHI Alpine repository by 2026-11-27: 20 builds, 1.21.0-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same version and architecture, so it is the same file. Each holds /usr/bin/docker-scout, the Docker Scout CLI Go program built with CGO_ENABLED=0 for GOOS=linux; the -dev build has the same Go release and module versions as the scout-cli build of the same version, built without the -w linker flag and without -trimpath. We read the Go build information (module versions and replace directives) of every build from the published packages, and re-read the 1.26.0-r3 scout-cli x86_64 and 1.20.4-r1 scout-cli-dev aarch64 Alpine 3.23 packages ourselves (checksums equal to the index). The relevant module is grpc v1.81.1 in 1.21.0-r1 to 1.21.0-r2; grpc v1.82.0 in 1.23.1-r0; grpc v1.82.1 in 1.23.1-r1; grpc v1.83.0 in 1.23.1-r2 to 1.23.1-r3; grpc v1.83.1 in 1.23.1-r4 to 1.23.1-r5; grpc v1.83.2 in 1.23.1-r6 to 1.23.1-r9; grpc v1.84.0 replaced by v1.83.2 in 1.23.1-r10 to 1.26.0-r3; grpc v1.85.0 replaced by v1.83.2 in 1.26.0-r4 to 1.30.0-r1. From 1.23.1-r10 the build requires grpc 1.84.0 or 1.85.0 but a replace directive in the build information pins the code actually linked to 1.83.2, which descends from 1.83.1 on the same release branch and carries the fix. So the builds before 1.23.1-r4 link a grpc release before the fixed 1.83.1, and 1.23.1-r4 and every later build link 1.83.1 or 1.83.2. In the function tables of the two builds we re-read ourselves, internal/xds/httpfilter/rbac.parseConfig is linked, and the 1.26.0 build also links rbac.normalizeHeaderMatcher, the function the fix adds."
     },
     {
       "vulnerability": {
@@ -217132,7 +217160,8 @@
           "@id": "pkg:apk/dhi/scout-cli-fips-dev@1.30.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. The scout-cli-fips-dev packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository, not in the repository we read for the other owners. Pending: a per-build reading of the Go build information (module versions) and function table of every published scout-cli-fips-dev build for Alpine 3.23 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -217203,7 +217232,8 @@
           "@id": "pkg:apk/dhi/scout-cli-fips-dev@1.30.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. The scout-cli-fips-dev packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository, not in the repository we read for the other owners. Pending: a per-build reading of the Go build information (module versions) and function table of every published scout-cli-fips-dev build for Alpine 3.24 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -217289,7 +217319,8 @@
           "@id": "pkg:apk/dhi/scout-cli-fips@1.30.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. The scout-cli-fips packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository, not in the repository we read for the other owners. Pending: a per-build reading of the Go build information (module versions) and function table of every published scout-cli-fips build for Alpine 3.23 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -217360,7 +217391,8 @@
           "@id": "pkg:apk/dhi/scout-cli-fips@1.30.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. The scout-cli-fips packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository, not in the repository we read for the other owners. Pending: a per-build reading of the Go build information (module versions) and function table of every published scout-cli-fips build for Alpine 3.24 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -217395,9 +217427,6 @@
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/scout-cli@1.23.1-r10?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r1?distro=dhi-3.23"
         },
         {
@@ -217405,6 +217434,22 @@
         },
         {
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r3?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update scout-cli to 1.23.1-r4 or later.",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. Checked every scout-cli package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 25 builds, 1.20.4-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each holds /usr/bin/docker-scout, the Docker Scout CLI Go program built with CGO_ENABLED=0 for GOOS=linux. We read the Go build information (module versions and replace directives) of every build from the published packages, and re-read the 1.26.0-r3 scout-cli x86_64 and 1.20.4-r1 scout-cli-dev aarch64 Alpine 3.23 packages ourselves (checksums equal to the index). The relevant module is grpc v1.80.0 in 1.20.4-r1; grpc v1.81.0 in 1.20.4-r2 to 1.20.4-r4; grpc v1.81.1 in 1.21.0-r0 to 1.21.0-r2; grpc v1.82.0 in 1.23.1-r0; grpc v1.82.1 in 1.23.1-r1; grpc v1.83.0 in 1.23.1-r2 to 1.23.1-r3; grpc v1.83.1 in 1.23.1-r4 to 1.23.1-r5; grpc v1.83.2 in 1.23.1-r6 to 1.23.1-r9; grpc v1.84.0 replaced by v1.83.2 in 1.23.1-r10 to 1.26.0-r3; grpc v1.85.0 replaced by v1.83.2 in 1.26.0-r4 to 1.30.0-r1. From 1.23.1-r10 the build requires grpc 1.84.0 or 1.85.0 but a replace directive in the build information pins the code actually linked to 1.83.2, which descends from 1.83.1 on the same release branch and carries the fix. So the builds before 1.23.1-r4 link a grpc release before the fixed 1.83.1, and 1.23.1-r4 and every later build link 1.83.1 or 1.83.2. In the function tables of the two builds we re-read ourselves, internal/xds/httpfilter/rbac.parseConfig is linked, and the 1.26.0 build also links rbac.normalizeHeaderMatcher, the function the fix adds."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-xuwv-dhta-hya2-m377",
+        "aliases": [
+          "CVE-2026-84303"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/scout-cli@1.23.1-r10?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r4?distro=dhi-3.23"
@@ -217446,7 +217491,8 @@
           "@id": "pkg:apk/dhi/scout-cli@1.30.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. Checked every scout-cli package published for Alpine 3.23 in the DHI Alpine repository by 2026-11-27: 25 builds, 1.20.4-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each holds /usr/bin/docker-scout, the Docker Scout CLI Go program built with CGO_ENABLED=0 for GOOS=linux. We read the Go build information (module versions and replace directives) of every build from the published packages, and re-read the 1.26.0-r3 scout-cli x86_64 and 1.20.4-r1 scout-cli-dev aarch64 Alpine 3.23 packages ourselves (checksums equal to the index). The relevant module is grpc v1.80.0 in 1.20.4-r1; grpc v1.81.0 in 1.20.4-r2 to 1.20.4-r4; grpc v1.81.1 in 1.21.0-r0 to 1.21.0-r2; grpc v1.82.0 in 1.23.1-r0; grpc v1.82.1 in 1.23.1-r1; grpc v1.83.0 in 1.23.1-r2 to 1.23.1-r3; grpc v1.83.1 in 1.23.1-r4 to 1.23.1-r5; grpc v1.83.2 in 1.23.1-r6 to 1.23.1-r9; grpc v1.84.0 replaced by v1.83.2 in 1.23.1-r10 to 1.26.0-r3; grpc v1.85.0 replaced by v1.83.2 in 1.26.0-r4 to 1.30.0-r1. From 1.23.1-r10 the build requires grpc 1.84.0 or 1.85.0 but a replace directive in the build information pins the code actually linked to 1.83.2, which descends from 1.83.1 on the same release branch and carries the fix. So the builds before 1.23.1-r4 link a grpc release before the fixed 1.83.1, and 1.23.1-r4 and every later build link 1.83.1 or 1.83.2. In the function tables of the two builds we re-read ourselves, internal/xds/httpfilter/rbac.parseConfig is linked, and the 1.26.0 build also links rbac.normalizeHeaderMatcher, the function the fix adds."
     },
     {
       "vulnerability": {
@@ -217466,9 +217512,6 @@
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r0?distro=dhi-3.24"
         },
         {
-          "@id": "pkg:apk/dhi/scout-cli@1.23.1-r10?distro=dhi-3.24"
-        },
-        {
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r1?distro=dhi-3.24"
         },
         {
@@ -217476,6 +217519,22 @@
         },
         {
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r3?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update scout-cli to 1.23.1-r4 or later.",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. Checked every scout-cli package published for Alpine 3.24 in the DHI Alpine repository by 2026-11-27: 20 builds, 1.21.0-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same version and architecture, so it is the same file. Each holds /usr/bin/docker-scout, the Docker Scout CLI Go program built with CGO_ENABLED=0 for GOOS=linux. We read the Go build information (module versions and replace directives) of every build from the published packages, and re-read the 1.26.0-r3 scout-cli x86_64 and 1.20.4-r1 scout-cli-dev aarch64 Alpine 3.23 packages ourselves (checksums equal to the index). The relevant module is grpc v1.81.1 in 1.21.0-r1 to 1.21.0-r2; grpc v1.82.0 in 1.23.1-r0; grpc v1.82.1 in 1.23.1-r1; grpc v1.83.0 in 1.23.1-r2 to 1.23.1-r3; grpc v1.83.1 in 1.23.1-r4 to 1.23.1-r5; grpc v1.83.2 in 1.23.1-r6 to 1.23.1-r9; grpc v1.84.0 replaced by v1.83.2 in 1.23.1-r10 to 1.26.0-r3; grpc v1.85.0 replaced by v1.83.2 in 1.26.0-r4 to 1.30.0-r1. From 1.23.1-r10 the build requires grpc 1.84.0 or 1.85.0 but a replace directive in the build information pins the code actually linked to 1.83.2, which descends from 1.83.1 on the same release branch and carries the fix. So the builds before 1.23.1-r4 link a grpc release before the fixed 1.83.1, and 1.23.1-r4 and every later build link 1.83.1 or 1.83.2. In the function tables of the two builds we re-read ourselves, internal/xds/httpfilter/rbac.parseConfig is linked, and the 1.26.0 build also links rbac.normalizeHeaderMatcher, the function the fix adds."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-xuwv-dhta-hya2-m377",
+        "aliases": [
+          "CVE-2026-84303"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/scout-cli@1.23.1-r10?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/scout-cli@1.23.1-r4?distro=dhi-3.24"
@@ -217517,7 +217576,8 @@
           "@id": "pkg:apk/dhi/scout-cli@1.30.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. Checked every scout-cli package published for Alpine 3.24 in the DHI Alpine repository by 2026-11-27: 20 builds, 1.21.0-r1 to 1.30.0-r1, each for x86_64 and aarch64. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same version and architecture, so it is the same file. Each holds /usr/bin/docker-scout, the Docker Scout CLI Go program built with CGO_ENABLED=0 for GOOS=linux. We read the Go build information (module versions and replace directives) of every build from the published packages, and re-read the 1.26.0-r3 scout-cli x86_64 and 1.20.4-r1 scout-cli-dev aarch64 Alpine 3.23 packages ourselves (checksums equal to the index). The relevant module is grpc v1.81.1 in 1.21.0-r1 to 1.21.0-r2; grpc v1.82.0 in 1.23.1-r0; grpc v1.82.1 in 1.23.1-r1; grpc v1.83.0 in 1.23.1-r2 to 1.23.1-r3; grpc v1.83.1 in 1.23.1-r4 to 1.23.1-r5; grpc v1.83.2 in 1.23.1-r6 to 1.23.1-r9; grpc v1.84.0 replaced by v1.83.2 in 1.23.1-r10 to 1.26.0-r3; grpc v1.85.0 replaced by v1.83.2 in 1.26.0-r4 to 1.30.0-r1. From 1.23.1-r10 the build requires grpc 1.84.0 or 1.85.0 but a replace directive in the build information pins the code actually linked to 1.83.2, which descends from 1.83.1 on the same release branch and carries the fix. So the builds before 1.23.1-r4 link a grpc release before the fixed 1.83.1, and 1.23.1-r4 and every later build link 1.83.1 or 1.83.2. In the function tables of the two builds we re-read ourselves, internal/xds/httpfilter/rbac.parseConfig is linked, and the 1.26.0 build also links rbac.normalizeHeaderMatcher, the function the fix adds."
     },
     {
       "vulnerability": {
@@ -366683,9 +366743,6 @@
           "@id": "pkg:deb/dhi/scout-cli-dev@1.23.1-0?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/scout-cli-dev@1.23.1-10?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/scout-cli-dev@1.23.1-1?distro=dhi-13"
         },
         {
@@ -366693,6 +366750,22 @@
         },
         {
           "@id": "pkg:deb/dhi/scout-cli-dev@1.23.1-3?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update scout-cli-dev to 1.23.1-4 or later.",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. Checked every scout-cli-dev package published for Debian 13 in the DHI Debian repository by 2026-11-27: 25 builds, 1.20.4-1 to 1.30.0-1, each for amd64 and arm64. Each package lists one file in its md5sums, /usr/bin/docker-scout, the Docker Scout CLI Go program built with CGO_ENABLED=0 for GOOS=linux; the -dev build has the same Go release and module versions as the scout-cli build of the same version, built without the -w linker flag and without -trimpath. That program is the same file as in the Alpine 3.23 scout-cli-dev build of the same version and architecture (1.20.4-r1 for 1.20.4-1, and so on): each pair has the same Go build ID, which embeds a hash of the linked program. We read the Go build information (module versions and replace directives) of every build from the published packages, and re-read the 1.26.0-r3 scout-cli x86_64 and 1.20.4-r1 scout-cli-dev aarch64 Alpine 3.23 packages ourselves (checksums equal to the index). The relevant module is grpc v1.80.0 in 1.20.4-1; grpc v1.81.0 in 1.20.4-2 to 1.20.4-4; grpc v1.81.1 in 1.21.0-0 to 1.21.0-2; grpc v1.82.0 in 1.23.1-0; grpc v1.82.1 in 1.23.1-1; grpc v1.83.0 in 1.23.1-2 to 1.23.1-3; grpc v1.83.1 in 1.23.1-4 to 1.23.1-5; grpc v1.83.2 in 1.23.1-6 to 1.23.1-9; grpc v1.84.0 replaced by v1.83.2 in 1.23.1-10 to 1.26.0-3; grpc v1.85.0 replaced by v1.83.2 in 1.26.0-4 to 1.30.0-1. From 1.23.1-10 the build requires grpc 1.84.0 or 1.85.0 but a replace directive in the build information pins the code actually linked to 1.83.2, which descends from 1.83.1 on the same release branch and carries the fix. So the builds before 1.23.1-4 link a grpc release before the fixed 1.83.1, and 1.23.1-4 and every later build link 1.83.1 or 1.83.2. In the function tables of the two builds we re-read ourselves, internal/xds/httpfilter/rbac.parseConfig is linked, and the 1.26.0 build also links rbac.normalizeHeaderMatcher, the function the fix adds."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-xuwv-dhta-hya2-m377",
+        "aliases": [
+          "CVE-2026-84303"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/scout-cli-dev@1.23.1-10?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/scout-cli-dev@1.23.1-4?distro=dhi-13"
@@ -366734,7 +366807,8 @@
           "@id": "pkg:deb/dhi/scout-cli-dev@1.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. Checked every scout-cli-dev package published for Debian 13 in the DHI Debian repository by 2026-11-27: 25 builds, 1.20.4-1 to 1.30.0-1, each for amd64 and arm64. Each package lists one file in its md5sums, /usr/bin/docker-scout, the Docker Scout CLI Go program built with CGO_ENABLED=0 for GOOS=linux; the -dev build has the same Go release and module versions as the scout-cli build of the same version, built without the -w linker flag and without -trimpath. That program is the same file as in the Alpine 3.23 scout-cli-dev build of the same version and architecture (1.20.4-r1 for 1.20.4-1, and so on): each pair has the same Go build ID, which embeds a hash of the linked program. We read the Go build information (module versions and replace directives) of every build from the published packages, and re-read the 1.26.0-r3 scout-cli x86_64 and 1.20.4-r1 scout-cli-dev aarch64 Alpine 3.23 packages ourselves (checksums equal to the index). The relevant module is grpc v1.80.0 in 1.20.4-1; grpc v1.81.0 in 1.20.4-2 to 1.20.4-4; grpc v1.81.1 in 1.21.0-0 to 1.21.0-2; grpc v1.82.0 in 1.23.1-0; grpc v1.82.1 in 1.23.1-1; grpc v1.83.0 in 1.23.1-2 to 1.23.1-3; grpc v1.83.1 in 1.23.1-4 to 1.23.1-5; grpc v1.83.2 in 1.23.1-6 to 1.23.1-9; grpc v1.84.0 replaced by v1.83.2 in 1.23.1-10 to 1.26.0-3; grpc v1.85.0 replaced by v1.83.2 in 1.26.0-4 to 1.30.0-1. From 1.23.1-10 the build requires grpc 1.84.0 or 1.85.0 but a replace directive in the build information pins the code actually linked to 1.83.2, which descends from 1.83.1 on the same release branch and carries the fix. So the builds before 1.23.1-4 link a grpc release before the fixed 1.83.1, and 1.23.1-4 and every later build link 1.83.1 or 1.83.2. In the function tables of the two builds we re-read ourselves, internal/xds/httpfilter/rbac.parseConfig is linked, and the 1.26.0 build also links rbac.normalizeHeaderMatcher, the function the fix adds."
     },
     {
       "vulnerability": {
@@ -366820,7 +366894,8 @@
           "@id": "pkg:deb/dhi/scout-cli-fips-dev@1.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. The scout-cli-fips-dev packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository, not in the repository we read for the other owners. Pending: a per-build reading of the Go build information (module versions) and function table of every published scout-cli-fips-dev build for Debian 13 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -366906,7 +366981,8 @@
           "@id": "pkg:deb/dhi/scout-cli-fips@1.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. The scout-cli-fips packages are built from the same Docker Scout CLI source with Go FIPS 140-3 mode enabled and are published in the DHI security repository, not in the repository we read for the other owners. Pending: a per-build reading of the Go build information (module versions) and function table of every published scout-cli-fips build for Debian 13 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -366941,9 +367017,6 @@
           "@id": "pkg:deb/dhi/scout-cli@1.23.1-0?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/scout-cli@1.23.1-10?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/scout-cli@1.23.1-1?distro=dhi-13"
         },
         {
@@ -366951,6 +367024,22 @@
         },
         {
           "@id": "pkg:deb/dhi/scout-cli@1.23.1-3?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update scout-cli to 1.23.1-4 or later.",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. Checked every scout-cli package published for Debian 13 in the DHI Debian repository by 2026-11-27: 25 builds, 1.20.4-1 to 1.30.0-1, each for amd64 and arm64. Each package lists one file in its md5sums, /usr/bin/docker-scout, the Docker Scout CLI Go program built with CGO_ENABLED=0 for GOOS=linux. That program is the same file as in the Alpine 3.23 scout-cli build of the same version and architecture (1.20.4-r1 for 1.20.4-1, and so on): each pair has the same Go build ID, which embeds a hash of the linked program. We read the Go build information (module versions and replace directives) of every build from the published packages, and re-read the 1.26.0-r3 scout-cli x86_64 and 1.20.4-r1 scout-cli-dev aarch64 Alpine 3.23 packages ourselves (checksums equal to the index). The relevant module is grpc v1.80.0 in 1.20.4-1; grpc v1.81.0 in 1.20.4-2 to 1.20.4-4; grpc v1.81.1 in 1.21.0-0 to 1.21.0-2; grpc v1.82.0 in 1.23.1-0; grpc v1.82.1 in 1.23.1-1; grpc v1.83.0 in 1.23.1-2 to 1.23.1-3; grpc v1.83.1 in 1.23.1-4 to 1.23.1-5; grpc v1.83.2 in 1.23.1-6 to 1.23.1-9; grpc v1.84.0 replaced by v1.83.2 in 1.23.1-10 to 1.26.0-3; grpc v1.85.0 replaced by v1.83.2 in 1.26.0-4 to 1.30.0-1. From 1.23.1-10 the build requires grpc 1.84.0 or 1.85.0 but a replace directive in the build information pins the code actually linked to 1.83.2, which descends from 1.83.1 on the same release branch and carries the fix. So the builds before 1.23.1-4 link a grpc release before the fixed 1.83.1, and 1.23.1-4 and every later build link 1.83.1 or 1.83.2. In the function tables of the two builds we re-read ourselves, internal/xds/httpfilter/rbac.parseConfig is linked, and the 1.26.0 build also links rbac.normalizeHeaderMatcher, the function the fix adds."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-xuwv-dhta-hya2-m377",
+        "aliases": [
+          "CVE-2026-84303"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/scout-cli@1.23.1-10?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/scout-cli@1.23.1-4?distro=dhi-13"
@@ -366992,7 +367081,8 @@
           "@id": "pkg:deb/dhi/scout-cli@1.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-84303 (GHSA-qc2q-p7wx-3px3, GO-2026-6441): the gRPC-Go xDS RBAC HTTP filter does not lowercase header matcher names, so a policy rule that names a header with uppercase characters matches nothing and a DENY rule can fail open; mixed-case names can also evade the gRFC A41 checks on grpc- prefixed headers and :scheme. Affected is google.golang.org/grpc before 1.83.1. Refs: https://github.com/grpc/grpc-go/security/advisories/GHSA-qc2q-p7wx-3px3, fix https://github.com/grpc/grpc-go/pull/9332 (listed in the v1.83.1 release notes), https://pkg.go.dev/vuln/GO-2026-6441. Checked every scout-cli package published for Debian 13 in the DHI Debian repository by 2026-11-27: 25 builds, 1.20.4-1 to 1.30.0-1, each for amd64 and arm64. Each package lists one file in its md5sums, /usr/bin/docker-scout, the Docker Scout CLI Go program built with CGO_ENABLED=0 for GOOS=linux. That program is the same file as in the Alpine 3.23 scout-cli build of the same version and architecture (1.20.4-r1 for 1.20.4-1, and so on): each pair has the same Go build ID, which embeds a hash of the linked program. We read the Go build information (module versions and replace directives) of every build from the published packages, and re-read the 1.26.0-r3 scout-cli x86_64 and 1.20.4-r1 scout-cli-dev aarch64 Alpine 3.23 packages ourselves (checksums equal to the index). The relevant module is grpc v1.80.0 in 1.20.4-1; grpc v1.81.0 in 1.20.4-2 to 1.20.4-4; grpc v1.81.1 in 1.21.0-0 to 1.21.0-2; grpc v1.82.0 in 1.23.1-0; grpc v1.82.1 in 1.23.1-1; grpc v1.83.0 in 1.23.1-2 to 1.23.1-3; grpc v1.83.1 in 1.23.1-4 to 1.23.1-5; grpc v1.83.2 in 1.23.1-6 to 1.23.1-9; grpc v1.84.0 replaced by v1.83.2 in 1.23.1-10 to 1.26.0-3; grpc v1.85.0 replaced by v1.83.2 in 1.26.0-4 to 1.30.0-1. From 1.23.1-10 the build requires grpc 1.84.0 or 1.85.0 but a replace directive in the build information pins the code actually linked to 1.83.2, which descends from 1.83.1 on the same release branch and carries the fix. So the builds before 1.23.1-4 link a grpc release before the fixed 1.83.1, and 1.23.1-4 and every later build link 1.83.1 or 1.83.2. In the function tables of the two builds we re-read ourselves, internal/xds/httpfilter/rbac.parseConfig is linked, and the 1.26.0 build also links rbac.normalizeHeaderMatcher, the function the fix adds."
     },
     {
       "vulnerability": {
