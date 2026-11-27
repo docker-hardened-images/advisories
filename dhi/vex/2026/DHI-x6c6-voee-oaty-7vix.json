@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:45:21Z",
-  "last_updated": "2026-11-27T02:55:27Z",
-  "version": 32,
+  "last_updated": "2026-11-27T08:26:10Z",
+  "version": 34,
   "statements": [
     {
       "vulnerability": {
@@ -109428,15 +109428,6 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.1-r3?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.10-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r1?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.2-r3?distro=dhi-3.23"
         },
         {
@@ -109450,6 +109441,28 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.5-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26-dev to 1.26.6-r0 or later.",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template in the Go standard library tracks whether a '/' in a JavaScript context starts a regular expression; pathological inputs could close an unescaped '/' early, letting attacker-controlled data inject arbitrary content, which could lead to cross-site scripting. The Go vulnerability database lists it for Go before 1.25.13, Go 1.26.0 to 1.26.5 and Go 1.27 before 1.27.0-rc.3, fixed in Go 1.26.6 for this release line: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100, https://groups.google.com/g/golang-announce/c/94pEornpRlI . For Go 1.26 the fix is commit 33ecb96 on release-branch.go1.26, \"html/template: fix JavaScript regexp tracking\", which names CVE-2026-56858; outside tests it changes only src/html/template/transition.go, where tJS now also updates its JavaScript context (whether a following '/' starts a regular expression or is a division operator) with nextJSCtx at the four places where it handles a '{' or '}' brace; it is in go1.26.6 and not in go1.26.5: https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/html/template that is compiled into programs built with it; its go tool cover program also has html/template's tJS in its function table in every build. We read every published golang-1.26-dev package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 15 versions, 1.26.1-r2 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) and the other Go programs report the Go release in the package version: every build before 1.26.6-r0 (1.26.1-r2 to 1.26.5-r0) packages Go 1.26.1 to 1.26.5, inside the affected range, and 1.26.6-r0 and every later build package Go 1.26.6 to 1.26.11. As a check on the boundary, on both architectures the src/html/template/transition.go in 1.26.6-r0 has the four nextJSCtx calls in tJS's brace handling that the fix adds, and the one in 1.26.5-r0 has none of them; we read that file in every build, and it has the fix in exactly the builds from 1.26.6-r0 on. The range ends at 1.26.6-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-x6c6-voee-oaty-7vix",
+        "aliases": [
+          "CVE-2026-56858"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.10-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r1?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.6-r0?distro=dhi-3.23"
@@ -109467,7 +109480,33 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template in the Go standard library tracks whether a '/' in a JavaScript context starts a regular expression; pathological inputs could close an unescaped '/' early, letting attacker-controlled data inject arbitrary content, which could lead to cross-site scripting. The Go vulnerability database lists it for Go before 1.25.13, Go 1.26.0 to 1.26.5 and Go 1.27 before 1.27.0-rc.3, fixed in Go 1.26.6 for this release line: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100, https://groups.google.com/g/golang-announce/c/94pEornpRlI . For Go 1.26 the fix is commit 33ecb96 on release-branch.go1.26, \"html/template: fix JavaScript regexp tracking\", which names CVE-2026-56858; outside tests it changes only src/html/template/transition.go, where tJS now also updates its JavaScript context (whether a following '/' starts a regular expression or is a division operator) with nextJSCtx at the four places where it handles a '{' or '}' brace; it is in go1.26.6 and not in go1.26.5: https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/html/template that is compiled into programs built with it; its go tool cover program also has html/template's tJS in its function table in every build. We read every published golang-1.26-dev package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 15 versions, 1.26.1-r2 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) and the other Go programs report the Go release in the package version: every build before 1.26.6-r0 (1.26.1-r2 to 1.26.5-r0) packages Go 1.26.1 to 1.26.5, inside the affected range, and 1.26.6-r0 and every later build package Go 1.26.6 to 1.26.11. As a check on the boundary, on both architectures the src/html/template/transition.go in 1.26.6-r0 has the four nextJSCtx calls in tJS's brace handling that the fix adds, and the one in 1.26.5-r0 has none of them; we read that file in every build, and it has the fix in exactly the builds from 1.26.6-r0 on. The range ends at 1.26.6-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-x6c6-voee-oaty-7vix",
+        "aliases": [
+          "CVE-2026-56858"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.3-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.4-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.4-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.5-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26-dev to 1.26.6-r0 or later.",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template in the Go standard library tracks whether a '/' in a JavaScript context starts a regular expression; pathological inputs could close an unescaped '/' early, letting attacker-controlled data inject arbitrary content, which could lead to cross-site scripting. The Go vulnerability database lists it for Go before 1.25.13, Go 1.26.0 to 1.26.5 and Go 1.27 before 1.27.0-rc.3, fixed in Go 1.26.6 for this release line: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100, https://groups.google.com/g/golang-announce/c/94pEornpRlI . For Go 1.26 the fix is commit 33ecb96 on release-branch.go1.26, \"html/template: fix JavaScript regexp tracking\", which names CVE-2026-56858; outside tests it changes only src/html/template/transition.go, where tJS now also updates its JavaScript context (whether a following '/' starts a regular expression or is a division operator) with nextJSCtx at the four places where it handles a '{' or '}' brace; it is in go1.26.6 and not in go1.26.5: https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/html/template that is compiled into programs built with it; its go tool cover program also has html/template's tJS in its function table in every build. We read every published golang-1.26-dev package for Alpine 3.24 in the DHI Alpine repository, x86_64 and aarch64: 12 versions, 1.26.3-r0 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) and the other Go programs report the Go release in the package version: every build before 1.26.6-r0 (1.26.3-r0 to 1.26.5-r0) packages Go 1.26.3 to 1.26.5, inside the affected range, and 1.26.6-r0 and every later build package Go 1.26.6 to 1.26.11. As a check on the boundary, on both architectures the src/html/template/transition.go in 1.26.6-r0 has the four nextJSCtx calls in tJS's brace handling that the fix adds, and the one in 1.26.5-r0 has none of them; we read that file in every build, and it has the fix in exactly the builds from 1.26.6-r0 on. The range ends at 1.26.6-r0."
     },
     {
       "vulnerability": {
@@ -109487,18 +109526,6 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r1?distro=dhi-3.24"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.3-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.4-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.4-r1?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.5-r0?distro=dhi-3.24"
-        },
-        {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.6-r0?distro=dhi-3.24"
         },
         {
@@ -109514,7 +109541,8 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.9-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template in the Go standard library tracks whether a '/' in a JavaScript context starts a regular expression; pathological inputs could close an unescaped '/' early, letting attacker-controlled data inject arbitrary content, which could lead to cross-site scripting. The Go vulnerability database lists it for Go before 1.25.13, Go 1.26.0 to 1.26.5 and Go 1.27 before 1.27.0-rc.3, fixed in Go 1.26.6 for this release line: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100, https://groups.google.com/g/golang-announce/c/94pEornpRlI . For Go 1.26 the fix is commit 33ecb96 on release-branch.go1.26, \"html/template: fix JavaScript regexp tracking\", which names CVE-2026-56858; outside tests it changes only src/html/template/transition.go, where tJS now also updates its JavaScript context (whether a following '/' starts a regular expression or is a division operator) with nextJSCtx at the four places where it handles a '{' or '}' brace; it is in go1.26.6 and not in go1.26.5: https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/html/template that is compiled into programs built with it; its go tool cover program also has html/template's tJS in its function table in every build. We read every published golang-1.26-dev package for Alpine 3.24 in the DHI Alpine repository, x86_64 and aarch64: 12 versions, 1.26.3-r0 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) and the other Go programs report the Go release in the package version: every build before 1.26.6-r0 (1.26.3-r0 to 1.26.5-r0) packages Go 1.26.3 to 1.26.5, inside the affected range, and 1.26.6-r0 and every later build package Go 1.26.6 to 1.26.11. As a check on the boundary, on both architectures the src/html/template/transition.go in 1.26.6-r0 has the four nextJSCtx calls in tJS's brace handling that the fix adds, and the one in 1.26.5-r0 has none of them; we read that file in every build, and it has the fix in exactly the builds from 1.26.6-r0 on. The range ends at 1.26.6-r0."
     },
     {
       "vulnerability": {
@@ -109543,15 +109571,6 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.1-r3?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.10-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r1?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.2-r3?distro=dhi-3.23"
         },
         {
@@ -109565,6 +109584,28 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.5-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26 to 1.26.6-r0 or later.",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template in the Go standard library tracks whether a '/' in a JavaScript context starts a regular expression; pathological inputs could close an unescaped '/' early, letting attacker-controlled data inject arbitrary content, which could lead to cross-site scripting. The Go vulnerability database lists it for Go before 1.25.13, Go 1.26.0 to 1.26.5 and Go 1.27 before 1.27.0-rc.3, fixed in Go 1.26.6 for this release line: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100, https://groups.google.com/g/golang-announce/c/94pEornpRlI . For Go 1.26 the fix is commit 33ecb96 on release-branch.go1.26, \"html/template: fix JavaScript regexp tracking\", which names CVE-2026-56858; outside tests it changes only src/html/template/transition.go, where tJS now also updates its JavaScript context (whether a following '/' starts a regular expression or is a division operator) with nextJSCtx at the four places where it handles a '{' or '}' brace; it is in go1.26.6 and not in go1.26.5: https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/html/template that is compiled into programs built with it; its go tool cover program also has html/template's tJS in its function table in every build. We read every published golang-1.26 package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 18 versions, 1.26.0-r0 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) and the other Go programs report the Go release in the package version: every build before 1.26.6-r0 (1.26.0-r0 to 1.26.5-r0) packages Go 1.26.0 to 1.26.5, inside the affected range, and 1.26.6-r0 and every later build package Go 1.26.6 to 1.26.11. As a check on the boundary, on both architectures the src/html/template/transition.go in 1.26.6-r0 has the four nextJSCtx calls in tJS's brace handling that the fix adds, and the one in 1.26.5-r0 has none of them; we read that file in every build, and it has the fix in exactly the builds from 1.26.6-r0 on. The range ends at 1.26.6-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-x6c6-voee-oaty-7vix",
+        "aliases": [
+          "CVE-2026-56858"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.10-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r1?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.6-r0?distro=dhi-3.23"
@@ -109582,7 +109623,33 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template in the Go standard library tracks whether a '/' in a JavaScript context starts a regular expression; pathological inputs could close an unescaped '/' early, letting attacker-controlled data inject arbitrary content, which could lead to cross-site scripting. The Go vulnerability database lists it for Go before 1.25.13, Go 1.26.0 to 1.26.5 and Go 1.27 before 1.27.0-rc.3, fixed in Go 1.26.6 for this release line: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100, https://groups.google.com/g/golang-announce/c/94pEornpRlI . For Go 1.26 the fix is commit 33ecb96 on release-branch.go1.26, \"html/template: fix JavaScript regexp tracking\", which names CVE-2026-56858; outside tests it changes only src/html/template/transition.go, where tJS now also updates its JavaScript context (whether a following '/' starts a regular expression or is a division operator) with nextJSCtx at the four places where it handles a '{' or '}' brace; it is in go1.26.6 and not in go1.26.5: https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/html/template that is compiled into programs built with it; its go tool cover program also has html/template's tJS in its function table in every build. We read every published golang-1.26 package for Alpine 3.23 in the DHI Alpine repository, x86_64 and aarch64: 18 versions, 1.26.0-r0 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) and the other Go programs report the Go release in the package version: every build before 1.26.6-r0 (1.26.0-r0 to 1.26.5-r0) packages Go 1.26.0 to 1.26.5, inside the affected range, and 1.26.6-r0 and every later build package Go 1.26.6 to 1.26.11. As a check on the boundary, on both architectures the src/html/template/transition.go in 1.26.6-r0 has the four nextJSCtx calls in tJS's brace handling that the fix adds, and the one in 1.26.5-r0 has none of them; we read that file in every build, and it has the fix in exactly the builds from 1.26.6-r0 on. The range ends at 1.26.6-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-x6c6-voee-oaty-7vix",
+        "aliases": [
+          "CVE-2026-56858"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.3-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.4-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.4-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.5-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26 to 1.26.6-r0 or later.",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template in the Go standard library tracks whether a '/' in a JavaScript context starts a regular expression; pathological inputs could close an unescaped '/' early, letting attacker-controlled data inject arbitrary content, which could lead to cross-site scripting. The Go vulnerability database lists it for Go before 1.25.13, Go 1.26.0 to 1.26.5 and Go 1.27 before 1.27.0-rc.3, fixed in Go 1.26.6 for this release line: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100, https://groups.google.com/g/golang-announce/c/94pEornpRlI . For Go 1.26 the fix is commit 33ecb96 on release-branch.go1.26, \"html/template: fix JavaScript regexp tracking\", which names CVE-2026-56858; outside tests it changes only src/html/template/transition.go, where tJS now also updates its JavaScript context (whether a following '/' starts a regular expression or is a division operator) with nextJSCtx at the four places where it handles a '{' or '}' brace; it is in go1.26.6 and not in go1.26.5: https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/html/template that is compiled into programs built with it; its go tool cover program also has html/template's tJS in its function table in every build. We read every published golang-1.26 package for Alpine 3.24 in the DHI Alpine repository, x86_64 and aarch64: 12 versions, 1.26.3-r0 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) and the other Go programs report the Go release in the package version: every build before 1.26.6-r0 (1.26.3-r0 to 1.26.5-r0) packages Go 1.26.3 to 1.26.5, inside the affected range, and 1.26.6-r0 and every later build package Go 1.26.6 to 1.26.11. As a check on the boundary, on both architectures the src/html/template/transition.go in 1.26.6-r0 has the four nextJSCtx calls in tJS's brace handling that the fix adds, and the one in 1.26.5-r0 has none of them; we read that file in every build, and it has the fix in exactly the builds from 1.26.6-r0 on. The range ends at 1.26.6-r0."
     },
     {
       "vulnerability": {
@@ -109602,18 +109669,6 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r1?distro=dhi-3.24"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.3-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.4-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.4-r1?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.5-r0?distro=dhi-3.24"
-        },
-        {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.6-r0?distro=dhi-3.24"
         },
         {
@@ -109629,7 +109684,8 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.9-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template in the Go standard library tracks whether a '/' in a JavaScript context starts a regular expression; pathological inputs could close an unescaped '/' early, letting attacker-controlled data inject arbitrary content, which could lead to cross-site scripting. The Go vulnerability database lists it for Go before 1.25.13, Go 1.26.0 to 1.26.5 and Go 1.27 before 1.27.0-rc.3, fixed in Go 1.26.6 for this release line: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100, https://groups.google.com/g/golang-announce/c/94pEornpRlI . For Go 1.26 the fix is commit 33ecb96 on release-branch.go1.26, \"html/template: fix JavaScript regexp tracking\", which names CVE-2026-56858; outside tests it changes only src/html/template/transition.go, where tJS now also updates its JavaScript context (whether a following '/' starts a regular expression or is a division operator) with nextJSCtx at the four places where it handles a '{' or '}' brace; it is in go1.26.6 and not in go1.26.5: https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d . This package is the Go 1.26 toolchain, and it ships the source in /usr/lib/go/src/html/template that is compiled into programs built with it; its go tool cover program also has html/template's tJS in its function table in every build. We read every published golang-1.26 package for Alpine 3.24 in the DHI Alpine repository, x86_64 and aarch64: 12 versions, 1.26.3-r0 to the current 1.26.11-r1, each matching its repository index checksum. In every build the go command (/usr/lib/go/bin/go) and the other Go programs report the Go release in the package version: every build before 1.26.6-r0 (1.26.3-r0 to 1.26.5-r0) packages Go 1.26.3 to 1.26.5, inside the affected range, and 1.26.6-r0 and every later build package Go 1.26.6 to 1.26.11. As a check on the boundary, on both architectures the src/html/template/transition.go in 1.26.6-r0 has the four nextJSCtx calls in tJS's brace handling that the fix adds, and the one in 1.26.5-r0 has none of them; we read that file in every build, and it has the fix in exactly the builds from 1.26.6-r0 on. The range ends at 1.26.6-r0."
     },
     {
       "vulnerability": {
@@ -197045,6 +197101,9 @@
         },
         {
           "@id": "pkg:apk/dhi/mongodb-exporter-dev@0.54.0-r5?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/mongodb-exporter-dev@0.55.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -197116,6 +197175,9 @@
         },
         {
           "@id": "pkg:apk/dhi/mongodb-exporter-dev@0.54.0-r5?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/mongodb-exporter-dev@0.55.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -197187,6 +197249,9 @@
         },
         {
           "@id": "pkg:apk/dhi/mongodb-exporter-fips-dev@0.54.0-r5?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/mongodb-exporter-fips-dev@0.55.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -197258,6 +197323,9 @@
         },
         {
           "@id": "pkg:apk/dhi/mongodb-exporter-fips-dev@0.54.0-r5?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/mongodb-exporter-fips-dev@0.55.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -197329,6 +197397,9 @@
         },
         {
           "@id": "pkg:apk/dhi/mongodb-exporter-fips@0.54.0-r5?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/mongodb-exporter-fips@0.55.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -197400,6 +197471,9 @@
         },
         {
           "@id": "pkg:apk/dhi/mongodb-exporter-fips@0.54.0-r5?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/mongodb-exporter-fips@0.55.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -197471,6 +197545,9 @@
         },
         {
           "@id": "pkg:apk/dhi/mongodb-exporter@0.54.0-r5?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/mongodb-exporter@0.55.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -197542,6 +197619,9 @@
         },
         {
           "@id": "pkg:apk/dhi/mongodb-exporter@0.54.0-r5?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/mongodb-exporter@0.55.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -209826,6 +209906,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -209906,6 +209989,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -209986,6 +210072,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -210066,6 +210155,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -210146,6 +210238,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -210226,6 +210321,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -210306,6 +210404,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -210386,6 +210487,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -210466,6 +210570,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -210546,6 +210653,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -210626,6 +210736,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -210706,6 +210819,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -210786,6 +210902,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -210866,6 +210985,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -210946,6 +211068,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r1?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -211026,6 +211151,9 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r1?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -357884,6 +358012,9 @@
         },
         {
           "@id": "pkg:deb/dhi/mongodb-exporter-dev@0.54.0-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/mongodb-exporter-dev@0.55.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -357955,6 +358086,9 @@
         },
         {
           "@id": "pkg:deb/dhi/mongodb-exporter-fips-dev@0.54.0-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/mongodb-exporter-fips-dev@0.55.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -358026,6 +358160,9 @@
         },
         {
           "@id": "pkg:deb/dhi/mongodb-exporter-fips@0.54.0-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/mongodb-exporter-fips@0.55.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -358097,6 +358234,9 @@
         },
         {
           "@id": "pkg:deb/dhi/mongodb-exporter@0.54.0-5?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/mongodb-exporter@0.55.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -365562,6 +365702,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -365642,6 +365785,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -365722,6 +365868,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -365802,6 +365951,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -365882,6 +366034,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-dev@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-dev@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -365962,6 +366117,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips-dev@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-fips-dev@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -366042,6 +366200,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-fips@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -366122,6 +366283,9 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector@0.166.0-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
