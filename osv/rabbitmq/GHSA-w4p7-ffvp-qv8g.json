@@ -1,0 +1,63 @@
+{
+  "modified": "2026-11-27T07:04:09Z",
+  "published": "2026-11-27T07:04:08Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-w4p7-ffvp-qv8g",
+  "details": "### Summary\r\n\r\nDirect reply-to addresses have the form `amq.rabbitmq.reply-to.\u003cencoded-pid\u003e.\u003ckey\u003e`. The key is the capability that authorises delivery to the reply-to consumer — `rabbit_queue_type:handle_event/3` matches on the full resource name, so a wrong key delivers nothing. That key is generated with `rabbit_guid:gen/0`, whose own docstring states it \"should be used when performance is a priority and predictability is not an issue. Otherwise use `gen_secure/0`.\"\r\n\r\n`gen/0` advances a per-process chain by a reversible transform. A party that observes reply-to keys from a given channel or session process can therefore derive keys that the same process generates later, including keys it uses for conversations with other peers.\r\n\r\n*Note on tooling: this report was prepared with AI assistance (Claude Code). The analysis and the proposed fix were reviewed by the submitter before filing.*\r\n\r\n### Why this is reachable in practice\r\n\r\nThe reply-to key is not secret from the peer a client addresses — that peer is told the address so it can reply. Predictability matters because it lets that peer derive keys used with *different* peers.\r\n\r\nTwo properties make this more than theoretical:\r\n\r\n1. **A client can allocate multiple keys on one channel.** `basic.cancel` resets `direct_reply = none` (`rabbit_channel.erl:1391`), so cancel-and-re-consume yields a fresh key from the same process and the same chain. Some clients do this per request as normal behaviour.\r\n2. **The chain's other consumer is often attacker-observable.** The same per-process chain is advanced by `rabbit_classic_queue:deliver/3`, once per publish to a classic queue. In the RPC case the attacker is the responder, so it receives those requests and can count them — meaning the step count between two reply-to allocations is frequently visible to exactly the party who benefits from knowing it. I initially assumed this sharing added uncertainty for an attacker; it largely does not.\r\n\r\n### Impact\r\n\r\nA peer that a client sends reply-to addresses to can inject forged replies into that client's other direct reply-to conversations. This is an integrity issue, not a confidentiality one — the key authorises delivery to the consumer, so it permits injection but not reading the victim's traffic. Downstream severity depends on how the client application treats RPC responses.\r\n\r\n### Preconditions\r\n\r\n- Authenticated account with permission to publish\r\n- The attacker is a party the victim addresses replies to, or otherwise observes reply-to addresses from the victim's channel\r\n- The victim allocates a direct reply-to consumer more than once on the same channel or session\r\n- Shared vhost with at least one other peer for the cross-peer case to have value\r\n\r\n### Affected code\r\n\r\n- `deps/rabbit/src/rabbit_volatile_queue.erl`, `new_name/0` — 4.2.x, 4.3.x, `main`\r\n- `deps/rabbit/src/rabbit_direct_reply_to.erl`, `compute_key_and_suffix_v1/2` — 3.13.x through 4.1.x\r\n\r\nVerified present on the `v3.13.x`, `v4.0.x`, `v4.1.x`, `v4.2.x`, `v4.3.x` and `main` branch tips.\r\n\r\n### Suggested fix\r\n\r\nUse `rabbit_guid:gen_secure/0` for the key. `rabbit_channel` already uses it a few lines away when generating the consumer tag, so the asymmetry appears unintentional. `new_name/0` runs once per direct reply-to consumer rather than per message, so the extra hashing is not on a hot path.\r\n\r\nI have a one-line change plus a regression test for `main` ready to submit as a PR once you've decided how you'd like to handle this. The test asserts that a key is not derivable from its predecessor; it fails on current `main` and passes with the change.\r\n\r\n### Environment\r\n\r\n- RabbitMQ 4.3.5 and 4.3.6, and verified by source inspection on the branch tips listed above\r\n- Erlang/OTP 29\r\n- Linux\r\n\r\n### A note on severity\r\n\r\nI am not confident whether this clears your bar for a vulnerability rather than hardening. I first assessed it as hardening on the basis that consecutive keys were hard to obtain, and both halves of that reasoning turned out to be weaker than I thought — hence this report rather than a public PR. If you consider it hardening, I am happy to open the PR publicly instead.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.7"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.12"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-w4p7-ffvp-qv8g"
+    }
+  ]
+}

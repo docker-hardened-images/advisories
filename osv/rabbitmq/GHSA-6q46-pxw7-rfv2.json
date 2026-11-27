@@ -1,0 +1,87 @@
+{
+  "modified": "2026-11-27T07:04:07Z",
+  "published": "2026-11-27T07:04:07Z",
+  "schema_version": "1.5.0",
+  "id": "GHSA-6q46-pxw7-rfv2",
+  "details": "# RabbitMQ 4.4.0 auth-cache accepts expired OAuth JWTs for new management operations\r\n\r\n## Summary\r\n\r\nWhen `rabbitmq_auth_backend_cache` wraps `rabbit_auth_backend_oauth2`, a previously accepted signed JWT remains usable for new management HTTP requests after its `exp` timestamp, until the cache entry's independent TTL elapses. The default cache TTL is 15,000 ms. This affects only deployments that explicitly enable this plugin combination and only the exact token whose successful result was cached before expiry.\r\n\r\nI reproduced two consequences on RabbitMQ 4.4.0 in isolated loopback Docker containers:\r\n\r\n1. A fresh `POST /api/queues/%2F/expiry_lab_primed/get` with an expired read-scoped JWT returned a synthetic message published **after** the JWT expired. The identical request to a same-image direct-OAuth2 control returned 401. This is a new HTTP request, not persistence of an already-open AMQP or STOMP consumer.\r\n2. A fresh `PUT /api/users/synthetic_paired_post_expiry_admin` with an expired administrator JWT created an administrator-tagged internal user. With an internal authentication backend configured after cached OAuth2, that user's Basic credentials still accessed the admin-only `/api/users` endpoint after the JWT cache entry expired. The same JWT on a direct-OAuth2 control could not create the user. This durable-login consequence requires the explicitly mixed backend configuration and Basic authentication.\r\n\r\nNo JWT was forged, no initially invalid token succeeded, and no lower-privilege token acquired administrator rights. The token holder previously had the corresponding read or administrator permission while the token was valid. The issue extends that permission past the token's stated expiry.\r\n\r\n## Tested build and configuration\r\n\r\n- RabbitMQ Server `4.4.0`, official `rabbitmq:4.4.0-management` Linux arm64 image digest `sha256:c200fd496482cda18c412be4e6f244830e1e75949b8cf5f0e887cea9ea456109`. Both paired containers reported `rabbitmqctl version` = `4.4.0`.\r\n- The official `rabbitmq-server-4.4.0.tar.xz` used for source review has SHA256 `e6fb6eb6b0d26d96efe7e726f694d19a9c1cd89bbe9344a8bfd4c020095a6278`; its detached signature verified with the RabbitMQ signing key fingerprint `0A9AF2115F4687BD29803A206B73A36E6026DFCA`.\r\n- All requests targeted `127.0.0.1` ports on disposable local containers. Keys, accounts, queues and message bodies were synthetic. The image was unchanged between positive and negative controls.\r\n\r\nThe cache container enabled `rabbitmq_management`, `rabbitmq_auth_backend_oauth2`, and `rabbitmq_auth_backend_cache`. Its `advanced.config` was:\r\n\r\n```erlang\r\n[\r\n {rabbit, [\r\n   {auth_backends, [rabbit_auth_backend_cache]}\r\n ]},\r\n {rabbitmq_auth_backend_cache, [\r\n   {cached_backend, rabbit_auth_backend_oauth2},\r\n   {cache_ttl, 15000},\r\n   {cache_module, rabbit_auth_cache_ets},\r\n   {cache_refusals, false}\r\n ]},\r\n {rabbitmq_auth_backend_oauth2, [\r\n   {resource_server_id, \u003c\u003c\"rabbitmq\"\u003e\u003e},\r\n   {key_config, [\r\n     {default_key, \u003c\u003c\"local-key\"\u003e\u003e},\r\n     {signing_keys, #{\r\n       \u003c\u003c\"local-key\"\u003e\u003e =\u003e {map, #{\r\n         \u003c\u003c\"alg\"\u003e\u003e =\u003e \u003c\u003c\"HS256\"\u003e\u003e,\r\n         \u003c\u003c\"value\"\u003e\u003e =\u003e \u003c\u003c\"RMQ_LOCAL_ONLY_TEST_KEY_20261022\"\u003e\u003e,\r\n         \u003c\u003c\"kty\"\u003e\u003e =\u003e \u003c\u003c\"MAC\"\u003e\u003e,\r\n         \u003c\u003c\"use\"\u003e\u003e =\u003e \u003c\u003c\"sig\"\u003e\u003e\r\n       }}\r\n     }}\r\n   ]}\r\n ]}\r\n].\r\n```\r\n\r\nThe negative-control container used the same OAuth2 key configuration and image, with `auth_backends = [rabbit_auth_backend_oauth2]` and no cache plugin. For the durable-login control, I placed `rabbit_auth_backend_internal` second in each list, after cached or direct OAuth2 respectively. The management listener was published to loopback only.\r\n\r\n## Reproduction and observed results\r\n\r\nJWTs were locally minted with `alg=HS256`, `kid=local-key`, `aud=rabbitmq`, `sub` as stated below, and an integer `exp`. The same signed token bytes were used in each cache/direct pair. Requests were made before expiry to populate the relevant cache entries, repeated one second after expiry, and repeated after the 15-second cache TTL. The token digests below identify the exact bytes without disclosing a live credential (the signing key above is synthetic and local-only).\r\n\r\n### Newly published message read after expiry\r\n\r\nReader JWT: `sub=synthetic_reader`, `scope=\"rabbitmq.tag:management rabbitmq.read:*/*\"`, `exp=1792646247`, SHA256 `bccd12f24b066836317567c47ed107f7707a77963906bad6f045d9a3f20c3cc7`. A separate synthetic admin JWT valid for 120 seconds created durable queue `expiry_lab_primed` in vhost `/` on both containers.\r\n\r\nBefore `exp`, I sent the **same** `POST /api/queues/%2F/expiry_lab_primed/get` request on each container with body `{\"count\":1,\"ackmode\":\"ack_requeue_true\",\"encoding\":\"auto\"}` and the reader JWT. Both returned `200 []`. This primes the HTTP login and the queue-get path, including its separate direct-connection authentication. After `exp`, the admin JWT published `SYNTHETIC_POST_EXPIRY_MARKER_20261022` to each queue; both publish responses were `200 {\"routed\":true}`. A new queue-get request with the expired reader JWT gave:\r\n\r\n| Check | Cache wrapping OAuth2 | Direct OAuth2 |\r\n| --- | ---: | ---: |\r\n| Pre-expiry queue-get | `200 []` | `200 []` |\r\n| Post-expiry publish using separate valid admin JWT | `200`, routed | `200`, routed |\r\n| Post-expiry queue-get using expired reader JWT | **`200`, marker returned** | **`401`** |\r\n| Never-valid reader JWT | `401` | `401` |\r\n| Same expired reader JWT after cache TTL | `401` | `401` |\r\n\r\nThe initial cache response contained `\"payload\":\"SYNTHETIC_POST_EXPIRY_MARKER_20261022\"`. Its queue-get occurred at Unix time `1792646248`, after `exp=1792646247`. The same-image direct control rejected that reader token at the same timestamp. A first attempt that had not primed the queue-get path returned 401 in the cache container because the inner direct-connection login used a different, cold cache key; the table above is the corrected same-request control.\r\n\r\n### Durable administrator login after expiry in a mixed backend configuration\r\n\r\nAdministrator JWT: `sub=synthetic_admin`, `scope=\"rabbitmq.tag:administrator\"`, `exp=1792645911`, SHA256 `45a1002f17944190b325d8c80b1b2241c981acee42ce6ea5a694fce21f252f3b`. Both fresh containers placed the internal auth backend after cached or direct OAuth2, respectively. Both returned `200` to pre-expiry `GET /api/whoami`. A valid `management`-tag JWT could not list users on either container (`401`).\r\n\r\nOne second after `exp`, I sent `PUT /api/users/synthetic_paired_post_expiry_admin` with `{\"password\":\"LOCAL_ONLY_PAIRED_PASSWORD_20261022\",\"tags\":\"administrator\"}` using the same expired admin JWT. Cache/OAuth2 returned **201**; direct OAuth2 returned **401**. `rabbitmqctl list_users` confirmed the new administrator-tagged user existed only in the cache container. After the JWT cache entry expired, the expired JWT was rejected with 401 in both containers, but Basic authentication as the newly created user returned **200** for admin-only `GET /api/users` in cache-mixed and **401** in direct-mixed. A wrong password also returned 401. This demonstrates that the post-expiry management write can leave a durable login path when the internal backend is enabled; it does not claim that the OAuth-only configuration allows that new internal user to log in.\r\n\r\n## Root cause\r\n\r\nIn `deps/rabbitmq_auth_backend_cache/src/rabbit_auth_backend_cache.erl`, `with_cache/3` lines 111–127 returns `Result` directly on a cache hit (lines 115–117). On a miss it calls the underlying backend and stores the positive result for `cache_ttl` (lines 119–125), without bounding that TTL by the wrapped OAuth2 token's `exp`. `rabbit_auth_cache_ets.erl` lines 33–35 and 45–50 expire the entry according to that independent TTL. Cache keys include the exact presented credential through a salted hash (`rabbit_auth_backend_cache.erl` lines 132–154), so the previously accepted JWT is replayed to hit the entry.\r\n\r\nThe OAuth2 backend would reject the token if called: `rabbit_auth_backend_oauth2.erl` lines 206–212 invokes `validate_token_expiry/1`; lines 241–247 reject `ExpTs =\u003c Now`. A cache hit bypasses that check. The cache wrapper already delegates `expiry_timestamp/1` to the wrapped backend (lines 77–80) for other connection-level expiry handling, but does not use it to bound auth-cache entries. `rabbit_web_dispatch_access_control.erl` lines 169–184 consumes the cached user and tags for each management request. The queue-get endpoint also opens a direct connection, whose separate login must be primed for the same token before expiry; the corrected control above does so.\r\n\r\nThe cache plugin documentation describes a time-based positive-result cache (15,000 ms default), primarily illustrating LDAP/HTTP. The OAuth2 documentation states that a JWT must not be accepted for processing after `exp`. Please assess whether this first-party plugin combination should cap the cache entry at the credential's expiry or explicitly reject/warn about caching OAuth2 credentials. Direct OAuth2 is an observed short-term configuration workaround. I have not tested versions other than 4.4.0 and am not assigning severity or a CVE.\r\n\r\n## Prior-art distinction and researcher credit\r\n\r\nI checked the published RabbitMQ repository advisories and targeted public issues on 2026-10-22. The published STOMP JWT-expiry advisory `GHSA-j6hc-926v-qwq2` and AMQP consumer-persistence advisory `GHSA-wmrr-4h5v-5ch7` concern existing consumers/connections. This report concerns **new management HTTP requests** accepted because a prior auth-cache decision outlived the JWT. The OAuth tag-refresh advisory `GHSA-86fm-44m9-rqjx` concerns stale tags after refresh, also a different path. I cannot rule out a non-public duplicate.\r\n\r\nPlease coordinate any disclosure privately. Researcher credit requested: **HaTaeHoon** (`@HaTaeHoon`); contact: `a01066622184@gmail.com`. The submitting GitHub account is `dpfkdlemtp` at the researcher's instruction. I can provide the full synthetic scripts, outputs, and broker logs in this private thread.\r\n",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.4.0"
+            },
+            {
+              "fixed": "4.4.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.3.0"
+            },
+            {
+              "fixed": "4.3.8"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "DHI",
+        "name": "rabbitmq",
+        "purl": "pkg:dhi/rabbitmq"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "4.2.0"
+            },
+            {
+              "fixed": "4.2.13"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source_ecosystem": "other",
+        "source_package": "rabbitmq-server"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-6q46-pxw7-rfv2"
+    }
+  ]
+}
