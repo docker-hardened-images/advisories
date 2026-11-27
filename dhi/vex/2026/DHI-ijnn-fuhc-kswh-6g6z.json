@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T15:41:32Z",
-  "last_updated": "2026-11-25T01:27:44Z",
-  "version": 2,
+  "last_updated": "2026-11-27T23:24:40Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -49,7 +49,9 @@
           "@id": "pkg:apk/dhi/curl@8.23.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-86413: when a first transfer used Negotiate (SPNEGO) authentication with an ambient user, meaning curl passes on whatever credentials the Kerberos system provides, and followed a redirect, libcurl could pass those credentials on to an unrelated second origin (https://curl.se/docs/CVE-2026-86413.html). curl lists 8.21.0 to 8.22.0 as affected; the flaw was introduced by https://github.com/curl/curl/commit/8f71d0fde515aa4c68002477356c35bd79927729 and fixed in curl 8.23.0 by https://github.com/curl/curl/commit/43029e2ec37eba2354ced199ccd8898de695858e, which adds a check that credentials are allowed for the new host to the Negotiate and NTLM connection matching in lib/url.c. Negotiate authentication is only compiled into libcurl when it is built with a GSS-API library (or Windows SSPI), and the DHI Alpine curl packages are built without GSS-API. Inspected the libcurl, curl, curl-static, curl-dev and curl-dbg packages of every DHI curl build published for Alpine 3.23 in the DHI Alpine main repository as of 2026-11-27 (8.17.0-r1, 8.18.0-r0, 8.19.0-r0, 8.20.0-r0, 8.20.0-r1, 8.21.0-r0, 8.22.0-r0, 8.23.0-r0 and 8.23.0-r1), on x86_64 and aarch64: libcurl.so.4.8.0 needs no GSS-API or Kerberos library and contains none of the strings GSS-API, SPNEGO, Kerberos, Negotiate or gss_init_sec_context; neither the static libcurl.a nor the libcurl debug symbols contain Curl_input_negotiate, Curl_output_negotiate or the SPNEGO message functions, while Curl_input_digest is present in both as a control; and the feature list in curl-config names no GSS-API, Kerberos or SPNEGO feature. The same searches find these names, gss_init_sec_context and a libgssapi_krb5.so.2 dependency in the DHI Debian 13 libcurl, which is built with GSS-API. The curl program contains these words only in its help and feature-name text and links libcurl.so.4 for its transfers. NTLM is listed as a feature only in the 8.17.0-r1, 8.18.0-r0 and 8.19.0-r0 builds, which predate the curl 8.21.0 change that introduced this flaw. Packages published only in the DHI Alpine security repository, which needs credentials, were not inspected. The Negotiate code this CVE concerns is not compiled into any of the inspected builds."
     },
     {
       "vulnerability": {
@@ -75,7 +77,9 @@
           "@id": "pkg:apk/dhi/curl@8.23.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-86413: when a first transfer used Negotiate (SPNEGO) authentication with an ambient user, meaning curl passes on whatever credentials the Kerberos system provides, and followed a redirect, libcurl could pass those credentials on to an unrelated second origin (https://curl.se/docs/CVE-2026-86413.html). curl lists 8.21.0 to 8.22.0 as affected; the flaw was introduced by https://github.com/curl/curl/commit/8f71d0fde515aa4c68002477356c35bd79927729 and fixed in curl 8.23.0 by https://github.com/curl/curl/commit/43029e2ec37eba2354ced199ccd8898de695858e, which adds a check that credentials are allowed for the new host to the Negotiate and NTLM connection matching in lib/url.c. Negotiate authentication is only compiled into libcurl when it is built with a GSS-API library (or Windows SSPI), and the DHI Alpine curl packages are built without GSS-API. Inspected the libcurl, curl, curl-static, curl-dev and curl-dbg packages of every DHI curl build published for Alpine 3.24 in the DHI Alpine main repository as of 2026-11-27 (8.20.0-r1, 8.21.0-r0, 8.22.0-r0, 8.22.0-r1 and 8.23.0-r0), on x86_64 and aarch64: libcurl.so.4.8.0 needs no GSS-API or Kerberos library and contains none of the strings GSS-API, SPNEGO, Kerberos, Negotiate or gss_init_sec_context; neither the static libcurl.a nor the libcurl debug symbols contain Curl_input_negotiate, Curl_output_negotiate or the SPNEGO message functions, while Curl_input_digest is present in both as a control; and the feature list in curl-config names no GSS-API, Kerberos or SPNEGO feature. The same searches find these names, gss_init_sec_context and a libgssapi_krb5.so.2 dependency in the DHI Debian 13 libcurl, which is built with GSS-API. The curl program contains these words only in its help and feature-name text and links libcurl.so.4 for its transfers. No Alpine 3.24 build lists NTLM as a feature either. Packages published only in the DHI Alpine security repository, which needs credentials, were not inspected. The Negotiate code this CVE concerns is not compiled into any of the inspected builds."
     }
   ]
 }
