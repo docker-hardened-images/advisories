@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T22:21:39Z",
-  "last_updated": "2026-11-27T02:55:27Z",
-  "version": 61,
+  "last_updated": "2026-11-27T03:55:06Z",
+  "version": 62,
   "statements": [
     {
       "vulnerability": {
@@ -211348,7 +211348,9 @@
           "@id": "pkg:apk/dhi/redis-exporter-dev@1.99.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56855 (GO-2026-6355): in golang.org/x/crypto before v0.56.0, a malicious SSH peer could send crafted messages on an established channel that deadlock the whole connection. The fix is in the golang.org/x/crypto/ssh package, which now handles every RFC 4254 channel message and tears the connection down on anything else: commit 86efde5 (https://github.com/golang/crypto/commit/86efde54dc7069251a8b007026c500d28e4239ce, https://go.dev/cl/826524), released in v0.56.0. Sources: https://pkg.go.dev/vuln/GO-2026-6355 and https://go.dev/issue/81317. The vulnerable code exists only in golang.org/x/crypto/ssh (the advisory's symbols are ssh.Dial, ssh.NewClientConn, ssh.NewControlClientConn, ssh.NewServerConn and channel.handlePacket). We checked every published redis-exporter-dev package for Alpine 3.23 in the DHI Alpine repository: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages), each verified against its index checksum, and read each binary's Go build information and Go function table. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. The same results hold on both architectures for every build. The build information lists golang.org/x/crypto v0.52.0 to v0.59.0, depending on the build, but the function table of every build contains functions from only two golang.org/x/crypto packages, bcrypt and blowfish, besides the Go standard library's own vendored copies, and no function from golang.org/x/crypto/ssh, including channel.handlePacket. A byte search of every binary for golang.org/x/crypto/ssh also finds nothing, while the same scans find runtime.main and golang.org/x/crypto/bcrypt in every build. The vulnerable code is not compiled into any published build. The Debian tracker lists golang-go.crypto in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-56855); that is not the basis for this decision, which rests on the absence of the code from these binaries."
     },
     {
       "vulnerability": {
@@ -211434,7 +211436,9 @@
           "@id": "pkg:apk/dhi/redis-exporter-dev@1.99.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56855 (GO-2026-6355): in golang.org/x/crypto before v0.56.0, a malicious SSH peer could send crafted messages on an established channel that deadlock the whole connection. The fix is in the golang.org/x/crypto/ssh package, which now handles every RFC 4254 channel message and tears the connection down on anything else: commit 86efde5 (https://github.com/golang/crypto/commit/86efde54dc7069251a8b007026c500d28e4239ce, https://go.dev/cl/826524), released in v0.56.0. Sources: https://pkg.go.dev/vuln/GO-2026-6355 and https://go.dev/issue/81317. The vulnerable code exists only in golang.org/x/crypto/ssh (the advisory's symbols are ssh.Dial, ssh.NewClientConn, ssh.NewControlClientConn, ssh.NewServerConn and channel.handlePacket). We checked every published redis-exporter-dev package for Alpine 3.24 in the DHI Alpine repository: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages), each verified against its index checksum, and read each binary's Go build information and Go function table. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. The same results hold on both architectures for every build. The build information lists golang.org/x/crypto v0.52.0 to v0.59.0, depending on the build, but the function table of every build contains functions from only two golang.org/x/crypto packages, bcrypt and blowfish, besides the Go standard library's own vendored copies, and no function from golang.org/x/crypto/ssh, including channel.handlePacket. A byte search of every binary for golang.org/x/crypto/ssh also finds nothing, while the same scans find runtime.main and golang.org/x/crypto/bcrypt in every build. The vulnerable code is not compiled into any published build. The Debian tracker lists golang-go.crypto in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-56855); that is not the basis for this decision, which rests on the absence of the code from these binaries."
     },
     {
       "vulnerability": {
@@ -211520,7 +211524,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-fips-dev@1.99.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56855 (GO-2026-6355): in golang.org/x/crypto before v0.56.0, a malicious SSH peer could send crafted messages on an established channel that deadlock the whole connection. The fix is in the golang.org/x/crypto/ssh package, which now handles every RFC 4254 channel message and tears the connection down on anything else: commit 86efde5 (https://github.com/golang/crypto/commit/86efde54dc7069251a8b007026c500d28e4239ce, https://go.dev/cl/826524), released in v0.56.0. Sources: https://pkg.go.dev/vuln/GO-2026-6355 and https://go.dev/issue/81317. The vulnerable code exists only in golang.org/x/crypto/ssh (the advisory's symbols are ssh.Dial, ssh.NewClientConn, ssh.NewControlClientConn, ssh.NewServerConn and channel.handlePacket). Pending inspection of the published redis-exporter-fips-dev packages for Alpine 3.23. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter packages for the same distributions were scanned in full and contain no golang.org/x/crypto/ssh code. The same check has to be made on every published redis-exporter-fips-dev build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -211606,7 +211611,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-fips-dev@1.99.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56855 (GO-2026-6355): in golang.org/x/crypto before v0.56.0, a malicious SSH peer could send crafted messages on an established channel that deadlock the whole connection. The fix is in the golang.org/x/crypto/ssh package, which now handles every RFC 4254 channel message and tears the connection down on anything else: commit 86efde5 (https://github.com/golang/crypto/commit/86efde54dc7069251a8b007026c500d28e4239ce, https://go.dev/cl/826524), released in v0.56.0. Sources: https://pkg.go.dev/vuln/GO-2026-6355 and https://go.dev/issue/81317. The vulnerable code exists only in golang.org/x/crypto/ssh (the advisory's symbols are ssh.Dial, ssh.NewClientConn, ssh.NewControlClientConn, ssh.NewServerConn and channel.handlePacket). Pending inspection of the published redis-exporter-fips-dev packages for Alpine 3.24. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter packages for the same distributions were scanned in full and contain no golang.org/x/crypto/ssh code. The same check has to be made on every published redis-exporter-fips-dev build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -211692,7 +211698,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-fips@1.99.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56855 (GO-2026-6355): in golang.org/x/crypto before v0.56.0, a malicious SSH peer could send crafted messages on an established channel that deadlock the whole connection. The fix is in the golang.org/x/crypto/ssh package, which now handles every RFC 4254 channel message and tears the connection down on anything else: commit 86efde5 (https://github.com/golang/crypto/commit/86efde54dc7069251a8b007026c500d28e4239ce, https://go.dev/cl/826524), released in v0.56.0. Sources: https://pkg.go.dev/vuln/GO-2026-6355 and https://go.dev/issue/81317. The vulnerable code exists only in golang.org/x/crypto/ssh (the advisory's symbols are ssh.Dial, ssh.NewClientConn, ssh.NewControlClientConn, ssh.NewServerConn and channel.handlePacket). Pending inspection of the published redis-exporter-fips packages for Alpine 3.23. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter packages for the same distributions were scanned in full and contain no golang.org/x/crypto/ssh code. The same check has to be made on every published redis-exporter-fips build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -211778,7 +211785,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-fips@1.99.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56855 (GO-2026-6355): in golang.org/x/crypto before v0.56.0, a malicious SSH peer could send crafted messages on an established channel that deadlock the whole connection. The fix is in the golang.org/x/crypto/ssh package, which now handles every RFC 4254 channel message and tears the connection down on anything else: commit 86efde5 (https://github.com/golang/crypto/commit/86efde54dc7069251a8b007026c500d28e4239ce, https://go.dev/cl/826524), released in v0.56.0. Sources: https://pkg.go.dev/vuln/GO-2026-6355 and https://go.dev/issue/81317. The vulnerable code exists only in golang.org/x/crypto/ssh (the advisory's symbols are ssh.Dial, ssh.NewClientConn, ssh.NewControlClientConn, ssh.NewServerConn and channel.handlePacket). Pending inspection of the published redis-exporter-fips packages for Alpine 3.24. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter packages for the same distributions were scanned in full and contain no golang.org/x/crypto/ssh code. The same check has to be made on every published redis-exporter-fips build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -211864,7 +211872,9 @@
           "@id": "pkg:apk/dhi/redis-exporter@1.99.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56855 (GO-2026-6355): in golang.org/x/crypto before v0.56.0, a malicious SSH peer could send crafted messages on an established channel that deadlock the whole connection. The fix is in the golang.org/x/crypto/ssh package, which now handles every RFC 4254 channel message and tears the connection down on anything else: commit 86efde5 (https://github.com/golang/crypto/commit/86efde54dc7069251a8b007026c500d28e4239ce, https://go.dev/cl/826524), released in v0.56.0. Sources: https://pkg.go.dev/vuln/GO-2026-6355 and https://go.dev/issue/81317. The vulnerable code exists only in golang.org/x/crypto/ssh (the advisory's symbols are ssh.Dial, ssh.NewClientConn, ssh.NewControlClientConn, ssh.NewServerConn and channel.handlePacket). We checked every published redis-exporter package for Alpine 3.23 in the DHI Alpine repository: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages), each verified against its index checksum, and read each binary's Go build information and Go function table. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. The same results hold on both architectures for every build. The build information lists golang.org/x/crypto v0.52.0 to v0.59.0, depending on the build, but the function table of every build contains functions from only two golang.org/x/crypto packages, bcrypt and blowfish, besides the Go standard library's own vendored copies, and no function from golang.org/x/crypto/ssh, including channel.handlePacket. A byte search of every binary for golang.org/x/crypto/ssh also finds nothing, while the same scans find runtime.main and golang.org/x/crypto/bcrypt in every build. The vulnerable code is not compiled into any published build. The Debian tracker lists golang-go.crypto in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-56855); that is not the basis for this decision, which rests on the absence of the code from these binaries."
     },
     {
       "vulnerability": {
@@ -211950,7 +211960,9 @@
           "@id": "pkg:apk/dhi/redis-exporter@1.99.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56855 (GO-2026-6355): in golang.org/x/crypto before v0.56.0, a malicious SSH peer could send crafted messages on an established channel that deadlock the whole connection. The fix is in the golang.org/x/crypto/ssh package, which now handles every RFC 4254 channel message and tears the connection down on anything else: commit 86efde5 (https://github.com/golang/crypto/commit/86efde54dc7069251a8b007026c500d28e4239ce, https://go.dev/cl/826524), released in v0.56.0. Sources: https://pkg.go.dev/vuln/GO-2026-6355 and https://go.dev/issue/81317. The vulnerable code exists only in golang.org/x/crypto/ssh (the advisory's symbols are ssh.Dial, ssh.NewClientConn, ssh.NewControlClientConn, ssh.NewServerConn and channel.handlePacket). We checked every published redis-exporter package for Alpine 3.24 in the DHI Alpine repository: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages), each verified against its index checksum, and read each binary's Go build information and Go function table. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. The same results hold on both architectures for every build. The build information lists golang.org/x/crypto v0.52.0 to v0.59.0, depending on the build, but the function table of every build contains functions from only two golang.org/x/crypto packages, bcrypt and blowfish, besides the Go standard library's own vendored copies, and no function from golang.org/x/crypto/ssh, including channel.handlePacket. A byte search of every binary for golang.org/x/crypto/ssh also finds nothing, while the same scans find runtime.main and golang.org/x/crypto/bcrypt in every build. The vulnerable code is not compiled into any published build. The Debian tracker lists golang-go.crypto in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-56855); that is not the basis for this decision, which rests on the absence of the code from these binaries."
     },
     {
       "vulnerability": {
@@ -368064,7 +368076,9 @@
           "@id": "pkg:deb/dhi/redis-exporter-dev@1.99.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56855 (GO-2026-6355): in golang.org/x/crypto before v0.56.0, a malicious SSH peer could send crafted messages on an established channel that deadlock the whole connection. The fix is in the golang.org/x/crypto/ssh package, which now handles every RFC 4254 channel message and tears the connection down on anything else: commit 86efde5 (https://github.com/golang/crypto/commit/86efde54dc7069251a8b007026c500d28e4239ce, https://go.dev/cl/826524), released in v0.56.0. Sources: https://pkg.go.dev/vuln/GO-2026-6355 and https://go.dev/issue/81317. The vulnerable code exists only in golang.org/x/crypto/ssh (the advisory's symbols are ssh.Dial, ssh.NewClientConn, ssh.NewControlClientConn, ssh.NewServerConn and channel.handlePacket). We checked every published redis-exporter-dev package for Debian 13 in the DHI Debian repository: 25 builds, 1.86.0-0 to the current 1.99.0-0, on amd64 and arm64 (50 packages), each verified against its index checksum, and read each binary's Go build information and Go function table. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. The same results hold on both architectures for every build. The build information lists golang.org/x/crypto v0.52.0 to v0.59.0, depending on the build, but the function table of every build contains functions from only two golang.org/x/crypto packages, bcrypt and blowfish, besides the Go standard library's own vendored copies, and no function from golang.org/x/crypto/ssh, including channel.handlePacket. A byte search of every binary for golang.org/x/crypto/ssh also finds nothing, while the same scans find runtime.main and golang.org/x/crypto/bcrypt in every build. The vulnerable code is not compiled into any published build. The Debian tracker lists golang-go.crypto in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-56855); that is not the basis for this decision, which rests on the absence of the code from these binaries."
     },
     {
       "vulnerability": {
@@ -368150,7 +368164,8 @@
           "@id": "pkg:deb/dhi/redis-exporter-fips-dev@1.99.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56855 (GO-2026-6355): in golang.org/x/crypto before v0.56.0, a malicious SSH peer could send crafted messages on an established channel that deadlock the whole connection. The fix is in the golang.org/x/crypto/ssh package, which now handles every RFC 4254 channel message and tears the connection down on anything else: commit 86efde5 (https://github.com/golang/crypto/commit/86efde54dc7069251a8b007026c500d28e4239ce, https://go.dev/cl/826524), released in v0.56.0. Sources: https://pkg.go.dev/vuln/GO-2026-6355 and https://go.dev/issue/81317. The vulnerable code exists only in golang.org/x/crypto/ssh (the advisory's symbols are ssh.Dial, ssh.NewClientConn, ssh.NewControlClientConn, ssh.NewServerConn and channel.handlePacket). Pending inspection of the published redis-exporter-fips-dev packages for Debian 13. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter packages for the same distributions were scanned in full and contain no golang.org/x/crypto/ssh code. The same check has to be made on every published redis-exporter-fips-dev build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -368236,7 +368251,8 @@
           "@id": "pkg:deb/dhi/redis-exporter-fips@1.99.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56855 (GO-2026-6355): in golang.org/x/crypto before v0.56.0, a malicious SSH peer could send crafted messages on an established channel that deadlock the whole connection. The fix is in the golang.org/x/crypto/ssh package, which now handles every RFC 4254 channel message and tears the connection down on anything else: commit 86efde5 (https://github.com/golang/crypto/commit/86efde54dc7069251a8b007026c500d28e4239ce, https://go.dev/cl/826524), released in v0.56.0. Sources: https://pkg.go.dev/vuln/GO-2026-6355 and https://go.dev/issue/81317. The vulnerable code exists only in golang.org/x/crypto/ssh (the advisory's symbols are ssh.Dial, ssh.NewClientConn, ssh.NewControlClientConn, ssh.NewServerConn and channel.handlePacket). Pending inspection of the published redis-exporter-fips packages for Debian 13. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter packages for the same distributions were scanned in full and contain no golang.org/x/crypto/ssh code. The same check has to be made on every published redis-exporter-fips build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -368322,7 +368338,9 @@
           "@id": "pkg:deb/dhi/redis-exporter@1.99.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-56855 (GO-2026-6355): in golang.org/x/crypto before v0.56.0, a malicious SSH peer could send crafted messages on an established channel that deadlock the whole connection. The fix is in the golang.org/x/crypto/ssh package, which now handles every RFC 4254 channel message and tears the connection down on anything else: commit 86efde5 (https://github.com/golang/crypto/commit/86efde54dc7069251a8b007026c500d28e4239ce, https://go.dev/cl/826524), released in v0.56.0. Sources: https://pkg.go.dev/vuln/GO-2026-6355 and https://go.dev/issue/81317. The vulnerable code exists only in golang.org/x/crypto/ssh (the advisory's symbols are ssh.Dial, ssh.NewClientConn, ssh.NewControlClientConn, ssh.NewServerConn and channel.handlePacket). We checked every published redis-exporter package for Debian 13 in the DHI Debian repository: 25 builds, 1.86.0-0 to the current 1.99.0-0, on amd64 and arm64 (50 packages), each verified against its index checksum, and read each binary's Go build information and Go function table. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. The same results hold on both architectures for every build. The build information lists golang.org/x/crypto v0.52.0 to v0.59.0, depending on the build, but the function table of every build contains functions from only two golang.org/x/crypto packages, bcrypt and blowfish, besides the Go standard library's own vendored copies, and no function from golang.org/x/crypto/ssh, including channel.handlePacket. A byte search of every binary for golang.org/x/crypto/ssh also finds nothing, while the same scans find runtime.main and golang.org/x/crypto/bcrypt in every build. The vulnerable code is not compiled into any published build. The Debian tracker lists golang-go.crypto in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-56855); that is not the basis for this decision, which rests on the absence of the code from these binaries."
     },
     {
       "vulnerability": {
