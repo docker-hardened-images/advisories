@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-12T23:05:10Z",
-  "last_updated": "2026-11-24T22:29:10Z",
-  "version": 9,
+  "last_updated": "2026-11-27T20:26:20Z",
+  "version": 10,
   "statements": [
     {
       "vulnerability": {
@@ -1394,7 +1394,8 @@
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-xmrv-pmrh-hhx2 (CVE-2026-89090, GO-2026-5764): the event stream header decoder of the AWS SDK for Go v2 (github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream) before 1.7.8 panicked on a header value type outside the valid range, so a crafted event stream response frame could terminate the program. Fixed in the SDK release of 2026-03-23 (https://github.com/aws/aws-sdk-go-v2/releases/tag/release-2026-03-23), which ships eventstream 1.7.8 and service/s3 1.97.3, by commit https://github.com/aws/aws-sdk-go-v2/commit/d7776a81bbe2a2e752ba6e851708fd19fe0dea8d, which makes decodeHeaderValue return the error 'unable to decode header of unknown value type' instead of panicking; see https://github.com/aws/aws-sdk-go-v2/security/advisories/GHSA-xmrv-pmrh-hhx2 and https://pkg.go.dev/vuln/GO-2026-5764. The trivy-fips packages for Alpine 3.23 are published in the DHI security repository, which requires authentication, and their builds have not been read for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to confirm which builds carry eventstream 1.7.8 or later, so that a fixed boundary can be set from what each build ships. In the non-FIPS trivy packages of the same releases the first build that carries the fix is 0.69.3-r5."
     },
     {
       "vulnerability": {
@@ -1424,7 +1425,20 @@
         },
         {
           "@id": "pkg:apk/dhi/trivy@0.69.3-r4?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update trivy to 0.69.3-r5 or later.",
+      "status_notes": "GHSA-xmrv-pmrh-hhx2 (CVE-2026-89090, GO-2026-5764): the event stream header decoder of the AWS SDK for Go v2 (github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream) before 1.7.8 panicked on a header value type outside the valid range, so a crafted event stream response frame could terminate the program. Fixed in the SDK release of 2026-03-23 (https://github.com/aws/aws-sdk-go-v2/releases/tag/release-2026-03-23), which ships eventstream 1.7.8 and service/s3 1.97.3, by commit https://github.com/aws/aws-sdk-go-v2/commit/d7776a81bbe2a2e752ba6e851708fd19fe0dea8d, which makes decodeHeaderValue return the error 'unable to decode header of unknown value type' instead of panicking; see https://github.com/aws/aws-sdk-go-v2/security/advisories/GHSA-xmrv-pmrh-hhx2 and https://pkg.go.dev/vuln/GO-2026-5764. Each trivy package installs one file, /usr/bin/trivy, a Go program for Linux whose build information (go version -m) records CGO_ENABLED=0 and GOOS=linux. We read every trivy build published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 38 builds, 0.69.1-r0 to 0.74.0-r12, each on x86_64 and aarch64 (76 packages), each checked against its index entry. We read the Go build information of every package; both architectures of each build report the same Go release and the same module versions, except that 0.69.3-r0 records github.com/letsencrypt/boulder v0.20260225.0 on x86_64 and v0.20260303.0 on aarch64. We listed the program's function names from its symbol table (go tool nm); runtime.main is among them in every package. The build information records github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.4 and github.com/aws/aws-sdk-go-v2/service/s3 v1.95.0 in every build from 0.69.1-r0 to 0.69.3-r4, and eventstream v1.7.8 or later (v1.7.8, v1.7.9, v1.7.10, v1.7.14 or v1.7.16) with service/s3 v1.97.3 or later in every build from 0.69.3-r5 on, with no replacement for either. eventstream decodeHeaderValue is among the function names of every build. A byte search of the whole program finds the fixed error text 'unable to decode header of unknown value type' in trivy 0.69.3-r5, 0.70.0-r4, 0.70.0-r5, 0.71.2-r0, 0.71.2-r1, 0.71.2-r3 and 0.73.0-r0 (x86_64) and 0.74.0-r12 (aarch64), and not in trivy 0.69.3-r4 (x86_64). 0.69.3-r5 is the first build that carries the fix, and every later build carries it; the earlier builds are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-yjrk-wypv-yztw-tt3d",
+        "aliases": [
+          "GHSA-xmrv-pmrh-hhx2"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/trivy@0.69.3-r5?distro=dhi-3.23"
         },
@@ -1519,7 +1533,8 @@
           "@id": "pkg:apk/dhi/trivy@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-xmrv-pmrh-hhx2 (CVE-2026-89090, GO-2026-5764): the event stream header decoder of the AWS SDK for Go v2 (github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream) before 1.7.8 panicked on a header value type outside the valid range, so a crafted event stream response frame could terminate the program. Fixed in the SDK release of 2026-03-23 (https://github.com/aws/aws-sdk-go-v2/releases/tag/release-2026-03-23), which ships eventstream 1.7.8 and service/s3 1.97.3, by commit https://github.com/aws/aws-sdk-go-v2/commit/d7776a81bbe2a2e752ba6e851708fd19fe0dea8d, which makes decodeHeaderValue return the error 'unable to decode header of unknown value type' instead of panicking; see https://github.com/aws/aws-sdk-go-v2/security/advisories/GHSA-xmrv-pmrh-hhx2 and https://pkg.go.dev/vuln/GO-2026-5764. Each trivy package installs one file, /usr/bin/trivy, a Go program for Linux whose build information (go version -m) records CGO_ENABLED=0 and GOOS=linux. We read every trivy build published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 38 builds, 0.69.1-r0 to 0.74.0-r12, each on x86_64 and aarch64 (76 packages), each checked against its index entry. We read the Go build information of every package; both architectures of each build report the same Go release and the same module versions, except that 0.69.3-r0 records github.com/letsencrypt/boulder v0.20260225.0 on x86_64 and v0.20260303.0 on aarch64. We listed the program's function names from its symbol table (go tool nm); runtime.main is among them in every package. The build information records github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.4 and github.com/aws/aws-sdk-go-v2/service/s3 v1.95.0 in every build from 0.69.1-r0 to 0.69.3-r4, and eventstream v1.7.8 or later (v1.7.8, v1.7.9, v1.7.10, v1.7.14 or v1.7.16) with service/s3 v1.97.3 or later in every build from 0.69.3-r5 on, with no replacement for either. eventstream decodeHeaderValue is among the function names of every build. A byte search of the whole program finds the fixed error text 'unable to decode header of unknown value type' in trivy 0.69.3-r5, 0.70.0-r4, 0.70.0-r5, 0.71.2-r0, 0.71.2-r1, 0.71.2-r3 and 0.73.0-r0 (x86_64) and 0.74.0-r12 (aarch64), and not in trivy 0.69.3-r4 (x86_64). 0.69.3-r5 is the first build that carries the fix, and every later build carries it; the earlier builds are affected."
     },
     {
       "vulnerability": {
