@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:30:35Z",
-  "last_updated": "2026-11-27T16:57:57Z",
-  "version": 49,
+  "last_updated": "2026-11-27T19:34:20Z",
+  "version": 51,
   "statements": [
     {
       "vulnerability": {
@@ -140761,6 +140761,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench-dev@0.15.6-r9?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench-dev@0.16.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -140808,6 +140811,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench-dev@0.15.6-r9?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench-dev@0.16.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -140855,6 +140861,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench-fips-dev@0.15.6-r9?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench-fips-dev@0.16.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -140902,6 +140911,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench-fips-dev@0.15.6-r9?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench-fips-dev@0.16.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -140949,6 +140961,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench-fips@0.15.6-r9?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench-fips@0.16.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -140996,6 +141011,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench-fips@0.15.6-r9?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench-fips@0.16.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -141043,6 +141061,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench@0.15.6-r9?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench@0.16.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -141090,6 +141111,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench@0.15.6-r9?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench@0.16.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -219862,7 +219886,9 @@
           "@id": "pkg:apk/dhi/redis-exporter-dev@1.99.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser in golang.org/x/net/dns/dnsmessage when a parameter value's size overflows the message buffer. In the Go standard library the parser is reached only through the cgo DNS resolver (net.cgoResSearch, used by LookupCNAME). Fixed in Go 1.26.6 and 1.27.0-rc.3 (Go 1.25 is not affected) and in golang.org/x/net v0.56.0 (https://github.com/golang/net/commit/82e7868a02167540748b74780b0bf825985256f7). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. We checked every published redis-exporter-dev package for Alpine 3.23 in the DHI Alpine repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages). We downloaded the Alpine 3.23 packages, verified each against its index checksum, listed every file in each and read each program's Go build information and Go function table. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. Each -dev program uses the same Go release and module versions as the base redis-exporter build of the same version, but is built without the -w linker flag and without -trimpath. The same results hold on both architectures for every build. Every build was made with CGO_ENABLED=0 and none contains net.cgoResSearch or any other cgo resolver function. No build lists the golang.org/x/net module, and the standard library's own copy of the DNS message parser that each build links has no SVCB or HTTPS parsing code: the function table of every build has no unpackSVCBResource, SVCBResource, HTTPSResource or AllAnswers function. The same scan finds runtime.main and other functions of that vendored parser, such as (*Parser).AAAAResource, in every build; in a control program built with Go 1.27.1 and CGO_ENABLED=0 for linux/amd64 and linux/arm64 that calls net.LookupCNAME, it finds net.(*Resolver).LookupCNAME and likewise no SVCB parsing function. The bare text AllAnswers occurs three times in each binary's data, as it does in the control program, which has no such function; it is not code. The builds were made with Go 1.26.5 to 1.27.4, but the vulnerable code is not compiled into any published build. The Debian tracker lists golang-golang-x-net in trixie as not affected (https://security-tracker.debian.org/tracker/CVE-2026-46600); this decision rests on the absence of the code from these binaries."
     },
     {
       "vulnerability": {
@@ -219948,7 +219974,9 @@
           "@id": "pkg:apk/dhi/redis-exporter-dev@1.99.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser in golang.org/x/net/dns/dnsmessage when a parameter value's size overflows the message buffer. In the Go standard library the parser is reached only through the cgo DNS resolver (net.cgoResSearch, used by LookupCNAME). Fixed in Go 1.26.6 and 1.27.0-rc.3 (Go 1.25 is not affected) and in golang.org/x/net v0.56.0 (https://github.com/golang/net/commit/82e7868a02167540748b74780b0bf825985256f7). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. We checked every published redis-exporter-dev package for Alpine 3.24 in the DHI Alpine repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages). We downloaded the Alpine 3.23 packages, verified each against its index checksum, listed every file in each and read each program's Go build information and Go function table; every Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same version and architecture, so they are the same packages. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. Each -dev program uses the same Go release and module versions as the base redis-exporter build of the same version, but is built without the -w linker flag and without -trimpath. The same results hold on both architectures for every build. Every build was made with CGO_ENABLED=0 and none contains net.cgoResSearch or any other cgo resolver function. No build lists the golang.org/x/net module, and the standard library's own copy of the DNS message parser that each build links has no SVCB or HTTPS parsing code: the function table of every build has no unpackSVCBResource, SVCBResource, HTTPSResource or AllAnswers function. The same scan finds runtime.main and other functions of that vendored parser, such as (*Parser).AAAAResource, in every build; in a control program built with Go 1.27.1 and CGO_ENABLED=0 for linux/amd64 and linux/arm64 that calls net.LookupCNAME, it finds net.(*Resolver).LookupCNAME and likewise no SVCB parsing function. The bare text AllAnswers occurs three times in each binary's data, as it does in the control program, which has no such function; it is not code. The builds were made with Go 1.26.5 to 1.27.4, but the vulnerable code is not compiled into any published build. The Debian tracker lists golang-golang-x-net in trixie as not affected (https://security-tracker.debian.org/tracker/CVE-2026-46600); this decision rests on the absence of the code from these binaries."
     },
     {
       "vulnerability": {
@@ -220034,7 +220062,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-fips-dev@1.99.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser in golang.org/x/net/dns/dnsmessage when a parameter value's size overflows the message buffer. In the Go standard library the parser is reached only through the cgo DNS resolver (net.cgoResSearch, used by LookupCNAME). Fixed in Go 1.26.6 and 1.27.0-rc.3 (Go 1.25 is not affected) and in golang.org/x/net v0.56.0 (https://github.com/golang/net/commit/82e7868a02167540748b74780b0bf825985256f7). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. Pending inspection of the published redis-exporter-fips-dev packages for Alpine 3.23. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter and redis-exporter-dev packages for the same distributions were scanned in full and contain no cgo resolver and no SVCB or HTTPS parsing code. The same check has to be made on every published redis-exporter-fips-dev build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -220120,7 +220149,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-fips-dev@1.99.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser in golang.org/x/net/dns/dnsmessage when a parameter value's size overflows the message buffer. In the Go standard library the parser is reached only through the cgo DNS resolver (net.cgoResSearch, used by LookupCNAME). Fixed in Go 1.26.6 and 1.27.0-rc.3 (Go 1.25 is not affected) and in golang.org/x/net v0.56.0 (https://github.com/golang/net/commit/82e7868a02167540748b74780b0bf825985256f7). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. Pending inspection of the published redis-exporter-fips-dev packages for Alpine 3.24. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter and redis-exporter-dev packages for the same distributions were scanned in full and contain no cgo resolver and no SVCB or HTTPS parsing code. The same check has to be made on every published redis-exporter-fips-dev build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -220206,7 +220236,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-fips@1.99.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser in golang.org/x/net/dns/dnsmessage when a parameter value's size overflows the message buffer. In the Go standard library the parser is reached only through the cgo DNS resolver (net.cgoResSearch, used by LookupCNAME). Fixed in Go 1.26.6 and 1.27.0-rc.3 (Go 1.25 is not affected) and in golang.org/x/net v0.56.0 (https://github.com/golang/net/commit/82e7868a02167540748b74780b0bf825985256f7). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. Pending inspection of the published redis-exporter-fips packages for Alpine 3.23. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter and redis-exporter-dev packages for the same distributions were scanned in full and contain no cgo resolver and no SVCB or HTTPS parsing code. The same check has to be made on every published redis-exporter-fips build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -220292,7 +220323,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-fips@1.99.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser in golang.org/x/net/dns/dnsmessage when a parameter value's size overflows the message buffer. In the Go standard library the parser is reached only through the cgo DNS resolver (net.cgoResSearch, used by LookupCNAME). Fixed in Go 1.26.6 and 1.27.0-rc.3 (Go 1.25 is not affected) and in golang.org/x/net v0.56.0 (https://github.com/golang/net/commit/82e7868a02167540748b74780b0bf825985256f7). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. Pending inspection of the published redis-exporter-fips packages for Alpine 3.24. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter and redis-exporter-dev packages for the same distributions were scanned in full and contain no cgo resolver and no SVCB or HTTPS parsing code. The same check has to be made on every published redis-exporter-fips build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -220378,7 +220410,9 @@
           "@id": "pkg:apk/dhi/redis-exporter@1.99.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser in golang.org/x/net/dns/dnsmessage when a parameter value's size overflows the message buffer. In the Go standard library the parser is reached only through the cgo DNS resolver (net.cgoResSearch, used by LookupCNAME). Fixed in Go 1.26.6 and 1.27.0-rc.3 (Go 1.25 is not affected) and in golang.org/x/net v0.56.0 (https://github.com/golang/net/commit/82e7868a02167540748b74780b0bf825985256f7). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. We checked every published redis-exporter package for Alpine 3.23 in the DHI Alpine repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages). We downloaded the Alpine 3.23 packages, verified each against its index checksum, listed every file in each and read each program's Go build information and Go function table. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. The same results hold on both architectures for every build. Every build was made with CGO_ENABLED=0 and none contains net.cgoResSearch or any other cgo resolver function. No build lists the golang.org/x/net module, and the standard library's own copy of the DNS message parser that each build links has no SVCB or HTTPS parsing code: the function table of every build has no unpackSVCBResource, SVCBResource, HTTPSResource or AllAnswers function. The same scan finds runtime.main and other functions of that vendored parser, such as (*Parser).AAAAResource, in every build; in a control program built with Go 1.27.1 and CGO_ENABLED=0 for linux/amd64 and linux/arm64 that calls net.LookupCNAME, it finds net.(*Resolver).LookupCNAME and likewise no SVCB parsing function. The bare text AllAnswers occurs three times in each binary's data, as it does in the control program, which has no such function; it is not code. The builds were made with Go 1.26.5 to 1.27.4, but the vulnerable code is not compiled into any published build. The Debian tracker lists golang-golang-x-net in trixie as not affected (https://security-tracker.debian.org/tracker/CVE-2026-46600); this decision rests on the absence of the code from these binaries."
     },
     {
       "vulnerability": {
@@ -220464,7 +220498,9 @@
           "@id": "pkg:apk/dhi/redis-exporter@1.99.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser in golang.org/x/net/dns/dnsmessage when a parameter value's size overflows the message buffer. In the Go standard library the parser is reached only through the cgo DNS resolver (net.cgoResSearch, used by LookupCNAME). Fixed in Go 1.26.6 and 1.27.0-rc.3 (Go 1.25 is not affected) and in golang.org/x/net v0.56.0 (https://github.com/golang/net/commit/82e7868a02167540748b74780b0bf825985256f7). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. We checked every published redis-exporter package for Alpine 3.24 in the DHI Alpine repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages). We downloaded the Alpine 3.23 packages, verified each against its index checksum, listed every file in each and read each program's Go build information and Go function table; every Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same version and architecture, so they are the same packages. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. The same results hold on both architectures for every build. Every build was made with CGO_ENABLED=0 and none contains net.cgoResSearch or any other cgo resolver function. No build lists the golang.org/x/net module, and the standard library's own copy of the DNS message parser that each build links has no SVCB or HTTPS parsing code: the function table of every build has no unpackSVCBResource, SVCBResource, HTTPSResource or AllAnswers function. The same scan finds runtime.main and other functions of that vendored parser, such as (*Parser).AAAAResource, in every build; in a control program built with Go 1.27.1 and CGO_ENABLED=0 for linux/amd64 and linux/arm64 that calls net.LookupCNAME, it finds net.(*Resolver).LookupCNAME and likewise no SVCB parsing function. The bare text AllAnswers occurs three times in each binary's data, as it does in the control program, which has no such function; it is not code. The builds were made with Go 1.26.5 to 1.27.4, but the vulnerable code is not compiled into any published build. The Debian tracker lists golang-golang-x-net in trixie as not affected (https://security-tracker.debian.org/tracker/CVE-2026-46600); this decision rests on the absence of the code from these binaries."
     },
     {
       "vulnerability": {
@@ -330186,6 +330222,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kube-bench-dev@0.15.6-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kube-bench-dev@0.16.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -330233,6 +330272,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kube-bench-fips-dev@0.15.6-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kube-bench-fips-dev@0.16.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -330280,6 +330322,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kube-bench-fips@0.15.6-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kube-bench-fips@0.16.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -330327,6 +330372,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kube-bench@0.15.6-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kube-bench@0.16.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -372592,7 +372640,9 @@
           "@id": "pkg:deb/dhi/redis-exporter-dev@1.99.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser in golang.org/x/net/dns/dnsmessage when a parameter value's size overflows the message buffer. In the Go standard library the parser is reached only through the cgo DNS resolver (net.cgoResSearch, used by LookupCNAME). Fixed in Go 1.26.6 and 1.27.0-rc.3 (Go 1.25 is not affected) and in golang.org/x/net v0.56.0 (https://github.com/golang/net/commit/82e7868a02167540748b74780b0bf825985256f7). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. We checked every published redis-exporter-dev package for Debian 13 in the DHI Debian repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-0 to the current 1.99.0-0, on amd64 and arm64 (50 packages). For each we read the package's file manifest (md5sums), which lists one file, /usr/bin/redis-exporter, whose MD5 equals that of the program in the Alpine package of the same version and architecture, and we read that program's Go build information and Go function table; we did not unpack the Debian data archives themselves. The program is a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies, and no manifest lists any other file. Each -dev program uses the same Go release and module versions as the base redis-exporter build of the same version, but is built without the -w linker flag and without -trimpath. The same results hold on both architectures for every build. Every build was made with CGO_ENABLED=0 and none contains net.cgoResSearch or any other cgo resolver function. No build lists the golang.org/x/net module, and the standard library's own copy of the DNS message parser that each build links has no SVCB or HTTPS parsing code: the function table of every build has no unpackSVCBResource, SVCBResource, HTTPSResource or AllAnswers function. The same scan finds runtime.main and other functions of that vendored parser, such as (*Parser).AAAAResource, in every build; in a control program built with Go 1.27.1 and CGO_ENABLED=0 for linux/amd64 and linux/arm64 that calls net.LookupCNAME, it finds net.(*Resolver).LookupCNAME and likewise no SVCB parsing function. The bare text AllAnswers occurs three times in each binary's data, as it does in the control program, which has no such function; it is not code. The builds were made with Go 1.26.5 to 1.27.4, but the vulnerable code is not compiled into any published build. The Debian tracker lists golang-golang-x-net in trixie as not affected (https://security-tracker.debian.org/tracker/CVE-2026-46600); this decision rests on the absence of the code from these binaries."
     },
     {
       "vulnerability": {
@@ -372678,7 +372728,8 @@
           "@id": "pkg:deb/dhi/redis-exporter-fips-dev@1.99.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser in golang.org/x/net/dns/dnsmessage when a parameter value's size overflows the message buffer. In the Go standard library the parser is reached only through the cgo DNS resolver (net.cgoResSearch, used by LookupCNAME). Fixed in Go 1.26.6 and 1.27.0-rc.3 (Go 1.25 is not affected) and in golang.org/x/net v0.56.0 (https://github.com/golang/net/commit/82e7868a02167540748b74780b0bf825985256f7). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. Pending inspection of the published redis-exporter-fips-dev packages for Debian 13. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter and redis-exporter-dev packages for the same distributions were scanned in full and contain no cgo resolver and no SVCB or HTTPS parsing code. The same check has to be made on every published redis-exporter-fips-dev build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -372764,7 +372815,8 @@
           "@id": "pkg:deb/dhi/redis-exporter-fips@1.99.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser in golang.org/x/net/dns/dnsmessage when a parameter value's size overflows the message buffer. In the Go standard library the parser is reached only through the cgo DNS resolver (net.cgoResSearch, used by LookupCNAME). Fixed in Go 1.26.6 and 1.27.0-rc.3 (Go 1.25 is not affected) and in golang.org/x/net v0.56.0 (https://github.com/golang/net/commit/82e7868a02167540748b74780b0bf825985256f7). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. Pending inspection of the published redis-exporter-fips packages for Debian 13. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter and redis-exporter-dev packages for the same distributions were scanned in full and contain no cgo resolver and no SVCB or HTTPS parsing code. The same check has to be made on every published redis-exporter-fips build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -372850,7 +372902,9 @@
           "@id": "pkg:deb/dhi/redis-exporter@1.99.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-46600 (GO-2026-5942): parsing an invalid SVCB or HTTPS resource record can panic the DNS message parser in golang.org/x/net/dns/dnsmessage when a parameter value's size overflows the message buffer. In the Go standard library the parser is reached only through the cgo DNS resolver (net.cgoResSearch, used by LookupCNAME). Fixed in Go 1.26.6 and 1.27.0-rc.3 (Go 1.25 is not affected) and in golang.org/x/net v0.56.0 (https://github.com/golang/net/commit/82e7868a02167540748b74780b0bf825985256f7). Sources: https://pkg.go.dev/vuln/GO-2026-5942, https://go.dev/issue/79795, https://go.dev/cl/786345 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. We checked every published redis-exporter package for Debian 13 in the DHI Debian repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-0 to the current 1.99.0-0, on amd64 and arm64 (50 packages). For each we read the package's file manifest (md5sums), which lists one file, /usr/bin/redis-exporter, whose MD5 equals that of the program in the Alpine package of the same version and architecture, and we read that program's Go build information and Go function table; we did not unpack the Debian data archives themselves. The program is a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies, and no manifest lists any other file. The same results hold on both architectures for every build. Every build was made with CGO_ENABLED=0 and none contains net.cgoResSearch or any other cgo resolver function. No build lists the golang.org/x/net module, and the standard library's own copy of the DNS message parser that each build links has no SVCB or HTTPS parsing code: the function table of every build has no unpackSVCBResource, SVCBResource, HTTPSResource or AllAnswers function. The same scan finds runtime.main and other functions of that vendored parser, such as (*Parser).AAAAResource, in every build; in a control program built with Go 1.27.1 and CGO_ENABLED=0 for linux/amd64 and linux/arm64 that calls net.LookupCNAME, it finds net.(*Resolver).LookupCNAME and likewise no SVCB parsing function. The bare text AllAnswers occurs three times in each binary's data, as it does in the control program, which has no such function; it is not code. The builds were made with Go 1.26.5 to 1.27.4, but the vulnerable code is not compiled into any published build. The Debian tracker lists golang-golang-x-net in trixie as not affected (https://security-tracker.debian.org/tracker/CVE-2026-46600); this decision rests on the absence of the code from these binaries."
     },
     {
       "vulnerability": {

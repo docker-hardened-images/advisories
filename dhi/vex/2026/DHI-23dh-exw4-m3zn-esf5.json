@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:38:30Z",
-  "last_updated": "2026-11-27T16:58:33Z",
-  "version": 53,
+  "last_updated": "2026-11-27T19:34:04Z",
+  "version": 55,
   "statements": [
     {
       "vulnerability": {
@@ -142549,6 +142549,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench-dev@0.15.6-r9?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench-dev@0.16.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -142596,6 +142599,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench-dev@0.15.6-r9?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench-dev@0.16.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -142643,6 +142649,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench-fips-dev@0.15.6-r9?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench-fips-dev@0.16.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -142690,6 +142699,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench-fips-dev@0.15.6-r9?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench-fips-dev@0.16.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -142737,6 +142749,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench-fips@0.15.6-r9?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench-fips@0.16.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -142784,6 +142799,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench-fips@0.15.6-r9?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench-fips@0.16.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -142831,6 +142849,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench@0.15.6-r9?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench@0.16.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -142878,6 +142899,9 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-bench@0.15.6-r9?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/kube-bench@0.16.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -224625,7 +224649,20 @@
         },
         {
           "@id": "pkg:apk/dhi/redis-exporter-dev@1.89.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update redis-exporter-dev to 1.89.0-r1 or later.",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. We checked every published redis-exporter-dev package for Alpine 3.23 in the DHI Alpine repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages). We downloaded the Alpine 3.23 packages, verified each against its index checksum, listed every file in each and read each program's Go build information and Go function table. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. Each -dev program uses the same Go release and module versions as the base redis-exporter build of the same version, but is built without the -w linker flag and without -trimpath. The same results hold on both architectures for every build. Every build links the IDNA code vendored into the standard library (vendor/golang.org/x/net/idna, including (*Profile).process and validateFromPunycode), although none links net/http's Client or Transport or the HTTP/2 client, and no build lists the golang.org/x/net module. Because the code the fix changes ships in every build, this owner is ranged by Go release. The Go release in each build's information is: Go 1.26.5 in 1.86.0-r0 to 1.89.0-r0, Go 1.26.6 in 1.89.0-r1, Go 1.26.7 in 1.89.0-r2 to 1.90.0-r0, Go 1.26.8 in 1.90.0-r1 to 1.91.1-r0, Go 1.27.1 in 1.92.0-r0 to 1.93.0-r1, Go 1.27.2 in 1.93.0-r2 to 1.94.0-r0, Go 1.27.3 in 1.95.0-r0 to 1.97.0-r1, and Go 1.27.4 in 1.97.0-r2 to 1.99.0-r0. Corroborating that, the size of idna (*Profile).process changes at Go 1.26.6, from 2752 to 2976 bytes on x86_64 and from 2128 to 2304 bytes on aarch64 (measured as the span between function entries in the Go function table, which includes alignment padding). 1.89.0-r1 is the first build made with a fixed Go release (Go 1.26.6) and every later build uses a fixed release (Go 1.27.1 and later are past 1.27.0-rc.3), so 1.86.0-r0 to 1.89.0-r0 are affected and 1.89.0-r1 and later are fixed. The Debian tracker lists golang-golang-x-net in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39821); that does not change this decision, which rests on the Go release in each build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-23dh-exw4-m3zn-esf5",
+        "aliases": [
+          "CVE-2026-39821"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/redis-exporter-dev@1.89.0-r1?distro=dhi-3.23"
         },
@@ -224690,7 +224727,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-dev@1.99.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. We checked every published redis-exporter-dev package for Alpine 3.23 in the DHI Alpine repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages). We downloaded the Alpine 3.23 packages, verified each against its index checksum, listed every file in each and read each program's Go build information and Go function table. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. Each -dev program uses the same Go release and module versions as the base redis-exporter build of the same version, but is built without the -w linker flag and without -trimpath. The same results hold on both architectures for every build. Every build links the IDNA code vendored into the standard library (vendor/golang.org/x/net/idna, including (*Profile).process and validateFromPunycode), although none links net/http's Client or Transport or the HTTP/2 client, and no build lists the golang.org/x/net module. Because the code the fix changes ships in every build, this owner is ranged by Go release. The Go release in each build's information is: Go 1.26.5 in 1.86.0-r0 to 1.89.0-r0, Go 1.26.6 in 1.89.0-r1, Go 1.26.7 in 1.89.0-r2 to 1.90.0-r0, Go 1.26.8 in 1.90.0-r1 to 1.91.1-r0, Go 1.27.1 in 1.92.0-r0 to 1.93.0-r1, Go 1.27.2 in 1.93.0-r2 to 1.94.0-r0, Go 1.27.3 in 1.95.0-r0 to 1.97.0-r1, and Go 1.27.4 in 1.97.0-r2 to 1.99.0-r0. Corroborating that, the size of idna (*Profile).process changes at Go 1.26.6, from 2752 to 2976 bytes on x86_64 and from 2128 to 2304 bytes on aarch64 (measured as the span between function entries in the Go function table, which includes alignment padding). 1.89.0-r1 is the first build made with a fixed Go release (Go 1.26.6) and every later build uses a fixed release (Go 1.27.1 and later are past 1.27.0-rc.3), so 1.86.0-r0 to 1.89.0-r0 are affected and 1.89.0-r1 and later are fixed. The Debian tracker lists golang-golang-x-net in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39821); that does not change this decision, which rests on the Go release in each build."
     },
     {
       "vulnerability": {
@@ -224711,7 +224749,20 @@
         },
         {
           "@id": "pkg:apk/dhi/redis-exporter-dev@1.89.0-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update redis-exporter-dev to 1.89.0-r1 or later.",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. We checked every published redis-exporter-dev package for Alpine 3.24 in the DHI Alpine repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages). We downloaded the Alpine 3.23 packages, verified each against its index checksum, listed every file in each and read each program's Go build information and Go function table; every Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same version and architecture, so they are the same packages. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. Each -dev program uses the same Go release and module versions as the base redis-exporter build of the same version, but is built without the -w linker flag and without -trimpath. The same results hold on both architectures for every build. Every build links the IDNA code vendored into the standard library (vendor/golang.org/x/net/idna, including (*Profile).process and validateFromPunycode), although none links net/http's Client or Transport or the HTTP/2 client, and no build lists the golang.org/x/net module. Because the code the fix changes ships in every build, this owner is ranged by Go release. The Go release in each build's information is: Go 1.26.5 in 1.86.0-r0 to 1.89.0-r0, Go 1.26.6 in 1.89.0-r1, Go 1.26.7 in 1.89.0-r2 to 1.90.0-r0, Go 1.26.8 in 1.90.0-r1 to 1.91.1-r0, Go 1.27.1 in 1.92.0-r0 to 1.93.0-r1, Go 1.27.2 in 1.93.0-r2 to 1.94.0-r0, Go 1.27.3 in 1.95.0-r0 to 1.97.0-r1, and Go 1.27.4 in 1.97.0-r2 to 1.99.0-r0. Corroborating that, the size of idna (*Profile).process changes at Go 1.26.6, from 2752 to 2976 bytes on x86_64 and from 2128 to 2304 bytes on aarch64 (measured as the span between function entries in the Go function table, which includes alignment padding). 1.89.0-r1 is the first build made with a fixed Go release (Go 1.26.6) and every later build uses a fixed release (Go 1.27.1 and later are past 1.27.0-rc.3), so 1.86.0-r0 to 1.89.0-r0 are affected and 1.89.0-r1 and later are fixed. The Debian tracker lists golang-golang-x-net in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39821); that does not change this decision, which rests on the Go release in each build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-23dh-exw4-m3zn-esf5",
+        "aliases": [
+          "CVE-2026-39821"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/redis-exporter-dev@1.89.0-r1?distro=dhi-3.24"
         },
@@ -224776,7 +224827,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-dev@1.99.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. We checked every published redis-exporter-dev package for Alpine 3.24 in the DHI Alpine repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages). We downloaded the Alpine 3.23 packages, verified each against its index checksum, listed every file in each and read each program's Go build information and Go function table; every Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same version and architecture, so they are the same packages. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. Each -dev program uses the same Go release and module versions as the base redis-exporter build of the same version, but is built without the -w linker flag and without -trimpath. The same results hold on both architectures for every build. Every build links the IDNA code vendored into the standard library (vendor/golang.org/x/net/idna, including (*Profile).process and validateFromPunycode), although none links net/http's Client or Transport or the HTTP/2 client, and no build lists the golang.org/x/net module. Because the code the fix changes ships in every build, this owner is ranged by Go release. The Go release in each build's information is: Go 1.26.5 in 1.86.0-r0 to 1.89.0-r0, Go 1.26.6 in 1.89.0-r1, Go 1.26.7 in 1.89.0-r2 to 1.90.0-r0, Go 1.26.8 in 1.90.0-r1 to 1.91.1-r0, Go 1.27.1 in 1.92.0-r0 to 1.93.0-r1, Go 1.27.2 in 1.93.0-r2 to 1.94.0-r0, Go 1.27.3 in 1.95.0-r0 to 1.97.0-r1, and Go 1.27.4 in 1.97.0-r2 to 1.99.0-r0. Corroborating that, the size of idna (*Profile).process changes at Go 1.26.6, from 2752 to 2976 bytes on x86_64 and from 2128 to 2304 bytes on aarch64 (measured as the span between function entries in the Go function table, which includes alignment padding). 1.89.0-r1 is the first build made with a fixed Go release (Go 1.26.6) and every later build uses a fixed release (Go 1.27.1 and later are past 1.27.0-rc.3), so 1.86.0-r0 to 1.89.0-r0 are affected and 1.89.0-r1 and later are fixed. The Debian tracker lists golang-golang-x-net in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39821); that does not change this decision, which rests on the Go release in each build."
     },
     {
       "vulnerability": {
@@ -224862,7 +224914,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-fips-dev@1.99.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Pending inspection of the published redis-exporter-fips-dev packages for Alpine 3.23. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter and redis-exporter-dev packages for the same distributions were scanned in full and link the vendored IDNA code, with the first Go 1.26.6 build at 1.89.0-r1 (Debian 1.89.0-1). The same check has to be made on every published redis-exporter-fips-dev build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -224948,7 +225001,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-fips-dev@1.99.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Pending inspection of the published redis-exporter-fips-dev packages for Alpine 3.24. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter and redis-exporter-dev packages for the same distributions were scanned in full and link the vendored IDNA code, with the first Go 1.26.6 build at 1.89.0-r1 (Debian 1.89.0-1). The same check has to be made on every published redis-exporter-fips-dev build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -225034,7 +225088,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-fips@1.99.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Pending inspection of the published redis-exporter-fips packages for Alpine 3.23. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter and redis-exporter-dev packages for the same distributions were scanned in full and link the vendored IDNA code, with the first Go 1.26.6 build at 1.89.0-r1 (Debian 1.89.0-1). The same check has to be made on every published redis-exporter-fips build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -225120,7 +225175,8 @@
           "@id": "pkg:apk/dhi/redis-exporter-fips@1.99.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Pending inspection of the published redis-exporter-fips packages for Alpine 3.24. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter and redis-exporter-dev packages for the same distributions were scanned in full and link the vendored IDNA code, with the first Go 1.26.6 build at 1.89.0-r1 (Debian 1.89.0-1). The same check has to be made on every published redis-exporter-fips build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -225141,7 +225197,20 @@
         },
         {
           "@id": "pkg:apk/dhi/redis-exporter@1.89.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update redis-exporter to 1.89.0-r1 or later.",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. We checked every published redis-exporter package for Alpine 3.23 in the DHI Alpine repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages). We downloaded the Alpine 3.23 packages, verified each against its index checksum, listed every file in each and read each program's Go build information and Go function table. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. The same results hold on both architectures for every build. Every build links the IDNA code vendored into the standard library (vendor/golang.org/x/net/idna, including (*Profile).process and validateFromPunycode), although none links net/http's Client or Transport or the HTTP/2 client, and no build lists the golang.org/x/net module. Because the code the fix changes ships in every build, this owner is ranged by Go release. The Go release in each build's information is: Go 1.26.5 in 1.86.0-r0 to 1.89.0-r0, Go 1.26.6 in 1.89.0-r1, Go 1.26.7 in 1.89.0-r2 to 1.90.0-r0, Go 1.26.8 in 1.90.0-r1 to 1.91.1-r0, Go 1.27.1 in 1.92.0-r0 to 1.93.0-r1, Go 1.27.2 in 1.93.0-r2 to 1.94.0-r0, Go 1.27.3 in 1.95.0-r0 to 1.97.0-r1, and Go 1.27.4 in 1.97.0-r2 to 1.99.0-r0. Corroborating that, the size of idna (*Profile).process changes at Go 1.26.6, from 2752 to 2976 bytes on x86_64 and from 2128 to 2304 bytes on aarch64 (measured as the span between function entries in the Go function table, which includes alignment padding). 1.89.0-r1 is the first build made with a fixed Go release (Go 1.26.6) and every later build uses a fixed release (Go 1.27.1 and later are past 1.27.0-rc.3), so 1.86.0-r0 to 1.89.0-r0 are affected and 1.89.0-r1 and later are fixed. The Debian tracker lists golang-golang-x-net in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39821); that does not change this decision, which rests on the Go release in each build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-23dh-exw4-m3zn-esf5",
+        "aliases": [
+          "CVE-2026-39821"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/redis-exporter@1.89.0-r1?distro=dhi-3.23"
         },
@@ -225206,7 +225275,8 @@
           "@id": "pkg:apk/dhi/redis-exporter@1.99.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. We checked every published redis-exporter package for Alpine 3.23 in the DHI Alpine repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages). We downloaded the Alpine 3.23 packages, verified each against its index checksum, listed every file in each and read each program's Go build information and Go function table. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. The same results hold on both architectures for every build. Every build links the IDNA code vendored into the standard library (vendor/golang.org/x/net/idna, including (*Profile).process and validateFromPunycode), although none links net/http's Client or Transport or the HTTP/2 client, and no build lists the golang.org/x/net module. Because the code the fix changes ships in every build, this owner is ranged by Go release. The Go release in each build's information is: Go 1.26.5 in 1.86.0-r0 to 1.89.0-r0, Go 1.26.6 in 1.89.0-r1, Go 1.26.7 in 1.89.0-r2 to 1.90.0-r0, Go 1.26.8 in 1.90.0-r1 to 1.91.1-r0, Go 1.27.1 in 1.92.0-r0 to 1.93.0-r1, Go 1.27.2 in 1.93.0-r2 to 1.94.0-r0, Go 1.27.3 in 1.95.0-r0 to 1.97.0-r1, and Go 1.27.4 in 1.97.0-r2 to 1.99.0-r0. Corroborating that, the size of idna (*Profile).process changes at Go 1.26.6, from 2752 to 2976 bytes on x86_64 and from 2128 to 2304 bytes on aarch64 (measured as the span between function entries in the Go function table, which includes alignment padding). 1.89.0-r1 is the first build made with a fixed Go release (Go 1.26.6) and every later build uses a fixed release (Go 1.27.1 and later are past 1.27.0-rc.3), so 1.86.0-r0 to 1.89.0-r0 are affected and 1.89.0-r1 and later are fixed. The Debian tracker lists golang-golang-x-net in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39821); that does not change this decision, which rests on the Go release in each build."
     },
     {
       "vulnerability": {
@@ -225227,7 +225297,20 @@
         },
         {
           "@id": "pkg:apk/dhi/redis-exporter@1.89.0-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update redis-exporter to 1.89.0-r1 or later.",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. We checked every published redis-exporter package for Alpine 3.24 in the DHI Alpine repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages). We downloaded the Alpine 3.23 packages, verified each against its index checksum, listed every file in each and read each program's Go build information and Go function table; every Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same version and architecture, so they are the same packages. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. The same results hold on both architectures for every build. Every build links the IDNA code vendored into the standard library (vendor/golang.org/x/net/idna, including (*Profile).process and validateFromPunycode), although none links net/http's Client or Transport or the HTTP/2 client, and no build lists the golang.org/x/net module. Because the code the fix changes ships in every build, this owner is ranged by Go release. The Go release in each build's information is: Go 1.26.5 in 1.86.0-r0 to 1.89.0-r0, Go 1.26.6 in 1.89.0-r1, Go 1.26.7 in 1.89.0-r2 to 1.90.0-r0, Go 1.26.8 in 1.90.0-r1 to 1.91.1-r0, Go 1.27.1 in 1.92.0-r0 to 1.93.0-r1, Go 1.27.2 in 1.93.0-r2 to 1.94.0-r0, Go 1.27.3 in 1.95.0-r0 to 1.97.0-r1, and Go 1.27.4 in 1.97.0-r2 to 1.99.0-r0. Corroborating that, the size of idna (*Profile).process changes at Go 1.26.6, from 2752 to 2976 bytes on x86_64 and from 2128 to 2304 bytes on aarch64 (measured as the span between function entries in the Go function table, which includes alignment padding). 1.89.0-r1 is the first build made with a fixed Go release (Go 1.26.6) and every later build uses a fixed release (Go 1.27.1 and later are past 1.27.0-rc.3), so 1.86.0-r0 to 1.89.0-r0 are affected and 1.89.0-r1 and later are fixed. The Debian tracker lists golang-golang-x-net in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39821); that does not change this decision, which rests on the Go release in each build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-23dh-exw4-m3zn-esf5",
+        "aliases": [
+          "CVE-2026-39821"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/redis-exporter@1.89.0-r1?distro=dhi-3.24"
         },
@@ -225292,7 +225375,8 @@
           "@id": "pkg:apk/dhi/redis-exporter@1.99.0-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. We checked every published redis-exporter package for Alpine 3.24 in the DHI Alpine repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-r0 to the current 1.99.0-r0, on x86_64 and aarch64 (50 packages). We downloaded the Alpine 3.23 packages, verified each against its index checksum, listed every file in each and read each program's Go build information and Go function table; every Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same version and architecture, so they are the same packages. Each package installs one file, /usr/bin/redis-exporter, a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies; no package contains any other ELF file, PE or Mach-O file, or static archive. The same results hold on both architectures for every build. Every build links the IDNA code vendored into the standard library (vendor/golang.org/x/net/idna, including (*Profile).process and validateFromPunycode), although none links net/http's Client or Transport or the HTTP/2 client, and no build lists the golang.org/x/net module. Because the code the fix changes ships in every build, this owner is ranged by Go release. The Go release in each build's information is: Go 1.26.5 in 1.86.0-r0 to 1.89.0-r0, Go 1.26.6 in 1.89.0-r1, Go 1.26.7 in 1.89.0-r2 to 1.90.0-r0, Go 1.26.8 in 1.90.0-r1 to 1.91.1-r0, Go 1.27.1 in 1.92.0-r0 to 1.93.0-r1, Go 1.27.2 in 1.93.0-r2 to 1.94.0-r0, Go 1.27.3 in 1.95.0-r0 to 1.97.0-r1, and Go 1.27.4 in 1.97.0-r2 to 1.99.0-r0. Corroborating that, the size of idna (*Profile).process changes at Go 1.26.6, from 2752 to 2976 bytes on x86_64 and from 2128 to 2304 bytes on aarch64 (measured as the span between function entries in the Go function table, which includes alignment padding). 1.89.0-r1 is the first build made with a fixed Go release (Go 1.26.6) and every later build uses a fixed release (Go 1.27.1 and later are past 1.27.0-rc.3), so 1.86.0-r0 to 1.89.0-r0 are affected and 1.89.0-r1 and later are fixed. The Debian tracker lists golang-golang-x-net in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39821); that does not change this decision, which rests on the Go release in each build."
     },
     {
       "vulnerability": {
@@ -338501,6 +338585,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kube-bench-dev@0.15.6-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kube-bench-dev@0.16.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -338548,6 +338635,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kube-bench-fips-dev@0.15.6-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kube-bench-fips-dev@0.16.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -338595,6 +338685,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kube-bench-fips@0.15.6-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kube-bench-fips@0.16.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -338642,6 +338735,9 @@
         },
         {
           "@id": "pkg:deb/dhi/kube-bench@0.15.6-9?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/kube-bench@0.16.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -383282,7 +383378,20 @@
         },
         {
           "@id": "pkg:deb/dhi/redis-exporter-dev@1.89.0-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update redis-exporter-dev to 1.89.0-1 or later.",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. We checked every published redis-exporter-dev package for Debian 13 in the DHI Debian repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-0 to the current 1.99.0-0, on amd64 and arm64 (50 packages). For each we read the package's file manifest (md5sums), which lists one file, /usr/bin/redis-exporter, whose MD5 equals that of the program in the Alpine package of the same version and architecture, and we read that program's Go build information and Go function table; we did not unpack the Debian data archives themselves. The program is a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies, and no manifest lists any other file. Each -dev program uses the same Go release and module versions as the base redis-exporter build of the same version, but is built without the -w linker flag and without -trimpath. The same results hold on both architectures for every build. Every build links the IDNA code vendored into the standard library (vendor/golang.org/x/net/idna, including (*Profile).process and validateFromPunycode), although none links net/http's Client or Transport or the HTTP/2 client, and no build lists the golang.org/x/net module. Because the code the fix changes ships in every build, this owner is ranged by Go release. The Go release in each build's information is: Go 1.26.5 in 1.86.0-0 to 1.89.0-0, Go 1.26.6 in 1.89.0-1, Go 1.26.7 in 1.89.0-2 to 1.90.0-0, Go 1.26.8 in 1.90.0-1 to 1.91.1-0, Go 1.27.1 in 1.92.0-0 to 1.93.0-1, Go 1.27.2 in 1.93.0-2 to 1.94.0-0, Go 1.27.3 in 1.95.0-0 to 1.97.0-1, and Go 1.27.4 in 1.97.0-2 to 1.99.0-0. Corroborating that, the size of idna (*Profile).process changes at Go 1.26.6, from 2752 to 2976 bytes on x86_64 and from 2128 to 2304 bytes on aarch64 (measured as the span between function entries in the Go function table, which includes alignment padding). 1.89.0-1 is the first build made with a fixed Go release (Go 1.26.6) and every later build uses a fixed release (Go 1.27.1 and later are past 1.27.0-rc.3), so 1.86.0-0 to 1.89.0-0 are affected and 1.89.0-1 and later are fixed. The Debian tracker lists golang-golang-x-net in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39821); that does not change this decision, which rests on the Go release in each build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-23dh-exw4-m3zn-esf5",
+        "aliases": [
+          "CVE-2026-39821"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/redis-exporter-dev@1.89.0-1?distro=dhi-13"
         },
@@ -383347,7 +383456,8 @@
           "@id": "pkg:deb/dhi/redis-exporter-dev@1.99.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. We checked every published redis-exporter-dev package for Debian 13 in the DHI Debian repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-0 to the current 1.99.0-0, on amd64 and arm64 (50 packages). For each we read the package's file manifest (md5sums), which lists one file, /usr/bin/redis-exporter, whose MD5 equals that of the program in the Alpine package of the same version and architecture, and we read that program's Go build information and Go function table; we did not unpack the Debian data archives themselves. The program is a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies, and no manifest lists any other file. Each -dev program uses the same Go release and module versions as the base redis-exporter build of the same version, but is built without the -w linker flag and without -trimpath. The same results hold on both architectures for every build. Every build links the IDNA code vendored into the standard library (vendor/golang.org/x/net/idna, including (*Profile).process and validateFromPunycode), although none links net/http's Client or Transport or the HTTP/2 client, and no build lists the golang.org/x/net module. Because the code the fix changes ships in every build, this owner is ranged by Go release. The Go release in each build's information is: Go 1.26.5 in 1.86.0-0 to 1.89.0-0, Go 1.26.6 in 1.89.0-1, Go 1.26.7 in 1.89.0-2 to 1.90.0-0, Go 1.26.8 in 1.90.0-1 to 1.91.1-0, Go 1.27.1 in 1.92.0-0 to 1.93.0-1, Go 1.27.2 in 1.93.0-2 to 1.94.0-0, Go 1.27.3 in 1.95.0-0 to 1.97.0-1, and Go 1.27.4 in 1.97.0-2 to 1.99.0-0. Corroborating that, the size of idna (*Profile).process changes at Go 1.26.6, from 2752 to 2976 bytes on x86_64 and from 2128 to 2304 bytes on aarch64 (measured as the span between function entries in the Go function table, which includes alignment padding). 1.89.0-1 is the first build made with a fixed Go release (Go 1.26.6) and every later build uses a fixed release (Go 1.27.1 and later are past 1.27.0-rc.3), so 1.86.0-0 to 1.89.0-0 are affected and 1.89.0-1 and later are fixed. The Debian tracker lists golang-golang-x-net in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39821); that does not change this decision, which rests on the Go release in each build."
     },
     {
       "vulnerability": {
@@ -383433,7 +383543,8 @@
           "@id": "pkg:deb/dhi/redis-exporter-fips-dev@1.99.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Pending inspection of the published redis-exporter-fips-dev packages for Debian 13. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter and redis-exporter-dev packages for the same distributions were scanned in full and link the vendored IDNA code, with the first Go 1.26.6 build at 1.89.0-r1 (Debian 1.89.0-1). The same check has to be made on every published redis-exporter-fips-dev build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -383519,7 +383630,8 @@
           "@id": "pkg:deb/dhi/redis-exporter-fips@1.99.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. Pending inspection of the published redis-exporter-fips packages for Debian 13. They are published in the DHI security repository, which requires authentication, and have not yet been scanned for this advisory. The non-FIPS redis-exporter and redis-exporter-dev packages for the same distributions were scanned in full and link the vendored IDNA code, with the first Go 1.26.6 build at 1.89.0-r1 (Debian 1.89.0-1). The same check has to be made on every published redis-exporter-fips build, on both architectures, before this owner is decided."
     },
     {
       "vulnerability": {
@@ -383540,7 +383652,20 @@
         },
         {
           "@id": "pkg:deb/dhi/redis-exporter@1.89.0-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update redis-exporter to 1.89.0-1 or later.",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. We checked every published redis-exporter package for Debian 13 in the DHI Debian repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-0 to the current 1.99.0-0, on amd64 and arm64 (50 packages). For each we read the package's file manifest (md5sums), which lists one file, /usr/bin/redis-exporter, whose MD5 equals that of the program in the Alpine package of the same version and architecture, and we read that program's Go build information and Go function table; we did not unpack the Debian data archives themselves. The program is a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies, and no manifest lists any other file. The same results hold on both architectures for every build. Every build links the IDNA code vendored into the standard library (vendor/golang.org/x/net/idna, including (*Profile).process and validateFromPunycode), although none links net/http's Client or Transport or the HTTP/2 client, and no build lists the golang.org/x/net module. Because the code the fix changes ships in every build, this owner is ranged by Go release. The Go release in each build's information is: Go 1.26.5 in 1.86.0-0 to 1.89.0-0, Go 1.26.6 in 1.89.0-1, Go 1.26.7 in 1.89.0-2 to 1.90.0-0, Go 1.26.8 in 1.90.0-1 to 1.91.1-0, Go 1.27.1 in 1.92.0-0 to 1.93.0-1, Go 1.27.2 in 1.93.0-2 to 1.94.0-0, Go 1.27.3 in 1.95.0-0 to 1.97.0-1, and Go 1.27.4 in 1.97.0-2 to 1.99.0-0. Corroborating that, the size of idna (*Profile).process changes at Go 1.26.6, from 2752 to 2976 bytes on x86_64 and from 2128 to 2304 bytes on aarch64 (measured as the span between function entries in the Go function table, which includes alignment padding). 1.89.0-1 is the first build made with a fixed Go release (Go 1.26.6) and every later build uses a fixed release (Go 1.27.1 and later are past 1.27.0-rc.3), so 1.86.0-0 to 1.89.0-0 are affected and 1.89.0-1 and later are fixed. The Debian tracker lists golang-golang-x-net in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39821); that does not change this decision, which rests on the Go release in each build."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-23dh-exw4-m3zn-esf5",
+        "aliases": [
+          "CVE-2026-39821"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/redis-exporter@1.89.0-1?distro=dhi-13"
         },
@@ -383605,7 +383730,8 @@
           "@id": "pkg:deb/dhi/redis-exporter@1.99.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-39821 (GO-2026-5026): the IDNA code that the Go standard library vendors from golang.org/x/net/idna accepted Punycode-encoded labels that decode to an ASCII-only label (ToUnicode('xn--example-.com') returned 'example.com' instead of an error), which can defeat host-name checks; Go's net/http client reaches it when it converts host names (Client.Do, Transport.RoundTrip). Fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3, and in golang.org/x/net v0.57.0. Sources: https://pkg.go.dev/vuln/GO-2026-5026, https://go.dev/issue/78760, https://go.dev/cl/767220 and https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8. We checked every published redis-exporter package for Debian 13 in the DHI Debian repository, as listed in its index on 2026-11-27: 25 builds, 1.86.0-0 to the current 1.99.0-0, on amd64 and arm64 (50 packages). For each we read the package's file manifest (md5sums), which lists one file, /usr/bin/redis-exporter, whose MD5 equals that of the program in the Alpine package of the same version and architecture, and we read that program's Go build information and Go function table; we did not unpack the Debian data archives themselves. The program is a Go program built with CGO_ENABLED=0 that has no program interpreter and no shared-library dependencies, and no manifest lists any other file. The same results hold on both architectures for every build. Every build links the IDNA code vendored into the standard library (vendor/golang.org/x/net/idna, including (*Profile).process and validateFromPunycode), although none links net/http's Client or Transport or the HTTP/2 client, and no build lists the golang.org/x/net module. Because the code the fix changes ships in every build, this owner is ranged by Go release. The Go release in each build's information is: Go 1.26.5 in 1.86.0-0 to 1.89.0-0, Go 1.26.6 in 1.89.0-1, Go 1.26.7 in 1.89.0-2 to 1.90.0-0, Go 1.26.8 in 1.90.0-1 to 1.91.1-0, Go 1.27.1 in 1.92.0-0 to 1.93.0-1, Go 1.27.2 in 1.93.0-2 to 1.94.0-0, Go 1.27.3 in 1.95.0-0 to 1.97.0-1, and Go 1.27.4 in 1.97.0-2 to 1.99.0-0. Corroborating that, the size of idna (*Profile).process changes at Go 1.26.6, from 2752 to 2976 bytes on x86_64 and from 2128 to 2304 bytes on aarch64 (measured as the span between function entries in the Go function table, which includes alignment padding). 1.89.0-1 is the first build made with a fixed Go release (Go 1.26.6) and every later build uses a fixed release (Go 1.27.1 and later are past 1.27.0-rc.3), so 1.86.0-0 to 1.89.0-0 are affected and 1.89.0-1 and later are fixed. The Debian tracker lists golang-golang-x-net in trixie as no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39821); that does not change this decision, which rests on the Go release in each build."
     },
     {
       "vulnerability": {
