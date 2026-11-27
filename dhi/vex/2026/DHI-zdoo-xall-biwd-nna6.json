@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-12T02:19:11Z",
-  "last_updated": "2026-11-26T04:55:33Z",
-  "version": 9,
+  "last_updated": "2026-11-27T09:16:13Z",
+  "version": 10,
   "statements": [
     {
       "vulnerability": {
@@ -3972,7 +3972,8 @@
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39984 (GHSA-xm5m-wgh2-rrg3): in github.com/sigstore/timestamp-authority/v2 up to 2.0.5, VerifyTimestampResponse in the pkg/verification package checked the TSA constraints (VerifyLeafCert) against the first non-CA certificate in the PKCS#7 certificate bag instead of the leaf of the verified chain, so a prepended forged certificate could bypass authorization checks. The advisory states that only users of the pkg/verification package are affected. It is fixed in 2.0.6 by commit https://github.com/sigstore/timestamp-authority/commit/9583b6186084a309cb6ccaf4323a29781901e962: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-xm5m-wgh2-rrg3, https://pkg.go.dev/vuln/GO-2026-5763. The trivy-fips packages for Alpine 3.23 are published in the DHI security repository, which requires authentication, and their builds have not been read for this advisory. Pending: reading /usr/bin/trivy in each published trivy-fips build for Alpine 3.23 to confirm that no build links VerifyTimestampResponse or VerifyLeafCert from the pkg/verification package. The non-FIPS trivy package of the same releases links neither function."
     },
     {
       "vulnerability": {
@@ -4097,7 +4098,9 @@
           "@id": "pkg:apk/dhi/trivy@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39984 (GHSA-xm5m-wgh2-rrg3): in github.com/sigstore/timestamp-authority/v2 up to 2.0.5, VerifyTimestampResponse in the pkg/verification package checked the TSA constraints (VerifyLeafCert) against the first non-CA certificate in the PKCS#7 certificate bag instead of the leaf of the verified chain, so a prepended forged certificate could bypass authorization checks. The advisory states that only users of the pkg/verification package are affected. It is fixed in 2.0.6 by commit https://github.com/sigstore/timestamp-authority/commit/9583b6186084a309cb6ccaf4323a29781901e962: https://github.com/sigstore/timestamp-authority/security/advisories/GHSA-xm5m-wgh2-rrg3, https://pkg.go.dev/vuln/GO-2026-5763. We read every trivy package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 38 builds, 0.69.1-r0 to 0.74.0-r12, each for x86_64 and aarch64 (76 packages), each checked against its repository index entry. Each package installs /usr/bin/trivy, a Go program whose build information (go version -m) records CGO_ENABLED=0. We listed the function names in its symbol table (go tool nm), which include runtime.main in every build. The build information lists github.com/sigstore/timestamp-authority/v2 v2.0.3 in 0.69.1-r0 to 0.69.3-r5, v2.0.6 in 0.69.3-r6 to 0.71.2-r0, v2.1.0 in 0.71.2-r1 to 0.71.2-r2 and v2.1.2 in 0.71.2-r3, and no timestamp-authority module from 0.73.0-r0 on. In every build that lists the module, the only timestamp-authority function in the symbol table is the package initializer github.com/sigstore/timestamp-authority/v2/pkg/verification.init: VerifyTimestampResponse, VerifyLeafCert and every other function of the pkg/verification package are absent, while the table does list other functions such as runtime.main. The Go linker keeps only reachable functions, so the verifier code the advisory describes is not in any build, including those that list an affected module version."
     },
     {
       "vulnerability": {
