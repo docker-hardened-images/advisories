@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T17:03:58Z",
-  "last_updated": "2026-11-25T19:44:18Z",
-  "version": 6,
+  "last_updated": "2026-11-27T11:19:33Z",
+  "version": 8,
   "statements": [
     {
       "vulnerability": {
@@ -588,7 +588,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.157.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-dev to 0.158.0-r0 or later.",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . We read every opentelemetry-collector-contrib-dev package listed in the Alpine 3.23 index of the DHI Alpine repository: 23 builds, 0.156.0-r0 to 0.166.0-r0, for x86_64 and aarch64 (46 packages). For each we checked the control section against its index checksum and read the start of the data archive, which holds /usr/bin/otelcol-contrib, up to and including the program's Go build information; that covers its function table (pclntab) and its read-only data, but not the debug sections at the end of the file. A 24th build, 0.166.0-r1, was published on 2026-11-27; we read the start of each of its two packages, and the Go build ID of its program, which ends in a hash of the program content, is the same as that of 0.166.0-r0 on both architectures, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and the function names in its function table; runtime.main is present in every build as a control. In 0.156.0-r0 and 0.157.0-r0 the program file table names source files of github.com/hamba/avro/v2@v2.31.0 and the function table holds 559 functions under the github.com/hamba/avro/v2 import path, including (*arrayDecoder).Decode, (*mapDecoder).Decode and (*Reader).ReadBlockHeader: the unfixed release. From 0.158.0-r0 the file table no longer names any github.com/hamba/avro/v2@v2.31.0 source file and the same import path holds 620 functions, in every build on both architectures. The build information shows why: go version -m on 0.157.0-r0 prints dep github.com/hamba/avro/v2 v2.31.0 with no replacement, and on 0.158.0-r0 it prints dep github.com/hamba/avro/v2 v2.31.0 followed by => github.com/iskorotkov/avro/v2 v2.33.0, so the code compiled under the hamba import path is the fixed fork release v2.33.0. From 0.158.0-r0 the programs also list github.com/iskorotkov/avro/v2 v2.33.1, which is fixed too. The fix commits named above are in the v2.33.0 tag. So 0.156.0-r0 and 0.157.0-r0 are affected, and every build from 0.158.0-r0 is fixed."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdqz-tzfc-sd5z-7mxq",
+        "aliases": [
+          "CVE-2026-46385"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.158.0-r0?distro=dhi-3.23"
         },
@@ -651,9 +664,13 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . We read every opentelemetry-collector-contrib-dev package listed in the Alpine 3.23 index of the DHI Alpine repository: 23 builds, 0.156.0-r0 to 0.166.0-r0, for x86_64 and aarch64 (46 packages). For each we checked the control section against its index checksum and read the start of the data archive, which holds /usr/bin/otelcol-contrib, up to and including the program's Go build information; that covers its function table (pclntab) and its read-only data, but not the debug sections at the end of the file. A 24th build, 0.166.0-r1, was published on 2026-11-27; we read the start of each of its two packages, and the Go build ID of its program, which ends in a hash of the program content, is the same as that of 0.166.0-r0 on both architectures, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and the function names in its function table; runtime.main is present in every build as a control. In 0.156.0-r0 and 0.157.0-r0 the program file table names source files of github.com/hamba/avro/v2@v2.31.0 and the function table holds 559 functions under the github.com/hamba/avro/v2 import path, including (*arrayDecoder).Decode, (*mapDecoder).Decode and (*Reader).ReadBlockHeader: the unfixed release. From 0.158.0-r0 the file table no longer names any github.com/hamba/avro/v2@v2.31.0 source file and the same import path holds 620 functions, in every build on both architectures. The build information shows why: go version -m on 0.157.0-r0 prints dep github.com/hamba/avro/v2 v2.31.0 with no replacement, and on 0.158.0-r0 it prints dep github.com/hamba/avro/v2 v2.31.0 followed by => github.com/iskorotkov/avro/v2 v2.33.0, so the code compiled under the hamba import path is the fixed fork release v2.33.0. From 0.158.0-r0 the programs also list github.com/iskorotkov/avro/v2 v2.33.1, which is fixed too. The fix commits named above are in the v2.33.0 tag. So 0.156.0-r0 and 0.157.0-r0 are affected, and every build from 0.158.0-r0 is fixed."
     },
     {
       "vulnerability": {
@@ -668,7 +685,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.157.0-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-dev to 0.158.0-r0 or later.",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . The Alpine 3.24 index of the DHI Alpine repository lists the same 23 builds, 0.156.0-r0 to 0.166.0-r0, with the same package checksums as the Alpine 3.23 index on both x86_64 and aarch64, so they are the same files. We read the Alpine 3.23 copies, each checked against its index checksum. For each we read the start of the data archive, which holds /usr/bin/otelcol-contrib, up to and including the program's Go build information; that covers its function table (pclntab) and its read-only data, but not the debug sections at the end of the file. A 24th build, 0.166.0-r1, was published on 2026-11-27 with the same checksum in both indexes; the Go build ID of its program, which ends in a hash of the program content, is the same as that of 0.166.0-r0 on both architectures, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and the function names in its function table; runtime.main is present in every build as a control. In 0.156.0-r0 and 0.157.0-r0 the program file table names source files of github.com/hamba/avro/v2@v2.31.0 and the function table holds 559 functions under the github.com/hamba/avro/v2 import path, including (*arrayDecoder).Decode, (*mapDecoder).Decode and (*Reader).ReadBlockHeader: the unfixed release. From 0.158.0-r0 the file table no longer names any github.com/hamba/avro/v2@v2.31.0 source file and the same import path holds 620 functions, in every build on both architectures. The build information shows why: go version -m on 0.157.0-r0 prints dep github.com/hamba/avro/v2 v2.31.0 with no replacement, and on 0.158.0-r0 it prints dep github.com/hamba/avro/v2 v2.31.0 followed by => github.com/iskorotkov/avro/v2 v2.33.0, so the code compiled under the hamba import path is the fixed fork release v2.33.0. From 0.158.0-r0 the programs also list github.com/iskorotkov/avro/v2 v2.33.1, which is fixed too. The fix commits named above are in the v2.33.0 tag. So 0.156.0-r0 and 0.157.0-r0 are affected, and every build from 0.158.0-r0 is fixed."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdqz-tzfc-sd5z-7mxq",
+        "aliases": [
+          "CVE-2026-46385"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.158.0-r0?distro=dhi-3.24"
         },
@@ -731,9 +761,13 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . The Alpine 3.24 index of the DHI Alpine repository lists the same 23 builds, 0.156.0-r0 to 0.166.0-r0, with the same package checksums as the Alpine 3.23 index on both x86_64 and aarch64, so they are the same files. We read the Alpine 3.23 copies, each checked against its index checksum. For each we read the start of the data archive, which holds /usr/bin/otelcol-contrib, up to and including the program's Go build information; that covers its function table (pclntab) and its read-only data, but not the debug sections at the end of the file. A 24th build, 0.166.0-r1, was published on 2026-11-27 with the same checksum in both indexes; the Go build ID of its program, which ends in a hash of the program content, is the same as that of 0.166.0-r0 on both architectures, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and the function names in its function table; runtime.main is present in every build as a control. In 0.156.0-r0 and 0.157.0-r0 the program file table names source files of github.com/hamba/avro/v2@v2.31.0 and the function table holds 559 functions under the github.com/hamba/avro/v2 import path, including (*arrayDecoder).Decode, (*mapDecoder).Decode and (*Reader).ReadBlockHeader: the unfixed release. From 0.158.0-r0 the file table no longer names any github.com/hamba/avro/v2@v2.31.0 source file and the same import path holds 620 functions, in every build on both architectures. The build information shows why: go version -m on 0.157.0-r0 prints dep github.com/hamba/avro/v2 v2.31.0 with no replacement, and on 0.158.0-r0 it prints dep github.com/hamba/avro/v2 v2.31.0 followed by => github.com/iskorotkov/avro/v2 v2.33.0, so the code compiled under the hamba import path is the fixed fork release v2.33.0. From 0.158.0-r0 the programs also list github.com/iskorotkov/avro/v2 v2.33.1, which is fixed too. The fix commits named above are in the v2.33.0 tag. So 0.156.0-r0 and 0.157.0-r0 are affected, and every build from 0.158.0-r0 is fixed."
     },
     {
       "vulnerability": {
@@ -811,9 +845,13 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The opentelemetry-collector-contrib-fips-dev packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips-dev build on both architectures, to establish which Avro module, if any, each one links. In the non-FIPS opentelemetry-collector-contrib-dev packages, which we did inspect, builds 0.156.0 and 0.157.0 link the unfixed github.com/hamba/avro/v2 v2.31.0, and every build from 0.158.0 replaces it with the fixed github.com/iskorotkov/avro/v2 v2.33.0. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -891,9 +929,13 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The opentelemetry-collector-contrib-fips-dev packages for Alpine 3.24 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips-dev build on both architectures, to establish which Avro module, if any, each one links. In the non-FIPS opentelemetry-collector-contrib-dev packages, which we did inspect, builds 0.156.0 and 0.157.0 link the unfixed github.com/hamba/avro/v2 v2.31.0, and every build from 0.158.0 replaces it with the fixed github.com/iskorotkov/avro/v2 v2.33.0. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -971,9 +1013,13 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The opentelemetry-collector-contrib-fips packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips build on both architectures, to establish which Avro module, if any, each one links. In the non-FIPS opentelemetry-collector-contrib packages, which we did inspect, builds 0.156.0 and 0.157.0 link the unfixed github.com/hamba/avro/v2 v2.31.0, and every build from 0.158.0 replaces it with the fixed github.com/iskorotkov/avro/v2 v2.33.0. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -1051,9 +1097,13 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The opentelemetry-collector-contrib-fips packages for Alpine 3.24 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips build on both architectures, to establish which Avro module, if any, each one links. In the non-FIPS opentelemetry-collector-contrib packages, which we did inspect, builds 0.156.0 and 0.157.0 link the unfixed github.com/hamba/avro/v2 v2.31.0, and every build from 0.158.0 replaces it with the fixed github.com/iskorotkov/avro/v2 v2.33.0. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -1068,7 +1118,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.157.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib to 0.158.0-r0 or later.",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . We downloaded every opentelemetry-collector-contrib package listed in the Alpine 3.23 index of the DHI Alpine repository: 23 builds, 0.156.0-r0 to 0.166.0-r0, for x86_64 and aarch64 (46 packages), and checked each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib. A 24th build, 0.166.0-r1, was published on 2026-11-27; we read the start of each of its two packages, and the Go build ID of its program, which ends in a hash of the program content, is the same as that of 0.166.0-r0 on both architectures, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and its symbol table; runtime.main is present in every build as a control. In 0.156.0-r0 and 0.157.0-r0, go version -m prints dep github.com/hamba/avro/v2 v2.31.0 with no replacement, and the program links that unfixed release, including (*arrayDecoder).Decode, (*mapDecoder).Decode and (*Reader).ReadBlockHeader (566 functions under the github.com/hamba/avro/v2 import path). From 0.158.0-r0 it prints dep github.com/hamba/avro/v2 v2.31.0 followed by => github.com/iskorotkov/avro/v2 v2.33.0, so the code compiled under the hamba import path is the fixed fork release v2.33.0; the programs also list github.com/iskorotkov/avro/v2 v2.33.1, which is fixed too. The fix commits named above are in the v2.33.0 tag. We read that replacement line in the x86_64 build information of every build except 0.160.0-r1, for which we read the aarch64 build, and 0.166.0-r1, whose x86_64 program has the same SHA-256 as 0.166.0-r0. On both architectures the number of functions under the github.com/hamba/avro/v2 import path changes from 566 to 624 at 0.158.0 and is 624 in every later build. So 0.156.0-r0 and 0.157.0-r0 are affected, and every build from 0.158.0-r0 is fixed."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdqz-tzfc-sd5z-7mxq",
+        "aliases": [
+          "CVE-2026-46385"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.158.0-r0?distro=dhi-3.23"
         },
@@ -1131,9 +1194,13 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . We downloaded every opentelemetry-collector-contrib package listed in the Alpine 3.23 index of the DHI Alpine repository: 23 builds, 0.156.0-r0 to 0.166.0-r0, for x86_64 and aarch64 (46 packages), and checked each against its index checksum. Each package holds one file, /usr/bin/otelcol-contrib. A 24th build, 0.166.0-r1, was published on 2026-11-27; we read the start of each of its two packages, and the Go build ID of its program, which ends in a hash of the program content, is the same as that of 0.166.0-r0 on both architectures, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and its symbol table; runtime.main is present in every build as a control. In 0.156.0-r0 and 0.157.0-r0, go version -m prints dep github.com/hamba/avro/v2 v2.31.0 with no replacement, and the program links that unfixed release, including (*arrayDecoder).Decode, (*mapDecoder).Decode and (*Reader).ReadBlockHeader (566 functions under the github.com/hamba/avro/v2 import path). From 0.158.0-r0 it prints dep github.com/hamba/avro/v2 v2.31.0 followed by => github.com/iskorotkov/avro/v2 v2.33.0, so the code compiled under the hamba import path is the fixed fork release v2.33.0; the programs also list github.com/iskorotkov/avro/v2 v2.33.1, which is fixed too. The fix commits named above are in the v2.33.0 tag. We read that replacement line in the x86_64 build information of every build except 0.160.0-r1, for which we read the aarch64 build, and 0.166.0-r1, whose x86_64 program has the same SHA-256 as 0.166.0-r0. On both architectures the number of functions under the github.com/hamba/avro/v2 import path changes from 566 to 624 at 0.158.0 and is 624 in every later build. So 0.156.0-r0 and 0.157.0-r0 are affected, and every build from 0.158.0-r0 is fixed."
     },
     {
       "vulnerability": {
@@ -1148,7 +1215,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.157.0-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib to 0.158.0-r0 or later.",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . The Alpine 3.24 index of the DHI Alpine repository lists the same 23 builds, 0.156.0-r0 to 0.166.0-r0, with the same package checksums as the Alpine 3.23 index on both x86_64 and aarch64, so they are the same files. We read the Alpine 3.23 copies, each checked against its index checksum; each holds one file, /usr/bin/otelcol-contrib. A 24th build, 0.166.0-r1, was published on 2026-11-27 with the same checksum in both indexes; the Go build ID of its program, which ends in a hash of the program content, is the same as that of 0.166.0-r0 on both architectures, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and its symbol table; runtime.main is present in every build as a control. In 0.156.0-r0 and 0.157.0-r0, go version -m prints dep github.com/hamba/avro/v2 v2.31.0 with no replacement, and the program links that unfixed release, including (*arrayDecoder).Decode, (*mapDecoder).Decode and (*Reader).ReadBlockHeader (566 functions under the github.com/hamba/avro/v2 import path). From 0.158.0-r0 it prints dep github.com/hamba/avro/v2 v2.31.0 followed by => github.com/iskorotkov/avro/v2 v2.33.0, so the code compiled under the hamba import path is the fixed fork release v2.33.0; the programs also list github.com/iskorotkov/avro/v2 v2.33.1, which is fixed too. The fix commits named above are in the v2.33.0 tag. We read that replacement line in the x86_64 build information of every build except 0.160.0-r1, for which we read the aarch64 build, and 0.166.0-r1, whose x86_64 program has the same SHA-256 as 0.166.0-r0. On both architectures the number of functions under the github.com/hamba/avro/v2 import path changes from 566 to 624 at 0.158.0 and is 624 in every later build. So 0.156.0-r0 and 0.157.0-r0 are affected, and every build from 0.158.0-r0 is fixed."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdqz-tzfc-sd5z-7mxq",
+        "aliases": [
+          "CVE-2026-46385"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.158.0-r0?distro=dhi-3.24"
         },
@@ -1211,9 +1291,13 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . The Alpine 3.24 index of the DHI Alpine repository lists the same 23 builds, 0.156.0-r0 to 0.166.0-r0, with the same package checksums as the Alpine 3.23 index on both x86_64 and aarch64, so they are the same files. We read the Alpine 3.23 copies, each checked against its index checksum; each holds one file, /usr/bin/otelcol-contrib. A 24th build, 0.166.0-r1, was published on 2026-11-27 with the same checksum in both indexes; the Go build ID of its program, which ends in a hash of the program content, is the same as that of 0.166.0-r0 on both architectures, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and its symbol table; runtime.main is present in every build as a control. In 0.156.0-r0 and 0.157.0-r0, go version -m prints dep github.com/hamba/avro/v2 v2.31.0 with no replacement, and the program links that unfixed release, including (*arrayDecoder).Decode, (*mapDecoder).Decode and (*Reader).ReadBlockHeader (566 functions under the github.com/hamba/avro/v2 import path). From 0.158.0-r0 it prints dep github.com/hamba/avro/v2 v2.31.0 followed by => github.com/iskorotkov/avro/v2 v2.33.0, so the code compiled under the hamba import path is the fixed fork release v2.33.0; the programs also list github.com/iskorotkov/avro/v2 v2.33.1, which is fixed too. The fix commits named above are in the v2.33.0 tag. We read that replacement line in the x86_64 build information of every build except 0.160.0-r1, for which we read the aarch64 build, and 0.166.0-r1, whose x86_64 program has the same SHA-256 as 0.166.0-r0. On both architectures the number of functions under the github.com/hamba/avro/v2 import path changes from 566 to 624 at 0.158.0 and is 624 in every later build. So 0.156.0-r0 and 0.157.0-r0 are affected, and every build from 0.158.0-r0 is fixed."
     },
     {
       "vulnerability": {
@@ -1291,9 +1375,14 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. We read every opentelemetry-collector-dev package listed in the Alpine 3.23 index of the DHI Alpine repository: 23 builds, 0.156.0-r0 to 0.166.0-r0, for x86_64 and aarch64 (46 packages). For each we checked the control section against its index checksum and read the start of the data archive, which holds /usr/bin/otelcol, up to and including the program's Go build information; that covers its function table (pclntab) and its read-only data, but not the debug sections at the end of the file. A 24th build, 0.166.0-r1, was published on 2026-11-27; we read the start of each of its two packages, and the Go build ID of its program, which ends in a hash of the program content, is the same as that of 0.166.0-r0 on both architectures, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and the function names in its function table; runtime.main is present in every build as a control. Its Go build information lists no github.com/hamba/avro/v2 or github.com/iskorotkov/avro/v2 module in any build, and no build has a function from either package. The same scan finds Avro decoder functions under the github.com/hamba/avro/v2 import path, such as (*arrayDecoder).Decode and (*Reader).ReadBlockHeader, in every opentelemetry-collector-contrib build. The vulnerable Avro decoder is not part of this package."
     },
     {
       "vulnerability": {
@@ -1371,9 +1460,14 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The Alpine 3.24 index of the DHI Alpine repository lists the same 23 builds, 0.156.0-r0 to 0.166.0-r0, with the same package checksums as the Alpine 3.23 index on both x86_64 and aarch64, so they are the same files. We read the Alpine 3.23 copies, each checked against its index checksum. For each we read the start of the data archive, which holds /usr/bin/otelcol, up to and including the program's Go build information; that covers its function table (pclntab) and its read-only data, but not the debug sections at the end of the file. A 24th build, 0.166.0-r1, was published on 2026-11-27 with the same checksum in both indexes; the Go build ID of its program, which ends in a hash of the program content, is the same as that of 0.166.0-r0 on both architectures, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and the function names in its function table; runtime.main is present in every build as a control. Its Go build information lists no github.com/hamba/avro/v2 or github.com/iskorotkov/avro/v2 module in any build, and no build has a function from either package. The same scan finds Avro decoder functions under the github.com/hamba/avro/v2 import path, such as (*arrayDecoder).Decode and (*Reader).ReadBlockHeader, in every opentelemetry-collector-contrib build. The vulnerable Avro decoder is not part of this package."
     },
     {
       "vulnerability": {
@@ -1451,9 +1545,13 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The opentelemetry-collector-fips-dev packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips-dev build on both architectures, to establish which Avro module, if any, each one links. In the non-FIPS opentelemetry-collector-dev packages, which we did inspect, no build links github.com/hamba/avro/v2 or github.com/iskorotkov/avro/v2. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -1531,9 +1629,13 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The opentelemetry-collector-fips-dev packages for Alpine 3.24 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips-dev build on both architectures, to establish which Avro module, if any, each one links. In the non-FIPS opentelemetry-collector-dev packages, which we did inspect, no build links github.com/hamba/avro/v2 or github.com/iskorotkov/avro/v2. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -1611,9 +1713,13 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The opentelemetry-collector-fips packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips build on both architectures, to establish which Avro module, if any, each one links. In the non-FIPS opentelemetry-collector packages, which we did inspect, no build links github.com/hamba/avro/v2 or github.com/iskorotkov/avro/v2. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -1691,9 +1797,13 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The opentelemetry-collector-fips packages for Alpine 3.24 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips build on both architectures, to establish which Avro module, if any, each one links. In the non-FIPS opentelemetry-collector packages, which we did inspect, no build links github.com/hamba/avro/v2 or github.com/iskorotkov/avro/v2. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -1771,9 +1881,14 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. We downloaded every opentelemetry-collector package listed in the Alpine 3.23 index of the DHI Alpine repository: 23 builds, 0.156.0-r0 to 0.166.0-r0, for x86_64 and aarch64 (46 packages), and checked each against its index checksum. Each package holds one file, /usr/bin/otelcol. A 24th build, 0.166.0-r1, was published on 2026-11-27; we read the start of each of its two packages, and the Go build ID of its program, which ends in a hash of the program content, is the same as that of 0.166.0-r0 on both architectures, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and its symbol table; runtime.main is present in every build as a control. Its Go build information lists no github.com/hamba/avro/v2 or github.com/iskorotkov/avro/v2 module in any build, and no build has a function from either package. The same scan finds Avro decoder functions under the github.com/hamba/avro/v2 import path, such as (*arrayDecoder).Decode and (*Reader).ReadBlockHeader, in every opentelemetry-collector-contrib build. The vulnerable Avro decoder is not part of this package."
     },
     {
       "vulnerability": {
@@ -1851,9 +1966,14 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The Alpine 3.24 index of the DHI Alpine repository lists the same 23 builds, 0.156.0-r0 to 0.166.0-r0, with the same package checksums as the Alpine 3.23 index on both x86_64 and aarch64, so they are the same files. We read the Alpine 3.23 copies, each checked against its index checksum; each holds one file, /usr/bin/otelcol. A 24th build, 0.166.0-r1, was published on 2026-11-27 with the same checksum in both indexes; the Go build ID of its program, which ends in a hash of the program content, is the same as that of 0.166.0-r0 on both architectures, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and its symbol table; runtime.main is present in every build as a control. Its Go build information lists no github.com/hamba/avro/v2 or github.com/iskorotkov/avro/v2 module in any build, and no build has a function from either package. The same scan finds Avro decoder functions under the github.com/hamba/avro/v2 import path, such as (*arrayDecoder).Decode and (*Reader).ReadBlockHeader, in every opentelemetry-collector-contrib build. The vulnerable Avro decoder is not part of this package."
     },
     {
       "vulnerability": {
@@ -2152,7 +2272,20 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.157.0-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-dev to 0.158.0-0 or later.",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . The DHI Debian repository lists 23 builds, 0.156.0-0 to 0.166.0-0, for amd64 and arm64 (46 packages). For each we read the control archive, whose file list names only /usr/bin/otelcol-contrib, and the start of the data archive: the Go build ID of /usr/bin/otelcol-contrib, which ends in a hash of the program's content, equals the one in the opentelemetry-collector-contrib-dev package for Alpine 3.23 of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-0 and 0.166.0-r0), so each Debian build ships the same program as the Alpine build we read. For the Alpine copies we checked the control section against its index checksum and read the start of the data archive up to and including the program's Go build information, which covers its function table (pclntab) and its read-only data, but not the debug sections at the end of the file. A 24th build, 0.166.0-1, was published on 2026-11-27: its control archive MD5 checksums and the Go build ID of its program are the same as those of 0.166.0-0 on both amd64 and arm64, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and the function names in its function table; runtime.main is present in every build as a control. In 0.156.0-0 and 0.157.0-0 the program file table names source files of github.com/hamba/avro/v2@v2.31.0 and the function table holds 559 functions under the github.com/hamba/avro/v2 import path, including (*arrayDecoder).Decode, (*mapDecoder).Decode and (*Reader).ReadBlockHeader: the unfixed release. From 0.158.0-0 the file table no longer names any github.com/hamba/avro/v2@v2.31.0 source file and the same import path holds 620 functions, in every build on both architectures. The build information shows why: go version -m on 0.157.0-0 prints dep github.com/hamba/avro/v2 v2.31.0 with no replacement, and on 0.158.0-0 it prints dep github.com/hamba/avro/v2 v2.31.0 followed by => github.com/iskorotkov/avro/v2 v2.33.0, so the code compiled under the hamba import path is the fixed fork release v2.33.0. From 0.158.0-0 the programs also list github.com/iskorotkov/avro/v2 v2.33.1, which is fixed too. The fix commits named above are in the v2.33.0 tag. So 0.156.0-0 and 0.157.0-0 are affected, and every build from 0.158.0-0 is fixed."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdqz-tzfc-sd5z-7mxq",
+        "aliases": [
+          "CVE-2026-46385"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.158.0-0?distro=dhi-13"
         },
@@ -2215,9 +2348,13 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . The DHI Debian repository lists 23 builds, 0.156.0-0 to 0.166.0-0, for amd64 and arm64 (46 packages). For each we read the control archive, whose file list names only /usr/bin/otelcol-contrib, and the start of the data archive: the Go build ID of /usr/bin/otelcol-contrib, which ends in a hash of the program's content, equals the one in the opentelemetry-collector-contrib-dev package for Alpine 3.23 of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-0 and 0.166.0-r0), so each Debian build ships the same program as the Alpine build we read. For the Alpine copies we checked the control section against its index checksum and read the start of the data archive up to and including the program's Go build information, which covers its function table (pclntab) and its read-only data, but not the debug sections at the end of the file. A 24th build, 0.166.0-1, was published on 2026-11-27: its control archive MD5 checksums and the Go build ID of its program are the same as those of 0.166.0-0 on both amd64 and arm64, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and the function names in its function table; runtime.main is present in every build as a control. In 0.156.0-0 and 0.157.0-0 the program file table names source files of github.com/hamba/avro/v2@v2.31.0 and the function table holds 559 functions under the github.com/hamba/avro/v2 import path, including (*arrayDecoder).Decode, (*mapDecoder).Decode and (*Reader).ReadBlockHeader: the unfixed release. From 0.158.0-0 the file table no longer names any github.com/hamba/avro/v2@v2.31.0 source file and the same import path holds 620 functions, in every build on both architectures. The build information shows why: go version -m on 0.157.0-0 prints dep github.com/hamba/avro/v2 v2.31.0 with no replacement, and on 0.158.0-0 it prints dep github.com/hamba/avro/v2 v2.31.0 followed by => github.com/iskorotkov/avro/v2 v2.33.0, so the code compiled under the hamba import path is the fixed fork release v2.33.0. From 0.158.0-0 the programs also list github.com/iskorotkov/avro/v2 v2.33.1, which is fixed too. The fix commits named above are in the v2.33.0 tag. So 0.156.0-0 and 0.157.0-0 are affected, and every build from 0.158.0-0 is fixed."
     },
     {
       "vulnerability": {
@@ -2295,9 +2432,13 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The opentelemetry-collector-contrib-fips-dev packages are published only in the DHI Debian security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips-dev build on both architectures, to establish which Avro module, if any, each one links. In the non-FIPS opentelemetry-collector-contrib-dev packages, which we did inspect, builds 0.156.0 and 0.157.0 link the unfixed github.com/hamba/avro/v2 v2.31.0, and every build from 0.158.0 replaces it with the fixed github.com/iskorotkov/avro/v2 v2.33.0. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -2375,9 +2516,13 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The opentelemetry-collector-contrib-fips packages are published only in the DHI Debian security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips build on both architectures, to establish which Avro module, if any, each one links. In the non-FIPS opentelemetry-collector-contrib packages, which we did inspect, builds 0.156.0 and 0.157.0 link the unfixed github.com/hamba/avro/v2 v2.31.0, and every build from 0.158.0 replaces it with the fixed github.com/iskorotkov/avro/v2 v2.33.0. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -2392,7 +2537,20 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.157.0-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib to 0.158.0-0 or later.",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . The DHI Debian repository lists 23 builds, 0.156.0-0 to 0.166.0-0, for amd64 and arm64 (46 packages). For each we read the control archive, whose file list names only /usr/bin/otelcol-contrib, and the start of the data archive: the Go build ID of /usr/bin/otelcol-contrib, which ends in a hash of the program's content, equals the one in the opentelemetry-collector-contrib package for Alpine 3.23 of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-0 and 0.166.0-r0), and so does its MD5 checksum, so each Debian build ships the same program as the Alpine build we downloaded. A 24th build, 0.166.0-1, was published on 2026-11-27: its control archive MD5 checksums and the Go build ID of its program are the same as those of 0.166.0-0 on both amd64 and arm64, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and its symbol table; runtime.main is present in every build as a control. In 0.156.0-0 and 0.157.0-0, go version -m prints dep github.com/hamba/avro/v2 v2.31.0 with no replacement, and the program links that unfixed release, including (*arrayDecoder).Decode, (*mapDecoder).Decode and (*Reader).ReadBlockHeader (566 functions under the github.com/hamba/avro/v2 import path). From 0.158.0-0 it prints dep github.com/hamba/avro/v2 v2.31.0 followed by => github.com/iskorotkov/avro/v2 v2.33.0, so the code compiled under the hamba import path is the fixed fork release v2.33.0; the programs also list github.com/iskorotkov/avro/v2 v2.33.1, which is fixed too. The fix commits named above are in the v2.33.0 tag. We read that replacement line in the x86_64 build information of every build except 0.160.0-r1, for which we read the aarch64 build, and 0.166.0-r1, whose x86_64 program has the same SHA-256 as 0.166.0-r0. On both architectures the number of functions under the github.com/hamba/avro/v2 import path changes from 566 to 624 at 0.158.0 and is 624 in every later build. So 0.156.0-0 and 0.157.0-0 are affected, and every build from 0.158.0-0 is fixed."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdqz-tzfc-sd5z-7mxq",
+        "aliases": [
+          "CVE-2026-46385"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.158.0-0?distro=dhi-13"
         },
@@ -2455,9 +2613,13 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . The DHI Debian repository lists 23 builds, 0.156.0-0 to 0.166.0-0, for amd64 and arm64 (46 packages). For each we read the control archive, whose file list names only /usr/bin/otelcol-contrib, and the start of the data archive: the Go build ID of /usr/bin/otelcol-contrib, which ends in a hash of the program's content, equals the one in the opentelemetry-collector-contrib package for Alpine 3.23 of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-0 and 0.166.0-r0), and so does its MD5 checksum, so each Debian build ships the same program as the Alpine build we downloaded. A 24th build, 0.166.0-1, was published on 2026-11-27: its control archive MD5 checksums and the Go build ID of its program are the same as those of 0.166.0-0 on both amd64 and arm64, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and its symbol table; runtime.main is present in every build as a control. In 0.156.0-0 and 0.157.0-0, go version -m prints dep github.com/hamba/avro/v2 v2.31.0 with no replacement, and the program links that unfixed release, including (*arrayDecoder).Decode, (*mapDecoder).Decode and (*Reader).ReadBlockHeader (566 functions under the github.com/hamba/avro/v2 import path). From 0.158.0-0 it prints dep github.com/hamba/avro/v2 v2.31.0 followed by => github.com/iskorotkov/avro/v2 v2.33.0, so the code compiled under the hamba import path is the fixed fork release v2.33.0; the programs also list github.com/iskorotkov/avro/v2 v2.33.1, which is fixed too. The fix commits named above are in the v2.33.0 tag. We read that replacement line in the x86_64 build information of every build except 0.160.0-r1, for which we read the aarch64 build, and 0.166.0-r1, whose x86_64 program has the same SHA-256 as 0.166.0-r0. On both architectures the number of functions under the github.com/hamba/avro/v2 import path changes from 566 to 624 at 0.158.0 and is 624 in every later build. So 0.156.0-0 and 0.157.0-0 are affected, and every build from 0.158.0-0 is fixed."
     },
     {
       "vulnerability": {
@@ -2535,9 +2697,14 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-dev@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-dev@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The DHI Debian repository lists 23 builds, 0.156.0-0 to 0.166.0-0, for amd64 and arm64 (46 packages). For each we read the control archive, whose file list names only /usr/bin/otelcol, and the start of the data archive: the Go build ID of /usr/bin/otelcol, which ends in a hash of the program's content, equals the one in the opentelemetry-collector-dev package for Alpine 3.23 of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-0 and 0.166.0-r0), so each Debian build ships the same program as the Alpine build we read. For the Alpine copies we checked the control section against its index checksum and read the start of the data archive up to and including the program's Go build information, which covers its function table (pclntab) and its read-only data, but not the debug sections at the end of the file. A 24th build, 0.166.0-1, was published on 2026-11-27: its control archive MD5 checksums and the Go build ID of its program are the same as those of 0.166.0-0 on both amd64 and arm64, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and the function names in its function table; runtime.main is present in every build as a control. Its Go build information lists no github.com/hamba/avro/v2 or github.com/iskorotkov/avro/v2 module in any build, and no build has a function from either package. The same scan finds Avro decoder functions under the github.com/hamba/avro/v2 import path, such as (*arrayDecoder).Decode and (*Reader).ReadBlockHeader, in every opentelemetry-collector-contrib build. The vulnerable Avro decoder is not part of this package."
     },
     {
       "vulnerability": {
@@ -2615,9 +2782,13 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips-dev@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-fips-dev@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The opentelemetry-collector-fips-dev packages are published only in the DHI Debian security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips-dev build on both architectures, to establish which Avro module, if any, each one links. In the non-FIPS opentelemetry-collector-dev packages, which we did inspect, no build links github.com/hamba/avro/v2 or github.com/iskorotkov/avro/v2. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -2695,9 +2866,13 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector-fips@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The opentelemetry-collector-fips packages are published only in the DHI Debian security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips build on both architectures, to establish which Avro module, if any, each one links. In the non-FIPS opentelemetry-collector packages, which we did inspect, no build links github.com/hamba/avro/v2 or github.com/iskorotkov/avro/v2. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -2775,9 +2950,14 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector@0.166.0-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/opentelemetry-collector@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-46385 (GHSA-w8j3-pq8g-8m7w, GO-2026-5046): the Go Avro codec's array and map decoders loop over an attacker-supplied block count without checking the reader's error state inside the loop, so a stream that declares a huge block and then ends keeps a CPU core busy until the process is stopped, a remote denial of service on amd64 and arm64. It is fixed in the maintained fork github.com/iskorotkov/avro/v2 v2.33.0: https://github.com/iskorotkov/avro/security/advisories/GHSA-w8j3-pq8g-8m7w, commits https://github.com/iskorotkov/avro/commit/2ce4242e6095d93470ab3b37ed6082b0596f325c and https://github.com/iskorotkov/avro/commit/b124caa58a821f68f100d86f045f9753b88881e8 . The original module github.com/hamba/avro/v2 is archived on GitHub with v2.31.0 as its last release, and the Go vulnerability database lists it as affected in every version with no fix: https://pkg.go.dev/vuln/GO-2026-5046 . In hamba/avro v2.31.0, ReadArrayCB in reader_generic.go still calls its callback for every declared element without checking the reader's error, the loop that commit 2ce4242e6095 fixes. The DHI Debian repository lists 23 builds, 0.156.0-0 to 0.166.0-0, for amd64 and arm64 (46 packages). For each we read the control archive, whose file list names only /usr/bin/otelcol, and the start of the data archive: the Go build ID of /usr/bin/otelcol, which ends in a hash of the program's content, equals the one in the opentelemetry-collector package for Alpine 3.23 of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-0 and 0.166.0-r0), and so does its MD5 checksum, so each Debian build ships the same program as the Alpine build we downloaded. A 24th build, 0.166.0-1, was published on 2026-11-27: its control archive MD5 checksums and the Go build ID of its program are the same as those of 0.166.0-0 on both amd64 and arm64, so it ships the same program. Each program is a Go program built with CGO_ENABLED=0. We read its Go build information (the Go release and module versions) and its symbol table; runtime.main is present in every build as a control. Its Go build information lists no github.com/hamba/avro/v2 or github.com/iskorotkov/avro/v2 module in any build, and no build has a function from either package. The same scan finds Avro decoder functions under the github.com/hamba/avro/v2 import path, such as (*arrayDecoder).Decode and (*Reader).ReadBlockHeader, in every opentelemetry-collector-contrib build. The vulnerable Avro decoder is not part of this package."
     }
   ]
 }
