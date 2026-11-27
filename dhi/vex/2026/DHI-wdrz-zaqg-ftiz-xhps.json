@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:38:30Z",
-  "last_updated": "2026-11-27T13:15:09Z",
-  "version": 37,
+  "last_updated": "2026-11-27T14:08:11Z",
+  "version": 38,
   "statements": [
     {
       "vulnerability": {
@@ -89096,6 +89096,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eks-pod-identity-agent-dev@0.2.7-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/eks-pod-identity-agent-dev@0.3.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -89188,6 +89191,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eks-pod-identity-agent-dev@0.2.7-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/eks-pod-identity-agent-dev@0.3.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -89280,6 +89286,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eks-pod-identity-agent-fips-dev@0.2.7-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/eks-pod-identity-agent-fips-dev@0.3.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -89372,6 +89381,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eks-pod-identity-agent-fips-dev@0.2.7-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/eks-pod-identity-agent-fips-dev@0.3.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -89464,6 +89476,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eks-pod-identity-agent-fips@0.2.7-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/eks-pod-identity-agent-fips@0.3.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -89556,6 +89571,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eks-pod-identity-agent-fips@0.2.7-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/eks-pod-identity-agent-fips@0.3.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -89648,6 +89666,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eks-pod-identity-agent@0.2.7-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/eks-pod-identity-agent@0.3.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -89740,6 +89761,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eks-pod-identity-agent@0.2.7-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/eks-pod-identity-agent@0.3.0-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -196402,7 +196426,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/mimir-dev@3.1.4-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update mimir-dev to 3.1.4-r1 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). We read every mimir-dev package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each package was downloaded and checked against its index checksum. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its DWARF debug information and Go symbol table. We read its Go build information and its Go function table (.gopclntab). net/url.resolvePath, the function the fix rewrites, is linked in every build, with (*URL).ResolveReference. The Go toolchain recorded in each build is Go 1.26.5 in 3.1.4-r0; Go 1.26.6 in 3.1.4-r1 and 3.2.0-r0; Go 1.26.7 in 3.2.0-r1 and 3.2.0-r2; Go 1.26.8 in 3.2.0-r3 to 3.2.2-r0; Go 1.26.9 in 3.2.2-r1; Go 1.26.10 in 3.2.2-r2 to 3.2.4-r1; Go 1.26.11 in 3.2.4-r2 to 3.2.6-r0. So 3.1.4-r0 lacks the fix and every build from 3.1.4-r1 carries it. The function table agrees: resolvePath spans 1504 bytes on aarch64 and 1856 on x86_64 in 3.1.4-r0, and 1104 and 1216 in 3.1.4-r1 (entry spacing, which includes alignment padding)."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/mimir-dev@3.1.4-r1?distro=dhi-3.23"
         },
@@ -196464,7 +196501,8 @@
           "@id": "pkg:apk/dhi/mimir-dev@3.2.6-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). We read every mimir-dev package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each package was downloaded and checked against its index checksum. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its DWARF debug information and Go symbol table. We read its Go build information and its Go function table (.gopclntab). net/url.resolvePath, the function the fix rewrites, is linked in every build, with (*URL).ResolveReference. The Go toolchain recorded in each build is Go 1.26.5 in 3.1.4-r0; Go 1.26.6 in 3.1.4-r1 and 3.2.0-r0; Go 1.26.7 in 3.2.0-r1 and 3.2.0-r2; Go 1.26.8 in 3.2.0-r3 to 3.2.2-r0; Go 1.26.9 in 3.2.2-r1; Go 1.26.10 in 3.2.2-r2 to 3.2.4-r1; Go 1.26.11 in 3.2.4-r2 to 3.2.6-r0. So 3.1.4-r0 lacks the fix and every build from 3.1.4-r1 carries it. The function table agrees: resolvePath spans 1504 bytes on aarch64 and 1856 on x86_64 in 3.1.4-r0, and 1104 and 1216 in 3.1.4-r1 (entry spacing, which includes alignment padding)."
     },
     {
       "vulnerability": {
@@ -196476,7 +196514,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/mimir-dev@3.1.4-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update mimir-dev to 3.1.4-r1 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). We read every mimir-dev package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same name, version and architecture, which we downloaded, checked against that checksum and read. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its DWARF debug information and Go symbol table. We read its Go build information and its Go function table (.gopclntab). net/url.resolvePath, the function the fix rewrites, is linked in every build, with (*URL).ResolveReference. The Go toolchain recorded in each build is Go 1.26.5 in 3.1.4-r0; Go 1.26.6 in 3.1.4-r1 and 3.2.0-r0; Go 1.26.7 in 3.2.0-r1 and 3.2.0-r2; Go 1.26.8 in 3.2.0-r3 to 3.2.2-r0; Go 1.26.9 in 3.2.2-r1; Go 1.26.10 in 3.2.2-r2 to 3.2.4-r1; Go 1.26.11 in 3.2.4-r2 to 3.2.6-r0. So 3.1.4-r0 lacks the fix and every build from 3.1.4-r1 carries it. The function table agrees: resolvePath spans 1504 bytes on aarch64 and 1856 on x86_64 in 3.1.4-r0, and 1104 and 1216 in 3.1.4-r1 (entry spacing, which includes alignment padding)."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/mimir-dev@3.1.4-r1?distro=dhi-3.24"
         },
@@ -196538,7 +196589,8 @@
           "@id": "pkg:apk/dhi/mimir-dev@3.2.6-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). We read every mimir-dev package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same name, version and architecture, which we downloaded, checked against that checksum and read. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its DWARF debug information and Go symbol table. We read its Go build information and its Go function table (.gopclntab). net/url.resolvePath, the function the fix rewrites, is linked in every build, with (*URL).ResolveReference. The Go toolchain recorded in each build is Go 1.26.5 in 3.1.4-r0; Go 1.26.6 in 3.1.4-r1 and 3.2.0-r0; Go 1.26.7 in 3.2.0-r1 and 3.2.0-r2; Go 1.26.8 in 3.2.0-r3 to 3.2.2-r0; Go 1.26.9 in 3.2.2-r1; Go 1.26.10 in 3.2.2-r2 to 3.2.4-r1; Go 1.26.11 in 3.2.4-r2 to 3.2.6-r0. So 3.1.4-r0 lacks the fix and every build from 3.1.4-r1 carries it. The function table agrees: resolvePath spans 1504 bytes on aarch64 and 1856 on x86_64 in 3.1.4-r0, and 1104 and 1216 in 3.1.4-r1 (entry spacing, which includes alignment padding)."
     },
     {
       "vulnerability": {
@@ -196612,7 +196664,8 @@
           "@id": "pkg:apk/dhi/mimir-fips-dev@3.2.6-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). The mimir-fips-dev packages for Alpine 3.23 are published only in the DHI security repository, which this review could not read, so no mimir-fips-dev build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips-dev build, to establish which build first carries the fix; in the non-FIPS mimir packages of the same versions it is 3.1.4-r1, but that has not been confirmed for mimir-fips-dev."
     },
     {
       "vulnerability": {
@@ -196686,7 +196739,8 @@
           "@id": "pkg:apk/dhi/mimir-fips-dev@3.2.6-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). The mimir-fips-dev packages for Alpine 3.24 are published only in the DHI security repository, which this review could not read, so no mimir-fips-dev build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips-dev build, to establish which build first carries the fix; in the non-FIPS mimir packages of the same versions it is 3.1.4-r1, but that has not been confirmed for mimir-fips-dev."
     },
     {
       "vulnerability": {
@@ -196760,7 +196814,8 @@
           "@id": "pkg:apk/dhi/mimir-fips@3.2.6-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). The mimir-fips packages for Alpine 3.23 are published only in the DHI security repository, which this review could not read, so no mimir-fips build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips build, to establish which build first carries the fix; in the non-FIPS mimir packages of the same versions it is 3.1.4-r1, but that has not been confirmed for mimir-fips."
     },
     {
       "vulnerability": {
@@ -196834,7 +196889,8 @@
           "@id": "pkg:apk/dhi/mimir-fips@3.2.6-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). The mimir-fips packages for Alpine 3.24 are published only in the DHI security repository, which this review could not read, so no mimir-fips build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips build, to establish which build first carries the fix; in the non-FIPS mimir packages of the same versions it is 3.1.4-r1, but that has not been confirmed for mimir-fips."
     },
     {
       "vulnerability": {
@@ -196846,7 +196902,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/mimir@3.1.4-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update mimir to 3.1.4-r1 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). We read every mimir package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each package was downloaded and checked against its index checksum. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its Go symbol table but no DWARF debug information. We read its Go build information and its Go function table (.gopclntab). net/url.resolvePath, the function the fix rewrites, is linked in every build, with (*URL).ResolveReference. The Go toolchain recorded in each build is Go 1.26.5 in 3.1.4-r0; Go 1.26.6 in 3.1.4-r1 and 3.2.0-r0; Go 1.26.7 in 3.2.0-r1 and 3.2.0-r2; Go 1.26.8 in 3.2.0-r3 to 3.2.2-r0; Go 1.26.9 in 3.2.2-r1; Go 1.26.10 in 3.2.2-r2 to 3.2.4-r1; Go 1.26.11 in 3.2.4-r2 to 3.2.6-r0. So 3.1.4-r0 lacks the fix and every build from 3.1.4-r1 carries it. The function table agrees: resolvePath spans 1504 bytes on aarch64 and 1856 on x86_64 in 3.1.4-r0, and 1104 and 1216 in 3.1.4-r1 (entry spacing, which includes alignment padding)."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/mimir@3.1.4-r1?distro=dhi-3.23"
         },
@@ -196908,7 +196977,8 @@
           "@id": "pkg:apk/dhi/mimir@3.2.6-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). We read every mimir package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each package was downloaded and checked against its index checksum. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its Go symbol table but no DWARF debug information. We read its Go build information and its Go function table (.gopclntab). net/url.resolvePath, the function the fix rewrites, is linked in every build, with (*URL).ResolveReference. The Go toolchain recorded in each build is Go 1.26.5 in 3.1.4-r0; Go 1.26.6 in 3.1.4-r1 and 3.2.0-r0; Go 1.26.7 in 3.2.0-r1 and 3.2.0-r2; Go 1.26.8 in 3.2.0-r3 to 3.2.2-r0; Go 1.26.9 in 3.2.2-r1; Go 1.26.10 in 3.2.2-r2 to 3.2.4-r1; Go 1.26.11 in 3.2.4-r2 to 3.2.6-r0. So 3.1.4-r0 lacks the fix and every build from 3.1.4-r1 carries it. The function table agrees: resolvePath spans 1504 bytes on aarch64 and 1856 on x86_64 in 3.1.4-r0, and 1104 and 1216 in 3.1.4-r1 (entry spacing, which includes alignment padding)."
     },
     {
       "vulnerability": {
@@ -196920,7 +196990,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/mimir@3.1.4-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update mimir to 3.1.4-r1 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). We read every mimir package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same name, version and architecture, which we downloaded, checked against that checksum and read. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its Go symbol table but no DWARF debug information. We read its Go build information and its Go function table (.gopclntab). net/url.resolvePath, the function the fix rewrites, is linked in every build, with (*URL).ResolveReference. The Go toolchain recorded in each build is Go 1.26.5 in 3.1.4-r0; Go 1.26.6 in 3.1.4-r1 and 3.2.0-r0; Go 1.26.7 in 3.2.0-r1 and 3.2.0-r2; Go 1.26.8 in 3.2.0-r3 to 3.2.2-r0; Go 1.26.9 in 3.2.2-r1; Go 1.26.10 in 3.2.2-r2 to 3.2.4-r1; Go 1.26.11 in 3.2.4-r2 to 3.2.6-r0. So 3.1.4-r0 lacks the fix and every build from 3.1.4-r1 carries it. The function table agrees: resolvePath spans 1504 bytes on aarch64 and 1856 on x86_64 in 3.1.4-r0, and 1104 and 1216 in 3.1.4-r1 (entry spacing, which includes alignment padding)."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/mimir@3.1.4-r1?distro=dhi-3.24"
         },
@@ -196982,7 +197065,8 @@
           "@id": "pkg:apk/dhi/mimir@3.2.6-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). We read every mimir package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same name, version and architecture, which we downloaded, checked against that checksum and read. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its Go symbol table but no DWARF debug information. We read its Go build information and its Go function table (.gopclntab). net/url.resolvePath, the function the fix rewrites, is linked in every build, with (*URL).ResolveReference. The Go toolchain recorded in each build is Go 1.26.5 in 3.1.4-r0; Go 1.26.6 in 3.1.4-r1 and 3.2.0-r0; Go 1.26.7 in 3.2.0-r1 and 3.2.0-r2; Go 1.26.8 in 3.2.0-r3 to 3.2.2-r0; Go 1.26.9 in 3.2.2-r1; Go 1.26.10 in 3.2.2-r2 to 3.2.4-r1; Go 1.26.11 in 3.2.4-r2 to 3.2.6-r0. So 3.1.4-r0 lacks the fix and every build from 3.1.4-r1 carries it. The function table agrees: resolvePath spans 1504 bytes on aarch64 and 1856 on x86_64 in 3.1.4-r0, and 1104 and 1216 in 3.1.4-r1 (entry spacing, which includes alignment padding)."
     },
     {
       "vulnerability": {
@@ -301708,6 +301792,9 @@
         },
         {
           "@id": "pkg:deb/dhi/eks-pod-identity-agent-dev@0.2.7-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/eks-pod-identity-agent-dev@0.3.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -301800,6 +301887,9 @@
         },
         {
           "@id": "pkg:deb/dhi/eks-pod-identity-agent-fips-dev@0.2.7-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/eks-pod-identity-agent-fips-dev@0.3.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -301892,6 +301982,9 @@
         },
         {
           "@id": "pkg:deb/dhi/eks-pod-identity-agent-fips@0.2.7-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/eks-pod-identity-agent-fips@0.3.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -301984,6 +302077,9 @@
         },
         {
           "@id": "pkg:deb/dhi/eks-pod-identity-agent@0.2.7-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/eks-pod-identity-agent@0.3.0-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -357694,7 +357790,20 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/mimir-dev@3.1.4-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update mimir-dev to 3.1.4-1 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). We read every mimir-dev package published for Debian 13 in the DHI Debian repository as of 2026-11-27: 21 versions, 3.1.4-0 to 3.2.6-0, for amd64 and arm64 except 3.2.2-0, which is published for arm64 only. Each package lists one file, usr/bin/mimir, in its md5sums, and that checksum equals the md5 of usr/bin/mimir in the Alpine mimir-dev package of the same version and architecture (Debian 3.2.0-3 is Alpine 3.2.0-r3), which we downloaded, checked against its index checksum and read. The program is a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its DWARF debug information and Go symbol table. We read its Go build information and its Go function table (.gopclntab). net/url.resolvePath, the function the fix rewrites, is linked in every build, with (*URL).ResolveReference. The Go toolchain recorded in each build is Go 1.26.5 in 3.1.4-0; Go 1.26.6 in 3.1.4-1 and 3.2.0-0; Go 1.26.7 in 3.2.0-1 and 3.2.0-2; Go 1.26.8 in 3.2.0-3 to 3.2.2-0; Go 1.26.9 in 3.2.2-1; Go 1.26.10 in 3.2.2-2 to 3.2.4-1; Go 1.26.11 in 3.2.4-2 to 3.2.6-0. So 3.1.4-0 lacks the fix and every build from 3.1.4-1 carries it. The function table agrees: resolvePath spans 1504 bytes on arm64 and 1856 on amd64 in 3.1.4-0, and 1104 and 1216 in 3.1.4-1 (entry spacing, which includes alignment padding)."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/mimir-dev@3.1.4-1?distro=dhi-13"
         },
@@ -357756,7 +357865,8 @@
           "@id": "pkg:deb/dhi/mimir-dev@3.2.6-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). We read every mimir-dev package published for Debian 13 in the DHI Debian repository as of 2026-11-27: 21 versions, 3.1.4-0 to 3.2.6-0, for amd64 and arm64 except 3.2.2-0, which is published for arm64 only. Each package lists one file, usr/bin/mimir, in its md5sums, and that checksum equals the md5 of usr/bin/mimir in the Alpine mimir-dev package of the same version and architecture (Debian 3.2.0-3 is Alpine 3.2.0-r3), which we downloaded, checked against its index checksum and read. The program is a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its DWARF debug information and Go symbol table. We read its Go build information and its Go function table (.gopclntab). net/url.resolvePath, the function the fix rewrites, is linked in every build, with (*URL).ResolveReference. The Go toolchain recorded in each build is Go 1.26.5 in 3.1.4-0; Go 1.26.6 in 3.1.4-1 and 3.2.0-0; Go 1.26.7 in 3.2.0-1 and 3.2.0-2; Go 1.26.8 in 3.2.0-3 to 3.2.2-0; Go 1.26.9 in 3.2.2-1; Go 1.26.10 in 3.2.2-2 to 3.2.4-1; Go 1.26.11 in 3.2.4-2 to 3.2.6-0. So 3.1.4-0 lacks the fix and every build from 3.1.4-1 carries it. The function table agrees: resolvePath spans 1504 bytes on arm64 and 1856 on amd64 in 3.1.4-0, and 1104 and 1216 in 3.1.4-1 (entry spacing, which includes alignment padding)."
     },
     {
       "vulnerability": {
@@ -357830,7 +357940,8 @@
           "@id": "pkg:deb/dhi/mimir-fips-dev@3.2.6-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). The mimir-fips-dev packages for Debian 13 are published only in the DHI security repository, which this review could not read, so no mimir-fips-dev build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips-dev build, to establish which build first carries the fix; in the non-FIPS mimir packages of the same versions it is 3.1.4-1, but that has not been confirmed for mimir-fips-dev."
     },
     {
       "vulnerability": {
@@ -357904,7 +358015,8 @@
           "@id": "pkg:deb/dhi/mimir-fips@3.2.6-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). The mimir-fips packages for Debian 13 are published only in the DHI security repository, which this review could not read, so no mimir-fips build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips build, to establish which build first carries the fix; in the non-FIPS mimir packages of the same versions it is 3.1.4-1, but that has not been confirmed for mimir-fips."
     },
     {
       "vulnerability": {
@@ -357916,7 +358028,20 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/mimir@3.1.4-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update mimir to 3.1.4-1 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). We read every mimir package published for Debian 13 in the DHI Debian repository as of 2026-11-27: 21 versions, 3.1.4-0 to 3.2.6-0, for amd64 and arm64 except 3.2.2-0, which is published for arm64 only. Each package lists one file, usr/bin/mimir, in its md5sums, and that checksum equals the md5 of usr/bin/mimir in the Alpine mimir package of the same version and architecture (Debian 3.2.0-3 is Alpine 3.2.0-r3), which we downloaded, checked against its index checksum and read. The program is a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its Go symbol table but no DWARF debug information. We read its Go build information and its Go function table (.gopclntab). net/url.resolvePath, the function the fix rewrites, is linked in every build, with (*URL).ResolveReference. The Go toolchain recorded in each build is Go 1.26.5 in 3.1.4-0; Go 1.26.6 in 3.1.4-1 and 3.2.0-0; Go 1.26.7 in 3.2.0-1 and 3.2.0-2; Go 1.26.8 in 3.2.0-3 to 3.2.2-0; Go 1.26.9 in 3.2.2-1; Go 1.26.10 in 3.2.2-2 to 3.2.4-1; Go 1.26.11 in 3.2.4-2 to 3.2.6-0. So 3.1.4-0 lacks the fix and every build from 3.1.4-1 carries it. The function table agrees: resolvePath spans 1504 bytes on arm64 and 1856 on amd64 in 3.1.4-0, and 1104 and 1216 in 3.1.4-1 (entry spacing, which includes alignment padding)."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/mimir@3.1.4-1?distro=dhi-13"
         },
@@ -357978,7 +358103,8 @@
           "@id": "pkg:deb/dhi/mimir@3.2.6-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url resolvePath took quadratic time on paths with many segments, so URL.Parse and URL.ResolveReference on attacker-supplied references could consume excessive CPU. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3 (https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, Go 1.26 release-branch fix https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57, https://groups.google.com/g/golang-announce/c/94pEornpRlI). We read every mimir package published for Debian 13 in the DHI Debian repository as of 2026-11-27: 21 versions, 3.1.4-0 to 3.2.6-0, for amd64 and arm64 except 3.2.2-0, which is published for arm64 only. Each package lists one file, usr/bin/mimir, in its md5sums, and that checksum equals the md5 of usr/bin/mimir in the Alpine mimir package of the same version and architecture (Debian 3.2.0-3 is Alpine 3.2.0-r3), which we downloaded, checked against its index checksum and read. The program is a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its Go symbol table but no DWARF debug information. We read its Go build information and its Go function table (.gopclntab). net/url.resolvePath, the function the fix rewrites, is linked in every build, with (*URL).ResolveReference. The Go toolchain recorded in each build is Go 1.26.5 in 3.1.4-0; Go 1.26.6 in 3.1.4-1 and 3.2.0-0; Go 1.26.7 in 3.2.0-1 and 3.2.0-2; Go 1.26.8 in 3.2.0-3 to 3.2.2-0; Go 1.26.9 in 3.2.2-1; Go 1.26.10 in 3.2.2-2 to 3.2.4-1; Go 1.26.11 in 3.2.4-2 to 3.2.6-0. So 3.1.4-0 lacks the fix and every build from 3.1.4-1 carries it. The function table agrees: resolvePath spans 1504 bytes on arm64 and 1856 on amd64 in 3.1.4-0, and 1104 and 1216 in 3.1.4-1 (entry spacing, which includes alignment padding)."
     },
     {
       "vulnerability": {
