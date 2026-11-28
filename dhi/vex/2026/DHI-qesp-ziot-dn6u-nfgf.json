@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T15:53:53Z",
-  "last_updated": "2026-11-25T02:33:30Z",
-  "version": 4,
+  "last_updated": "2026-11-28T13:45:59Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -22,6 +22,22 @@
           "@id": "pkg:apk/dhi/mariadb@11.4.11-r0?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/mariadb@11.4.9-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update mariadb to 11.4.12-r0 or later.",
+      "status_notes": "CVE-2026-48163 (GHSA-rpgv-q6gv-684r, MDEV-39648): during a Galera state snapshot transfer (SST) with the rsync method, the donor's wsrep_sst_rsync script wrote the user and password values sent by the joiner into the stunnel configuration and the rsync magic file without validating them, so a malicious joiner node could run shell commands on the donor. MariaDB fixed it in 10.6.27, 10.11.18, 11.4.12, 11.8.8 and 12.3.2 (https://github.com/MariaDB/server/security/advisories/GHSA-rpgv-q6gv-684r, listed in the release notes of MariaDB 11.4.12, released on 27 May 2026: https://mariadb.com/docs/release-notes/community-server/11.4/11.4.12). The fix, https://github.com/MariaDB/server/commit/dae315a7b2bf8bd2fd0449467e711e5a2db26669 (MDEV-39648), changes scripts/wsrep_sst_rsync.sh to pass WSREP_SST_OPT_REMOTE_USER and WSREP_SST_OPT_REMOTE_PSWD through the script's safe() filter; it is in the mariadb-11.4.12 tag and not in mariadb-11.4.11. Alpine records the fix at mariadb 11.4.12-r0 in its 3.23 security database (https://secdb.alpinelinux.org/v3.23/main.json), and Debian tracks it at https://security-tracker.debian.org/tracker/CVE-2026-48163 . We checked every mariadb build published in the DHI Alpine 3.23 repository as of 2026-11-28, 11.4.9-r0, 11.4.10-r0, 11.4.11-r0, 11.4.12-r0, 11.4.13-r0 and 11.4.14-r0, on x86_64 and aarch64, by unpacking the mariadb package of each build, each with the size the index gives. Each ships /usr/bin/wsrep_sst_rsync and the server program /usr/bin/mariadbd, whose version string matches the package version (11.4.9-MariaDB to 11.4.14-MariaDB). In 11.4.9-r0, 11.4.10-r0 and 11.4.11-r0 on both architectures the script still sets 'checkHost = $WSREP_SST_OPT_REMOTE_USER' and appends $WSREP_SST_OPT_REMOTE_PSWD to the magic file unfiltered; in 11.4.12-r0, 11.4.13-r0 and 11.4.14-r0 on both architectures it carries both changes from the fix commit, 'checkHost = $(safe WSREP_SST_OPT_REMOTE_USER)' and 'WSREP_SST_OPT_REMOTE_PSWD_=$(safe WSREP_SST_OPT_REMOTE_PSWD)'. 11.4.12-r0 is the first build that carries the fix, so the range ends there and the earlier builds are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-qesp-ziot-dn6u-nfgf",
+        "aliases": [
+          "CVE-2026-48163"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/mariadb@11.4.12-r0?distro=dhi-3.23"
         },
         {
@@ -29,12 +45,10 @@
         },
         {
           "@id": "pkg:apk/dhi/mariadb@11.4.14-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/mariadb@11.4.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-48163 (GHSA-rpgv-q6gv-684r, MDEV-39648): during a Galera state snapshot transfer (SST) with the rsync method, the donor's wsrep_sst_rsync script wrote the user and password values sent by the joiner into the stunnel configuration and the rsync magic file without validating them, so a malicious joiner node could run shell commands on the donor. MariaDB fixed it in 10.6.27, 10.11.18, 11.4.12, 11.8.8 and 12.3.2 (https://github.com/MariaDB/server/security/advisories/GHSA-rpgv-q6gv-684r, listed in the release notes of MariaDB 11.4.12, released on 27 May 2026: https://mariadb.com/docs/release-notes/community-server/11.4/11.4.12). The fix, https://github.com/MariaDB/server/commit/dae315a7b2bf8bd2fd0449467e711e5a2db26669 (MDEV-39648), changes scripts/wsrep_sst_rsync.sh to pass WSREP_SST_OPT_REMOTE_USER and WSREP_SST_OPT_REMOTE_PSWD through the script's safe() filter; it is in the mariadb-11.4.12 tag and not in mariadb-11.4.11. Alpine records the fix at mariadb 11.4.12-r0 in its 3.23 security database (https://secdb.alpinelinux.org/v3.23/main.json), and Debian tracks it at https://security-tracker.debian.org/tracker/CVE-2026-48163 . We checked every mariadb build published in the DHI Alpine 3.23 repository as of 2026-11-28, 11.4.9-r0, 11.4.10-r0, 11.4.11-r0, 11.4.12-r0, 11.4.13-r0 and 11.4.14-r0, on x86_64 and aarch64, by unpacking the mariadb package of each build, each with the size the index gives. Each ships /usr/bin/wsrep_sst_rsync and the server program /usr/bin/mariadbd, whose version string matches the package version (11.4.9-MariaDB to 11.4.14-MariaDB). In 11.4.9-r0, 11.4.10-r0 and 11.4.11-r0 on both architectures the script still sets 'checkHost = $WSREP_SST_OPT_REMOTE_USER' and appends $WSREP_SST_OPT_REMOTE_PSWD to the magic file unfiltered; in 11.4.12-r0, 11.4.13-r0 and 11.4.14-r0 on both architectures it carries both changes from the fix commit, 'checkHost = $(safe WSREP_SST_OPT_REMOTE_USER)' and 'WSREP_SST_OPT_REMOTE_PSWD_=$(safe WSREP_SST_OPT_REMOTE_PSWD)'. 11.4.12-r0 is the first build that carries the fix, so the range ends there and the earlier builds are affected."
     },
     {
       "vulnerability": {
@@ -57,7 +71,9 @@
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-48163 (GHSA-rpgv-q6gv-684r, MDEV-39648): during a Galera state snapshot transfer (SST) with the rsync method, the donor's wsrep_sst_rsync script wrote the user and password values sent by the joiner into the stunnel configuration and the rsync magic file without validating them, so a malicious joiner node could run shell commands on the donor. MariaDB fixed it in 10.6.27, 10.11.18, 11.4.12, 11.8.8 and 12.3.2 (https://github.com/MariaDB/server/security/advisories/GHSA-rpgv-q6gv-684r, listed in the release notes of MariaDB 11.8.8, released on 27 May 2026: https://mariadb.com/docs/release-notes/community-server/11.8/11.8.8). The fix, https://github.com/MariaDB/server/commit/dae315a7b2bf8bd2fd0449467e711e5a2db26669 (MDEV-39648), changes scripts/wsrep_sst_rsync.sh to pass WSREP_SST_OPT_REMOTE_USER and WSREP_SST_OPT_REMOTE_PSWD through the script's safe() filter; it is in the mariadb-11.8.8 tag and not in mariadb-11.8.6. Debian fixes it in trixie with mariadb 1:11.8.8-0+deb13u1 (https://security-tracker.debian.org/tracker/CVE-2026-48163). Every mariadb build published in the DHI Debian repository as of 2026-11-28 is one of four DHI rebuilds of Debian's mariadb 1:11.8.6-0+deb13u1, on amd64 and arm64. We unpacked the mariadb-server package of all four builds on both architectures, each with a checksum equal to the index: each ships /usr/bin/wsrep_sst_rsync, and in each the script still sets 'checkHost = $WSREP_SST_OPT_REMOTE_USER' and appends $WSREP_SST_OPT_REMOTE_PSWD to the magic file unfiltered, with neither of the safe() calls the fix adds. The Debian changelog shipped in each of the four builds on both architectures does not mention this CVE or MDEV-39648: the DHI rebuilds add backports only for other MariaDB advisories, each named in the changelog. Every published build is therefore affected until the owner ships MariaDB 11.8.8 or later, or a backport of the fix. Upstream's workaround is to remove wsrep_sst_rsync from donor hosts so the rsync SST method cannot be used."
     }
   ]
 }

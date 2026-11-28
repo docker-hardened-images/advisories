@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T15:53:53Z",
-  "last_updated": "2026-11-25T02:33:30Z",
-  "version": 4,
+  "last_updated": "2026-11-28T13:46:04Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -22,6 +22,22 @@
           "@id": "pkg:apk/dhi/mariadb@11.4.11-r0?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/mariadb@11.4.9-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update mariadb to 11.4.12-r0 or later.",
+      "status_notes": "CVE-2026-48165 (GHSA-7v3p-h23x-8hwv, MDEV-39676): a high-privileged MariaDB user (one allowed to set global system variables) could put shell syntax in wsrep_sst_receive_address or wsrep_sst_donor, which the Galera joiner node passes to the state snapshot transfer command, and so run shell commands as the user of the mariadbd process. MariaDB fixed it in 10.6.27, 10.11.18, 11.4.12, 11.8.8 and 12.3.2 (https://github.com/MariaDB/server/security/advisories/GHSA-7v3p-h23x-8hwv, listed in the release notes of MariaDB 11.4.12, released on 27 May 2026: https://mariadb.com/docs/release-notes/community-server/11.4/11.4.12). The fix, https://github.com/MariaDB/server/commit/13e6808f0138175ad48bf91b6487f56f33c51919 with the follow-up https://github.com/MariaDB/server/commit/a9e2f7f648f339c6f49b5bbe0435fa6b04a27ed2 (both MDEV-39676), changes the checks wsrep_sst_receive_address_check and wsrep_sst_donor_check in sql/wsrep_sst.cc to reject any value with characters outside the address or name character set, where before they only rejected a missing value or one longer than 511 bytes; both commits are in the mariadb-11.4.12 tag and not in mariadb-11.4.11. Alpine records the fix at mariadb 11.4.12-r0 in its 3.23 security database (https://secdb.alpinelinux.org/v3.23/main.json), and Debian tracks it at https://security-tracker.debian.org/tracker/CVE-2026-48165 . We checked every mariadb build published in the DHI Alpine 3.23 repository as of 2026-11-28, 11.4.9-r0, 11.4.10-r0, 11.4.11-r0, 11.4.12-r0, 11.4.13-r0 and 11.4.14-r0, on x86_64 and aarch64, by unpacking the mariadb package of each build, each with the size the index gives. Each ships the server program /usr/bin/mariadbd, whose version string matches the package version (11.4.9-MariaDB to 11.4.14-MariaDB) and which exports wsrep_sst_receive_address_check and wsrep_sst_donor_check (sizes from nm -D -S). In 11.4.9-r0, 11.4.10-r0 and 11.4.11-r0 both functions are 73 bytes on x86_64 and 116 bytes on aarch64, and disassembled they only test that the value is present and not longer than 511 bytes, with no call other than my_error. In 11.4.12-r0, 11.4.13-r0 and 11.4.14-r0 they are 136 to 217 bytes on x86_64 and 148 to 240 bytes on aarch64, and each also calls a character check before accepting the value, as the fix adds. 11.4.12-r0 is the first build that carries the fix, so the range ends there and the earlier builds are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-pxo4-in4i-ow6z-2iep",
+        "aliases": [
+          "CVE-2026-48165"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/mariadb@11.4.12-r0?distro=dhi-3.23"
         },
         {
@@ -29,12 +45,10 @@
         },
         {
           "@id": "pkg:apk/dhi/mariadb@11.4.14-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/mariadb@11.4.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-48165 (GHSA-7v3p-h23x-8hwv, MDEV-39676): a high-privileged MariaDB user (one allowed to set global system variables) could put shell syntax in wsrep_sst_receive_address or wsrep_sst_donor, which the Galera joiner node passes to the state snapshot transfer command, and so run shell commands as the user of the mariadbd process. MariaDB fixed it in 10.6.27, 10.11.18, 11.4.12, 11.8.8 and 12.3.2 (https://github.com/MariaDB/server/security/advisories/GHSA-7v3p-h23x-8hwv, listed in the release notes of MariaDB 11.4.12, released on 27 May 2026: https://mariadb.com/docs/release-notes/community-server/11.4/11.4.12). The fix, https://github.com/MariaDB/server/commit/13e6808f0138175ad48bf91b6487f56f33c51919 with the follow-up https://github.com/MariaDB/server/commit/a9e2f7f648f339c6f49b5bbe0435fa6b04a27ed2 (both MDEV-39676), changes the checks wsrep_sst_receive_address_check and wsrep_sst_donor_check in sql/wsrep_sst.cc to reject any value with characters outside the address or name character set, where before they only rejected a missing value or one longer than 511 bytes; both commits are in the mariadb-11.4.12 tag and not in mariadb-11.4.11. Alpine records the fix at mariadb 11.4.12-r0 in its 3.23 security database (https://secdb.alpinelinux.org/v3.23/main.json), and Debian tracks it at https://security-tracker.debian.org/tracker/CVE-2026-48165 . We checked every mariadb build published in the DHI Alpine 3.23 repository as of 2026-11-28, 11.4.9-r0, 11.4.10-r0, 11.4.11-r0, 11.4.12-r0, 11.4.13-r0 and 11.4.14-r0, on x86_64 and aarch64, by unpacking the mariadb package of each build, each with the size the index gives. Each ships the server program /usr/bin/mariadbd, whose version string matches the package version (11.4.9-MariaDB to 11.4.14-MariaDB) and which exports wsrep_sst_receive_address_check and wsrep_sst_donor_check (sizes from nm -D -S). In 11.4.9-r0, 11.4.10-r0 and 11.4.11-r0 both functions are 73 bytes on x86_64 and 116 bytes on aarch64, and disassembled they only test that the value is present and not longer than 511 bytes, with no call other than my_error. In 11.4.12-r0, 11.4.13-r0 and 11.4.14-r0 they are 136 to 217 bytes on x86_64 and 148 to 240 bytes on aarch64, and each also calls a character check before accepting the value, as the fix adds. 11.4.12-r0 is the first build that carries the fix, so the range ends there and the earlier builds are affected."
     },
     {
       "vulnerability": {
@@ -57,7 +71,9 @@
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-48165 (GHSA-7v3p-h23x-8hwv, MDEV-39676): a high-privileged MariaDB user (one allowed to set global system variables) could put shell syntax in wsrep_sst_receive_address or wsrep_sst_donor, which the Galera joiner node passes to the state snapshot transfer command, and so run shell commands as the user of the mariadbd process. MariaDB fixed it in 10.6.27, 10.11.18, 11.4.12, 11.8.8 and 12.3.2 (https://github.com/MariaDB/server/security/advisories/GHSA-7v3p-h23x-8hwv, listed in the release notes of MariaDB 11.8.8, released on 27 May 2026: https://mariadb.com/docs/release-notes/community-server/11.8/11.8.8). The fix, https://github.com/MariaDB/server/commit/13e6808f0138175ad48bf91b6487f56f33c51919 with the follow-up https://github.com/MariaDB/server/commit/a9e2f7f648f339c6f49b5bbe0435fa6b04a27ed2 (both MDEV-39676), changes the checks wsrep_sst_receive_address_check and wsrep_sst_donor_check in sql/wsrep_sst.cc to reject any value with characters outside the address or name character set, where before they only rejected a missing value or one longer than 511 bytes; both commits are in the mariadb-11.8.8 tag and not in mariadb-11.8.6. Debian fixes it in trixie with mariadb 1:11.8.8-0+deb13u1 (https://security-tracker.debian.org/tracker/CVE-2026-48165). Every mariadb build published in the DHI Debian repository as of 2026-11-28 is one of four DHI rebuilds of Debian's mariadb 1:11.8.6-0+deb13u1, on amd64 and arm64. We unpacked the mariadb-server-core package of all four builds on both architectures, each with a checksum equal to the index: each ships /usr/sbin/mariadbd, which reports version 11.8.6-MariaDB and exports wsrep_sst_receive_address_check and wsrep_sst_donor_check (72 bytes each on amd64, 100 bytes on arm64, from nm -D -S). Disassembled, both functions in every build only test that the value is present and not longer than 511 bytes, and their only call is to my_error: neither checks the characters of the value, as the fix requires. The Debian changelog shipped in each of the four builds on both architectures does not mention this CVE or MDEV-39676: the DHI rebuilds add backports only for other MariaDB advisories, each named in the changelog. Every published build is therefore affected until the owner ships MariaDB 11.8.8 or later, or a backport of the fix."
     }
   ]
 }
