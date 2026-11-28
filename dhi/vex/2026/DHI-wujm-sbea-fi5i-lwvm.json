@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:53:03Z",
-  "last_updated": "2026-11-25T17:32:49Z",
-  "version": 8,
+  "last_updated": "2026-11-28T16:49:06Z",
+  "version": 9,
   "statements": [
     {
       "vulnerability": {
@@ -150,7 +150,20 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql18@18.4-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql18 to 18.6-r0 or later.",
+      "status_notes": "CVE-2026-14673 (PostgreSQL amcheck does not clear untrusted search path): a grantee of EXECUTE on an amcheck function can run arbitrary functions as the owner of an expression index that depends on the search path. https://www.postgresql.org/support/security/CVE-2026-14673/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/0a61fcde03257739d59d9b96e4c77f6c65e070e3 (Security: CVE-2026-14673, in tag REL_18_6 and not in REL_18_4), which adds a RestrictSearchPath() call to amcheck_lock_relation_and_check() in contrib/amcheck/verify_common.c; its message explains that a PostgreSQL 18 change had removed the protection PostgreSQL 17 had. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.23 are built with Alpine's postgresql18 APKBUILD from the 3.23-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/59a1f1d230675807d5a95a0c1e57ba5d640ba039/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.23 package repository publishes builds of source postgresql18 at 18.1-r0, 18.2-r0, 18.3-r0, 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. amcheck.so ships in the postgresql18-contrib package of every one of those builds on both architectures. In the dynamic symbol table of amcheck.so, the 18.6-r0 and 18.7-r0 builds import RestrictSearchPath and the earlier builds do not, on both architectures; none of amcheck's source files at the REL_18_4 tag calls it. As a control, every build's amcheck.so imports NewGUCNestLevel, which the same function calls. 18.6-r0 is the first published build for Alpine 3.23 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published builds (18.1-r0, 18.2-r0, 18.3-r0 and 18.4-r0) are built from PostgreSQL releases before the fix and are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wujm-sbea-fi5i-lwvm",
+        "aliases": [
+          "CVE-2026-14673"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.6-r0?distro=dhi-3.23"
         },
@@ -158,7 +171,8 @@
           "@id": "pkg:apk/dhi/postgresql18@18.7-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14673 (PostgreSQL amcheck does not clear untrusted search path): a grantee of EXECUTE on an amcheck function can run arbitrary functions as the owner of an expression index that depends on the search path. https://www.postgresql.org/support/security/CVE-2026-14673/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/0a61fcde03257739d59d9b96e4c77f6c65e070e3 (Security: CVE-2026-14673, in tag REL_18_6 and not in REL_18_4), which adds a RestrictSearchPath() call to amcheck_lock_relation_and_check() in contrib/amcheck/verify_common.c; its message explains that a PostgreSQL 18 change had removed the protection PostgreSQL 17 had. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.23 are built with Alpine's postgresql18 APKBUILD from the 3.23-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/59a1f1d230675807d5a95a0c1e57ba5d640ba039/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.23 package repository publishes builds of source postgresql18 at 18.1-r0, 18.2-r0, 18.3-r0, 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. amcheck.so ships in the postgresql18-contrib package of every one of those builds on both architectures. In the dynamic symbol table of amcheck.so, the 18.6-r0 and 18.7-r0 builds import RestrictSearchPath and the earlier builds do not, on both architectures; none of amcheck's source files at the REL_18_4 tag calls it. As a control, every build's amcheck.so imports NewGUCNestLevel, which the same function calls. 18.6-r0 is the first published build for Alpine 3.23 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published builds (18.1-r0, 18.2-r0, 18.3-r0 and 18.4-r0) are built from PostgreSQL releases before the fix and are affected."
     },
     {
       "vulnerability": {
@@ -170,7 +184,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.4-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql18 to 18.6-r0 or later.",
+      "status_notes": "CVE-2026-14673 (PostgreSQL amcheck does not clear untrusted search path): a grantee of EXECUTE on an amcheck function can run arbitrary functions as the owner of an expression index that depends on the search path. https://www.postgresql.org/support/security/CVE-2026-14673/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/0a61fcde03257739d59d9b96e4c77f6c65e070e3 (Security: CVE-2026-14673, in tag REL_18_6 and not in REL_18_4), which adds a RestrictSearchPath() call to amcheck_lock_relation_and_check() in contrib/amcheck/verify_common.c; its message explains that a PostgreSQL 18 change had removed the protection PostgreSQL 17 had. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.24 are built with Alpine's postgresql18 APKBUILD from the 3.24-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/33a57d3919ee0227231f5a3e599540514584e309/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.24 package repository publishes builds of source postgresql18 at 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. amcheck.so ships in the postgresql18-contrib package of every one of those builds on both architectures. In the dynamic symbol table of amcheck.so, the 18.6-r0 and 18.7-r0 builds import RestrictSearchPath and the earlier builds do not, on both architectures; none of amcheck's source files at the REL_18_4 tag calls it. As a control, every build's amcheck.so imports NewGUCNestLevel, which the same function calls. 18.6-r0 is the first published build for Alpine 3.24 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published build (18.4-r0) is built from PostgreSQL releases before the fix and is affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wujm-sbea-fi5i-lwvm",
+        "aliases": [
+          "CVE-2026-14673"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.6-r0?distro=dhi-3.24"
         },
@@ -178,7 +205,8 @@
           "@id": "pkg:apk/dhi/postgresql18@18.7-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14673 (PostgreSQL amcheck does not clear untrusted search path): a grantee of EXECUTE on an amcheck function can run arbitrary functions as the owner of an expression index that depends on the search path. https://www.postgresql.org/support/security/CVE-2026-14673/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/0a61fcde03257739d59d9b96e4c77f6c65e070e3 (Security: CVE-2026-14673, in tag REL_18_6 and not in REL_18_4), which adds a RestrictSearchPath() call to amcheck_lock_relation_and_check() in contrib/amcheck/verify_common.c; its message explains that a PostgreSQL 18 change had removed the protection PostgreSQL 17 had. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.24 are built with Alpine's postgresql18 APKBUILD from the 3.24-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/33a57d3919ee0227231f5a3e599540514584e309/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.24 package repository publishes builds of source postgresql18 at 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. amcheck.so ships in the postgresql18-contrib package of every one of those builds on both architectures. In the dynamic symbol table of amcheck.so, the 18.6-r0 and 18.7-r0 builds import RestrictSearchPath and the earlier builds do not, on both architectures; none of amcheck's source files at the REL_18_4 tag calls it. As a control, every build's amcheck.so imports NewGUCNestLevel, which the same function calls. 18.6-r0 is the first published build for Alpine 3.24 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published build (18.4-r0) is built from PostgreSQL releases before the fix and is affected."
     },
     {
       "vulnerability": {

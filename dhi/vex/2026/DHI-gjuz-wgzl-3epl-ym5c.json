@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:53:03Z",
-  "last_updated": "2026-11-25T17:18:12Z",
-  "version": 5,
+  "last_updated": "2026-11-28T16:49:10Z",
+  "version": 6,
   "statements": [
     {
       "vulnerability": {
@@ -126,7 +126,20 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql18@18.4-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql18 to 18.6-r0 or later.",
+      "status_notes": "CVE-2026-14676 (PostgreSQL pg_stat_statements heap buffer overflow executes arbitrary code): the query author can write past a buffer in pg_stat_statements with crafted queries containing array constants. https://www.postgresql.org/support/security/CVE-2026-14676/ says only major version 18 is affected and lists 18.6 as its fixed release, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/8a31ffc2d4cc5e2f3fb42b6a41b7db802716615d (Security: CVE-2026-14676, in tag REL_18_6 and not in REL_18_4), which replaces the fixed-size buffer for the normalized query in contrib/pg_stat_statements/pg_stat_statements.c with an expansible StringInfo; it is the only change to that file between those tags. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.23 are built with Alpine's postgresql18 APKBUILD from the 3.23-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/59a1f1d230675807d5a95a0c1e57ba5d640ba039/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.23 package repository publishes builds of source postgresql18 at 18.1-r0, 18.2-r0, 18.3-r0, 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. pg_stat_statements.so ships in the postgresql18-contrib package of every one of those builds on both architectures. In its dynamic symbol table, the 18.6-r0 and 18.7-r0 builds import the StringInfo functions appendStringInfo, appendBinaryStringInfo and initStringInfoExt and no longer import pg_sprintf, while the earlier builds import pg_sprintf and none of those three, on both architectures; the module's source at the REL_18_4 tag uses no StringInfo. 18.6-r0 is the first published build for Alpine 3.23 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published builds (18.1-r0, 18.2-r0, 18.3-r0 and 18.4-r0) are built from PostgreSQL releases before the fix and are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-gjuz-wgzl-3epl-ym5c",
+        "aliases": [
+          "CVE-2026-14676"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.6-r0?distro=dhi-3.23"
         },
@@ -134,7 +147,8 @@
           "@id": "pkg:apk/dhi/postgresql18@18.7-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14676 (PostgreSQL pg_stat_statements heap buffer overflow executes arbitrary code): the query author can write past a buffer in pg_stat_statements with crafted queries containing array constants. https://www.postgresql.org/support/security/CVE-2026-14676/ says only major version 18 is affected and lists 18.6 as its fixed release, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/8a31ffc2d4cc5e2f3fb42b6a41b7db802716615d (Security: CVE-2026-14676, in tag REL_18_6 and not in REL_18_4), which replaces the fixed-size buffer for the normalized query in contrib/pg_stat_statements/pg_stat_statements.c with an expansible StringInfo; it is the only change to that file between those tags. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.23 are built with Alpine's postgresql18 APKBUILD from the 3.23-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/59a1f1d230675807d5a95a0c1e57ba5d640ba039/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.23 package repository publishes builds of source postgresql18 at 18.1-r0, 18.2-r0, 18.3-r0, 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. pg_stat_statements.so ships in the postgresql18-contrib package of every one of those builds on both architectures. In its dynamic symbol table, the 18.6-r0 and 18.7-r0 builds import the StringInfo functions appendStringInfo, appendBinaryStringInfo and initStringInfoExt and no longer import pg_sprintf, while the earlier builds import pg_sprintf and none of those three, on both architectures; the module's source at the REL_18_4 tag uses no StringInfo. 18.6-r0 is the first published build for Alpine 3.23 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published builds (18.1-r0, 18.2-r0, 18.3-r0 and 18.4-r0) are built from PostgreSQL releases before the fix and are affected."
     },
     {
       "vulnerability": {
@@ -146,7 +160,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.4-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql18 to 18.6-r0 or later.",
+      "status_notes": "CVE-2026-14676 (PostgreSQL pg_stat_statements heap buffer overflow executes arbitrary code): the query author can write past a buffer in pg_stat_statements with crafted queries containing array constants. https://www.postgresql.org/support/security/CVE-2026-14676/ says only major version 18 is affected and lists 18.6 as its fixed release, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/8a31ffc2d4cc5e2f3fb42b6a41b7db802716615d (Security: CVE-2026-14676, in tag REL_18_6 and not in REL_18_4), which replaces the fixed-size buffer for the normalized query in contrib/pg_stat_statements/pg_stat_statements.c with an expansible StringInfo; it is the only change to that file between those tags. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.24 are built with Alpine's postgresql18 APKBUILD from the 3.24-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/33a57d3919ee0227231f5a3e599540514584e309/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.24 package repository publishes builds of source postgresql18 at 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. pg_stat_statements.so ships in the postgresql18-contrib package of every one of those builds on both architectures. In its dynamic symbol table, the 18.6-r0 and 18.7-r0 builds import the StringInfo functions appendStringInfo, appendBinaryStringInfo and initStringInfoExt and no longer import pg_sprintf, while the earlier builds import pg_sprintf and none of those three, on both architectures; the module's source at the REL_18_4 tag uses no StringInfo. 18.6-r0 is the first published build for Alpine 3.24 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published build (18.4-r0) is built from PostgreSQL releases before the fix and is affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-gjuz-wgzl-3epl-ym5c",
+        "aliases": [
+          "CVE-2026-14676"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.6-r0?distro=dhi-3.24"
         },
@@ -154,7 +181,8 @@
           "@id": "pkg:apk/dhi/postgresql18@18.7-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14676 (PostgreSQL pg_stat_statements heap buffer overflow executes arbitrary code): the query author can write past a buffer in pg_stat_statements with crafted queries containing array constants. https://www.postgresql.org/support/security/CVE-2026-14676/ says only major version 18 is affected and lists 18.6 as its fixed release, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/8a31ffc2d4cc5e2f3fb42b6a41b7db802716615d (Security: CVE-2026-14676, in tag REL_18_6 and not in REL_18_4), which replaces the fixed-size buffer for the normalized query in contrib/pg_stat_statements/pg_stat_statements.c with an expansible StringInfo; it is the only change to that file between those tags. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.24 are built with Alpine's postgresql18 APKBUILD from the 3.24-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/33a57d3919ee0227231f5a3e599540514584e309/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.24 package repository publishes builds of source postgresql18 at 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. pg_stat_statements.so ships in the postgresql18-contrib package of every one of those builds on both architectures. In its dynamic symbol table, the 18.6-r0 and 18.7-r0 builds import the StringInfo functions appendStringInfo, appendBinaryStringInfo and initStringInfoExt and no longer import pg_sprintf, while the earlier builds import pg_sprintf and none of those three, on both architectures; the module's source at the REL_18_4 tag uses no StringInfo. 18.6-r0 is the first published build for Alpine 3.24 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published build (18.4-r0) is built from PostgreSQL releases before the fix and is affected."
     }
   ]
 }

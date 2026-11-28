@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:53:03Z",
-  "last_updated": "2026-11-25T17:18:08Z",
-  "version": 8,
+  "last_updated": "2026-11-28T16:49:16Z",
+  "version": 9,
   "statements": [
     {
       "vulnerability": {
@@ -174,7 +174,20 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql18@18.4-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql18 to 18.6-r0 or later.",
+      "status_notes": "CVE-2026-14677 (PostgreSQL 32-bit pltcl and plperl undersize allocations, via integer wraparound): https://www.postgresql.org/support/security/CVE-2026-14677/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/028ee716a7902bd2a68843a5d317a6821a0500e2 (Security: CVE-2026-14677, in tag REL_18_6 and not in REL_18_4), which changes src/pl/plperl/SPI.xs, src/pl/plperl/plperl.c and src/pl/tcl/pltcl.c so that allocations sized by a multiplication use palloc_array(), which in PostgreSQL 18 expands to the overflow-checking palloc_mul(). PostgreSQL describes the flaw as affecting 32-bit builds. This owner is published for Alpine 3.23 only on x86_64 and aarch64, which are 64-bit, but its PL/Perl and PL/Tcl modules, /usr/lib/postgresql18/plperl.so in postgresql18-plperl and /usr/lib/postgresql18/pltcl.so in postgresql18-pltcl, ship in every published build, so FIXED is recorded at the first build carrying the upstream fix rather than NOT_AFFECTED: the patched code ships in this owner and PostgreSQL lists 18.6 as the fixed release. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.23 are built with Alpine's postgresql18 APKBUILD from the 3.23-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/59a1f1d230675807d5a95a0c1e57ba5d640ba039/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.23 package repository publishes builds of source postgresql18 at 18.1-r0, 18.2-r0, 18.3-r0, 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. Other PL/Perl and PL/Tcl changes in the same release also touch these files, so no symbol marks this fix on its own, and the per-build evidence is the release each server binary reports. 18.6-r0 is the first published build for Alpine 3.23 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published builds (18.1-r0, 18.2-r0, 18.3-r0 and 18.4-r0) are built from PostgreSQL releases before the fix and are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-nvfz-tidi-aljv-qp3p",
+        "aliases": [
+          "CVE-2026-14677"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.6-r0?distro=dhi-3.23"
         },
@@ -182,7 +195,8 @@
           "@id": "pkg:apk/dhi/postgresql18@18.7-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14677 (PostgreSQL 32-bit pltcl and plperl undersize allocations, via integer wraparound): https://www.postgresql.org/support/security/CVE-2026-14677/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/028ee716a7902bd2a68843a5d317a6821a0500e2 (Security: CVE-2026-14677, in tag REL_18_6 and not in REL_18_4), which changes src/pl/plperl/SPI.xs, src/pl/plperl/plperl.c and src/pl/tcl/pltcl.c so that allocations sized by a multiplication use palloc_array(), which in PostgreSQL 18 expands to the overflow-checking palloc_mul(). PostgreSQL describes the flaw as affecting 32-bit builds. This owner is published for Alpine 3.23 only on x86_64 and aarch64, which are 64-bit, but its PL/Perl and PL/Tcl modules, /usr/lib/postgresql18/plperl.so in postgresql18-plperl and /usr/lib/postgresql18/pltcl.so in postgresql18-pltcl, ship in every published build, so FIXED is recorded at the first build carrying the upstream fix rather than NOT_AFFECTED: the patched code ships in this owner and PostgreSQL lists 18.6 as the fixed release. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.23 are built with Alpine's postgresql18 APKBUILD from the 3.23-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/59a1f1d230675807d5a95a0c1e57ba5d640ba039/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.23 package repository publishes builds of source postgresql18 at 18.1-r0, 18.2-r0, 18.3-r0, 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. Other PL/Perl and PL/Tcl changes in the same release also touch these files, so no symbol marks this fix on its own, and the per-build evidence is the release each server binary reports. 18.6-r0 is the first published build for Alpine 3.23 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published builds (18.1-r0, 18.2-r0, 18.3-r0 and 18.4-r0) are built from PostgreSQL releases before the fix and are affected."
     },
     {
       "vulnerability": {
@@ -194,7 +208,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.4-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql18 to 18.6-r0 or later.",
+      "status_notes": "CVE-2026-14677 (PostgreSQL 32-bit pltcl and plperl undersize allocations, via integer wraparound): https://www.postgresql.org/support/security/CVE-2026-14677/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/028ee716a7902bd2a68843a5d317a6821a0500e2 (Security: CVE-2026-14677, in tag REL_18_6 and not in REL_18_4), which changes src/pl/plperl/SPI.xs, src/pl/plperl/plperl.c and src/pl/tcl/pltcl.c so that allocations sized by a multiplication use palloc_array(), which in PostgreSQL 18 expands to the overflow-checking palloc_mul(). PostgreSQL describes the flaw as affecting 32-bit builds. This owner is published for Alpine 3.24 only on x86_64 and aarch64, which are 64-bit, but its PL/Perl and PL/Tcl modules, /usr/lib/postgresql18/plperl.so in postgresql18-plperl and /usr/lib/postgresql18/pltcl.so in postgresql18-pltcl, ship in every published build, so FIXED is recorded at the first build carrying the upstream fix rather than NOT_AFFECTED: the patched code ships in this owner and PostgreSQL lists 18.6 as the fixed release. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.24 are built with Alpine's postgresql18 APKBUILD from the 3.24-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/33a57d3919ee0227231f5a3e599540514584e309/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.24 package repository publishes builds of source postgresql18 at 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. Other PL/Perl and PL/Tcl changes in the same release also touch these files, so no symbol marks this fix on its own, and the per-build evidence is the release each server binary reports. 18.6-r0 is the first published build for Alpine 3.24 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published build (18.4-r0) is built from PostgreSQL releases before the fix and is affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-nvfz-tidi-aljv-qp3p",
+        "aliases": [
+          "CVE-2026-14677"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.6-r0?distro=dhi-3.24"
         },
@@ -202,7 +229,8 @@
           "@id": "pkg:apk/dhi/postgresql18@18.7-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14677 (PostgreSQL 32-bit pltcl and plperl undersize allocations, via integer wraparound): https://www.postgresql.org/support/security/CVE-2026-14677/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/028ee716a7902bd2a68843a5d317a6821a0500e2 (Security: CVE-2026-14677, in tag REL_18_6 and not in REL_18_4), which changes src/pl/plperl/SPI.xs, src/pl/plperl/plperl.c and src/pl/tcl/pltcl.c so that allocations sized by a multiplication use palloc_array(), which in PostgreSQL 18 expands to the overflow-checking palloc_mul(). PostgreSQL describes the flaw as affecting 32-bit builds. This owner is published for Alpine 3.24 only on x86_64 and aarch64, which are 64-bit, but its PL/Perl and PL/Tcl modules, /usr/lib/postgresql18/plperl.so in postgresql18-plperl and /usr/lib/postgresql18/pltcl.so in postgresql18-pltcl, ship in every published build, so FIXED is recorded at the first build carrying the upstream fix rather than NOT_AFFECTED: the patched code ships in this owner and PostgreSQL lists 18.6 as the fixed release. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.24 are built with Alpine's postgresql18 APKBUILD from the 3.24-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/33a57d3919ee0227231f5a3e599540514584e309/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.24 package repository publishes builds of source postgresql18 at 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. Other PL/Perl and PL/Tcl changes in the same release also touch these files, so no symbol marks this fix on its own, and the per-build evidence is the release each server binary reports. 18.6-r0 is the first published build for Alpine 3.24 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published build (18.4-r0) is built from PostgreSQL releases before the fix and is affected."
     },
     {
       "vulnerability": {
