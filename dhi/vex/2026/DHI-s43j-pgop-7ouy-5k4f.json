@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:00:00Z",
-  "last_updated": "2026-11-13T21:07:05Z",
-  "version": 3,
+  "last_updated": "2026-11-28T14:37:31Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -29,7 +29,20 @@
         },
         {
           "@id": "pkg:apk/dhi/nodejs-22@22.22.3-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nodejs-22 to 22.23.0-r0 or later.",
+      "status_notes": "CVE-2026-48937 is a flaw in the Node.js HTTP/2 server: when the bundled nghttp2 library ended a session on its own because of a protocol error from the peer, it queued a GOAWAY frame without notifying Node.js, so the server kept the session open and kept accepting data after sending GOAWAY. Node.js fixed it for 22.x in 22.23.0, released 2026-06-18: the June 2026 security release, https://nodejs.org/en/blog/vulnerability/june-2026-security-releases, lists Node.js 22 among the two affected release lines, and the 22.23.0 release notes, https://nodejs.org/en/blog/release/v22.23.0, list this CVE. The fix is commit https://github.com/nodejs/node/commit/a1a5bb968303229d4a3a7c9e389dc3ece6237b4c ('deps: fix integration issues with the latest nghttp2'), which carries CVE-ID: CVE-2026-48937 and is in the v22.23.0 tag and not in v22.22.3; outside tests it changes src/node_http2.cc and src/node_http2.h, so that a GOAWAY frame sent by nghttp2 that Node.js did not initiate is detected when the frame is sent and the session is then failed with a protocol error and torn down. The CVE record, https://www.cve.org/CVERecord?id=CVE-2026-48937, lists Node.js 22 releases up to 22.22.3 as affected. The DHI nodejs-22 packages for Alpine 3.23 are built from the upstream Node.js release tarball for their version. Each published nodejs-22 package holds one file, /usr/bin/node, a dynamically linked musl program that carries the Node.js JavaScript library and the C++ runtime where this code lives; the nodejs-22-dev subpackages hold C and C++ header files and two .gypi build configuration files under /usr/include/node, and the nodejs-22-doc subpackages hold the node man page and two debugger helper files, gdbinit and lldb_commands.py, with no ELF, PE or Mach-O file in either. The node binary links no system nghttp2 library (its only ELF NEEDED entries are libstdc++.so.6, libgcc_s.so.1 and the musl C library), so the HTTP/2 code is the copy compiled into it. We checked /usr/bin/node in every nodejs-22 package for Alpine 3.23 published by 2026-11-28, on x86_64 and aarch64 (checksums verified against the package index): 22.23.0-r0, 22.23.1-r0, 22.23.2-r0, 22.23.3-r0, 22.23.4-r0, 22.23.4-r1, 22.23.4-r2 and 22.23.5-r0 report v22.23.0 through v22.23.5 and carry the fix, while the earlier builds 22.22.0-r0, 22.22.1-r0, 22.22.2-r0, 22.22.2-r1 and 22.22.3-r0 report v22.22.0 through v22.22.3 and are affected. As a check, the debug message the fix adds to src/node_http2.cc, 'nghttp2 session terminated internally', is in the node binary of 22.23.0-r0 and every later build on both architectures and in none of the earlier builds, while a message from the same file that predates the fix, 'terminating session with code %d', is in every build. 22.23.0-r0 is the first published build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-s43j-pgop-7ouy-5k4f",
+        "aliases": [
+          "CVE-2026-48937"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/nodejs-22@22.23.0-r0?distro=dhi-3.23"
         },
@@ -55,7 +68,8 @@
           "@id": "pkg:apk/dhi/nodejs-22@22.23.5-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-48937 is a flaw in the Node.js HTTP/2 server: when the bundled nghttp2 library ended a session on its own because of a protocol error from the peer, it queued a GOAWAY frame without notifying Node.js, so the server kept the session open and kept accepting data after sending GOAWAY. Node.js fixed it for 22.x in 22.23.0, released 2026-06-18: the June 2026 security release, https://nodejs.org/en/blog/vulnerability/june-2026-security-releases, lists Node.js 22 among the two affected release lines, and the 22.23.0 release notes, https://nodejs.org/en/blog/release/v22.23.0, list this CVE. The fix is commit https://github.com/nodejs/node/commit/a1a5bb968303229d4a3a7c9e389dc3ece6237b4c ('deps: fix integration issues with the latest nghttp2'), which carries CVE-ID: CVE-2026-48937 and is in the v22.23.0 tag and not in v22.22.3; outside tests it changes src/node_http2.cc and src/node_http2.h, so that a GOAWAY frame sent by nghttp2 that Node.js did not initiate is detected when the frame is sent and the session is then failed with a protocol error and torn down. The CVE record, https://www.cve.org/CVERecord?id=CVE-2026-48937, lists Node.js 22 releases up to 22.22.3 as affected. The DHI nodejs-22 packages for Alpine 3.23 are built from the upstream Node.js release tarball for their version. Each published nodejs-22 package holds one file, /usr/bin/node, a dynamically linked musl program that carries the Node.js JavaScript library and the C++ runtime where this code lives; the nodejs-22-dev subpackages hold C and C++ header files and two .gypi build configuration files under /usr/include/node, and the nodejs-22-doc subpackages hold the node man page and two debugger helper files, gdbinit and lldb_commands.py, with no ELF, PE or Mach-O file in either. The node binary links no system nghttp2 library (its only ELF NEEDED entries are libstdc++.so.6, libgcc_s.so.1 and the musl C library), so the HTTP/2 code is the copy compiled into it. We checked /usr/bin/node in every nodejs-22 package for Alpine 3.23 published by 2026-11-28, on x86_64 and aarch64 (checksums verified against the package index): 22.23.0-r0, 22.23.1-r0, 22.23.2-r0, 22.23.3-r0, 22.23.4-r0, 22.23.4-r1, 22.23.4-r2 and 22.23.5-r0 report v22.23.0 through v22.23.5 and carry the fix, while the earlier builds 22.22.0-r0, 22.22.1-r0, 22.22.2-r0, 22.22.2-r1 and 22.22.3-r0 report v22.22.0 through v22.22.3 and are affected. As a check, the debug message the fix adds to src/node_http2.cc, 'nghttp2 session terminated internally', is in the node binary of 22.23.0-r0 and every later build on both architectures and in none of the earlier builds, while a message from the same file that predates the fix, 'terminating session with code %d', is in every build. 22.23.0-r0 is the first published build that carries the fix."
     },
     {
       "vulnerability": {

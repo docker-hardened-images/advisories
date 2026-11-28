@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:00:00Z",
-  "last_updated": "2026-11-13T21:07:05Z",
-  "version": 3,
+  "last_updated": "2026-11-28T14:37:36Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -35,7 +35,20 @@
         },
         {
           "@id": "pkg:apk/dhi/nodejs-22@22.23.1-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nodejs-22 to 22.23.2-r0 or later.",
+      "status_notes": "CVE-2026-56846 is a flaw in the Node.js HTTP/2 implementation: once a stream's header block had been handed to JavaScript, its size was no longer counted against the session's maxSessionMemory limit, although the header objects stayed alive for the life of the stream, so a remote peer could open many streams with large header blocks, keep them open, and exhaust the process's memory without the limit ever rejecting a stream. Node.js fixed it for 22.x in 22.23.2, released 2026-07-29: the July 2026 security release, https://nodejs.org/en/blog/vulnerability/july-2026-security-releases, lists 22.x among the affected release lines, and the 22.23.2 release notes, https://nodejs.org/en/blog/release/v22.23.2, list this CVE. The fix is commit https://github.com/nodejs/node/commit/f14d78b9e0201bfe0291f2b0dc4b5d88c70cc28e ('http2: retain header memory in session accounting'), which carries CVE-ID: CVE-2026-56846 and is in the v22.23.2 tag and not in v22.23.1; outside tests and documentation it changes src/node_http2.cc and src/node_http2.h, so that each stream's header block stays charged against maxSessionMemory until the stream is removed. The CVE record, https://www.cve.org/CVERecord?id=CVE-2026-56846, lists Node.js 22 releases up to 22.23.1 as affected. The DHI nodejs-22 packages for Alpine 3.23 are built from the upstream Node.js release tarball for their version. Each published nodejs-22 package holds one file, /usr/bin/node, a dynamically linked musl program that carries the Node.js JavaScript library and the C++ runtime where this code lives; the nodejs-22-dev subpackages hold C and C++ header files and two .gypi build configuration files under /usr/include/node, and the nodejs-22-doc subpackages hold the node man page and two debugger helper files, gdbinit and lldb_commands.py, with no ELF, PE or Mach-O file in either. The node binary links no system nghttp2 library (its only ELF NEEDED entries are libstdc++.so.6, libgcc_s.so.1 and the musl C library), so the HTTP/2 code is the copy compiled into it. The fix adds no text to the binary, so we tested behaviour: we ran the regression test that ships with the fix, test/parallel/test-http2-max-session-memory-stalled-headers.js (a server with maxSessionMemory set to 1 and a client that opens 400 streams with 120 cookie headers each and a zero flow-control window), as a standalone script against /usr/bin/node from every nodejs-22 package for Alpine 3.23 published by 2026-11-28, on aarch64 (native) and x86_64 (under emulation), three runs each, in an Alpine 3.23 container (checksums of the packages verified against the package index). In 22.23.2-r0, 22.23.3-r0, 22.23.4-r0, 22.23.4-r1, 22.23.4-r2 and 22.23.5-r0, which report v22.23.2 through v22.23.5, the server rejected a stream with ENHANCE_YOUR_CALM after accepting 154 of them in every run, so the limit is enforced. In 22.22.0-r0, 22.22.1-r0, 22.22.2-r0, 22.22.2-r1, 22.22.3-r0, 22.23.0-r0 and 22.23.1-r0, which report v22.22.0 through v22.23.1, the server accepted all 400 streams and rejected none in every run, so they are affected. 22.23.2-r0 is the first published build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-hzfv-7xvu-fqqt-smra",
+        "aliases": [
+          "CVE-2026-56846"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/nodejs-22@22.23.2-r0?distro=dhi-3.23"
         },
@@ -55,7 +68,8 @@
           "@id": "pkg:apk/dhi/nodejs-22@22.23.5-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56846 is a flaw in the Node.js HTTP/2 implementation: once a stream's header block had been handed to JavaScript, its size was no longer counted against the session's maxSessionMemory limit, although the header objects stayed alive for the life of the stream, so a remote peer could open many streams with large header blocks, keep them open, and exhaust the process's memory without the limit ever rejecting a stream. Node.js fixed it for 22.x in 22.23.2, released 2026-07-29: the July 2026 security release, https://nodejs.org/en/blog/vulnerability/july-2026-security-releases, lists 22.x among the affected release lines, and the 22.23.2 release notes, https://nodejs.org/en/blog/release/v22.23.2, list this CVE. The fix is commit https://github.com/nodejs/node/commit/f14d78b9e0201bfe0291f2b0dc4b5d88c70cc28e ('http2: retain header memory in session accounting'), which carries CVE-ID: CVE-2026-56846 and is in the v22.23.2 tag and not in v22.23.1; outside tests and documentation it changes src/node_http2.cc and src/node_http2.h, so that each stream's header block stays charged against maxSessionMemory until the stream is removed. The CVE record, https://www.cve.org/CVERecord?id=CVE-2026-56846, lists Node.js 22 releases up to 22.23.1 as affected. The DHI nodejs-22 packages for Alpine 3.23 are built from the upstream Node.js release tarball for their version. Each published nodejs-22 package holds one file, /usr/bin/node, a dynamically linked musl program that carries the Node.js JavaScript library and the C++ runtime where this code lives; the nodejs-22-dev subpackages hold C and C++ header files and two .gypi build configuration files under /usr/include/node, and the nodejs-22-doc subpackages hold the node man page and two debugger helper files, gdbinit and lldb_commands.py, with no ELF, PE or Mach-O file in either. The node binary links no system nghttp2 library (its only ELF NEEDED entries are libstdc++.so.6, libgcc_s.so.1 and the musl C library), so the HTTP/2 code is the copy compiled into it. The fix adds no text to the binary, so we tested behaviour: we ran the regression test that ships with the fix, test/parallel/test-http2-max-session-memory-stalled-headers.js (a server with maxSessionMemory set to 1 and a client that opens 400 streams with 120 cookie headers each and a zero flow-control window), as a standalone script against /usr/bin/node from every nodejs-22 package for Alpine 3.23 published by 2026-11-28, on aarch64 (native) and x86_64 (under emulation), three runs each, in an Alpine 3.23 container (checksums of the packages verified against the package index). In 22.23.2-r0, 22.23.3-r0, 22.23.4-r0, 22.23.4-r1, 22.23.4-r2 and 22.23.5-r0, which report v22.23.2 through v22.23.5, the server rejected a stream with ENHANCE_YOUR_CALM after accepting 154 of them in every run, so the limit is enforced. In 22.22.0-r0, 22.22.1-r0, 22.22.2-r0, 22.22.2-r1, 22.22.3-r0, 22.23.0-r0 and 22.23.1-r0, which report v22.22.0 through v22.23.1, the server accepted all 400 streams and rejected none in every run, so they are affected. 22.23.2-r0 is the first published build that carries the fix."
     },
     {
       "vulnerability": {
