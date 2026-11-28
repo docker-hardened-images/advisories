@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T22:21:32Z",
-  "last_updated": "2026-11-27T01:52:40Z",
-  "version": 36,
+  "last_updated": "2026-11-28T10:39:58Z",
+  "version": 37,
   "statements": [
     {
       "vulnerability": {
@@ -12225,7 +12225,9 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-dev@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39824 (GO-2026-5024): NewNTUnicodeString in golang.org/x/sys/windows did not check for length overflow, so a string longer than an NTUnicodeString can hold (a 16-bit byte count) was silently truncated instead of returning an error. It affects golang.org/x/sys before v0.44.0, only in the golang.org/x/sys/windows package and only on Windows, as the Go vulnerability database records (goos: windows). Sources: https://pkg.go.dev/vuln/GO-2026-5024, https://go.dev/issue/78916, https://go.dev/cl/770080 and https://groups.google.com/g/golang-announce/c/6MMI8Lj-Atg. We checked every published kube-state-metrics-dev package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28: 28 builds, 2.18.0-r0 to the current 2.20.0-r13, 54 packages, on x86_64 and aarch64 except 2.20.0-r7 and 2.20.0-r8, which were published for aarch64 only. We downloaded each package and checked it against its index checksum. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies); the -dev programs are built without the -w linker flag and without -trimpath. Their build information lists the golang.org/x/sys module (v0.40.0 in 2.18.0-r0 to 2.18.0-r2, v0.42.0 in 2.18.0-r3, v0.43.0 in 2.18.0-r4 to 2.18.0-r6, v0.45.0 in 2.19.0-r0 to 2.19.0-r1, v0.46.0 in 2.19.1-r0 to 2.19.1-r1, v0.46.0 (x86_64) or v0.47.0 (aarch64) in 2.19.1-r2, v0.47.0 in 2.19.1-r3 to 2.20.0-r2, v0.48.0 in 2.20.0-r3 to 2.20.0-r7, v0.49.0 in 2.20.0-r8 to 2.20.0-r11 and v0.50.0 in 2.20.0-r12 to 2.20.0-r13). We read the Go function table (pclntab) of every program with the Go debug/gosym package, and byte-searched every program for the package path, which also matches the names of functions the compiler inlined (runtime.main is found in every program as a control). Every program's build information records GOOS=linux, and golang.org/x/sys/windows is only compiled for Windows targets. No program has any golang.org/x/sys/windows function and the byte search for golang.org/x/sys/windows finds nothing in any program, while golang.org/x/sys/unix functions are present in every program (87 to 91 per program), which shows the search reaches the module's code. So the vulnerable function is not in these builds, whichever golang.org/x/sys version a build records. The Debian security tracker marks its golang-golang-x-sys package not affected for the same reason: it only affects golang.org/x/sys on Windows (https://security-tracker.debian.org/tracker/CVE-2026-39824)."
     },
     {
       "vulnerability": {
@@ -12320,7 +12322,8 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-fips-dev@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips-dev packages for Alpine 3.23 are published in the DHI security repository, separately from the kube-state-metrics and kube-state-metrics-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-39824. Pending: a per-build check of every published kube-state-metrics-fips-dev package to establish whether it links golang.org/x/sys/windows. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -12415,7 +12418,8 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-fips@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips packages for Alpine 3.23 are published in the DHI security repository, separately from the kube-state-metrics and kube-state-metrics-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-39824. Pending: a per-build check of every published kube-state-metrics-fips package to establish whether it links golang.org/x/sys/windows. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -12510,7 +12514,9 @@
           "@id": "pkg:apk/dhi/kube-state-metrics@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39824 (GO-2026-5024): NewNTUnicodeString in golang.org/x/sys/windows did not check for length overflow, so a string longer than an NTUnicodeString can hold (a 16-bit byte count) was silently truncated instead of returning an error. It affects golang.org/x/sys before v0.44.0, only in the golang.org/x/sys/windows package and only on Windows, as the Go vulnerability database records (goos: windows). Sources: https://pkg.go.dev/vuln/GO-2026-5024, https://go.dev/issue/78916, https://go.dev/cl/770080 and https://groups.google.com/g/golang-announce/c/6MMI8Lj-Atg. We checked every published kube-state-metrics package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28: 28 builds, 2.18.0-r0 to the current 2.20.0-r13, 54 packages, on x86_64 and aarch64 except 2.20.0-r7 and 2.20.0-r8, which were published for aarch64 only. We downloaded each package and checked it against its index checksum. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). Their build information lists the golang.org/x/sys module (v0.40.0 in 2.18.0-r0 to 2.18.0-r2, v0.42.0 in 2.18.0-r3, v0.43.0 in 2.18.0-r4 to 2.18.0-r6, v0.45.0 in 2.19.0-r0 to 2.19.0-r1, v0.46.0 in 2.19.1-r0 to 2.19.1-r1, v0.46.0 (x86_64) or v0.47.0 (aarch64) in 2.19.1-r2, v0.47.0 in 2.19.1-r3 to 2.20.0-r2, v0.48.0 in 2.20.0-r3 to 2.20.0-r7, v0.49.0 in 2.20.0-r8 to 2.20.0-r11 and v0.50.0 in 2.20.0-r12 to 2.20.0-r13). We read the Go function table (pclntab) of every program with the Go debug/gosym package, and byte-searched every program for the package path, which also matches the names of functions the compiler inlined (runtime.main is found in every program as a control). Every program's build information records GOOS=linux, and golang.org/x/sys/windows is only compiled for Windows targets. No program has any golang.org/x/sys/windows function and the byte search for golang.org/x/sys/windows finds nothing in any program, while golang.org/x/sys/unix functions are present in every program (87 to 91 per program), which shows the search reaches the module's code. So the vulnerable function is not in these builds, whichever golang.org/x/sys version a build records. The Debian security tracker marks its golang-golang-x-sys package not affected for the same reason: it only affects golang.org/x/sys on Windows (https://security-tracker.debian.org/tracker/CVE-2026-39824)."
     },
     {
       "vulnerability": {
@@ -23138,6 +23144,9 @@
         },
         {
           "@id": "pkg:apk/dhi/runc@1.5.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/runc@1.6.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -37693,7 +37702,9 @@
           "@id": "pkg:deb/dhi/kube-state-metrics-dev@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39824 (GO-2026-5024): NewNTUnicodeString in golang.org/x/sys/windows did not check for length overflow, so a string longer than an NTUnicodeString can hold (a 16-bit byte count) was silently truncated instead of returning an error. It affects golang.org/x/sys before v0.44.0, only in the golang.org/x/sys/windows package and only on Windows, as the Go vulnerability database records (goos: windows). Sources: https://pkg.go.dev/vuln/GO-2026-5024, https://go.dev/issue/78916, https://go.dev/cl/770080 and https://groups.google.com/g/golang-announce/c/6MMI8Lj-Atg. We checked every published kube-state-metrics-dev package for Debian 13 in the DHI Debian repository as of 2026-11-28: 23 builds, 2.18.0-5 to the current 2.20.0-13, 44 packages, on amd64 and arm64 except 2.20.0-7 and 2.20.0-8, which were published for arm64 only. The MD5 manifest in each package's control archive shows that its only file, /usr/bin/kube-state-metrics, has the same MD5 as the program in the DHI Alpine package of the same version and architecture (2.18.0-5 matches 2.18.0-r5, and so on), which we downloaded and checked against the Alpine index checksum, except the amd64 package of 2.20.0-4, which we downloaded in full: the file served does not match the repository index checksum, so we read it as served; its program records the same Go release and module versions as the other 2.20.0-4 builds and gives the same result below. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies); the -dev programs are built without the -w linker flag and without -trimpath. Their build information lists the golang.org/x/sys module (v0.43.0 in 2.18.0-5 to 2.18.0-6, v0.45.0 in 2.19.0-0 to 2.19.0-1, v0.46.0 in 2.19.1-0 to 2.19.1-1, v0.46.0 (amd64) or v0.47.0 (arm64) in 2.19.1-2, v0.47.0 in 2.19.1-3 to 2.20.0-2, v0.48.0 in 2.20.0-3 to 2.20.0-7, v0.49.0 in 2.20.0-8 to 2.20.0-11 and v0.50.0 in 2.20.0-12 to 2.20.0-13). We read the Go function table (pclntab) of every program with the Go debug/gosym package, and byte-searched every program for the package path, which also matches the names of functions the compiler inlined (runtime.main is found in every program as a control). Every program's build information records GOOS=linux, and golang.org/x/sys/windows is only compiled for Windows targets. No program has any golang.org/x/sys/windows function and the byte search for golang.org/x/sys/windows finds nothing in any program, while golang.org/x/sys/unix functions are present in every program (87 to 91 per program), which shows the search reaches the module's code. So the vulnerable function is not in these builds, whichever golang.org/x/sys version a build records. The Debian security tracker marks its golang-golang-x-sys package not affected for the same reason: it only affects golang.org/x/sys on Windows (https://security-tracker.debian.org/tracker/CVE-2026-39824)."
     },
     {
       "vulnerability": {
@@ -37773,7 +37784,8 @@
           "@id": "pkg:deb/dhi/kube-state-metrics-fips-dev@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips-dev packages for Debian 13 are published in the DHI security repository, separately from the kube-state-metrics and kube-state-metrics-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-39824. Pending: a per-build check of every published kube-state-metrics-fips-dev package to establish whether it links golang.org/x/sys/windows. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -37853,7 +37865,8 @@
           "@id": "pkg:deb/dhi/kube-state-metrics-fips@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips packages for Debian 13 are published in the DHI security repository, separately from the kube-state-metrics and kube-state-metrics-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-39824. Pending: a per-build check of every published kube-state-metrics-fips package to establish whether it links golang.org/x/sys/windows. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -37933,7 +37946,9 @@
           "@id": "pkg:deb/dhi/kube-state-metrics@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39824 (GO-2026-5024): NewNTUnicodeString in golang.org/x/sys/windows did not check for length overflow, so a string longer than an NTUnicodeString can hold (a 16-bit byte count) was silently truncated instead of returning an error. It affects golang.org/x/sys before v0.44.0, only in the golang.org/x/sys/windows package and only on Windows, as the Go vulnerability database records (goos: windows). Sources: https://pkg.go.dev/vuln/GO-2026-5024, https://go.dev/issue/78916, https://go.dev/cl/770080 and https://groups.google.com/g/golang-announce/c/6MMI8Lj-Atg. We checked every published kube-state-metrics package for Debian 13 in the DHI Debian repository as of 2026-11-28: 23 builds, 2.18.0-5 to the current 2.20.0-13, 44 packages, on amd64 and arm64 except 2.20.0-7 and 2.20.0-8, which were published for arm64 only. The MD5 manifest in each package's control archive shows that its only file, /usr/bin/kube-state-metrics, has the same MD5 as the program in the DHI Alpine package of the same version and architecture (2.18.0-5 matches 2.18.0-r5, and so on), which we downloaded and checked against the Alpine index checksum. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). Their build information lists the golang.org/x/sys module (v0.43.0 in 2.18.0-5 to 2.18.0-6, v0.45.0 in 2.19.0-0 to 2.19.0-1, v0.46.0 in 2.19.1-0 to 2.19.1-1, v0.46.0 (amd64) or v0.47.0 (arm64) in 2.19.1-2, v0.47.0 in 2.19.1-3 to 2.20.0-2, v0.48.0 in 2.20.0-3 to 2.20.0-7, v0.49.0 in 2.20.0-8 to 2.20.0-11 and v0.50.0 in 2.20.0-12 to 2.20.0-13). We read the Go function table (pclntab) of every program with the Go debug/gosym package, and byte-searched every program for the package path, which also matches the names of functions the compiler inlined (runtime.main is found in every program as a control). Every program's build information records GOOS=linux, and golang.org/x/sys/windows is only compiled for Windows targets. No program has any golang.org/x/sys/windows function and the byte search for golang.org/x/sys/windows finds nothing in any program, while golang.org/x/sys/unix functions are present in every program (87 to 91 per program), which shows the search reaches the module's code. So the vulnerable function is not in these builds, whichever golang.org/x/sys version a build records. The Debian security tracker marks its golang-golang-x-sys package not affected for the same reason: it only affects golang.org/x/sys on Windows (https://security-tracker.debian.org/tracker/CVE-2026-39824)."
     },
     {
       "vulnerability": {
