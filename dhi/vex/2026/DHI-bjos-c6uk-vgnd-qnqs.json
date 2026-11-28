@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T05:55:16Z",
-  "last_updated": "2026-11-27T11:11:22Z",
-  "version": 29,
+  "last_updated": "2026-11-28T00:57:27Z",
+  "version": 30,
   "statements": [
     {
       "vulnerability": {
@@ -476,7 +476,9 @@
           "@id": "pkg:deb/dhi/uv@0.13.9-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "GHSA-qfwj-vfxf-92j2 (RUSTSEC-2026-0341): in quinn-proto 0.11.15 and 0.11.16 the chunk cap that the fix for GHSA-4w2j-m93h-cj5j added to stream reassembly is checked only on the defragmentation path, so a peer sending small gapped STREAM frames can pin gigabytes of receiver memory. Fixed in quinn-proto 0.11.17: https://github.com/quinn-rs/quinn/security/advisories/GHSA-qfwj-vfxf-92j2, https://rustsec.org/advisories/RUSTSEC-2026-0341.html. Read all 94 uv packages in the DHI Debian repository as of 2026-11-27: every published build, 0.11.22-0 to the current 0.13.10-4, on amd64 and arm64 (47 per architecture), each checked against the checksum in the package index; no debug-symbol packages are listed for this source. Each package holds two dynamically linked ELF programs, /usr/bin/uv and /usr/bin/uvx, plus shell completions, man pages and documentation; no package holds a static archive, PE or Mach-O file. For each program I read the crate list that cargo-auditable embeds and searched the program for the crates' source paths. uv reaches quinn only through reqwest, whose quinn-based HTTP/3 client is compiled only with reqwest's http3 feature, which also adds the h3 and h3-quinn crates (https://github.com/seanmonstar/reqwest/blob/v0.13.5/Cargo.toml). uv does not enable that feature: the reqwest features in its workspace manifest are json, gzip, deflate, zstd, stream, system-proxy, rustls, socks, multipart, http2 and query (https://github.com/astral-sh/uv/blob/0.13.10/Cargo.toml). The embedded crate list of every build still names quinn 0.11.9 and quinn-proto (0.11.14 in 0.11.22-0, 0.11.15 in 0.11.26-0 to 0.12.15-0, 0.11.18 in 0.12.17-0 to 0.13.8-0, 0.11.19 from 0.13.8-1 on), because reqwest's internal __rustls-aws-lc-rs feature names quinn as an optional dependency (quinn?/rustls-aws-lc-rs), but no list names h3 or h3-quinn. Neither program contains the text quinn in any build, in any letter case, while the same search finds the source paths of h2, hyper, reqwest, rustls and rustix in /usr/bin/uv of every build. So no quinn-proto code is compiled into any build of this owner."
     },
     {
       "vulnerability": {
