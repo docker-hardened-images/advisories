@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T20:11:11Z",
-  "last_updated": "2026-11-27T03:39:38Z",
-  "version": 21,
+  "last_updated": "2026-11-28T09:09:06Z",
+  "version": 22,
   "statements": [
     {
       "vulnerability": {
@@ -71,6 +71,9 @@
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.32.9.1.1-r4?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.33.1.1-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.33.10-r0?distro=dhi-3.23"
         },
         {
@@ -121,6 +124,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.32.9.1.1-r4?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.33.1.1-r0?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jdk@11.0.33.10-r0?distro=dhi-3.24"
@@ -196,6 +202,9 @@
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jre@11.0.32.9.1.1-r4?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/eclipse-temurin-11-jre@11.0.33.1.1-r0?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jre@11.0.33.10-r0?distro=dhi-3.23"
         },
         {
@@ -246,6 +255,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jre@11.0.32.9.1.1-r4?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/eclipse-temurin-11-jre@11.0.33.1.1-r0?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-11-jre@11.0.33.10-r0?distro=dhi-3.24"
@@ -814,7 +826,8 @@
           "@id": "pkg:apk/dhi/eclipse-temurin-25-jdk@25.0.5.8.1.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-13505 (GHSA-98j2-6v39-78w8): in Bouncy Castle for Java FIPS (bc-fips) before 2.1.3 in the 2.1 series, the AES and DESede engines, the SP 800-90A DRBGs, SymmetricSecretKey and the PBKD and scrypt parameter classes zeroise their key material through Object.finalize. On JVMs later than Java 11, where finalization is deprecated, the single finalizer thread can fall behind under load, so key material stays in the heap while queued and the queue can contribute to an OutOfMemoryError. bc-fips 2.1.3 (also 2.0.2 and 1.0.2.7) moves this zeroisation to a java.lang.ref.Cleaner in its Java 9 classes: https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013505, https://github.com/advisories/GHSA-98j2-6v39-78w8. Checked every eclipse-temurin-25-jdk-fips package published for Alpine 3.23 by 2026-11-25 in the DHI Alpine security repository, on x86_64 and aarch64 (18 versions, 25.0.2.10-r0 to 25.0.5.8.1.2-r0): 25.0.2.10-r0 to 25.0.4.1.1-r0 and 25.0.4.7-r0 carry bc-fips 2.1.2; 25.0.4.1.1-r1, 25.0.4.7.1.1-r2 and every later build carry bc-fips 2.1.3. The DHI Alpine repository index on 2026-11-28 lists no eclipse-temurin-25-jdk build for Alpine 3.23 newer than 25.0.5.8.1.2-r0. The eclipse-temurin-25-jdk-fips package installs the Bouncy Castle jars, under /usr/lib/bouncycastle; no published eclipse-temurin-25-jdk-oci-config or eclipse-temurin-25-jdk-fips-oci-config package for Alpine 3.23 contains a jar. The bc-fips 2.1.3 jar carries Cleaner-based zeroisers for these classes under META-INF/versions/9; the 2.1.2 jar has none. Every one of these packages also ships bc-rng-jent 1.3.6, the newest bc-rng-jent release, whose own SP 800-90A Hash DRBG (org.bouncycastle.entropy.provider.HashSP800DRBG) clears its working state only in Object.finalize and has no Cleaner-based replacement; the advisory does not list bc-rng-jent. We treat this unfixed bc-rng-jent copy as the same vulnerability. Pending: whether it is reachable on Alpine in a way that has the advisory's effect. In every published eclipse-temurin-25-jdk-fips package for Alpine 3.23, the security configuration file it installs (java.security.fips, or java.security in the three earliest builds) does not register bc-rng-jent's BouncyCastleEntropyProvider and sets securerandom.strongAlgorithms=DRBG:BCFIPS,DRBG:SUN,NativePRNGBlocking:SUN, with a comment that the JENT entropy source requires glibc; bc-rng-jent's bundled native JENT libraries link libc.so.6. In the DHI eclipse-temurin 25 JDK FIPS image for Alpine 3.24 (Java 25.0.5.1, from the eclipse-temurin-25-jdk and eclipse-temurin-25-jdk-fips 25.0.5.8.1.2-r0 packages it installs), on amd64 and arm64, SecureRandom.getInstanceStrong() is served by the SUN DRBG; the JVM holds one bc-rng-jent HashSP800DRBG working buffer after first use, and the count stayed at one after 50 more getInstanceStrong() calls, 50 new SecureRandom() calls and 50 AES key generations. In the same image, an application that registers the bc-rng-jent 1.3.6 provider itself and asks for its BCRNG ENTROPY generator gets \"JENT RNG failed\". Until that is settled or a bc-rng-jent release changes the zeroisation, no build is marked fixed."
     },
     {
       "vulnerability": {
@@ -858,7 +871,8 @@
           "@id": "pkg:apk/dhi/eclipse-temurin-25-jdk@25.0.5.8.1.2-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-13505 (GHSA-98j2-6v39-78w8): in Bouncy Castle for Java FIPS (bc-fips) before 2.1.3 in the 2.1 series, the AES and DESede engines, the SP 800-90A DRBGs, SymmetricSecretKey and the PBKD and scrypt parameter classes zeroise their key material through Object.finalize. On JVMs later than Java 11, where finalization is deprecated, the single finalizer thread can fall behind under load, so key material stays in the heap while queued and the queue can contribute to an OutOfMemoryError. bc-fips 2.1.3 (also 2.0.2 and 1.0.2.7) moves this zeroisation to a java.lang.ref.Cleaner in its Java 9 classes: https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013505, https://github.com/advisories/GHSA-98j2-6v39-78w8. Checked every eclipse-temurin-25-jdk-fips package published for Alpine 3.24 by 2026-11-25 in the DHI Alpine security repository, on x86_64 and aarch64 (11 versions, 25.0.3.9-r6 to 25.0.5.8.1.2-r0): 25.0.3.9-r6 to 25.0.4.1.1-r0 and 25.0.4.7-r0 carry bc-fips 2.1.2; 25.0.4.1.1-r1, 25.0.4.7.1.1-r2 and every later build carry bc-fips 2.1.3. The DHI Alpine repository index on 2026-11-28 lists no eclipse-temurin-25-jdk build for Alpine 3.24 newer than 25.0.5.8.1.2-r0. The eclipse-temurin-25-jdk-fips package installs the Bouncy Castle jars, under /usr/lib/bouncycastle; no published eclipse-temurin-25-jdk-oci-config or eclipse-temurin-25-jdk-fips-oci-config package for Alpine 3.24 contains a jar. The bc-fips 2.1.3 jar carries Cleaner-based zeroisers for these classes under META-INF/versions/9; the 2.1.2 jar has none. Every one of these packages also ships bc-rng-jent 1.3.6, the newest bc-rng-jent release, whose own SP 800-90A Hash DRBG (org.bouncycastle.entropy.provider.HashSP800DRBG) clears its working state only in Object.finalize and has no Cleaner-based replacement; the advisory does not list bc-rng-jent. We treat this unfixed bc-rng-jent copy as the same vulnerability. Pending: whether it is reachable on Alpine in a way that has the advisory's effect. In every published eclipse-temurin-25-jdk-fips package for Alpine 3.24, the security configuration file it installs (java.security.fips) does not register bc-rng-jent's BouncyCastleEntropyProvider and sets securerandom.strongAlgorithms=DRBG:BCFIPS,DRBG:SUN,NativePRNGBlocking:SUN, with a comment that the JENT entropy source requires glibc; bc-rng-jent's bundled native JENT libraries link libc.so.6. In the DHI eclipse-temurin 25 JDK FIPS image for Alpine 3.24 (Java 25.0.5.1, from the eclipse-temurin-25-jdk and eclipse-temurin-25-jdk-fips 25.0.5.8.1.2-r0 packages it installs), on amd64 and arm64, SecureRandom.getInstanceStrong() is served by the SUN DRBG; the JVM holds one bc-rng-jent HashSP800DRBG working buffer after first use, and the count stayed at one after 50 more getInstanceStrong() calls, 50 new SecureRandom() calls and 50 AES key generations. In the same image, an application that registers the bc-rng-jent 1.3.6 provider itself and asks for its BCRNG ENTROPY generator gets \"JENT RNG failed\". Until that is settled or a bc-rng-jent release changes the zeroisation, no build is marked fixed."
     },
     {
       "vulnerability": {
@@ -1192,6 +1206,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-8-jdk@8.512.09-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/eclipse-temurin-8-jdk@8.514.01-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation",
@@ -1231,6 +1248,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-8-jdk@8.512.09-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/eclipse-temurin-8-jdk@8.514.01-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation",
@@ -1304,6 +1324,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-8-jre@8.512.09-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/eclipse-temurin-8-jre@8.514.01-r0?distro=dhi-3.23"
         }
       ],
       "status": "fixed",
@@ -1356,6 +1379,9 @@
         },
         {
           "@id": "pkg:apk/dhi/eclipse-temurin-8-jre@8.512.09-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/eclipse-temurin-8-jre@8.514.01-r0?distro=dhi-3.24"
         }
       ],
       "status": "fixed",
@@ -1776,7 +1802,9 @@
           "@id": "pkg:deb/dhi/eclipse-temurin-25-jdk@25.0.4.7-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-13505 (GHSA-98j2-6v39-78w8): in Bouncy Castle for Java FIPS (bc-fips) before 2.1.3 in the 2.1 series, the AES and DESede engines, the SP 800-90A DRBGs, SymmetricSecretKey and the PBKD and scrypt parameter classes zeroise their key material through Object.finalize. On JVMs later than Java 11, where finalization is deprecated, the single finalizer thread can fall behind under load, so key material stays in the heap while queued and the queue can contribute to an OutOfMemoryError. bc-fips 2.1.3 (also 2.0.2 and 1.0.2.7) moves this zeroisation to a java.lang.ref.Cleaner in its Java 9 classes: https://github.com/bcgit/bc-java/wiki/CVE%E2%80%902026%E2%80%9013505, https://github.com/advisories/GHSA-98j2-6v39-78w8. By 2026-11-25 the DHI Debian security repository listed 14 versions of the eclipse-temurin-25-jdk-fips package for Debian 13, 25.0.3.9-0 to 1:25.0.5.1+2-0 (architecture-independent, the same file for amd64 and arm64). Checked the jars in 13 of them; the package served for 1:25.0.4.1+1-4 does not match the checksum the repository index lists for it, so its contents were not taken as evidence. 25.0.3.9-0 to 25.0.4.1.1-0 and 25.0.4.7-0 carry bc-fips 2.1.2; 25.0.4.1.1-1, 1:25.0.4.1+1-2, 1:25.0.4.1+1-3, and 1:25.0.5+8-0 to 1:25.0.5.1+2-0 carry bc-fips 2.1.3. The DHI Debian repository index on 2026-11-28 lists no eclipse-temurin-25-jdk build for Debian 13 newer than 1:25.0.5.1+2-0. The eclipse-temurin-25-jdk-fips package installs the Bouncy Castle jars, under /usr/lib/bouncycastle; no published eclipse-temurin-25-jdk-oci-config or eclipse-temurin-25-jdk-fips-oci-config package for Debian 13 contains a jar, except that we could not read the eclipse-temurin-25-jdk-oci-config 1:25.0.4.1+1-4 package, whose download does not match its index checksum. The bc-fips 2.1.3 jar carries Cleaner-based zeroisers for these classes under META-INF/versions/9; the 2.1.2 jar has none. Every one of these packages also ships bc-rng-jent 1.3.6, the newest bc-rng-jent release, whose own SP 800-90A Hash DRBG (org.bouncycastle.entropy.provider.HashSP800DRBG) clears its working state only in Object.finalize and has no Cleaner-based replacement; the advisory does not list bc-rng-jent. We treat this unfixed bc-rng-jent copy as the same vulnerability, and it is reached in the packages' default configuration. In each of the 13 eclipse-temurin-25-jdk-fips packages for Debian 13 whose checksum we verified, /usr/lib/bouncycastle/java.security.fips registers bc-rng-jent's org.bouncycastle.entropy.provider.BouncyCastleEntropyProvider and sets securerandom.strongAlgorithms=ENTROPY:BCRNG. We ran Java 25.0.5.1 from the published eclipse-temurin-25-jdk and eclipse-temurin-25-jdk-fips 1:25.0.5.1+2-0 packages for Debian 13 on amd64 and arm64, with the JAVA_TOOL_OPTIONS that eclipse-temurin-25-jdk-fips-oci-config 1:25.0.5.1+2-0 sets, which point the JVM at that java.security.fips file: SecureRandom.getInstanceStrong() returns the BCRNG ENTROPY generator, and each call creates a new HashSP800DRBG working buffer, a class that declares finalize: 50 more calls left 50 more of them on the heap. No bc-rng-jent release changes this (1.3.6 is the newest), so every build of this owner is marked affected."
     },
     {
       "vulnerability": {
