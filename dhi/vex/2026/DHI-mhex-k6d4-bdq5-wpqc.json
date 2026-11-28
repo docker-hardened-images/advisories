@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T04:19:04Z",
-  "last_updated": "2026-11-28T03:01:52Z",
-  "version": 7,
+  "last_updated": "2026-11-28T05:21:05Z",
+  "version": 8,
   "statements": [
     {
       "vulnerability": {
@@ -121,7 +121,20 @@
         },
         {
           "@id": "pkg:apk/dhi/gradle-9@9.8.0-r1?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update gradle-9 to 9.8.1-r0 or later.",
+      "status_notes": "GHSA-xwqc-3h47-hg64: the Gradle daemon listens on a loopback TCP port for client commands and authenticates them with a secret token, but it deserializes an incoming message, which can request Java serialization, before it checks the token. A local user who can connect to the port can make the daemon deserialize a hostile object graph, running code as the user who runs the build or crashing the daemon; it is not exploitable over the network. Gradle 9.0.0 to 9.8.0 is affected; 9.8.1 fixes it by checking the token in the connection handshake, before anything is deserialized (https://github.com/gradle/gradle/security/advisories/GHSA-xwqc-3h47-hg64; fix commit https://github.com/gradle/gradle/commit/f28e51437beb6c61f4cd83eefe86d1070b129054, Check the daemon token before any serialization). We read every gradle-9 package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28: 22 versions, 9.4.0-r0 to 9.9.2-r0. Each aarch64 package has the same index checksum as the x86_64 package of that version (9.6.1-r3 and 9.6.1-r4 are published for x86_64 only), so we read the x86_64 packages, checked each against its index checksum, and read every jar in them, including nested jars. The Gradle jars in each build are named for its package version (gradle-core-9.4.0.jar in 9.4.0-r0 and 9.4.0-r1, and so on up to gradle-core-9.9.2.jar in 9.9.2-r0). The fix makes org.gradle.internal.remote.internal.inet.TcpIncomingConnector, which accepts the daemon's connections, take a connectionToken and check it in the handshake; the class ships in the gradle-messaging jar (and, from 9.7.0-r1, also in the gradle-public-api-legacy jar). TcpIncomingConnector and its Receiver class carry the connectionToken field in every build from 9.8.1-r0 on, and no copy of them carries it in any build from 9.4.0-r0 to 9.8.0-r1, where we found the classes without it. So 9.4.0-r0 to 9.8.0-r1 (Gradle 9.4.0 to 9.8.0) are affected and the range ends at 9.8.1-r0, the first build with Gradle 9.8.1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-mhex-k6d4-bdq5-wpqc",
+        "aliases": [
+          "GHSA-xwqc-3h47-hg64"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/gradle-9@9.8.1-r0?distro=dhi-3.23"
         },
@@ -144,7 +157,8 @@
           "@id": "pkg:apk/dhi/gradle-9@9.9.3-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-xwqc-3h47-hg64: the Gradle daemon listens on a loopback TCP port for client commands and authenticates them with a secret token, but it deserializes an incoming message, which can request Java serialization, before it checks the token. A local user who can connect to the port can make the daemon deserialize a hostile object graph, running code as the user who runs the build or crashing the daemon; it is not exploitable over the network. Gradle 9.0.0 to 9.8.0 is affected; 9.8.1 fixes it by checking the token in the connection handshake, before anything is deserialized (https://github.com/gradle/gradle/security/advisories/GHSA-xwqc-3h47-hg64; fix commit https://github.com/gradle/gradle/commit/f28e51437beb6c61f4cd83eefe86d1070b129054, Check the daemon token before any serialization). We read every gradle-9 package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28: 22 versions, 9.4.0-r0 to 9.9.2-r0. Each aarch64 package has the same index checksum as the x86_64 package of that version (9.6.1-r3 and 9.6.1-r4 are published for x86_64 only), so we read the x86_64 packages, checked each against its index checksum, and read every jar in them, including nested jars. The Gradle jars in each build are named for its package version (gradle-core-9.4.0.jar in 9.4.0-r0 and 9.4.0-r1, and so on up to gradle-core-9.9.2.jar in 9.9.2-r0). The fix makes org.gradle.internal.remote.internal.inet.TcpIncomingConnector, which accepts the daemon's connections, take a connectionToken and check it in the handshake; the class ships in the gradle-messaging jar (and, from 9.7.0-r1, also in the gradle-public-api-legacy jar). TcpIncomingConnector and its Receiver class carry the connectionToken field in every build from 9.8.1-r0 on, and no copy of them carries it in any build from 9.4.0-r0 to 9.8.0-r1, where we found the classes without it. So 9.4.0-r0 to 9.8.0-r1 (Gradle 9.4.0 to 9.8.0) are affected and the range ends at 9.8.1-r0, the first build with Gradle 9.8.1."
     },
     {
       "vulnerability": {
