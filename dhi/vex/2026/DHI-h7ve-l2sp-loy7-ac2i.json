@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:24:30Z",
-  "last_updated": "2026-11-27T18:00:46Z",
-  "version": 25,
+  "last_updated": "2026-11-28T04:32:34Z",
+  "version": 26,
   "statements": [
     {
       "vulnerability": {
@@ -292,7 +292,9 @@
           "@id": "pkg:apk/dhi/build-dev@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-pmwq-pjrm-6p5r (GO-2026-5547; osv.dev lists no CVE alias): in-toto-golang before 0.11.0 used ^ for negation inside glob character classes in layout artifact rules, while in-toto-python uses !, so a layout written for one implementation can match different artifacts when verified by the other (https://github.com/advisories/GHSA-pmwq-pjrm-6p5r, https://pkg.go.dev/vuln/GO-2026-5547). The fix is https://github.com/in-toto/in-toto-golang/pull/462 (commit 36d782ffb2ca3adbffcdce1fd971c23319dd4469, which changes in_toto/match.go), released as v0.11.0; the affected code is the artifact-rule pattern matcher match() in the in_toto package, reached through layout verification (VerifyArtifacts). Checked every build-dev package published for Alpine 3.23 in the DHI Alpine repository on 2026-11-28: 92 versions, 2.6.4-r0 to the current 2.30.0-r1, each for x86_64 and aarch64, except 2.6.4-r0, which is published for aarch64 only. Each package holds one file, /usr/bin/build, a statically linked Go program built for Linux (no program interpreter and no shared-library dependencies). We downloaded every package from 2.6.4-r0 to 2.16.8-r0 (38 versions) for both architectures, checked each against its index checksum, and read the Go build information and the function table (.gopclntab) of every program in it, plus 2.17.0-r0 and 2.30.0-r1 for both architectures. The in-toto-golang version in the build program is github.com/in-toto/in-toto-golang v0.9.0 in 2.6.4-r0 to 2.9.1-r0 and v0.10.0 in 2.9.2-r0 to 2.16.8-r0, and its build information has no replace directive for that module. None of these programs links any in-toto-golang code: no function in any of their function tables names github.com/in-toto/in-toto-golang, so neither the pattern matcher nor any layout verification is present (runtime.main is present in every program). From 2.17.0-r0 to 2.30.0-r1 the Go build information of /usr/bin/build records github.com/in-toto/in-toto-golang v0.11.0, the fixed release; we read it from every one of those packages (each matching its index checksum) on 2026-11-27 and re-read 2.17.0-r0 and 2.30.0-r1 on 2026-11-28. As a control, a static Go program built for linux/arm64 (CGO_ENABLED=0, -trimpath, -s -w) against in-toto-golang v0.10.0 that calls VerifyArtifacts shows match, matchChunk, verifyMatchRule and VerifyArtifacts among 39 in_toto functions in its function table, while one that only uses the in_toto Statement types shows none, so linked matcher code would be visible in this table. The builds that ship v0.9.0 or v0.10.0 therefore do not contain the vulnerable code, and the later builds ship the fixed release."
     },
     {
       "vulnerability": {
@@ -579,7 +581,8 @@
           "@id": "pkg:apk/dhi/build-fips-dev@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-pmwq-pjrm-6p5r (GO-2026-5547; osv.dev lists no CVE alias): in-toto-golang before 0.11.0 used ^ for negation inside glob character classes in layout artifact rules, while in-toto-python uses !, so a layout written for one implementation can match different artifacts when verified by the other (https://github.com/advisories/GHSA-pmwq-pjrm-6p5r, https://pkg.go.dev/vuln/GO-2026-5547). The fix is https://github.com/in-toto/in-toto-golang/pull/462 (commit 36d782ffb2ca3adbffcdce1fd971c23319dd4469, which changes in_toto/match.go), released as v0.11.0; the affected code is the artifact-rule pattern matcher match() in the in_toto package, reached through layout verification (VerifyArtifacts). The build-fips-dev packages are built from the same source with Go FIPS 140-3 mode enabled and are published only in the DHI security repository, which requires authentication; they are not in the public DHI repository index we read for the other owners, and this assessment did not read them. Pending: a per-build reading of the Go build information (in-toto-golang version) and the function table of every published build-fips-dev build for Alpine 3.23 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -866,7 +869,8 @@
           "@id": "pkg:apk/dhi/build-fips@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-pmwq-pjrm-6p5r (GO-2026-5547; osv.dev lists no CVE alias): in-toto-golang before 0.11.0 used ^ for negation inside glob character classes in layout artifact rules, while in-toto-python uses !, so a layout written for one implementation can match different artifacts when verified by the other (https://github.com/advisories/GHSA-pmwq-pjrm-6p5r, https://pkg.go.dev/vuln/GO-2026-5547). The fix is https://github.com/in-toto/in-toto-golang/pull/462 (commit 36d782ffb2ca3adbffcdce1fd971c23319dd4469, which changes in_toto/match.go), released as v0.11.0; the affected code is the artifact-rule pattern matcher match() in the in_toto package, reached through layout verification (VerifyArtifacts). The build-fips packages are built from the same source with Go FIPS 140-3 mode enabled and are published only in the DHI security repository, which requires authentication; they are not in the public DHI repository index we read for the other owners, and this assessment did not read them. Pending: a per-build reading of the Go build information (in-toto-golang version) and the function table of every published build-fips build for Alpine 3.23 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -1156,7 +1160,9 @@
           "@id": "pkg:apk/dhi/build@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-pmwq-pjrm-6p5r (GO-2026-5547; osv.dev lists no CVE alias): in-toto-golang before 0.11.0 used ^ for negation inside glob character classes in layout artifact rules, while in-toto-python uses !, so a layout written for one implementation can match different artifacts when verified by the other (https://github.com/advisories/GHSA-pmwq-pjrm-6p5r, https://pkg.go.dev/vuln/GO-2026-5547). The fix is https://github.com/in-toto/in-toto-golang/pull/462 (commit 36d782ffb2ca3adbffcdce1fd971c23319dd4469, which changes in_toto/match.go), released as v0.11.0; the affected code is the artifact-rule pattern matcher match() in the in_toto package, reached through layout verification (VerifyArtifacts). Checked every build package published for Alpine 3.23 in the DHI Alpine repository on 2026-11-28: 93 versions, 2.4.4-r0 to the current 2.30.0-r1, each for x86_64 and aarch64, except 2.6.4-r0, which is published for aarch64 only. Every file in these packages is a statically linked ELF program built for Linux (no program interpreter and no shared-library dependencies) or, from 2.27.1-r1 on, one of two SPDX JSON files; there are no static archives, Windows PE files or Mach-O files. The Go programs are /usr/bin/build (installed at /opt/docker/dhi/build in 2.4.4-r0), /opt/docker/dhi/yq from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on; /opt/docker/dhi/uv, shipped from 2.27.1-r1 on, is a Rust program with no Go build information. We downloaded every package from 2.4.4-r0 to 2.16.8-r0 (39 versions) for both architectures, checked each against its index checksum, and read the Go build information and the function table (.gopclntab) of every program in it, plus 2.17.0-r0 and 2.30.0-r1 for both architectures. The in-toto-golang version in the build program is github.com/in-toto/in-toto-golang v0.9.0 in 2.4.4-r0 to 2.9.1-r0 and v0.10.0 in 2.9.2-r0 to 2.16.8-r0, and its build information has no replace directive for that module. None of these programs links any in-toto-golang code: no function in any of their function tables names github.com/in-toto/in-toto-golang, so neither the pattern matcher nor any layout verification is present (runtime.main is present in every program). From 2.17.0-r0 to 2.30.0-r1 the Go build information of /usr/bin/build and /usr/bin/dhi-source (from 2.28.0-r1 on) record github.com/in-toto/in-toto-golang v0.11.0, the fixed release; we read it from every one of those packages (each matching its index checksum) on 2026-11-27 and re-read 2.17.0-r0 and 2.30.0-r1 on 2026-11-28. As a control, a static Go program built for linux/arm64 (CGO_ENABLED=0, -trimpath, -s -w) against in-toto-golang v0.10.0 that calls VerifyArtifacts shows match, matchChunk, verifyMatchRule and VerifyArtifacts among 39 in_toto functions in its function table, while one that only uses the in_toto Statement types shows none, so linked matcher code would be visible in this table. The builds that ship v0.9.0 or v0.10.0 therefore do not contain the vulnerable code, and the later builds ship the fixed release."
     },
     {
       "vulnerability": {
@@ -7050,7 +7056,9 @@
           "@id": "pkg:deb/dhi/build-dev@2.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-pmwq-pjrm-6p5r (GO-2026-5547; osv.dev lists no CVE alias): in-toto-golang before 0.11.0 used ^ for negation inside glob character classes in layout artifact rules, while in-toto-python uses !, so a layout written for one implementation can match different artifacts when verified by the other (https://github.com/advisories/GHSA-pmwq-pjrm-6p5r, https://pkg.go.dev/vuln/GO-2026-5547). The fix is https://github.com/in-toto/in-toto-golang/pull/462 (commit 36d782ffb2ca3adbffcdce1fd971c23319dd4469, which changes in_toto/match.go), released as v0.11.0; the affected code is the artifact-rule pattern matcher match() in the in_toto package, reached through layout verification (VerifyArtifacts). Checked every build-dev package listed in the Debian 13 index of the DHI Debian repository on 2026-11-28, for amd64 and arm64: 67 versions, 2.13.0-1 to the current 2.30.0-1. We read the file list and MD5 checksums (the md5sums control file) of every one of them: every file in each has the same MD5 checksum as the file at the same path in the DHI Alpine 3.23 build-dev package of the same version and architecture (2.16.8-0 and 2.16.8-r0, for example), so they are the same programs, which were read from those Alpine packages; we confirmed it for 2.16.8-0 (arm64) and 2.13.0-1 (amd64) by downloading the Debian packages and reading their programs directly. Each package holds one file, /usr/bin/build, a statically linked Go program built for Linux (no program interpreter and no shared-library dependencies). In 2.13.0-1 to 2.16.8-0 (13 versions) /usr/bin/build records github.com/in-toto/in-toto-golang v0.10.0 in its Go build information, with no replace directive for that module, and its function table names no function under github.com/in-toto/in-toto-golang, so neither the pattern matcher nor any layout verification is present (runtime.main is present in every program). From 2.17.0-0 to 2.30.0-1 the Go build information of /usr/bin/build records github.com/in-toto/in-toto-golang v0.11.0, the fixed release. As a control, a static Go program built for linux/arm64 (CGO_ENABLED=0, -trimpath, -s -w) against in-toto-golang v0.10.0 that calls VerifyArtifacts shows match, matchChunk, verifyMatchRule and VerifyArtifacts among 39 in_toto functions in its function table, while one that only uses the in_toto Statement types shows none, so linked matcher code would be visible in this table. The builds that ship v0.10.0 therefore do not contain the vulnerable code, and the later builds ship the fixed release."
     },
     {
       "vulnerability": {
@@ -7262,7 +7270,8 @@
           "@id": "pkg:deb/dhi/build-fips-dev@2.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-pmwq-pjrm-6p5r (GO-2026-5547; osv.dev lists no CVE alias): in-toto-golang before 0.11.0 used ^ for negation inside glob character classes in layout artifact rules, while in-toto-python uses !, so a layout written for one implementation can match different artifacts when verified by the other (https://github.com/advisories/GHSA-pmwq-pjrm-6p5r, https://pkg.go.dev/vuln/GO-2026-5547). The fix is https://github.com/in-toto/in-toto-golang/pull/462 (commit 36d782ffb2ca3adbffcdce1fd971c23319dd4469, which changes in_toto/match.go), released as v0.11.0; the affected code is the artifact-rule pattern matcher match() in the in_toto package, reached through layout verification (VerifyArtifacts). The build-fips-dev packages are built from the same source with Go FIPS 140-3 mode enabled and are published only in the DHI security repository, which requires authentication; they are not in the public DHI repository index we read for the other owners, and this assessment did not read them. Pending: a per-build reading of the Go build information (in-toto-golang version) and the function table of every published build-fips-dev build for Debian 13 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -7474,7 +7483,8 @@
           "@id": "pkg:deb/dhi/build-fips@2.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-pmwq-pjrm-6p5r (GO-2026-5547; osv.dev lists no CVE alias): in-toto-golang before 0.11.0 used ^ for negation inside glob character classes in layout artifact rules, while in-toto-python uses !, so a layout written for one implementation can match different artifacts when verified by the other (https://github.com/advisories/GHSA-pmwq-pjrm-6p5r, https://pkg.go.dev/vuln/GO-2026-5547). The fix is https://github.com/in-toto/in-toto-golang/pull/462 (commit 36d782ffb2ca3adbffcdce1fd971c23319dd4469, which changes in_toto/match.go), released as v0.11.0; the affected code is the artifact-rule pattern matcher match() in the in_toto package, reached through layout verification (VerifyArtifacts). The build-fips packages are built from the same source with Go FIPS 140-3 mode enabled and are published only in the DHI security repository, which requires authentication; they are not in the public DHI repository index we read for the other owners, and this assessment did not read them. Pending: a per-build reading of the Go build information (in-toto-golang version) and the function table of every published build-fips build for Debian 13 on both architectures; until that reading is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -7686,7 +7696,9 @@
           "@id": "pkg:deb/dhi/build@2.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-pmwq-pjrm-6p5r (GO-2026-5547; osv.dev lists no CVE alias): in-toto-golang before 0.11.0 used ^ for negation inside glob character classes in layout artifact rules, while in-toto-python uses !, so a layout written for one implementation can match different artifacts when verified by the other (https://github.com/advisories/GHSA-pmwq-pjrm-6p5r, https://pkg.go.dev/vuln/GO-2026-5547). The fix is https://github.com/in-toto/in-toto-golang/pull/462 (commit 36d782ffb2ca3adbffcdce1fd971c23319dd4469, which changes in_toto/match.go), released as v0.11.0; the affected code is the artifact-rule pattern matcher match() in the in_toto package, reached through layout verification (VerifyArtifacts). Checked every build package listed in the Debian 13 index of the DHI Debian repository on 2026-11-28, for amd64 and arm64: 67 versions, 2.13.0-1 to the current 2.30.0-1. We read the file list and MD5 checksums (the md5sums control file) of every one of them: every file in each has the same MD5 checksum as the file at the same path in the DHI Alpine 3.23 build package of the same version and architecture (2.16.8-0 and 2.16.8-r0, for example), so they are the same programs, which were read from those Alpine packages; we confirmed it for 2.16.8-0 (arm64) and 2.13.0-1 (amd64) by downloading the Debian packages and reading their programs directly. Every file in these packages is a statically linked ELF program built for Linux (no program interpreter and no shared-library dependencies) or, from 2.27.1-1 on, one of two SPDX JSON files; there are no static archives, Windows PE files or Mach-O files. The Go programs are /usr/bin/build, /opt/docker/dhi/yq from 2.26.2-1 on and /usr/bin/dhi-source from 2.28.0-1 on; /opt/docker/dhi/uv, shipped from 2.27.1-1 on, is a Rust program with no Go build information. In 2.13.0-1 to 2.16.8-0 (13 versions) /usr/bin/build records github.com/in-toto/in-toto-golang v0.10.0 in its Go build information, with no replace directive for that module, and its function table names no function under github.com/in-toto/in-toto-golang, so neither the pattern matcher nor any layout verification is present (runtime.main is present in every program). From 2.17.0-0 to 2.30.0-1 the Go build information of /usr/bin/build and /usr/bin/dhi-source (from 2.28.0-1 on) record github.com/in-toto/in-toto-golang v0.11.0, the fixed release. As a control, a static Go program built for linux/arm64 (CGO_ENABLED=0, -trimpath, -s -w) against in-toto-golang v0.10.0 that calls VerifyArtifacts shows match, matchChunk, verifyMatchRule and VerifyArtifacts among 39 in_toto functions in its function table, while one that only uses the in_toto Statement types shows none, so linked matcher code would be visible in this table. The builds that ship v0.10.0 therefore do not contain the vulnerable code, and the later builds ship the fixed release."
     },
     {
       "vulnerability": {

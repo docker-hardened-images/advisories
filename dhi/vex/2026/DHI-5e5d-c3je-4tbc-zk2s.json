@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:56:08Z",
-  "last_updated": "2026-11-25T09:34:05Z",
-  "version": 5,
+  "last_updated": "2026-11-28T04:32:39Z",
+  "version": 6,
   "statements": [
     {
       "vulnerability": {
@@ -15,15 +15,6 @@
         ]
       },
       "products": [
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.1-r0?distro=dhi-3.24"
-        },
         {
           "@id": "pkg:apk/dhi/docker@29.5.2-r0?distro=dhi-3.24"
         },
@@ -74,6 +65,28 @@
         },
         {
           "@id": "pkg:apk/dhi/docker@29.8.1-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker to 29.8.2-r0 or later.",
+      "status_notes": "CVE-2026-92542 (GHSA-6m9p-4h64-m6vh): on a Linux Swarm node, the firewall rules Docker Engine programs to mark VXLAN datagrams for encryption on an encrypted overlay network match forged datagrams sent by user processes as well as those the kernel sends, so an unprivileged user on one Swarm node can inject forged Ethernet frames into an encrypted overlay network on another node. Docker Engine 26.0.0 to 29.8.1 is affected, and it is fixed in Docker Engine 29.8.2: https://github.com/moby/moby/security/advisories/GHSA-6m9p-4h64-m6vh, https://docs.docker.com/engine/release-notes/29/#2982 . The fix on the docker-29.x branch is commit https://github.com/moby/moby/commit/1150173bb7e8c76866125aafe107eb3135e8e6eb (in docker-v29.8.2, not docker-v29.8.1), which changes the overlay driver in daemon/libnetwork/drivers/overlay: in iptables mode it adds the rule only for packets with no local socket (-m owner ! --socket-exists) and a new programMangleMarkSpoofProtection function that clears the encryption mark from packets sent by local processes, and in nftables mode it adds an equivalent rule matching meta skuid 0-0xfffffffe. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages. The overlay driver is part of the daemon, /usr/bin/dockerd in docker-engine; the docker CLI does not include Docker's network drivers (docker/cli vendors only the moby api and client modules, checked at v29.5.2, v29.8.1 and v29.10.1). We read dockerd from every docker-engine package in the DHI Alpine 3.24 repository published by 2026-11-28, 33 versions from 29.5.2-r0 to 29.10.1-r0, for x86_64 and aarch64, with each package matched to the index checksum; each package holds two ELF files, dockerd and docker-proxy, and no PE, Mach-O or static archive file. In every build the overlay driver's programMangle function is present in dockerd, as a control. The new programMangleMarkSpoofProtection function and the nftables rule text meta skuid 0-0xfffffffe are absent from dockerd in every build up to 29.8.1-r0 and present in every build from 29.8.2-r0, on both architectures, and Go build information gives Docker version 29.8.1 for 29.8.1-r0 and 29.8.2 for 29.8.2-r0. FIXED at 29.8.2-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-5e5d-c3je-4tbc-zk2s",
+        "aliases": [
+          "CVE-2026-92542"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.1-r0?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/docker@29.8.2-r0?distro=dhi-3.24"
@@ -115,7 +128,8 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-92542 (GHSA-6m9p-4h64-m6vh): on a Linux Swarm node, the firewall rules Docker Engine programs to mark VXLAN datagrams for encryption on an encrypted overlay network match forged datagrams sent by user processes as well as those the kernel sends, so an unprivileged user on one Swarm node can inject forged Ethernet frames into an encrypted overlay network on another node. Docker Engine 26.0.0 to 29.8.1 is affected, and it is fixed in Docker Engine 29.8.2: https://github.com/moby/moby/security/advisories/GHSA-6m9p-4h64-m6vh, https://docs.docker.com/engine/release-notes/29/#2982 . The fix on the docker-29.x branch is commit https://github.com/moby/moby/commit/1150173bb7e8c76866125aafe107eb3135e8e6eb (in docker-v29.8.2, not docker-v29.8.1), which changes the overlay driver in daemon/libnetwork/drivers/overlay: in iptables mode it adds the rule only for packets with no local socket (-m owner ! --socket-exists) and a new programMangleMarkSpoofProtection function that clears the encryption mark from packets sent by local processes, and in nftables mode it adds an equivalent rule matching meta skuid 0-0xfffffffe. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages. The overlay driver is part of the daemon, /usr/bin/dockerd in docker-engine; the docker CLI does not include Docker's network drivers (docker/cli vendors only the moby api and client modules, checked at v29.5.2, v29.8.1 and v29.10.1). We read dockerd from every docker-engine package in the DHI Alpine 3.24 repository published by 2026-11-28, 33 versions from 29.5.2-r0 to 29.10.1-r0, for x86_64 and aarch64, with each package matched to the index checksum; each package holds two ELF files, dockerd and docker-proxy, and no PE, Mach-O or static archive file. In every build the overlay driver's programMangle function is present in dockerd, as a control. The new programMangleMarkSpoofProtection function and the nftables rule text meta skuid 0-0xfffffffe are absent from dockerd in every build up to 29.8.1-r0 and present in every build from 29.8.2-r0, on both architectures, and Go build information gives Docker version 29.8.1 for 29.8.1-r0 and 29.8.2 for 29.8.2-r0. FIXED at 29.8.2-r0."
     }
   ]
 }

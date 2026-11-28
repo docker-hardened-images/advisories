@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:00:40Z",
-  "last_updated": "2026-11-28T02:25:18Z",
-  "version": 13,
+  "last_updated": "2026-11-28T04:32:50Z",
+  "version": 14,
   "statements": [
     {
       "vulnerability": {
@@ -338,7 +338,20 @@
         },
         {
           "@id": "pkg:deb/dhi/dotnet-sdk-10@10.0.401-1?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update dotnet-sdk-10 to 10.0.402-0 or later.",
+      "status_notes": "CVE-2026-96236 (GHSA-f4g7-52wc-p8x7) is an ASP.NET Core denial of service in Microsoft.AspNetCore.Localization: when RequestLocalizationMiddleware falls back to parent cultures, request-supplied culture names that are well formed but not predefined (for example fr-FR-a0000001-b0000001-c0000001-d0000001-e0000001) are created and kept in the runtime's global culture cache, so unauthenticated requests can grow memory without bound. Microsoft lists the ASP.NET Core 10.0 runtime packs, including linux-x64 and linux-arm64, as affected from 10.0.0 through 10.0.12 and fixed in 10.0.13: https://github.com/dotnet/aspnetcore/security/advisories/GHSA-f4g7-52wc-p8x7, https://github.com/dotnet/announcements/issues/484, https://github.com/dotnet/aspnetcore/discussions/69803, https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.13/10.0.13.md. The .NET 10 fix is dotnet/dotnet commit e4eb9f4add4c489054e5fd7a9be8322388a94174 ('Reject non-predefined cultures in request localization fallback'), which changes the fallback lookup in RequestLocalizationMiddleware.cs from CultureInfo.GetCultureInfo(name) to CultureInfo.GetCultureInfo(name, predefinedOnly: true); it is in the v10.0.113 source tag and not in v10.0.112: https://github.com/dotnet/dotnet/commit/e4eb9f4add4c489054e5fd7a9be8322388a94174. DHI dotnet-sdk-10 for Debian 13 repackages Microsoft's .NET 10 SDK for Linux, which includes the ASP.NET Core shared framework. We checked every package built from this source and published in the DHI Debian repository by 2026-11-28: dotnet-sdk-10 10.0.301-0, 10.0.302-0, 10.0.302-1, 10.0.400-1, 10.0.401-0, 10.0.401-1, 10.0.402-0, 10.0.403-0, 10.0.404-0 and 10.0.404-1 for amd64 and arm64, and the dotnet-sdk-10-oci-config packages, which hold only an image configuration YAML file and a changelog; no debug-symbol packages are published. The file list and checksums of each dotnet-sdk-10 package show two files named Microsoft.AspNetCore.Localization.dll: the implementation in the ASP.NET Core shared framework under /usr/lib/dotnet/shared/Microsoft.AspNetCore.App/<version>, and a reference assembly in the Microsoft.AspNetCore.App.Ref targeting pack, which carries metadata for compilation and no method bodies. In every build the shared-framework copy is byte-identical (same MD5) to Microsoft.AspNetCore.Localization.dll in Microsoft's Microsoft.AspNetCore.App.Runtime.linux-x64 or linux-arm64 NuGet package of the same version: 10.0.9 in 10.0.301-0, 10.0.10 in 10.0.302-0 and 10.0.302-1, 10.0.11 in 10.0.400-1, 10.0.12 in 10.0.401-0 and 10.0.401-1, 10.0.13 in 10.0.402-0, 10.0.14 in 10.0.403-0, and 10.0.15 in 10.0.404-0 and 10.0.404-1. Reading the assembly metadata of those files, the 10.0.9 to 10.0.12 copies reference only CultureInfo.GetCultureInfo(string), and the 10.0.13, 10.0.14 and 10.0.15 copies reference only CultureInfo.GetCultureInfo(string, bool), the overload the fix calls, on both architectures. A byte search of every file in both 10.0.403-0 packages, including the files inside the nupkg archives they hold, finds the RequestLocalizationMiddleware name only in those two assemblies and the reference pack's XML documentation file. The range ends at 10.0.402-0 because it is the first published build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cww7-2af2-vjnn-67gg",
+        "aliases": [
+          "CVE-2026-96236"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/dotnet-sdk-10@10.0.402-0?distro=dhi-13"
         },
@@ -352,7 +365,8 @@
           "@id": "pkg:deb/dhi/dotnet-sdk-10@10.0.404-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-96236 (GHSA-f4g7-52wc-p8x7) is an ASP.NET Core denial of service in Microsoft.AspNetCore.Localization: when RequestLocalizationMiddleware falls back to parent cultures, request-supplied culture names that are well formed but not predefined (for example fr-FR-a0000001-b0000001-c0000001-d0000001-e0000001) are created and kept in the runtime's global culture cache, so unauthenticated requests can grow memory without bound. Microsoft lists the ASP.NET Core 10.0 runtime packs, including linux-x64 and linux-arm64, as affected from 10.0.0 through 10.0.12 and fixed in 10.0.13: https://github.com/dotnet/aspnetcore/security/advisories/GHSA-f4g7-52wc-p8x7, https://github.com/dotnet/announcements/issues/484, https://github.com/dotnet/aspnetcore/discussions/69803, https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.13/10.0.13.md. The .NET 10 fix is dotnet/dotnet commit e4eb9f4add4c489054e5fd7a9be8322388a94174 ('Reject non-predefined cultures in request localization fallback'), which changes the fallback lookup in RequestLocalizationMiddleware.cs from CultureInfo.GetCultureInfo(name) to CultureInfo.GetCultureInfo(name, predefinedOnly: true); it is in the v10.0.113 source tag and not in v10.0.112: https://github.com/dotnet/dotnet/commit/e4eb9f4add4c489054e5fd7a9be8322388a94174. DHI dotnet-sdk-10 for Debian 13 repackages Microsoft's .NET 10 SDK for Linux, which includes the ASP.NET Core shared framework. We checked every package built from this source and published in the DHI Debian repository by 2026-11-28: dotnet-sdk-10 10.0.301-0, 10.0.302-0, 10.0.302-1, 10.0.400-1, 10.0.401-0, 10.0.401-1, 10.0.402-0, 10.0.403-0, 10.0.404-0 and 10.0.404-1 for amd64 and arm64, and the dotnet-sdk-10-oci-config packages, which hold only an image configuration YAML file and a changelog; no debug-symbol packages are published. The file list and checksums of each dotnet-sdk-10 package show two files named Microsoft.AspNetCore.Localization.dll: the implementation in the ASP.NET Core shared framework under /usr/lib/dotnet/shared/Microsoft.AspNetCore.App/<version>, and a reference assembly in the Microsoft.AspNetCore.App.Ref targeting pack, which carries metadata for compilation and no method bodies. In every build the shared-framework copy is byte-identical (same MD5) to Microsoft.AspNetCore.Localization.dll in Microsoft's Microsoft.AspNetCore.App.Runtime.linux-x64 or linux-arm64 NuGet package of the same version: 10.0.9 in 10.0.301-0, 10.0.10 in 10.0.302-0 and 10.0.302-1, 10.0.11 in 10.0.400-1, 10.0.12 in 10.0.401-0 and 10.0.401-1, 10.0.13 in 10.0.402-0, 10.0.14 in 10.0.403-0, and 10.0.15 in 10.0.404-0 and 10.0.404-1. Reading the assembly metadata of those files, the 10.0.9 to 10.0.12 copies reference only CultureInfo.GetCultureInfo(string), and the 10.0.13, 10.0.14 and 10.0.15 copies reference only CultureInfo.GetCultureInfo(string, bool), the overload the fix calls, on both architectures. A byte search of every file in both 10.0.403-0 packages, including the files inside the nupkg archives they hold, finds the RequestLocalizationMiddleware name only in those two assemblies and the reference pack's XML documentation file. The range ends at 10.0.402-0 because it is the first published build with the fix."
     },
     {
       "vulnerability": {
