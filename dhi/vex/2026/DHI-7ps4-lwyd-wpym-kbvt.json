@@ -4,9 +4,25 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T16:00:28Z",
-  "last_updated": "2026-11-19T00:25:59Z",
-  "version": 2,
+  "last_updated": "2026-11-28T00:11:49Z",
+  "version": 3,
   "statements": [
+    {
+      "vulnerability": {
+        "name": "DHI-7ps4-lwyd-wpym-kbvt",
+        "aliases": [
+          "CVE-2026-2903"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/re2c@4.1-1dhi0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update re2c to 4.1-1+deb13u0+dhi2 or later.",
+      "status_notes": "CVE-2026-2903: re2c up to 4.4 dereferences a NULL pointer during determinization (closure_leftmost_dfs) when a block has entry, pre-rule or post-rule actions but no rules, so a crafted .re input file crashes the re2c code generator: https://github.com/skvadrik/re2c/issues/571. The fix is upstream commit febeb977936f9519a25d9fbd10ff8256358cdb97 (https://github.com/skvadrik/re2c/commit/febeb977936f9519a25d9fbd10ff8256358cdb97), first released in re2c 4.5, which makes the parser in src/parse/ast.cc reject such blocks with the error 'entry/pre-rule/post-rule action ... but no rules found' before determinization starts. The Debian tracker lists trixie's re2c 4.1-1 as vulnerable with urgency unimportant ('Crash im CLI tool, no security impact') and fixed only in unstable 4.5.1-1: https://security-tracker.debian.org/tracker/CVE-2026-2903. The DHI re2c package for Debian 13 is a rebuild of Debian's re2c 4.1-1 with that upstream commit applied. The DHI Debian repository publishes one re2c build in the current version scheme, 4.1-1+deb13u0+dhi2, as re2c and re2c-dbgsym for amd64 and arm64. We downloaded the re2c package for both architectures, checked each against its repository index checksum, and searched all ten programs it installs (re2c, re2d, re2go, re2hs, re2js, re2ocaml, re2py, re2rust, re2v and re2zig): every one contains the format string 'action %sbut no rules found' that the fix adds and none contains the 'action for non-existing condition' string the fix removes. Debian's own re2c 4.1-1 amd64 package, which lacks the fix, shows the opposite in all ten programs. So 4.1-1+deb13u0+dhi2 carries the fix, and the range is fixed at that build."
+    },
     {
       "vulnerability": {
         "name": "DHI-7ps4-lwyd-wpym-kbvt",
@@ -23,12 +39,10 @@
         },
         {
           "@id": "pkg:deb/dhi/re2c@4.1-1%2Bdhi2?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/re2c@4.1-1dhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-2903: re2c up to 4.4 dereferences a NULL pointer during determinization (closure_leftmost_dfs) when a block has entry, pre-rule or post-rule actions but no rules, so a crafted .re input file crashes the re2c code generator: https://github.com/skvadrik/re2c/issues/571. The fix is upstream commit febeb977936f9519a25d9fbd10ff8256358cdb97 (https://github.com/skvadrik/re2c/commit/febeb977936f9519a25d9fbd10ff8256358cdb97), first released in re2c 4.5, which makes the parser in src/parse/ast.cc reject such blocks with the error 'entry/pre-rule/post-rule action ... but no rules found' before determinization starts. The Debian tracker lists trixie's re2c 4.1-1 as vulnerable with urgency unimportant ('Crash im CLI tool, no security impact') and fixed only in unstable 4.5.1-1: https://security-tracker.debian.org/tracker/CVE-2026-2903. The DHI re2c package for Debian 13 is a rebuild of Debian's re2c 4.1-1 with that upstream commit applied. The DHI Debian repository publishes one re2c build in the current version scheme, 4.1-1+deb13u0+dhi2, as re2c and re2c-dbgsym for amd64 and arm64. We downloaded the re2c package for both architectures, checked each against its repository index checksum, and searched all ten programs it installs (re2c, re2d, re2go, re2hs, re2js, re2ocaml, re2py, re2rust, re2v and re2zig): every one contains the format string 'action %sbut no rules found' that the fix adds and none contains the 'action for non-existing condition' string the fix removes. Debian's own re2c 4.1-1 amd64 package, which lacks the fix, shows the opposite in all ten programs. So 4.1-1+deb13u0+dhi2 carries the fix, and the range is fixed at that build."
     }
   ]
 }
