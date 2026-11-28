@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-26T06:54:42Z",
-  "last_updated": "2026-11-28T00:27:38Z",
-  "version": 2,
+  "last_updated": "2026-11-28T04:48:39Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -20,9 +20,6 @@
         },
         {
           "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.1-r0?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/docker@29.5.2-r0?distro=dhi-3.24"
@@ -115,7 +112,24 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update docker to 29.10.1-r0 or later.",
+      "status_notes": "CVE-2026-135844 (GHSA-ffh6-8jcg-cjmw): the fix for GHSA-mjcv-p78q-w5fw / CVE-2026-61801 added file-type and size checks to user and group file parsing in github.com/moby/sys/user, but not to every parsing and lookup function: ParsePasswdFile and ParsePasswdFileFilter, GetAdditionalGroupsPath, ParseSubIDFile and ParseSubIDFileFilter, ParseIDMapFile and ParseIDMapFileFilter, and LookupUser, LookupUid, LookupGroup and LookupGid could still read unbounded files, such as /etc/passwd or /etc/group from a container image, and exhaust memory or CPU. It is fixed in moby/sys/user v0.5.1, which makes those functions enforce the 10 MiB read limit: https://github.com/moby/sys/security/advisories/GHSA-ffh6-8jcg-cjmw . Docker Engine 29.10.1 takes v0.5.1 in commit https://github.com/moby/moby/commit/fc12da96c63f116b2592e5a1589283d796c390f6 and lists this CVE in its release notes, https://github.com/moby/moby/releases/tag/docker-v29.10.1 . This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages (shell completions, documentation, OpenRC and systemd files, rootless extras). We covered every subpackage of every build published in the DHI Alpine 3.24 repository by 2026-11-27, 33 versions from 29.5.2-r0 to 29.10.1-r0, for x86_64 and aarch64, with each package matched to the index checksum. The only ELF files are three Go programs, all built for GOOS=linux: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli; no package holds a PE, Mach-O or static archive file. We read the function table of every Go program in every build from its Go line table, with runtime.main as a control, and its Go build information. dockerd links moby/sys/user and contains LookupUser, LookupGroup, GetAdditionalGroupsPath, ParsePasswdFileFilter and ParseSubIDFileFilter in every build. dockerd's build information shows github.com/moby/sys/user at 29.5.2-r0 to 29.6.0-r0 v0.4.0; 29.6.1-r0 to 29.9.3-r4 v0.4.1; 29.10.0-r0 to 29.10.0-r1 v0.5.0; 29.10.1-r0 v0.5.1. /usr/bin/docker contains a copy of moby/sys/user in every build (vendored under the docker/cli module path before 29.10.0-r1), but only its identity-mapping and directory-creation helpers (IdentityMapping.ToHost, IdentityMapping.ToContainer, toHost, toContainer, getRootUIDGID, and before 29.7.1-r0 also MkdirAllAndChown and mkdirAs), none of the affected parsing or lookup functions; docker-proxy does not contain the package. As a check on the boundary, lookupUserFileFilter and lookupGroupFileFilter, which v0.5.1 adds, are in dockerd's function table only from 29.10.1-r0, on both architectures. FIXED at 29.10.1-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-dz34-de7g-g6jw-pzxl",
+        "aliases": [
+          "CVE-2026-135844"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.1-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-135844 (GHSA-ffh6-8jcg-cjmw): the fix for GHSA-mjcv-p78q-w5fw / CVE-2026-61801 added file-type and size checks to user and group file parsing in github.com/moby/sys/user, but not to every parsing and lookup function: ParsePasswdFile and ParsePasswdFileFilter, GetAdditionalGroupsPath, ParseSubIDFile and ParseSubIDFileFilter, ParseIDMapFile and ParseIDMapFileFilter, and LookupUser, LookupUid, LookupGroup and LookupGid could still read unbounded files, such as /etc/passwd or /etc/group from a container image, and exhaust memory or CPU. It is fixed in moby/sys/user v0.5.1, which makes those functions enforce the 10 MiB read limit: https://github.com/moby/sys/security/advisories/GHSA-ffh6-8jcg-cjmw . Docker Engine 29.10.1 takes v0.5.1 in commit https://github.com/moby/moby/commit/fc12da96c63f116b2592e5a1589283d796c390f6 and lists this CVE in its release notes, https://github.com/moby/moby/releases/tag/docker-v29.10.1 . This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages (shell completions, documentation, OpenRC and systemd files, rootless extras). We covered every subpackage of every build published in the DHI Alpine 3.24 repository by 2026-11-27, 33 versions from 29.5.2-r0 to 29.10.1-r0, for x86_64 and aarch64, with each package matched to the index checksum. The only ELF files are three Go programs, all built for GOOS=linux: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli; no package holds a PE, Mach-O or static archive file. We read the function table of every Go program in every build from its Go line table, with runtime.main as a control, and its Go build information. dockerd links moby/sys/user and contains LookupUser, LookupGroup, GetAdditionalGroupsPath, ParsePasswdFileFilter and ParseSubIDFileFilter in every build. dockerd's build information shows github.com/moby/sys/user at 29.5.2-r0 to 29.6.0-r0 v0.4.0; 29.6.1-r0 to 29.9.3-r4 v0.4.1; 29.10.0-r0 to 29.10.0-r1 v0.5.0; 29.10.1-r0 v0.5.1. /usr/bin/docker contains a copy of moby/sys/user in every build (vendored under the docker/cli module path before 29.10.0-r1), but only its identity-mapping and directory-creation helpers (IdentityMapping.ToHost, IdentityMapping.ToContainer, toHost, toContainer, getRootUIDGID, and before 29.7.1-r0 also MkdirAllAndChown and mkdirAs), none of the affected parsing or lookup functions; docker-proxy does not contain the package. As a check on the boundary, lookupUserFileFilter and lookupGroupFileFilter, which v0.5.1 adds, are in dockerd's function table only from 29.10.1-r0, on both architectures. FIXED at 29.10.1-r0."
     },
     {
       "vulnerability": {

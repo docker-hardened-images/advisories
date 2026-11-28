@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-26T06:47:38Z",
-  "version": 1,
+  "last_updated": "2026-11-28T04:48:34Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -19,9 +20,6 @@
         },
         {
           "@id": "pkg:apk/dhi/docker@29.10.0-r1?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.10.1-r0?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/docker@29.5.2-r0?distro=dhi-3.24"
@@ -114,7 +112,24 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update docker to 29.10.1-r0 or later.",
+      "status_notes": "CVE-2026-135124 (GHSA-vfmq-r373-x89f): while docker cp, or PUT /containers/{id}/archive, copies files into a running container, the Docker daemon bind-mounts the container's volumes and applies the read-only flags afterwards through a path inside the container's filesystem, so a process in the container can redirect that path and leave a read-only bind mount writable for the duration of the copy, letting the copied archive modify host files behind it. It is fixed in Docker Engine 29.10.1: https://github.com/moby/moby/security/advisories/GHSA-vfmq-r373-x89f, https://github.com/moby/moby/releases/tag/docker-v29.10.1 . The fix on the 29.x branch is commit https://github.com/moby/moby/commit/e17039638ff300b76310efda00c4bfff6bbdced5 , which changes openContainerFS in daemon/containerfs_linux.go to bind each mount source onto a stub in a daemon-private staging directory (named with the prefix docker-containerfs-), apply the mount flags there, and move the result onto the target. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages (shell completions, documentation, OpenRC and systemd files, rootless extras). We covered every subpackage of every build published in the DHI Alpine 3.24 repository by 2026-11-27, 33 versions from 29.5.2-r0 to 29.10.1-r0, for x86_64 and aarch64, with each package matched to the index checksum. The only ELF files are three Go programs, all built for GOOS=linux: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli; no package holds a PE, Mach-O or static archive file. We read the function table of every Go program in every build from its Go line table, with runtime.main as a control, and its Go build information. The affected code is in dockerd, which contains Daemon.ContainerExtractToDir and Daemon.openContainerFS in every build; docker and docker-proxy do not contain the daemon's container code. The staging-directory prefix docker-containerfs- and the error text 'move mount onto', which the fix adds, are in dockerd only from 29.10.1-r0, on both architectures; no earlier build carries a backport. FIXED at 29.10.1-r0."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-esmo-3aed-yv2w-djzp",
+        "aliases": [
+          "CVE-2026-135124"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/docker@29.10.1-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-135124 (GHSA-vfmq-r373-x89f): while docker cp, or PUT /containers/{id}/archive, copies files into a running container, the Docker daemon bind-mounts the container's volumes and applies the read-only flags afterwards through a path inside the container's filesystem, so a process in the container can redirect that path and leave a read-only bind mount writable for the duration of the copy, letting the copied archive modify host files behind it. It is fixed in Docker Engine 29.10.1: https://github.com/moby/moby/security/advisories/GHSA-vfmq-r373-x89f, https://github.com/moby/moby/releases/tag/docker-v29.10.1 . The fix on the 29.x branch is commit https://github.com/moby/moby/commit/e17039638ff300b76310efda00c4bfff6bbdced5 , which changes openContainerFS in daemon/containerfs_linux.go to bind each mount source onto a stub in a daemon-private staging directory (named with the prefix docker-containerfs-), apply the mount flags there, and move the result onto the target. This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages (shell completions, documentation, OpenRC and systemd files, rootless extras). We covered every subpackage of every build published in the DHI Alpine 3.24 repository by 2026-11-27, 33 versions from 29.5.2-r0 to 29.10.1-r0, for x86_64 and aarch64, with each package matched to the index checksum. The only ELF files are three Go programs, all built for GOOS=linux: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli; no package holds a PE, Mach-O or static archive file. We read the function table of every Go program in every build from its Go line table, with runtime.main as a control, and its Go build information. The affected code is in dockerd, which contains Daemon.ContainerExtractToDir and Daemon.openContainerFS in every build; docker and docker-proxy do not contain the daemon's container code. The staging-directory prefix docker-containerfs- and the error text 'move mount onto', which the fix adds, are in dockerd only from 29.10.1-r0, on both architectures; no earlier build carries a backport. FIXED at 29.10.1-r0."
     }
   ]
 }

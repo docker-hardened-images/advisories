@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:53:46Z",
-  "last_updated": "2026-11-26T06:54:42Z",
-  "version": 4,
+  "last_updated": "2026-11-28T04:49:37Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -20,7 +20,20 @@
         },
         {
           "@id": "pkg:apk/dhi/gnutls@3.8.12-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update gnutls to 3.8.13-r0 or later.",
+      "status_notes": "CVE-2026-42014 (GNUTLS-SA-2026-04-29-9): changing the Security Officer PIN with gnutls_pkcs11_token_set_pin() with oldpin set to NULL, for a PKCS#11 token that lacks a protected authentication path, used the token URI after it had been freed (lib/pkcs11_write.c). It was reported as https://gitlab.com/gnutls/gnutls/-/issues/1766 . GnuTLS fixed it in 3.8.13 with commit 3957f136e2ed23caf176a594b54b3827f5cef701 (pkcs11_write: fix UAF and leak in gnutls_pkcs11_token_set_pin), which moves the p11_kit_uri_free() call from straight after the session is opened to the error path and the common exit: https://gitlab.com/gnutls/gnutls/-/commit/3957f136e2ed23caf176a594b54b3827f5cef701, https://gnutls.org/security-new.html, https://gitlab.com/gnutls/gnutls/-/blob/3.8.13/NEWS . Alpine's 3.23-stable gnutls APKBUILD builds gnutls from the upstream release and lists CVE-2026-42014 under its 3.8.13-r0 security fixes: https://gitlab.alpinelinux.org/alpine/aports/-/blob/3.23-stable/main/gnutls/APKBUILD . We downloaded every package built from the gnutls source in the Alpine 3.23 main index of the DHI Alpine repository as listed on 2026-11-28: gnutls, gnutls-c++, gnutls-dbg, gnutls-dev, gnutls-doc and gnutls-utils, each at 3.8.11-r0, 3.8.12-r0, 3.8.13-r0 and 3.8.14-r0 for x86_64 and aarch64, 48 apks, and checked each download against its index checksum. The library code is in libgnutls.so.30 in the gnutls package, a dynamically linked shared library whose needed libraries include musl's C library and libp11-kit.so.0, so PKCS#11 support is built in. gnutls-c++ ships the C++ wrapper libgnutlsxx.so.30, which links libgnutls.so.30; gnutls-utils ships seven programs (certtool, gnutls-cli, gnutls-cli-debug, gnutls-serv, ocsptool, p11tool and psktool), each dynamically linked against libgnutls.so.30 and loaded by the musl dynamic loader; gnutls-dev ships headers, gnutls.pc and the libgnutls.so and libgnutlsxx.so symbolic links; gnutls-doc ships man pages, info manuals and text documentation; gnutls-dbg ships separate debug-symbol files for the two libraries and the seven programs. None of the 48 packages contains a static archive, a PE file or a Mach-O file. The GnuTLS version string in libgnutls.so.30 reads 3.8.11, 3.8.12, 3.8.13 and 3.8.14 in the matching builds on both architectures. We disassembled gnutls_pkcs11_token_set_pin in libgnutls.so.30 of every build, locating it with the gnutls-dbg symbols: the 3.8.11-r0 and 3.8.12-r0 builds call p11_kit_uri_free once, as the unfixed source does, and the 3.8.13-r0 and 3.8.14-r0 builds call it twice, as the fixed source does, on both architectures. So 3.8.11-r0 and 3.8.12-r0 are affected and 3.8.13-r0 is the first fixed build; 3.8.14-r0 also carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-fdww-kvck-uqzv-bkgf",
+        "aliases": [
+          "CVE-2026-42014"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/gnutls@3.8.13-r0?distro=dhi-3.23"
         },
@@ -28,7 +41,8 @@
           "@id": "pkg:apk/dhi/gnutls@3.8.14-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-42014 (GNUTLS-SA-2026-04-29-9): changing the Security Officer PIN with gnutls_pkcs11_token_set_pin() with oldpin set to NULL, for a PKCS#11 token that lacks a protected authentication path, used the token URI after it had been freed (lib/pkcs11_write.c). It was reported as https://gitlab.com/gnutls/gnutls/-/issues/1766 . GnuTLS fixed it in 3.8.13 with commit 3957f136e2ed23caf176a594b54b3827f5cef701 (pkcs11_write: fix UAF and leak in gnutls_pkcs11_token_set_pin), which moves the p11_kit_uri_free() call from straight after the session is opened to the error path and the common exit: https://gitlab.com/gnutls/gnutls/-/commit/3957f136e2ed23caf176a594b54b3827f5cef701, https://gnutls.org/security-new.html, https://gitlab.com/gnutls/gnutls/-/blob/3.8.13/NEWS . Alpine's 3.23-stable gnutls APKBUILD builds gnutls from the upstream release and lists CVE-2026-42014 under its 3.8.13-r0 security fixes: https://gitlab.alpinelinux.org/alpine/aports/-/blob/3.23-stable/main/gnutls/APKBUILD . We downloaded every package built from the gnutls source in the Alpine 3.23 main index of the DHI Alpine repository as listed on 2026-11-28: gnutls, gnutls-c++, gnutls-dbg, gnutls-dev, gnutls-doc and gnutls-utils, each at 3.8.11-r0, 3.8.12-r0, 3.8.13-r0 and 3.8.14-r0 for x86_64 and aarch64, 48 apks, and checked each download against its index checksum. The library code is in libgnutls.so.30 in the gnutls package, a dynamically linked shared library whose needed libraries include musl's C library and libp11-kit.so.0, so PKCS#11 support is built in. gnutls-c++ ships the C++ wrapper libgnutlsxx.so.30, which links libgnutls.so.30; gnutls-utils ships seven programs (certtool, gnutls-cli, gnutls-cli-debug, gnutls-serv, ocsptool, p11tool and psktool), each dynamically linked against libgnutls.so.30 and loaded by the musl dynamic loader; gnutls-dev ships headers, gnutls.pc and the libgnutls.so and libgnutlsxx.so symbolic links; gnutls-doc ships man pages, info manuals and text documentation; gnutls-dbg ships separate debug-symbol files for the two libraries and the seven programs. None of the 48 packages contains a static archive, a PE file or a Mach-O file. The GnuTLS version string in libgnutls.so.30 reads 3.8.11, 3.8.12, 3.8.13 and 3.8.14 in the matching builds on both architectures. We disassembled gnutls_pkcs11_token_set_pin in libgnutls.so.30 of every build, locating it with the gnutls-dbg symbols: the 3.8.11-r0 and 3.8.12-r0 builds call p11_kit_uri_free once, as the unfixed source does, and the 3.8.13-r0 and 3.8.14-r0 builds call it twice, as the fixed source does, on both architectures. So 3.8.11-r0 and 3.8.12-r0 are affected and 3.8.13-r0 is the first fixed build; 3.8.14-r0 also carries the fix."
     },
     {
       "vulnerability": {
