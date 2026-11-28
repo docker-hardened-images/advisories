@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:53:03Z",
-  "last_updated": "2026-11-25T17:45:34Z",
-  "version": 8,
+  "last_updated": "2026-11-28T16:32:28Z",
+  "version": 9,
   "statements": [
     {
       "vulnerability": {
@@ -174,7 +174,20 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql18@18.4-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql18 to 18.6-r0 or later.",
+      "status_notes": "CVE-2026-14672 (PostgreSQL observable response discrepancy with non-default scram_iterations provides user existence oracle): an unauthenticated user can test whether a role exists when that role's password uses a non-default SCRAM iteration count, because the mock authentication challenge for a nonexistent role always reported the default iteration count. https://www.postgresql.org/support/security/CVE-2026-14672/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/822143c4d1dce62a43b98341eacbd4429eca7e59 (Security: CVE-2026-14672, in tag REL_18_6 and not in REL_18_4), which changes mock_scram_secret() in src/backend/libpq/auth-scram.c to use the scram_iterations setting instead of the built-in default, and documents the remaining behaviour. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.23 are built with Alpine's postgresql18 APKBUILD from the 3.23-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/59a1f1d230675807d5a95a0c1e57ba5d640ba039/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.23 package repository publishes builds of source postgresql18 at 18.1-r0, 18.2-r0, 18.3-r0, 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. The fix changes one assignment and adds no message or symbol that marks it in the binary, so the per-build evidence is the release each server binary reports. 18.6-r0 is the first published build for Alpine 3.23 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published builds (18.1-r0, 18.2-r0, 18.3-r0 and 18.4-r0) are built from PostgreSQL releases before the fix and are affected. As the updated PostgreSQL documentation for scram_iterations says, a role whose password was created with an iteration count different from the server's current scram_iterations setting can still be discerned, so passwords should be created with the configured value."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-tgw5-yfow-hkvl-unhj",
+        "aliases": [
+          "CVE-2026-14672"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.6-r0?distro=dhi-3.23"
         },
@@ -182,7 +195,8 @@
           "@id": "pkg:apk/dhi/postgresql18@18.7-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14672 (PostgreSQL observable response discrepancy with non-default scram_iterations provides user existence oracle): an unauthenticated user can test whether a role exists when that role's password uses a non-default SCRAM iteration count, because the mock authentication challenge for a nonexistent role always reported the default iteration count. https://www.postgresql.org/support/security/CVE-2026-14672/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/822143c4d1dce62a43b98341eacbd4429eca7e59 (Security: CVE-2026-14672, in tag REL_18_6 and not in REL_18_4), which changes mock_scram_secret() in src/backend/libpq/auth-scram.c to use the scram_iterations setting instead of the built-in default, and documents the remaining behaviour. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.23 are built with Alpine's postgresql18 APKBUILD from the 3.23-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/59a1f1d230675807d5a95a0c1e57ba5d640ba039/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.23 package repository publishes builds of source postgresql18 at 18.1-r0, 18.2-r0, 18.3-r0, 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. The fix changes one assignment and adds no message or symbol that marks it in the binary, so the per-build evidence is the release each server binary reports. 18.6-r0 is the first published build for Alpine 3.23 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published builds (18.1-r0, 18.2-r0, 18.3-r0 and 18.4-r0) are built from PostgreSQL releases before the fix and are affected. As the updated PostgreSQL documentation for scram_iterations says, a role whose password was created with an iteration count different from the server's current scram_iterations setting can still be discerned, so passwords should be created with the configured value."
     },
     {
       "vulnerability": {
@@ -194,7 +208,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.4-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql18 to 18.6-r0 or later.",
+      "status_notes": "CVE-2026-14672 (PostgreSQL observable response discrepancy with non-default scram_iterations provides user existence oracle): an unauthenticated user can test whether a role exists when that role's password uses a non-default SCRAM iteration count, because the mock authentication challenge for a nonexistent role always reported the default iteration count. https://www.postgresql.org/support/security/CVE-2026-14672/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/822143c4d1dce62a43b98341eacbd4429eca7e59 (Security: CVE-2026-14672, in tag REL_18_6 and not in REL_18_4), which changes mock_scram_secret() in src/backend/libpq/auth-scram.c to use the scram_iterations setting instead of the built-in default, and documents the remaining behaviour. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.24 are built with Alpine's postgresql18 APKBUILD from the 3.24-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/33a57d3919ee0227231f5a3e599540514584e309/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.24 package repository publishes builds of source postgresql18 at 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. The fix changes one assignment and adds no message or symbol that marks it in the binary, so the per-build evidence is the release each server binary reports. 18.6-r0 is the first published build for Alpine 3.24 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published build (18.4-r0) is built from PostgreSQL releases before the fix and is affected. As the updated PostgreSQL documentation for scram_iterations says, a role whose password was created with an iteration count different from the server's current scram_iterations setting can still be discerned, so passwords should be created with the configured value."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-tgw5-yfow-hkvl-unhj",
+        "aliases": [
+          "CVE-2026-14672"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql18@18.6-r0?distro=dhi-3.24"
         },
@@ -202,7 +229,8 @@
           "@id": "pkg:apk/dhi/postgresql18@18.7-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-14672 (PostgreSQL observable response discrepancy with non-default scram_iterations provides user existence oracle): an unauthenticated user can test whether a role exists when that role's password uses a non-default SCRAM iteration count, because the mock authentication challenge for a nonexistent role always reported the default iteration count. https://www.postgresql.org/support/security/CVE-2026-14672/ lists 18.6 as the fixed release for major version 18, and the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, list this CVE. The fix on the REL_18_STABLE branch is https://github.com/postgres/postgres/commit/822143c4d1dce62a43b98341eacbd4429eca7e59 (Security: CVE-2026-14672, in tag REL_18_6 and not in REL_18_4), which changes mock_scram_secret() in src/backend/libpq/auth-scram.c to use the scram_iterations setting instead of the built-in default, and documents the remaining behaviour. PostgreSQL 18.5 was never released (the 18.6 release notes, https://www.postgresql.org/docs/release/18.6/, say so), so although Alpine's security database lists this CVE for postgresql18 under 18.5-r0, this owner has no 18.5-r0 build and its first build that carries the fix is 18.6-r0. The DHI postgresql18 packages for Alpine 3.24 are built with Alpine's postgresql18 APKBUILD from the 3.24-stable branch of aports (current revision https://github.com/alpinelinux/aports/blob/33a57d3919ee0227231f5a3e599540514584e309/main/postgresql18/APKBUILD) and the upstream PostgreSQL source release of the same version; none of the patches that APKBUILD applies, at any revision used for these builds, changes the files this fix changes. As of 2026-11-28 the DHI Alpine 3.24 package repository publishes builds of source postgresql18 at 18.4-r0, 18.6-r0 and 18.7-r0, for x86_64 and aarch64. We read every one of them on both architectures, with package checksums verified against the repository index, and in each the postgres server binary, /usr/libexec/postgresql18/postgres, reports the PostgreSQL release matching its package version. The fix changes one assignment and adds no message or symbol that marks it in the binary, so the per-build evidence is the release each server binary reports. 18.6-r0 is the first published build for Alpine 3.24 that carries the fix, and 18.6-r0 and 18.7-r0 carry it. The earlier published build (18.4-r0) is built from PostgreSQL releases before the fix and is affected. As the updated PostgreSQL documentation for scram_iterations says, a role whose password was created with an iteration count different from the server's current scram_iterations setting can still be discerned, so passwords should be created with the configured value."
     },
     {
       "vulnerability": {

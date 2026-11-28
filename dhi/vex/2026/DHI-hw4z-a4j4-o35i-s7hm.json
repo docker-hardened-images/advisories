@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T02:59:15Z",
-  "last_updated": "2026-11-24T22:11:59Z",
-  "version": 9,
+  "last_updated": "2026-11-28T16:32:21Z",
+  "version": 10,
   "statements": [
     {
       "vulnerability": {
@@ -65,9 +65,6 @@
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
         },
         {
@@ -77,7 +74,24 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.12-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-6467 (PostgreSQL extension script schema mishandling executes arbitrary SQL) in 17.12 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-6467/ lists 17.12 as the fixed release for major version 17 (versions before 17.12 are affected), and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix is two commits on the REL_17_STABLE branch: https://github.com/postgres/postgres/commit/79f9793fc44c75d3096ef67677a729ad21a89c2c, which uses locking to block the ALTER SCHEMA ... RENAME attack on CREATE EXTENSION and ALTER EXTENSION, and https://github.com/postgres/postgres/commit/5c751533737eb08c97d6816e43039324e34bad42, which makes them reject a temporary schema or the '$user' placeholder as the extension schema. Together they change src/backend/commands/extension.c, src/backend/commands/schemacmds.c and src/backend/catalog/namespace.c; both are tagged Security: CVE-2026-6467 and are in the REL_17_12 release tag and not in REL_17_11. Debian fixed it for trixie in postgresql-17 17.12-0+deb13u1 (DSA-6625-1): https://security-tracker.debian.org/tracker/CVE-2026-6467. The affected code is in the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes, and Alpine lists CVE-2026-6467 under its 17.12-r0 secfixes. We checked every postgresql17 build published for Alpine 3.23 in the DHI package repository as of 2026-11-28 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0), both the postgresql17 and postgresql17-client packages, on x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.7, 17.8, 17.9, 17.10, 17.11 and 17.12). Of these, 17.12-r0 carry the fix, and 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0 are affected. As a check, the server binary in 17.12-r0 contains the error message the second commit adds, 'unacceptable extension schema name \"%s\"', and the server binary in 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0 does not, on both architectures. 17.12-r0 is the first published build for Alpine 3.23 that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-hw4z-a4j4-o35i-s7hm",
+        "aliases": [
+          "CVE-2026-6467"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-6467 (PostgreSQL extension script schema mishandling executes arbitrary SQL) in 17.12 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-6467/ lists 17.12 as the fixed release for major version 17 (versions before 17.12 are affected), and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix is two commits on the REL_17_STABLE branch: https://github.com/postgres/postgres/commit/79f9793fc44c75d3096ef67677a729ad21a89c2c, which uses locking to block the ALTER SCHEMA ... RENAME attack on CREATE EXTENSION and ALTER EXTENSION, and https://github.com/postgres/postgres/commit/5c751533737eb08c97d6816e43039324e34bad42, which makes them reject a temporary schema or the '$user' placeholder as the extension schema. Together they change src/backend/commands/extension.c, src/backend/commands/schemacmds.c and src/backend/catalog/namespace.c; both are tagged Security: CVE-2026-6467 and are in the REL_17_12 release tag and not in REL_17_11. Debian fixed it for trixie in postgresql-17 17.12-0+deb13u1 (DSA-6625-1): https://security-tracker.debian.org/tracker/CVE-2026-6467. The affected code is in the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/ce22298320177ae25085d86fbf3b4fc1150c16a2/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes, and Alpine lists CVE-2026-6467 under its 17.12-r0 secfixes. We checked every postgresql17 build published for Alpine 3.23 in the DHI package repository as of 2026-11-28 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0), both the postgresql17 and postgresql17-client packages, on x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.7, 17.8, 17.9, 17.10, 17.11 and 17.12). Of these, 17.12-r0 carry the fix, and 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0 are affected. As a check, the server binary in 17.12-r0 contains the error message the second commit adds, 'unacceptable extension schema name \"%s\"', and the server binary in 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0 and 17.11-r0 does not, on both architectures. 17.12-r0 is the first published build for Alpine 3.23 that carries the fix."
     },
     {
       "vulnerability": {
@@ -92,12 +106,26 @@
         },
         {
           "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.12-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-6467 (PostgreSQL extension script schema mishandling executes arbitrary SQL) in 17.12 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-6467/ lists 17.12 as the fixed release for major version 17 (versions before 17.12 are affected), and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix is two commits on the REL_17_STABLE branch: https://github.com/postgres/postgres/commit/79f9793fc44c75d3096ef67677a729ad21a89c2c, which uses locking to block the ALTER SCHEMA ... RENAME attack on CREATE EXTENSION and ALTER EXTENSION, and https://github.com/postgres/postgres/commit/5c751533737eb08c97d6816e43039324e34bad42, which makes them reject a temporary schema or the '$user' placeholder as the extension schema. Together they change src/backend/commands/extension.c, src/backend/commands/schemacmds.c and src/backend/catalog/namespace.c; both are tagged Security: CVE-2026-6467 and are in the REL_17_12 release tag and not in REL_17_11. Debian fixed it for trixie in postgresql-17 17.12-0+deb13u1 (DSA-6625-1): https://security-tracker.debian.org/tracker/CVE-2026-6467. The affected code is in the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes, and Alpine lists CVE-2026-6467 under its 17.12-r0 secfixes. We checked every postgresql17 build published for Alpine 3.24 in the DHI package repository as of 2026-11-28 (17.10-r0, 17.11-r0 and 17.12-r0), both the postgresql17 and postgresql17-client packages, on x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.10, 17.11 and 17.12). Of these, 17.12-r0 carry the fix, and 17.10-r0 and 17.11-r0 are affected. As a check, the server binary in 17.12-r0 contains the error message the second commit adds, 'unacceptable extension schema name \"%s\"', and the server binary in 17.10-r0 and 17.11-r0 does not, on both architectures. 17.12-r0 is the first published build for Alpine 3.24 that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-hw4z-a4j4-o35i-s7hm",
+        "aliases": [
+          "CVE-2026-6467"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-6467 (PostgreSQL extension script schema mishandling executes arbitrary SQL) in 17.12 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-6467/ lists 17.12 as the fixed release for major version 17 (versions before 17.12 are affected), and the 17.12 release notes, https://www.postgresql.org/docs/release/17.12/, list this CVE. The fix is two commits on the REL_17_STABLE branch: https://github.com/postgres/postgres/commit/79f9793fc44c75d3096ef67677a729ad21a89c2c, which uses locking to block the ALTER SCHEMA ... RENAME attack on CREATE EXTENSION and ALTER EXTENSION, and https://github.com/postgres/postgres/commit/5c751533737eb08c97d6816e43039324e34bad42, which makes them reject a temporary schema or the '$user' placeholder as the extension schema. Together they change src/backend/commands/extension.c, src/backend/commands/schemacmds.c and src/backend/catalog/namespace.c; both are tagged Security: CVE-2026-6467 and are in the REL_17_12 release tag and not in REL_17_11. Debian fixed it for trixie in postgresql-17 17.12-0+deb13u1 (DSA-6625-1): https://security-tracker.debian.org/tracker/CVE-2026-6467. The affected code is in the PostgreSQL server, /usr/libexec/postgresql17/postgres, in the postgresql17 package. The DHI postgresql17 packages for Alpine 3.24 are built from Alpine's postgresql17 APKBUILD, currently https://github.com/alpinelinux/aports/blob/6c4f74fa8784a6da0b51db919aafc6438e52ba6e/main/postgresql17/APKBUILD, which builds the upstream PostgreSQL release tarball; none of the patches it applies, in this or the earlier revisions the published builds came from, touch the source files this fix changes, and Alpine lists CVE-2026-6467 under its 17.12-r0 secfixes. We checked every postgresql17 build published for Alpine 3.24 in the DHI package repository as of 2026-11-28 (17.10-r0, 17.11-r0 and 17.12-r0), both the postgresql17 and postgresql17-client packages, on x86_64 and aarch64, with package checksums verified against the package index: the server binary of each build reports the PostgreSQL release of the same version (17.10, 17.11 and 17.12). Of these, 17.12-r0 carry the fix, and 17.10-r0 and 17.11-r0 are affected. As a check, the server binary in 17.12-r0 contains the error message the second commit adds, 'unacceptable extension schema name \"%s\"', and the server binary in 17.10-r0 and 17.11-r0 does not, on both architectures. 17.12-r0 is the first published build for Alpine 3.24 that carries the fix."
     },
     {
       "vulnerability": {
