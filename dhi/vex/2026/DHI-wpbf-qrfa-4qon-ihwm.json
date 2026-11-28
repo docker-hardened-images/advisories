@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-23T20:54:11Z",
-  "last_updated": "2026-11-27T06:24:28Z",
-  "version": 24,
+  "last_updated": "2026-11-28T11:33:24Z",
+  "version": 25,
   "statements": [
     {
       "vulnerability": {
@@ -20846,7 +20846,9 @@
           "@id": "pkg:apk/dhi/node-exporter-dev@1.13.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-42504 (GO-2026-5038): mime.WordDecoder.DecodeHeader in the Go standard library had quadratic complexity on a header containing many invalid encoded-words, so a crafted MIME header could consume excessive CPU. It is fixed in Go 1.25.11 and 1.26.4 by https://github.com/golang/go/commit/f230dd8a1d0a63d73e92685e378dcd725f7aac00 (CL 774481), which names this CVE: https://pkg.go.dev/vuln/GO-2026-5038, https://go.dev/issue/79217, https://go.dev/cl/774481, https://groups.google.com/g/golang-announce/c/tKs3rmcBcKw. The Go vulnerability database lists mime WordDecoder.DecodeHeader as the only vulnerable function. We read every published node-exporter-dev package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28: 27 builds from 1.10.2-r0 to the current 1.13.1-r0, for both x86_64 and aarch64, each checked against its repository index checksum. Each package installs a single file, /usr/bin/node_exporter, a statically linked Go program for Linux (an ELF executable with no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0; the packages contain no static archives, PE or Mach-O files. The -dev program is built without the -w linker flag and without -trimpath, so it keeps its DWARF debug information, and records the same Go release and module versions as the node-exporter program of the same version. The programs were built with Go 1.25.8 (1.10.2-r0) and Go 1.26.1 to 1.26.11 (from 1.10.2-r1); the builds before 1.11.1-r5 use a Go release without the fix, but no build contains the vulnerable function: a Go function-table (pclntab) reader finds no method of mime.WordDecoder in any of the 108 Alpine 3.23 node-exporter and node-exporter-dev programs (which include every program the Debian packages ship), and a byte search of every program, which also catches the names of inlined functions, finds no WordDecoder string. The mime functions the programs do link are the same 17 in every build, all from ParseMediaType, FormatMediaType and the extension-type table and their helpers, and the reader finds runtime.main and main.main in every program. As a positive control, the same reader lists mime.(*WordDecoder).DecodeHeader, and the byte search finds WordDecoder, in test programs we built with Go 1.27.1 for linux/amd64 and linux/arm64 (CGO_ENABLED=0, with and without -trimpath -ldflags=-w) against golang.org/x/crypto v0.50.0 and golang.org/x/net v0.52.0, which call net/mail.ParseAddress and ParseAddressList, mime.(*WordDecoder).DecodeHeader, golang.org/x/net/html Parse, ParseFragment and Render, and ssh.NewServerConn and ssh.NewClientConn with CertChecker callbacks. Debian lists its own Go packages in trixie as unfixed, no DSA, minor issue (https://security-tracker.debian.org/tracker/CVE-2026-42504); this decision rests on the vulnerable function being absent from every published build, not on that. The scanner evidence for this request also names Go 1.25.7, which no build now published in the DHI Alpine repository uses. The advisory's vulnerable function is not present in any published build."
     },
     {
       "vulnerability": {
@@ -20938,7 +20940,8 @@
           "@id": "pkg:apk/dhi/node-exporter-fips-dev@1.13.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-42504 (GO-2026-5038): mime.WordDecoder.DecodeHeader in the Go standard library had quadratic complexity on a header containing many invalid encoded-words, so a crafted MIME header could consume excessive CPU. It is fixed in Go 1.25.11 and 1.26.4 by https://github.com/golang/go/commit/f230dd8a1d0a63d73e92685e378dcd725f7aac00 (CL 774481), which names this CVE: https://pkg.go.dev/vuln/GO-2026-5038, https://go.dev/issue/79217, https://go.dev/cl/774481, https://groups.google.com/g/golang-announce/c/tKs3rmcBcKw. The Go vulnerability database lists mime WordDecoder.DecodeHeader as the only vulnerable function. The node-exporter-fips-dev packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication, and are built separately from the non-FIPS node-exporter packages; we have not yet read the program in any published node-exporter-fips-dev build. Pending: that per-build read on both architectures, to establish whether any FIPS build contains mime.WordDecoder.DecodeHeader. For comparison, no non-FIPS node-exporter or node-exporter-dev build for Alpine 3.23 contains it; that does not establish the same of the FIPS builds."
     },
     {
       "vulnerability": {
@@ -21030,7 +21033,8 @@
           "@id": "pkg:apk/dhi/node-exporter-fips@1.13.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-42504 (GO-2026-5038): mime.WordDecoder.DecodeHeader in the Go standard library had quadratic complexity on a header containing many invalid encoded-words, so a crafted MIME header could consume excessive CPU. It is fixed in Go 1.25.11 and 1.26.4 by https://github.com/golang/go/commit/f230dd8a1d0a63d73e92685e378dcd725f7aac00 (CL 774481), which names this CVE: https://pkg.go.dev/vuln/GO-2026-5038, https://go.dev/issue/79217, https://go.dev/cl/774481, https://groups.google.com/g/golang-announce/c/tKs3rmcBcKw. The Go vulnerability database lists mime WordDecoder.DecodeHeader as the only vulnerable function. The node-exporter-fips packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication, and are built separately from the non-FIPS node-exporter packages; we have not yet read the program in any published node-exporter-fips build. Pending: that per-build read on both architectures, to establish whether any FIPS build contains mime.WordDecoder.DecodeHeader. For comparison, no non-FIPS node-exporter or node-exporter-dev build for Alpine 3.23 contains it; that does not establish the same of the FIPS builds."
     },
     {
       "vulnerability": {
@@ -21122,7 +21126,9 @@
           "@id": "pkg:apk/dhi/node-exporter@1.13.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-42504 (GO-2026-5038): mime.WordDecoder.DecodeHeader in the Go standard library had quadratic complexity on a header containing many invalid encoded-words, so a crafted MIME header could consume excessive CPU. It is fixed in Go 1.25.11 and 1.26.4 by https://github.com/golang/go/commit/f230dd8a1d0a63d73e92685e378dcd725f7aac00 (CL 774481), which names this CVE: https://pkg.go.dev/vuln/GO-2026-5038, https://go.dev/issue/79217, https://go.dev/cl/774481, https://groups.google.com/g/golang-announce/c/tKs3rmcBcKw. The Go vulnerability database lists mime WordDecoder.DecodeHeader as the only vulnerable function. We read every published node-exporter package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28: 27 builds from 1.10.2-r0 to the current 1.13.1-r0, for both x86_64 and aarch64, each checked against its repository index checksum. Each package installs a single file, /usr/bin/node_exporter, a statically linked Go program for Linux (an ELF executable with no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0; the packages contain no static archives, PE or Mach-O files. The programs were built with Go 1.25.8 (1.10.2-r0) and Go 1.26.1 to 1.26.11 (from 1.10.2-r1); the builds before 1.11.1-r5 use a Go release without the fix, but no build contains the vulnerable function: a Go function-table (pclntab) reader finds no method of mime.WordDecoder in any of the 108 Alpine 3.23 node-exporter and node-exporter-dev programs (which include every program the Debian packages ship), and a byte search of every program, which also catches the names of inlined functions, finds no WordDecoder string. The mime functions the programs do link are the same 17 in every build, all from ParseMediaType, FormatMediaType and the extension-type table and their helpers, and the reader finds runtime.main and main.main in every program. As a positive control, the same reader lists mime.(*WordDecoder).DecodeHeader, and the byte search finds WordDecoder, in test programs we built with Go 1.27.1 for linux/amd64 and linux/arm64 (CGO_ENABLED=0, with and without -trimpath -ldflags=-w) against golang.org/x/crypto v0.50.0 and golang.org/x/net v0.52.0, which call net/mail.ParseAddress and ParseAddressList, mime.(*WordDecoder).DecodeHeader, golang.org/x/net/html Parse, ParseFragment and Render, and ssh.NewServerConn and ssh.NewClientConn with CertChecker callbacks. Debian lists its own Go packages in trixie as unfixed, no DSA, minor issue (https://security-tracker.debian.org/tracker/CVE-2026-42504); this decision rests on the vulnerable function being absent from every published build, not on that. The scanner evidence for this request also names Go 1.25.7, which no build now published in the DHI Alpine repository uses. The advisory's vulnerable function is not present in any published build."
     },
     {
       "vulnerability": {
@@ -23784,6 +23790,9 @@
         },
         {
           "@id": "pkg:apk/dhi/runc@1.5.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/runc@1.6.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -47940,7 +47949,9 @@
           "@id": "pkg:deb/dhi/node-exporter-dev@1.13.1-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-42504 (GO-2026-5038): mime.WordDecoder.DecodeHeader in the Go standard library had quadratic complexity on a header containing many invalid encoded-words, so a crafted MIME header could consume excessive CPU. It is fixed in Go 1.25.11 and 1.26.4 by https://github.com/golang/go/commit/f230dd8a1d0a63d73e92685e378dcd725f7aac00 (CL 774481), which names this CVE: https://pkg.go.dev/vuln/GO-2026-5038, https://go.dev/issue/79217, https://go.dev/cl/774481, https://groups.google.com/g/golang-announce/c/tKs3rmcBcKw. The Go vulnerability database lists mime WordDecoder.DecodeHeader as the only vulnerable function. We read every published node-exporter-dev package for Debian 13 in the DHI Debian repository as of 2026-11-28: 21 builds from 1.11.1-2 to the current 1.13.1-0, for both amd64 and arm64. Each package's MD5 manifest lists only /usr/bin/node_exporter, with the same MD5 as the program in the Alpine 3.23 node-exporter-dev package of the same version and architecture (Debian 1.12.1-7 is Alpine 1.12.1-r7, and so on), which we read in full; two Debian packages we downloaded in full (node-exporter 1.13.1-0 for amd64 and node-exporter-dev 1.11.1-2 for arm64) matched their index SHA-256, hold only that file, and match that MD5. Each package installs a single file, /usr/bin/node_exporter, a statically linked Go program for Linux (an ELF executable with no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0; the packages contain no static archives, PE or Mach-O files. The -dev program is built without the -w linker flag and without -trimpath, so it keeps its DWARF debug information, and records the same Go release and module versions as the node-exporter program of the same version. The programs were built with Go 1.26.2 (1.11.1-2) and Go 1.26.3 to 1.26.11 (from 1.11.1-3); the builds before 1.11.1-5 use a Go release without the fix, but no build contains the vulnerable function: a Go function-table (pclntab) reader finds no method of mime.WordDecoder in any of the 108 Alpine 3.23 node-exporter and node-exporter-dev programs (which include every program the Debian packages ship), and a byte search of every program, which also catches the names of inlined functions, finds no WordDecoder string. The mime functions the programs do link are the same 17 in every build, all from ParseMediaType, FormatMediaType and the extension-type table and their helpers, and the reader finds runtime.main and main.main in every program. As a positive control, the same reader lists mime.(*WordDecoder).DecodeHeader, and the byte search finds WordDecoder, in test programs we built with Go 1.27.1 for linux/amd64 and linux/arm64 (CGO_ENABLED=0, with and without -trimpath -ldflags=-w) against golang.org/x/crypto v0.50.0 and golang.org/x/net v0.52.0, which call net/mail.ParseAddress and ParseAddressList, mime.(*WordDecoder).DecodeHeader, golang.org/x/net/html Parse, ParseFragment and Render, and ssh.NewServerConn and ssh.NewClientConn with CertChecker callbacks. Debian lists its own Go packages in trixie as unfixed, no DSA, minor issue (https://security-tracker.debian.org/tracker/CVE-2026-42504); this decision rests on the vulnerable function being absent from every published build, not on that. The scanner evidence for this request also names Go 1.25.7, which no build now published in the DHI Alpine repository uses. The advisory's vulnerable function is not present in any published build."
     },
     {
       "vulnerability": {
@@ -48014,7 +48025,8 @@
           "@id": "pkg:deb/dhi/node-exporter-fips-dev@1.13.1-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-42504 (GO-2026-5038): mime.WordDecoder.DecodeHeader in the Go standard library had quadratic complexity on a header containing many invalid encoded-words, so a crafted MIME header could consume excessive CPU. It is fixed in Go 1.25.11 and 1.26.4 by https://github.com/golang/go/commit/f230dd8a1d0a63d73e92685e378dcd725f7aac00 (CL 774481), which names this CVE: https://pkg.go.dev/vuln/GO-2026-5038, https://go.dev/issue/79217, https://go.dev/cl/774481, https://groups.google.com/g/golang-announce/c/tKs3rmcBcKw. The Go vulnerability database lists mime WordDecoder.DecodeHeader as the only vulnerable function. The node-exporter-fips-dev packages for Debian 13 are published only in the DHI Debian security repository, which requires authentication, and are built separately from the non-FIPS node-exporter packages; we have not yet read the program in any published node-exporter-fips-dev build. Pending: that per-build read on both architectures, to establish whether any FIPS build contains mime.WordDecoder.DecodeHeader. For comparison, no non-FIPS node-exporter or node-exporter-dev build for Debian 13 contains it; that does not establish the same of the FIPS builds."
     },
     {
       "vulnerability": {
@@ -48088,7 +48100,8 @@
           "@id": "pkg:deb/dhi/node-exporter-fips@1.13.1-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-42504 (GO-2026-5038): mime.WordDecoder.DecodeHeader in the Go standard library had quadratic complexity on a header containing many invalid encoded-words, so a crafted MIME header could consume excessive CPU. It is fixed in Go 1.25.11 and 1.26.4 by https://github.com/golang/go/commit/f230dd8a1d0a63d73e92685e378dcd725f7aac00 (CL 774481), which names this CVE: https://pkg.go.dev/vuln/GO-2026-5038, https://go.dev/issue/79217, https://go.dev/cl/774481, https://groups.google.com/g/golang-announce/c/tKs3rmcBcKw. The Go vulnerability database lists mime WordDecoder.DecodeHeader as the only vulnerable function. The node-exporter-fips packages for Debian 13 are published only in the DHI Debian security repository, which requires authentication, and are built separately from the non-FIPS node-exporter packages; we have not yet read the program in any published node-exporter-fips build. Pending: that per-build read on both architectures, to establish whether any FIPS build contains mime.WordDecoder.DecodeHeader. For comparison, no non-FIPS node-exporter or node-exporter-dev build for Debian 13 contains it; that does not establish the same of the FIPS builds."
     },
     {
       "vulnerability": {
@@ -48162,7 +48175,9 @@
           "@id": "pkg:deb/dhi/node-exporter@1.13.1-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-42504 (GO-2026-5038): mime.WordDecoder.DecodeHeader in the Go standard library had quadratic complexity on a header containing many invalid encoded-words, so a crafted MIME header could consume excessive CPU. It is fixed in Go 1.25.11 and 1.26.4 by https://github.com/golang/go/commit/f230dd8a1d0a63d73e92685e378dcd725f7aac00 (CL 774481), which names this CVE: https://pkg.go.dev/vuln/GO-2026-5038, https://go.dev/issue/79217, https://go.dev/cl/774481, https://groups.google.com/g/golang-announce/c/tKs3rmcBcKw. The Go vulnerability database lists mime WordDecoder.DecodeHeader as the only vulnerable function. We read every published node-exporter package for Debian 13 in the DHI Debian repository as of 2026-11-28: 21 builds from 1.11.1-2 to the current 1.13.1-0, for both amd64 and arm64. Each package's MD5 manifest lists only /usr/bin/node_exporter, with the same MD5 as the program in the Alpine 3.23 node-exporter package of the same version and architecture (Debian 1.12.1-7 is Alpine 1.12.1-r7, and so on), which we read in full; two Debian packages we downloaded in full (node-exporter 1.13.1-0 for amd64 and node-exporter-dev 1.11.1-2 for arm64) matched their index SHA-256, hold only that file, and match that MD5. Each package installs a single file, /usr/bin/node_exporter, a statically linked Go program for Linux (an ELF executable with no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0; the packages contain no static archives, PE or Mach-O files. The programs were built with Go 1.26.2 (1.11.1-2) and Go 1.26.3 to 1.26.11 (from 1.11.1-3); the builds before 1.11.1-5 use a Go release without the fix, but no build contains the vulnerable function: a Go function-table (pclntab) reader finds no method of mime.WordDecoder in any of the 108 Alpine 3.23 node-exporter and node-exporter-dev programs (which include every program the Debian packages ship), and a byte search of every program, which also catches the names of inlined functions, finds no WordDecoder string. The mime functions the programs do link are the same 17 in every build, all from ParseMediaType, FormatMediaType and the extension-type table and their helpers, and the reader finds runtime.main and main.main in every program. As a positive control, the same reader lists mime.(*WordDecoder).DecodeHeader, and the byte search finds WordDecoder, in test programs we built with Go 1.27.1 for linux/amd64 and linux/arm64 (CGO_ENABLED=0, with and without -trimpath -ldflags=-w) against golang.org/x/crypto v0.50.0 and golang.org/x/net v0.52.0, which call net/mail.ParseAddress and ParseAddressList, mime.(*WordDecoder).DecodeHeader, golang.org/x/net/html Parse, ParseFragment and Render, and ssh.NewServerConn and ssh.NewClientConn with CertChecker callbacks. Debian lists its own Go packages in trixie as unfixed, no DSA, minor issue (https://security-tracker.debian.org/tracker/CVE-2026-42504); this decision rests on the vulnerable function being absent from every published build, not on that. The scanner evidence for this request also names Go 1.25.7, which no build now published in the DHI Alpine repository uses. The advisory's vulnerable function is not present in any published build."
     },
     {
       "vulnerability": {
