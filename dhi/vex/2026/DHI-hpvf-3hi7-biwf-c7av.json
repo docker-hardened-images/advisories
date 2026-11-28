@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T05:50:05Z",
-  "last_updated": "2026-11-27T11:11:22Z",
-  "version": 34,
+  "last_updated": "2026-11-28T07:27:47Z",
+  "version": 35,
   "statements": [
     {
       "vulnerability": {
@@ -29,6 +29,9 @@
         },
         {
           "@id": "pkg:deb/dhi/apollo-mcp-server-1@1.20.0-14?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/apollo-mcp-server-1@1.20.0-15?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/apollo-mcp-server-1@1.20.0-1?distro=dhi-13"
@@ -112,6 +115,9 @@
         },
         {
           "@id": "pkg:deb/dhi/apollo-mcp-server-2@2.3.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/apollo-mcp-server-2@2.3.0-2?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -616,7 +622,9 @@
           "@id": "pkg:deb/dhi/uv@0.13.9-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-3g6h-r5qx-f6hq (RUSTSEC-2026-0340): when an endpoint enables sending ACK_FREQUENCY frames, a peer's transport parameters can make quinn-proto call Duration::clamp with a minimum above its maximum and panic. The GitHub advisory lists quinn-proto 0.11.13 as affected and RustSec lists 0.11.0 to before 0.11.18; both name 0.11.18 as fixed: https://github.com/quinn-rs/quinn/security/advisories/GHSA-3g6h-r5qx-f6hq, https://rustsec.org/advisories/RUSTSEC-2026-0340.html. Read all 94 uv packages in the DHI Debian repository as of 2026-11-28: every published build, 0.11.22-0 to the current 0.13.10-4, on amd64 and arm64 (47 per architecture), each checked against the checksum in the package index; no debug-symbol packages are listed for this source. Each package holds two dynamically linked ELF programs, /usr/bin/uv and /usr/bin/uvx, plus shell completions, man pages and documentation, and the 76 packages of versions 0.11.22-0 to 0.13.8-0 also carry cargo's /usr/.crates.toml and /usr/.crates2.json install records (absent from 0.13.8-1 on); no package holds a static archive, PE or Mach-O file. For each program I read the crate list that cargo-auditable embeds and searched the program for the crates' source paths. uv reaches quinn only through reqwest, whose quinn-based HTTP/3 client is compiled only with reqwest's http3 feature, which also adds the h3 and h3-quinn crates (https://github.com/seanmonstar/reqwest/blob/v0.13.5/Cargo.toml). uv does not enable that feature: the reqwest features in its workspace manifest are json, gzip, deflate, zstd, stream, system-proxy, rustls, socks, multipart, http2 and query (https://github.com/astral-sh/uv/blob/0.13.10/Cargo.toml). The embedded crate list of every build still names quinn 0.11.9 and quinn-proto (0.11.14 in 0.11.22-0, 0.11.15 in 0.11.26-0 to 0.12.15-0, 0.11.18 in 0.12.17-0 to 0.13.8-0, 0.11.19 from 0.13.8-1 on), because reqwest's internal __rustls-aws-lc-rs feature names quinn as an optional dependency (quinn?/rustls-aws-lc-rs), but no list names h3 or h3-quinn. Neither program contains the text quinn in any build, in any letter case, while the same search finds the source paths of h2, hyper, reqwest, rustls and rustix in /usr/bin/uv of every build. So the crate list names quinn-proto, but no quinn-proto code is compiled into any build of this owner."
     },
     {
       "vulnerability": {

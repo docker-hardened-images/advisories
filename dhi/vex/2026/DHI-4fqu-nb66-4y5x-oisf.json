@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-26T12:50:47Z",
-  "version": 1,
+  "last_updated": "2026-11-28T07:27:59Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -53,7 +54,9 @@
           "@id": "pkg:deb/dhi/valkey-8.0@8.0.13-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Valkey's advisory GHSA-jcj7-v34w-v9vv, https://github.com/valkey-io/valkey/security/advisories/GHSA-jcj7-v34w-v9vv, reports a use-after-free in the RDMA transport's pending-data handler in src/rdma.c, fixed on the 8.0 branch in 8.0.11 by commit https://github.com/valkey-io/valkey/commit/073ea84f2effe9d390d109536e2025a15b6fa676 (upstream pull request https://github.com/valkey-io/valkey/pull/4534). The advisory states that only servers built with RDMA support (USE_RDMA) and configured with an RDMA listener are affected, and that builds without RDMA are not. On the 8.0 line the RDMA transport can only be built as a separate loadable module, valkey-rdma.so: src/Makefile at the 8.0.10 and 8.0.13 tags defaults to BUILD_RDMA=no, accepts only no or module, and builds rdma.c only for that module, and the whole of src/rdma.c is compiled only when USE_RDMA is defined. Every published DHI valkey-8.0 build for Debian 13 is built from the upstream release tag of the same version with no source patches, with TLS enabled (BUILD_TLS=yes) and without BUILD_RDMA. We checked every published valkey-8.0 package on amd64 and arm64 (valkey-8.0-server, valkey-8.0-tools, valkey-8.0-sentinel and the two -dbgsym packages, 8.0.10-0 to 8.0.13-1, as published on 28 November 2026, checksums verified against the package index): none contains valkey-rdma.so; apart from the separate debug-symbol files in the -dbgsym packages, the only ELF files are the valkey-server, valkey-cli and valkey-benchmark programs, all dynamically linked against glibc, libssl and libcrypto, with no dependency on librdmacm or libibverbs, and there are no static archives, PE or Mach-O files; the valkey-8.0-sentinel packages hold two symbolic links (valkey-sentinel to valkey-server, redis-sentinel to valkey-sentinel) and a Debian changelog. No file in any of these packages contains the text rdma in any letter case, while the source-file name tls.c, our control, is found in every valkey-server program and every valkey-8.0-server-dbgsym debug file, and the debug symbols of every valkey-server build carry the TLS transport's connTLS functions but no RDMA function. The vulnerable RDMA code is not present in this owner."
     },
     {
       "vulnerability": {

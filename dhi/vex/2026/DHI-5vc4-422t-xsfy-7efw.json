@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-26T12:50:47Z",
-  "version": 1,
+  "last_updated": "2026-11-28T07:27:55Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -53,7 +54,9 @@
           "@id": "pkg:deb/dhi/valkey-8.0@8.0.13-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Valkey's advisory GHSA-fq2f-crmw-q97r, https://github.com/valkey-io/valkey/security/advisories/GHSA-fq2f-crmw-q97r, describes two use-after-free defects in the script debugger of the module-based Lua scripting engine: ldbGenerateDebuggerCommandsArray in src/modules/lua/debug_lua.c caches the debugger command table with a pointer to the Lua interpreter state, which SCRIPT FLUSH ASYNC frees, and ldbLogStackValue in the same file freed a string that the debugger log still referenced. The advisory gives its affected range as <= 9.1.1, fixed in 9.1.2 by upstream pull request https://github.com/valkey-io/valkey/pull/4574. Its text states that the issue affects the 9.x line, that the defect was introduced when the Lua scripting engine was moved into a Valkey module, and that the 8.0.x and 8.1.x lines use the previous, non-module debugger and are not affected; the CVE record names 9.1.0 and 9.1.1 as the affected versions. We checked this against the source the DHI valkey-8.0 packages for Debian 13 are built from, the upstream valkey release tags 8.0.10 to 8.0.13 with no source patches: the 8.0.10 and 8.0.13 tags have no src/modules/lua directory and no src/scripting_engine.c, and their debugger in src/eval.c (byte-identical at 8.0.10 and 8.0.13) has no cached debugger command table and no ldbGenerateDebuggerCommandsArray; its ldbLogStackValue hands the new string to the debugger log and does not free it. In the debug symbols of every published valkey-8.0-server build on amd64 and arm64 (8.0.10-0, 8.0.11-0, 8.0.12-0, 8.0.13-0 and 8.0.13-1, as published on 28 November 2026), ldbGenerateDebuggerCommandsArray is absent, while the 8.0 debugger's own ldbRepl and ldbLogStackValue symbols, our control, are present in every build. The valkey-8.0 packages contain none of the 9.1 debugger code this advisory is about."
     },
     {
       "vulnerability": {
