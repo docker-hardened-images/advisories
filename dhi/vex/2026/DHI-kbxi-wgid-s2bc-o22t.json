@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-26T12:39:30Z",
-  "version": 1,
+  "last_updated": "2026-11-28T09:08:54Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -36,7 +37,9 @@
           "@id": "pkg:deb/dhi/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-137072: in libxml2 2.9.10 through 2.15.4, freeing an xmlTextReader after the caller has freed the document it obtained from xmlTextReaderCurrentDoc() makes the reader read the freed document: it pops DTD validation states whose element declarations point into the freed DTD (xmlValidatePopElement), and frees a fake text node that points at the freed document (https://www.cve.org/CVERecord?id=CVE-2026-137072, https://gitlab.gnome.org/GNOME/libxml2/-/issues/1208). The upstream issue is open and no upstream release carries a fix; Debian's tracker lists every release, unstable included, as vulnerable (https://security-tracker.debian.org/tracker/CVE-2026-137072). The DHI Debian libxml2 package is built from Debian's trixie source 2.12.7+dfsg+really2.9.14-2.1+deb13u3, which is libxml2 2.9.14 with Debian's patches. As of 2026-11-28 the DHI Debian repository publishes one libxml2 build, a DHI rebuild of that Debian version, for amd64 and arm64 (libxml2, libxml2-dev, libxml2-utils and python3-libxml2, plus -dbgsym packages for libxml2, libxml2-utils and python3-libxml2); earlier DHI builds are no longer published and sort below it. The source was checked against Debian's trixie source package 2.12.7+dfsg+really2.9.14-2.1+deb13u3 with Debian's patches and DHI's patches for this package applied; DHI's own patches do not touch xmlreader.c, and the one that changes valid.c (for CVE-2026-86140) changes only xmlSnprintfElements, not xmlValidatePopElement or the validation-state stack. In libxml2 2.9.14, xmlFreeTextReader pops the remaining validation states with xmlValidatePopElement, which reads each state's element declaration, and frees reader->faketext with xmlFreeNode, which reads the node's document; xmlTextReaderCurrentDoc only stops the reader from freeing the document. The upstream report reaches the same reads through xmlTextReaderClose, which in 2.15.4 is called from xmlFreeTextReader; in 2.9.14 they are in xmlFreeTextReader itself. The vulnerable code is present in the published build, so it is affected; no fixed build has been published."
     }
   ]
 }
