@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-23T20:49:00Z",
-  "last_updated": "2026-11-28T00:59:09Z",
-  "version": 51,
+  "last_updated": "2026-11-28T12:56:23Z",
+  "version": 52,
   "statements": [
     {
       "vulnerability": {
@@ -71396,15 +71396,6 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.1-r3?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.10-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r1?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.2-r3?distro=dhi-3.23"
         },
         {
@@ -71427,15 +71418,11 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.8-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.8-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update golang-1.26-dev to 1.26.8-r1 or later.",
+      "status_notes": "CVE-2026-56852 (GO-2026-5970): a norm.Iter in the golang.org/x/text/unicode/norm package can loop forever on input that contains invalid UTF-8. It is fixed in golang.org/x/text v0.39.0: https://pkg.go.dev/vuln/GO-2026-5970, https://go.dev/issue/80142, https://go.dev/cl/794100, commit https://github.com/golang/text/commit/5ae8e578e495731553eddba11b2d0e86c91a00ce (in v0.39.0, not in v0.38.0), which changes unicode/norm/forminfo.go, iter.go and normalize.go and adds the Properties.isInvalid check. This package is the Go 1.26 toolchain, and it carries two vendored copies of golang.org/x/text that include unicode/norm: the standard library's copy under /usr/lib/go/src/vendor, which the standard library imports and which is compiled into programs built with this toolchain that use it, and the copy for Go's own commands under /usr/lib/go/src/cmd/vendor. The upstream Go 1.26.0 to 1.26.11 releases vendor golang.org/x/text v0.32.0 in both trees, without the fix, and DHI updates the vendored modules when it builds this package. We read every golang-1.26-dev package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28, x86_64 and aarch64: 15 versions, 1.26.1-r2 to 1.26.11-r1, each matching its repository index checksum. In the builds before 1.26.8-r1 (1.26.1-r2 to 1.26.8-r0) both copies of unicode/norm/forminfo.go are byte-identical (md5) to golang.org/x/text v0.32.0, so they do not have the fix; from 1.26.8-r1 on, on both architectures, the copy for Go's commands is byte-identical to v0.39.0 and v0.41.0 and the standard library's copy to v0.39.0 and v0.41.0 or, from 1.26.11-r1, v0.43.0, all of which define isInvalid. Of the ten Go programs in each build, only the go command has unicode/norm normalization functions in its function table, all from the standard library's copy, among them four that the advisory lists: Form.Bytes, Form.IsNormalString, Form.String and nextComposed. As a check on the boundary, the inlined name norm.Properties.isInvalid is in the bytes of the go command in 1.26.8-r1 and every later build and in no earlier build. The range ends at 1.26.8-r1."
     },
     {
       "vulnerability": {
@@ -71446,14 +71433,32 @@
       },
       "products": [
         {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.10-r0?distro=dhi-3.24"
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.10-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r0?distro=dhi-3.24"
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r1?distro=dhi-3.24"
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r1?distro=dhi-3.23"
         },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.8-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.9-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-56852 (GO-2026-5970): a norm.Iter in the golang.org/x/text/unicode/norm package can loop forever on input that contains invalid UTF-8. It is fixed in golang.org/x/text v0.39.0: https://pkg.go.dev/vuln/GO-2026-5970, https://go.dev/issue/80142, https://go.dev/cl/794100, commit https://github.com/golang/text/commit/5ae8e578e495731553eddba11b2d0e86c91a00ce (in v0.39.0, not in v0.38.0), which changes unicode/norm/forminfo.go, iter.go and normalize.go and adds the Properties.isInvalid check. This package is the Go 1.26 toolchain, and it carries two vendored copies of golang.org/x/text that include unicode/norm: the standard library's copy under /usr/lib/go/src/vendor, which the standard library imports and which is compiled into programs built with this toolchain that use it, and the copy for Go's own commands under /usr/lib/go/src/cmd/vendor. The upstream Go 1.26.0 to 1.26.11 releases vendor golang.org/x/text v0.32.0 in both trees, without the fix, and DHI updates the vendored modules when it builds this package. We read every golang-1.26-dev package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28, x86_64 and aarch64: 15 versions, 1.26.1-r2 to 1.26.11-r1, each matching its repository index checksum. In the builds before 1.26.8-r1 (1.26.1-r2 to 1.26.8-r0) both copies of unicode/norm/forminfo.go are byte-identical (md5) to golang.org/x/text v0.32.0, so they do not have the fix; from 1.26.8-r1 on, on both architectures, the copy for Go's commands is byte-identical to v0.39.0 and v0.41.0 and the standard library's copy to v0.39.0 and v0.41.0 or, from 1.26.11-r1, v0.43.0, all of which define isInvalid. Of the ten Go programs in each build, only the go command has unicode/norm normalization functions in its function table, all from the standard library's copy, among them four that the advisory lists: Form.Bytes, Form.IsNormalString, Form.String and nextComposed. As a check on the boundary, the inlined name norm.Properties.isInvalid is in the bytes of the go command in 1.26.8-r1 and every later build and in no earlier build. The range ends at 1.26.8-r1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-nlat-w2pc-22ps-ah64",
+        "aliases": [
+          "CVE-2026-56852"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.3-r0?distro=dhi-3.24"
         },
@@ -71474,6 +71479,28 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.8-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26-dev to 1.26.8-r1 or later.",
+      "status_notes": "CVE-2026-56852 (GO-2026-5970): a norm.Iter in the golang.org/x/text/unicode/norm package can loop forever on input that contains invalid UTF-8. It is fixed in golang.org/x/text v0.39.0: https://pkg.go.dev/vuln/GO-2026-5970, https://go.dev/issue/80142, https://go.dev/cl/794100, commit https://github.com/golang/text/commit/5ae8e578e495731553eddba11b2d0e86c91a00ce (in v0.39.0, not in v0.38.0), which changes unicode/norm/forminfo.go, iter.go and normalize.go and adds the Properties.isInvalid check. This package is the Go 1.26 toolchain, and it carries two vendored copies of golang.org/x/text that include unicode/norm: the standard library's copy under /usr/lib/go/src/vendor, which the standard library imports and which is compiled into programs built with this toolchain that use it, and the copy for Go's own commands under /usr/lib/go/src/cmd/vendor. The upstream Go 1.26.0 to 1.26.11 releases vendor golang.org/x/text v0.32.0 in both trees, without the fix, and DHI updates the vendored modules when it builds this package. We read every golang-1.26-dev package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-28, x86_64 and aarch64: 12 versions, 1.26.3-r0 to 1.26.11-r1, each matching its repository index checksum. In the builds before 1.26.8-r1 (1.26.3-r0 to 1.26.8-r0) both copies of unicode/norm/forminfo.go are byte-identical (md5) to golang.org/x/text v0.32.0, so they do not have the fix; from 1.26.8-r1 on, on both architectures, the copy for Go's commands is byte-identical to v0.39.0 and v0.41.0 and the standard library's copy to v0.39.0 and v0.41.0 or, from 1.26.11-r1, v0.43.0, all of which define isInvalid. Of the ten Go programs in each build, only the go command has unicode/norm normalization functions in its function table, all from the standard library's copy, among them four that the advisory lists: Form.Bytes, Form.IsNormalString, Form.String and nextComposed. As a check on the boundary, the inlined name norm.Properties.isInvalid is in the bytes of the go command in 1.26.8-r1 and every later build and in no earlier build. The range ends at 1.26.8-r1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-nlat-w2pc-22ps-ah64",
+        "aliases": [
+          "CVE-2026-56852"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.10-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.11-r1?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.8-r1?distro=dhi-3.24"
@@ -71482,7 +71509,8 @@
           "@id": "pkg:apk/dhi/golang-1.26-dev@1.26.9-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56852 (GO-2026-5970): a norm.Iter in the golang.org/x/text/unicode/norm package can loop forever on input that contains invalid UTF-8. It is fixed in golang.org/x/text v0.39.0: https://pkg.go.dev/vuln/GO-2026-5970, https://go.dev/issue/80142, https://go.dev/cl/794100, commit https://github.com/golang/text/commit/5ae8e578e495731553eddba11b2d0e86c91a00ce (in v0.39.0, not in v0.38.0), which changes unicode/norm/forminfo.go, iter.go and normalize.go and adds the Properties.isInvalid check. This package is the Go 1.26 toolchain, and it carries two vendored copies of golang.org/x/text that include unicode/norm: the standard library's copy under /usr/lib/go/src/vendor, which the standard library imports and which is compiled into programs built with this toolchain that use it, and the copy for Go's own commands under /usr/lib/go/src/cmd/vendor. The upstream Go 1.26.0 to 1.26.11 releases vendor golang.org/x/text v0.32.0 in both trees, without the fix, and DHI updates the vendored modules when it builds this package. We read every golang-1.26-dev package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-28, x86_64 and aarch64: 12 versions, 1.26.3-r0 to 1.26.11-r1, each matching its repository index checksum. In the builds before 1.26.8-r1 (1.26.3-r0 to 1.26.8-r0) both copies of unicode/norm/forminfo.go are byte-identical (md5) to golang.org/x/text v0.32.0, so they do not have the fix; from 1.26.8-r1 on, on both architectures, the copy for Go's commands is byte-identical to v0.39.0 and v0.41.0 and the standard library's copy to v0.39.0 and v0.41.0 or, from 1.26.11-r1, v0.43.0, all of which define isInvalid. Of the ten Go programs in each build, only the go command has unicode/norm normalization functions in its function table, all from the standard library's copy, among them four that the advisory lists: Form.Bytes, Form.IsNormalString, Form.String and nextComposed. As a check on the boundary, the inlined name norm.Properties.isInvalid is in the bytes of the go command in 1.26.8-r1 and every later build and in no earlier build. The range ends at 1.26.8-r1."
     },
     {
       "vulnerability": {
@@ -71511,15 +71539,6 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.1-r3?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.10-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r1?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.2-r3?distro=dhi-3.23"
         },
         {
@@ -71542,15 +71561,11 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.8-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.8-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update golang-1.26 to 1.26.8-r1 or later.",
+      "status_notes": "CVE-2026-56852 (GO-2026-5970): a norm.Iter in the golang.org/x/text/unicode/norm package can loop forever on input that contains invalid UTF-8. It is fixed in golang.org/x/text v0.39.0: https://pkg.go.dev/vuln/GO-2026-5970, https://go.dev/issue/80142, https://go.dev/cl/794100, commit https://github.com/golang/text/commit/5ae8e578e495731553eddba11b2d0e86c91a00ce (in v0.39.0, not in v0.38.0), which changes unicode/norm/forminfo.go, iter.go and normalize.go and adds the Properties.isInvalid check. This package is the Go 1.26 toolchain, and it carries two vendored copies of golang.org/x/text that include unicode/norm: the standard library's copy under /usr/lib/go/src/vendor, which the standard library imports and which is compiled into programs built with this toolchain that use it, and the copy for Go's own commands under /usr/lib/go/src/cmd/vendor. The upstream Go 1.26.0 to 1.26.11 releases vendor golang.org/x/text v0.32.0 in both trees, without the fix, and DHI updates the vendored modules when it builds this package. We read every golang-1.26 package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28, x86_64 and aarch64: 18 versions, 1.26.0-r0 to 1.26.11-r1, each matching its repository index checksum. In the builds before 1.26.8-r1 (1.26.0-r0 to 1.26.8-r0) both copies of unicode/norm/forminfo.go are byte-identical (md5) to golang.org/x/text v0.32.0, so they do not have the fix; from 1.26.8-r1 on, on both architectures, the copy for Go's commands is byte-identical to v0.39.0 and v0.41.0 and the standard library's copy to v0.39.0 and v0.41.0 or, from 1.26.11-r1, v0.43.0, all of which define isInvalid. Of the ten Go programs in each build, only the go command has unicode/norm normalization functions in its function table, all from the standard library's copy, among them four that the advisory lists: Form.Bytes, Form.IsNormalString, Form.String and nextComposed. As a check on the boundary, the inlined name norm.Properties.isInvalid is in the bytes of the go command in 1.26.8-r1 and every later build and in no earlier build. The range ends at 1.26.8-r1."
     },
     {
       "vulnerability": {
@@ -71561,14 +71576,32 @@
       },
       "products": [
         {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.10-r0?distro=dhi-3.24"
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.10-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r0?distro=dhi-3.24"
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r1?distro=dhi-3.24"
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r1?distro=dhi-3.23"
         },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.8-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.9-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-56852 (GO-2026-5970): a norm.Iter in the golang.org/x/text/unicode/norm package can loop forever on input that contains invalid UTF-8. It is fixed in golang.org/x/text v0.39.0: https://pkg.go.dev/vuln/GO-2026-5970, https://go.dev/issue/80142, https://go.dev/cl/794100, commit https://github.com/golang/text/commit/5ae8e578e495731553eddba11b2d0e86c91a00ce (in v0.39.0, not in v0.38.0), which changes unicode/norm/forminfo.go, iter.go and normalize.go and adds the Properties.isInvalid check. This package is the Go 1.26 toolchain, and it carries two vendored copies of golang.org/x/text that include unicode/norm: the standard library's copy under /usr/lib/go/src/vendor, which the standard library imports and which is compiled into programs built with this toolchain that use it, and the copy for Go's own commands under /usr/lib/go/src/cmd/vendor. The upstream Go 1.26.0 to 1.26.11 releases vendor golang.org/x/text v0.32.0 in both trees, without the fix, and DHI updates the vendored modules when it builds this package. We read every golang-1.26 package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28, x86_64 and aarch64: 18 versions, 1.26.0-r0 to 1.26.11-r1, each matching its repository index checksum. In the builds before 1.26.8-r1 (1.26.0-r0 to 1.26.8-r0) both copies of unicode/norm/forminfo.go are byte-identical (md5) to golang.org/x/text v0.32.0, so they do not have the fix; from 1.26.8-r1 on, on both architectures, the copy for Go's commands is byte-identical to v0.39.0 and v0.41.0 and the standard library's copy to v0.39.0 and v0.41.0 or, from 1.26.11-r1, v0.43.0, all of which define isInvalid. Of the ten Go programs in each build, only the go command has unicode/norm normalization functions in its function table, all from the standard library's copy, among them four that the advisory lists: Form.Bytes, Form.IsNormalString, Form.String and nextComposed. As a check on the boundary, the inlined name norm.Properties.isInvalid is in the bytes of the go command in 1.26.8-r1 and every later build and in no earlier build. The range ends at 1.26.8-r1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-nlat-w2pc-22ps-ah64",
+        "aliases": [
+          "CVE-2026-56852"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.3-r0?distro=dhi-3.24"
         },
@@ -71589,6 +71622,28 @@
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.8-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26 to 1.26.8-r1 or later.",
+      "status_notes": "CVE-2026-56852 (GO-2026-5970): a norm.Iter in the golang.org/x/text/unicode/norm package can loop forever on input that contains invalid UTF-8. It is fixed in golang.org/x/text v0.39.0: https://pkg.go.dev/vuln/GO-2026-5970, https://go.dev/issue/80142, https://go.dev/cl/794100, commit https://github.com/golang/text/commit/5ae8e578e495731553eddba11b2d0e86c91a00ce (in v0.39.0, not in v0.38.0), which changes unicode/norm/forminfo.go, iter.go and normalize.go and adds the Properties.isInvalid check. This package is the Go 1.26 toolchain, and it carries two vendored copies of golang.org/x/text that include unicode/norm: the standard library's copy under /usr/lib/go/src/vendor, which the standard library imports and which is compiled into programs built with this toolchain that use it, and the copy for Go's own commands under /usr/lib/go/src/cmd/vendor. The upstream Go 1.26.0 to 1.26.11 releases vendor golang.org/x/text v0.32.0 in both trees, without the fix, and DHI updates the vendored modules when it builds this package. We read every golang-1.26 package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-28, x86_64 and aarch64: 12 versions, 1.26.3-r0 to 1.26.11-r1, each matching its repository index checksum. In the builds before 1.26.8-r1 (1.26.3-r0 to 1.26.8-r0) both copies of unicode/norm/forminfo.go are byte-identical (md5) to golang.org/x/text v0.32.0, so they do not have the fix; from 1.26.8-r1 on, on both architectures, the copy for Go's commands is byte-identical to v0.39.0 and v0.41.0 and the standard library's copy to v0.39.0 and v0.41.0 or, from 1.26.11-r1, v0.43.0, all of which define isInvalid. Of the ten Go programs in each build, only the go command has unicode/norm normalization functions in its function table, all from the standard library's copy, among them four that the advisory lists: Form.Bytes, Form.IsNormalString, Form.String and nextComposed. As a check on the boundary, the inlined name norm.Properties.isInvalid is in the bytes of the go command in 1.26.8-r1 and every later build and in no earlier build. The range ends at 1.26.8-r1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-nlat-w2pc-22ps-ah64",
+        "aliases": [
+          "CVE-2026-56852"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.10-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/golang-1.26@1.26.11-r1?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/golang-1.26@1.26.8-r1?distro=dhi-3.24"
@@ -71597,7 +71652,8 @@
           "@id": "pkg:apk/dhi/golang-1.26@1.26.9-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56852 (GO-2026-5970): a norm.Iter in the golang.org/x/text/unicode/norm package can loop forever on input that contains invalid UTF-8. It is fixed in golang.org/x/text v0.39.0: https://pkg.go.dev/vuln/GO-2026-5970, https://go.dev/issue/80142, https://go.dev/cl/794100, commit https://github.com/golang/text/commit/5ae8e578e495731553eddba11b2d0e86c91a00ce (in v0.39.0, not in v0.38.0), which changes unicode/norm/forminfo.go, iter.go and normalize.go and adds the Properties.isInvalid check. This package is the Go 1.26 toolchain, and it carries two vendored copies of golang.org/x/text that include unicode/norm: the standard library's copy under /usr/lib/go/src/vendor, which the standard library imports and which is compiled into programs built with this toolchain that use it, and the copy for Go's own commands under /usr/lib/go/src/cmd/vendor. The upstream Go 1.26.0 to 1.26.11 releases vendor golang.org/x/text v0.32.0 in both trees, without the fix, and DHI updates the vendored modules when it builds this package. We read every golang-1.26 package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-28, x86_64 and aarch64: 12 versions, 1.26.3-r0 to 1.26.11-r1, each matching its repository index checksum. In the builds before 1.26.8-r1 (1.26.3-r0 to 1.26.8-r0) both copies of unicode/norm/forminfo.go are byte-identical (md5) to golang.org/x/text v0.32.0, so they do not have the fix; from 1.26.8-r1 on, on both architectures, the copy for Go's commands is byte-identical to v0.39.0 and v0.41.0 and the standard library's copy to v0.39.0 and v0.41.0 or, from 1.26.11-r1, v0.43.0, all of which define isInvalid. Of the ten Go programs in each build, only the go command has unicode/norm normalization functions in its function table, all from the standard library's copy, among them four that the advisory lists: Form.Bytes, Form.IsNormalString, Form.String and nextComposed. As a check on the boundary, the inlined name norm.Properties.isInvalid is in the bytes of the go command in 1.26.8-r1 and every later build and in no earlier build. The range ends at 1.26.8-r1."
     },
     {
       "vulnerability": {
@@ -208683,6 +208739,43 @@
           "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.11-0?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.6-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.7-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.7-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.8-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.8-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.9-0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26-dev to 1.26.11-1 or later.",
+      "status_notes": "CVE-2026-56852 (GO-2026-5970): a norm.Iter in the golang.org/x/text/unicode/norm package can loop forever on input that contains invalid UTF-8. It is fixed in golang.org/x/text v0.39.0: https://pkg.go.dev/vuln/GO-2026-5970, https://go.dev/issue/80142, https://go.dev/cl/794100, commit https://github.com/golang/text/commit/5ae8e578e495731553eddba11b2d0e86c91a00ce (in v0.39.0, not in v0.38.0), which changes unicode/norm/forminfo.go, iter.go and normalize.go and adds the Properties.isInvalid check. This package is the Go 1.26 toolchain, and it carries two vendored copies of golang.org/x/text that include unicode/norm: the standard library's copy under /usr/lib/go/src/vendor, which the standard library imports and which is compiled into programs built with this toolchain that use it, and the copy for Go's own commands under /usr/lib/go/src/cmd/vendor. The upstream Go 1.26.0 to 1.26.11 releases vendor golang.org/x/text v0.32.0 in both trees, without the fix, and DHI updates the vendored modules when it builds this package. We read every golang-1.26-dev package published for Debian 13 in the DHI Debian repository as of 2026-11-28, amd64 and arm64: 28 versions, 1.26.4-0 to 1.26.11-18, from the md5sums manifest in each package's control archive. The golang-1.26-dev-dbgsym and golang-1.26-dev-oci-config packages built from the same source hold no Go source: each -dbgsym package holds ten debug files under /usr/lib/debug/.build-id and a symlink for its documentation directory, and each -oci-config package holds one configuration file under /opt/docker/config and its Debian changelog. In the builds before 1.26.11-1 (1.26.4-0 to 1.26.11-0) both copies of unicode/norm/forminfo.go are byte-identical (md5) to golang.org/x/text v0.32.0, so they do not have the fix; from 1.26.11-1 on, on both architectures, the copy for Go's commands is byte-identical to v0.39.0 and v0.41.0 and the standard library's copy to v0.43.0, both of which define isInvalid. The range ends at 1.26.11-1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-nlat-w2pc-22ps-ah64",
+        "aliases": [
+          "CVE-2026-56852"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.11-10?distro=dhi-13"
         },
         {
@@ -208735,33 +208828,10 @@
         },
         {
           "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.11-9?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.4-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.5-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.6-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.7-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.7-1?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.8-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.8-1?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26-dev@1.26.9-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56852 (GO-2026-5970): a norm.Iter in the golang.org/x/text/unicode/norm package can loop forever on input that contains invalid UTF-8. It is fixed in golang.org/x/text v0.39.0: https://pkg.go.dev/vuln/GO-2026-5970, https://go.dev/issue/80142, https://go.dev/cl/794100, commit https://github.com/golang/text/commit/5ae8e578e495731553eddba11b2d0e86c91a00ce (in v0.39.0, not in v0.38.0), which changes unicode/norm/forminfo.go, iter.go and normalize.go and adds the Properties.isInvalid check. This package is the Go 1.26 toolchain, and it carries two vendored copies of golang.org/x/text that include unicode/norm: the standard library's copy under /usr/lib/go/src/vendor, which the standard library imports and which is compiled into programs built with this toolchain that use it, and the copy for Go's own commands under /usr/lib/go/src/cmd/vendor. The upstream Go 1.26.0 to 1.26.11 releases vendor golang.org/x/text v0.32.0 in both trees, without the fix, and DHI updates the vendored modules when it builds this package. We read every golang-1.26-dev package published for Debian 13 in the DHI Debian repository as of 2026-11-28, amd64 and arm64: 28 versions, 1.26.4-0 to 1.26.11-18, from the md5sums manifest in each package's control archive. The golang-1.26-dev-dbgsym and golang-1.26-dev-oci-config packages built from the same source hold no Go source: each -dbgsym package holds ten debug files under /usr/lib/debug/.build-id and a symlink for its documentation directory, and each -oci-config package holds one configuration file under /opt/docker/config and its Debian changelog. In the builds before 1.26.11-1 (1.26.4-0 to 1.26.11-0) both copies of unicode/norm/forminfo.go are byte-identical (md5) to golang.org/x/text v0.32.0, so they do not have the fix; from 1.26.11-1 on, on both architectures, the copy for Go's commands is byte-identical to v0.39.0 and v0.41.0 and the standard library's copy to v0.43.0, both of which define isInvalid. The range ends at 1.26.11-1."
     },
     {
       "vulnerability": {
@@ -208777,6 +208847,43 @@
         {
           "@id": "pkg:deb/dhi/golang-1.26@1.26.11-0?distro=dhi-13"
         },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26@1.26.4-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26@1.26.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26@1.26.6-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26@1.26.7-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26@1.26.7-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26@1.26.8-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26@1.26.8-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/golang-1.26@1.26.9-0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update golang-1.26 to 1.26.11-1 or later.",
+      "status_notes": "CVE-2026-56852 (GO-2026-5970): a norm.Iter in the golang.org/x/text/unicode/norm package can loop forever on input that contains invalid UTF-8. It is fixed in golang.org/x/text v0.39.0: https://pkg.go.dev/vuln/GO-2026-5970, https://go.dev/issue/80142, https://go.dev/cl/794100, commit https://github.com/golang/text/commit/5ae8e578e495731553eddba11b2d0e86c91a00ce (in v0.39.0, not in v0.38.0), which changes unicode/norm/forminfo.go, iter.go and normalize.go and adds the Properties.isInvalid check. This package is the Go 1.26 toolchain, and it carries two vendored copies of golang.org/x/text that include unicode/norm: the standard library's copy under /usr/lib/go/src/vendor, which the standard library imports and which is compiled into programs built with this toolchain that use it, and the copy for Go's own commands under /usr/lib/go/src/cmd/vendor. The upstream Go 1.26.0 to 1.26.11 releases vendor golang.org/x/text v0.32.0 in both trees, without the fix, and DHI updates the vendored modules when it builds this package. We read every golang-1.26 package published for Debian 13 in the DHI Debian repository as of 2026-11-28, amd64 and arm64: 28 versions, 1.26.4-0 to 1.26.11-18, from the md5sums manifest in each package's control archive. The golang-1.26-dbgsym and golang-1.26-oci-config packages built from the same source hold no Go source: each -dbgsym package holds ten debug files under /usr/lib/debug/.build-id and a symlink for its documentation directory, and each -oci-config package holds one configuration file under /opt/docker/config and its Debian changelog. In the builds before 1.26.11-1 (1.26.4-0 to 1.26.11-0) both copies of unicode/norm/forminfo.go are byte-identical (md5) to golang.org/x/text v0.32.0, so they do not have the fix; from 1.26.11-1 on, on both architectures, the copy for Go's commands is byte-identical to v0.39.0 and v0.41.0 and the standard library's copy to v0.43.0, both of which define isInvalid. The range ends at 1.26.11-1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-nlat-w2pc-22ps-ah64",
+        "aliases": [
+          "CVE-2026-56852"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/golang-1.26@1.26.11-10?distro=dhi-13"
         },
@@ -208830,33 +208937,10 @@
         },
         {
           "@id": "pkg:deb/dhi/golang-1.26@1.26.11-9?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26@1.26.4-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26@1.26.5-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26@1.26.6-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26@1.26.7-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26@1.26.7-1?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26@1.26.8-0?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26@1.26.8-1?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/golang-1.26@1.26.9-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56852 (GO-2026-5970): a norm.Iter in the golang.org/x/text/unicode/norm package can loop forever on input that contains invalid UTF-8. It is fixed in golang.org/x/text v0.39.0: https://pkg.go.dev/vuln/GO-2026-5970, https://go.dev/issue/80142, https://go.dev/cl/794100, commit https://github.com/golang/text/commit/5ae8e578e495731553eddba11b2d0e86c91a00ce (in v0.39.0, not in v0.38.0), which changes unicode/norm/forminfo.go, iter.go and normalize.go and adds the Properties.isInvalid check. This package is the Go 1.26 toolchain, and it carries two vendored copies of golang.org/x/text that include unicode/norm: the standard library's copy under /usr/lib/go/src/vendor, which the standard library imports and which is compiled into programs built with this toolchain that use it, and the copy for Go's own commands under /usr/lib/go/src/cmd/vendor. The upstream Go 1.26.0 to 1.26.11 releases vendor golang.org/x/text v0.32.0 in both trees, without the fix, and DHI updates the vendored modules when it builds this package. We read every golang-1.26 package published for Debian 13 in the DHI Debian repository as of 2026-11-28, amd64 and arm64: 28 versions, 1.26.4-0 to 1.26.11-18, from the md5sums manifest in each package's control archive. The golang-1.26-dbgsym and golang-1.26-oci-config packages built from the same source hold no Go source: each -dbgsym package holds ten debug files under /usr/lib/debug/.build-id and a symlink for its documentation directory, and each -oci-config package holds one configuration file under /opt/docker/config and its Debian changelog. In the builds before 1.26.11-1 (1.26.4-0 to 1.26.11-0) both copies of unicode/norm/forminfo.go are byte-identical (md5) to golang.org/x/text v0.32.0, so they do not have the fix; from 1.26.11-1 on, on both architectures, the copy for Go's commands is byte-identical to v0.39.0 and v0.41.0 and the standard library's copy to v0.43.0, both of which define isInvalid. The range ends at 1.26.11-1."
     },
     {
       "vulnerability": {
