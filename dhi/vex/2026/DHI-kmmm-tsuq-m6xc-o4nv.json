@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:54:50Z",
-  "last_updated": "2026-11-24T22:11:59Z",
-  "version": 6,
+  "last_updated": "2026-11-28T01:27:06Z",
+  "version": 7,
   "statements": [
     {
       "vulnerability": {
@@ -39,15 +39,6 @@
       },
       "products": [
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
         },
         {
@@ -57,7 +48,30 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.10-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-6473 (PostgreSQL server undersizes allocations, via integer wraparound) in 17.10 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-6473/ lists 17.10 as the fixed release for major version 17 (versions before 17.10 are affected), and the 17.10 release notes, https://www.postgresql.org/docs/release/17.10/, list this CVE. The fix is a series of commits on the REL_17_STABLE branch tagged Security: CVE-2026-6473, all in the REL_17_10 release tag and not in REL_17_9, among them https://github.com/postgres/postgres/commit/fe2720c450655a9986dd731a62e476ea3e1313b0 (overflow-safe palloc_array()), https://github.com/postgres/postgres/commit/3c41f5534aa60402293e7a50c4e44f7d6b6e3e4d (array_agg()), https://github.com/postgres/postgres/commit/e3a2bea41c0c953feec0cc2468a434f12a60cc78 (regular expressions), https://github.com/postgres/postgres/commit/3ed3dbbf440a81590ade81ac6553dc7380a26561 (ts_headline()), and https://github.com/postgres/postgres/commit/8c3426110934af82590eb212ad5a282a9c5f7070 and https://github.com/postgres/postgres/commit/c4d04cc4810303427d2f6fcf914bb856af32cc52 (the ltree and intarray extensions). The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, which builds the upstream PostgreSQL release tarball; the 17.10-r0 APKBUILD, https://github.com/alpinelinux/aports/blob/2949d6752d74a3fb36bd772b9f993331fa6917e2/main/postgresql17/APKBUILD, differs from the 17.9-r0 one only in the version, the tarball checksum and the secfixes list, applies no patch that touches the files this fix changes, and lists CVE-2026-6473 under its 17.10-r0 secfixes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, and the ltree and intarray modules (/usr/lib/postgresql17/ltree.so and _int.so in the postgresql17-contrib package) in every postgresql17 build published for Alpine 3.23 in the DHI package repository as of 2026-11-27 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0), on both x86_64 and aarch64, with package checksums verified against the package index: 17.7-r0, 17.8-r0 and 17.9-r0 report PostgreSQL 17.7, 17.8 and 17.9 and are affected, while 17.10-r0, 17.11-r0 and 17.12-r0 report 17.10, 17.11 and 17.12 and carry the fix. As a check, the server binary contains the error messages these commits add ('array size exceeds the maximum allowed (%zu)' and 'invalid memory allocation request size %zu * %zu') in 17.10-r0, 17.11-r0 and 17.12-r0 on both architectures and not in 17.7-r0, 17.8-r0 or 17.9-r0, and ltree.so and _int.so gain 'lquery level is too large' and 'query_int expression is too complex' at 17.10-r0 in the same way. 17.10-r0 is the first published build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-kmmm-tsuq-m6xc-o4nv",
+        "aliases": [
+          "CVE-2026-6473"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-6473 (PostgreSQL server undersizes allocations, via integer wraparound) in 17.10 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-6473/ lists 17.10 as the fixed release for major version 17 (versions before 17.10 are affected), and the 17.10 release notes, https://www.postgresql.org/docs/release/17.10/, list this CVE. The fix is a series of commits on the REL_17_STABLE branch tagged Security: CVE-2026-6473, all in the REL_17_10 release tag and not in REL_17_9, among them https://github.com/postgres/postgres/commit/fe2720c450655a9986dd731a62e476ea3e1313b0 (overflow-safe palloc_array()), https://github.com/postgres/postgres/commit/3c41f5534aa60402293e7a50c4e44f7d6b6e3e4d (array_agg()), https://github.com/postgres/postgres/commit/e3a2bea41c0c953feec0cc2468a434f12a60cc78 (regular expressions), https://github.com/postgres/postgres/commit/3ed3dbbf440a81590ade81ac6553dc7380a26561 (ts_headline()), and https://github.com/postgres/postgres/commit/8c3426110934af82590eb212ad5a282a9c5f7070 and https://github.com/postgres/postgres/commit/c4d04cc4810303427d2f6fcf914bb856af32cc52 (the ltree and intarray extensions). The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, which builds the upstream PostgreSQL release tarball; the 17.10-r0 APKBUILD, https://github.com/alpinelinux/aports/blob/2949d6752d74a3fb36bd772b9f993331fa6917e2/main/postgresql17/APKBUILD, differs from the 17.9-r0 one only in the version, the tarball checksum and the secfixes list, applies no patch that touches the files this fix changes, and lists CVE-2026-6473 under its 17.10-r0 secfixes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, and the ltree and intarray modules (/usr/lib/postgresql17/ltree.so and _int.so in the postgresql17-contrib package) in every postgresql17 build published for Alpine 3.23 in the DHI package repository as of 2026-11-27 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0), on both x86_64 and aarch64, with package checksums verified against the package index: 17.7-r0, 17.8-r0 and 17.9-r0 report PostgreSQL 17.7, 17.8 and 17.9 and are affected, while 17.10-r0, 17.11-r0 and 17.12-r0 report 17.10, 17.11 and 17.12 and carry the fix. As a check, the server binary contains the error messages these commits add ('array size exceeds the maximum allowed (%zu)' and 'invalid memory allocation request size %zu * %zu') in 17.10-r0, 17.11-r0 and 17.12-r0 on both architectures and not in 17.7-r0, 17.8-r0 or 17.9-r0, and ltree.so and _int.so gain 'lquery level is too large' and 'query_int expression is too complex' at 17.10-r0 in the same way. 17.10-r0 is the first published build that carries the fix."
     },
     {
       "vulnerability": {
