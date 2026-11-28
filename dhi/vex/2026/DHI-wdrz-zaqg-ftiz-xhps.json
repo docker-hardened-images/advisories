@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:38:30Z",
-  "last_updated": "2026-11-28T10:58:22Z",
-  "version": 50,
+  "last_updated": "2026-11-28T13:46:45Z",
+  "version": 51,
   "statements": [
     {
       "vulnerability": {
@@ -170608,7 +170608,20 @@
         },
         {
           "@id": "pkg:apk/dhi/kustomize-dev@5.8.1-r2?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update kustomize-dev to 5.8.1-r3 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . We read every kustomize-dev package in the Alpine 3.23 index of the DHI Alpine repository on 2026-11-28: 12 builds, 5.8.1-r0 to the current 5.8.3-r4 (there is no 5.8.3-r0), for x86_64 and aarch64 (24 packages); the Alpine 3.23 and 3.24 indexes list the same package checksums for all of them, and each package was checked against its index checksum. The program in each package is byte-identical (same SHA-256) to /usr/bin/kustomize in the Debian kustomize-dev package of the same build and architecture (5.8.1-r0 and 5.8.1-0, and so on to 5.8.3-r4 and 5.8.3-4), all of which we downloaded, checked against the Debian index and unpacked. Each package holds one file, /usr/bin/kustomize (beside the usr and usr/bin directories): a statically linked Go program (no program interpreter, no shared-library dependencies) built with GOOS=linux, CGO_ENABLED=0 and -ldflags -s -w; the kustomize-dev programs are built without -trimpath. We read each program's Go build information and its function table (pclntab), which works on these stripped programs and finds runtime.main in every build, and searched its bytes, which also finds the names of inlined functions. The Go release in the build information, the same on both architectures, is: 5.8.1-r0 Go 1.26.4; 5.8.1-r1 and 5.8.1-r2 Go 1.26.5; 5.8.1-r3 Go 1.26.6; 5.8.1-r4 Go 1.26.7; 5.8.1-r5 to 5.8.2-r1 Go 1.26.8; 5.8.3-r1 Go 1.27.2; 5.8.3-r2 Go 1.27.3; 5.8.3-r3 and 5.8.3-r4 Go 1.27.4. Every build links net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse in its function table. 5.8.1-r0, 5.8.1-r1 and 5.8.1-r2 are built with Go 1.26.4 or 1.26.5, before the fix, and are affected. 5.8.1-r3 is the first build with Go 1.26.6, and every later build uses Go 1.26.6 to 1.26.8 or Go 1.27.2 to 1.27.4, all of which carry the fix. The function table shows the rewrite: the extent of net/url.resolvePath (the distance to the next function entry, padding included) is 1856 bytes on x86_64 and 1504 on aarch64 in 5.8.1-r0 to 5.8.1-r2, 1216 and 1104 from 5.8.1-r3 to 5.8.2-r1, and 1248 and 1120 in the Go 1.27 builds, the same as in a program we built with Go 1.27.1. The fixed version is the first build of this package that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/kustomize-dev@5.8.1-r3?distro=dhi-3.23"
         },
@@ -170637,7 +170650,8 @@
           "@id": "pkg:apk/dhi/kustomize-dev@5.8.3-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . We read every kustomize-dev package in the Alpine 3.23 index of the DHI Alpine repository on 2026-11-28: 12 builds, 5.8.1-r0 to the current 5.8.3-r4 (there is no 5.8.3-r0), for x86_64 and aarch64 (24 packages); the Alpine 3.23 and 3.24 indexes list the same package checksums for all of them, and each package was checked against its index checksum. The program in each package is byte-identical (same SHA-256) to /usr/bin/kustomize in the Debian kustomize-dev package of the same build and architecture (5.8.1-r0 and 5.8.1-0, and so on to 5.8.3-r4 and 5.8.3-4), all of which we downloaded, checked against the Debian index and unpacked. Each package holds one file, /usr/bin/kustomize (beside the usr and usr/bin directories): a statically linked Go program (no program interpreter, no shared-library dependencies) built with GOOS=linux, CGO_ENABLED=0 and -ldflags -s -w; the kustomize-dev programs are built without -trimpath. We read each program's Go build information and its function table (pclntab), which works on these stripped programs and finds runtime.main in every build, and searched its bytes, which also finds the names of inlined functions. The Go release in the build information, the same on both architectures, is: 5.8.1-r0 Go 1.26.4; 5.8.1-r1 and 5.8.1-r2 Go 1.26.5; 5.8.1-r3 Go 1.26.6; 5.8.1-r4 Go 1.26.7; 5.8.1-r5 to 5.8.2-r1 Go 1.26.8; 5.8.3-r1 Go 1.27.2; 5.8.3-r2 Go 1.27.3; 5.8.3-r3 and 5.8.3-r4 Go 1.27.4. Every build links net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse in its function table. 5.8.1-r0, 5.8.1-r1 and 5.8.1-r2 are built with Go 1.26.4 or 1.26.5, before the fix, and are affected. 5.8.1-r3 is the first build with Go 1.26.6, and every later build uses Go 1.26.6 to 1.26.8 or Go 1.27.2 to 1.27.4, all of which carry the fix. The function table shows the rewrite: the extent of net/url.resolvePath (the distance to the next function entry, padding included) is 1856 bytes on x86_64 and 1504 on aarch64 in 5.8.1-r0 to 5.8.1-r2, 1216 and 1104 from 5.8.1-r3 to 5.8.2-r1, and 1248 and 1120 in the Go 1.27 builds, the same as in a program we built with Go 1.27.1. The fixed version is the first build of this package that carries the fix."
     },
     {
       "vulnerability": {
@@ -170655,7 +170669,20 @@
         },
         {
           "@id": "pkg:apk/dhi/kustomize-dev@5.8.1-r2?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update kustomize-dev to 5.8.1-r3 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . We read every kustomize-dev package in the Alpine 3.24 index of the DHI Alpine repository on 2026-11-28: 12 builds, 5.8.1-r0 to the current 5.8.3-r4 (there is no 5.8.3-r0), for x86_64 and aarch64 (24 packages); the Alpine 3.23 and 3.24 indexes list the same package checksums for all of them, and each package was checked against its index checksum. The program in each package is byte-identical (same SHA-256) to /usr/bin/kustomize in the Debian kustomize-dev package of the same build and architecture (5.8.1-r0 and 5.8.1-0, and so on to 5.8.3-r4 and 5.8.3-4), all of which we downloaded, checked against the Debian index and unpacked. Each package holds one file, /usr/bin/kustomize (beside the usr and usr/bin directories): a statically linked Go program (no program interpreter, no shared-library dependencies) built with GOOS=linux, CGO_ENABLED=0 and -ldflags -s -w; the kustomize-dev programs are built without -trimpath. We read each program's Go build information and its function table (pclntab), which works on these stripped programs and finds runtime.main in every build, and searched its bytes, which also finds the names of inlined functions. The Go release in the build information, the same on both architectures, is: 5.8.1-r0 Go 1.26.4; 5.8.1-r1 and 5.8.1-r2 Go 1.26.5; 5.8.1-r3 Go 1.26.6; 5.8.1-r4 Go 1.26.7; 5.8.1-r5 to 5.8.2-r1 Go 1.26.8; 5.8.3-r1 Go 1.27.2; 5.8.3-r2 Go 1.27.3; 5.8.3-r3 and 5.8.3-r4 Go 1.27.4. Every build links net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse in its function table. 5.8.1-r0, 5.8.1-r1 and 5.8.1-r2 are built with Go 1.26.4 or 1.26.5, before the fix, and are affected. 5.8.1-r3 is the first build with Go 1.26.6, and every later build uses Go 1.26.6 to 1.26.8 or Go 1.27.2 to 1.27.4, all of which carry the fix. The function table shows the rewrite: the extent of net/url.resolvePath (the distance to the next function entry, padding included) is 1856 bytes on x86_64 and 1504 on aarch64 in 5.8.1-r0 to 5.8.1-r2, 1216 and 1104 from 5.8.1-r3 to 5.8.2-r1, and 1248 and 1120 in the Go 1.27 builds, the same as in a program we built with Go 1.27.1. The fixed version is the first build of this package that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/kustomize-dev@5.8.1-r3?distro=dhi-3.24"
         },
@@ -170684,7 +170711,8 @@
           "@id": "pkg:apk/dhi/kustomize-dev@5.8.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . We read every kustomize-dev package in the Alpine 3.24 index of the DHI Alpine repository on 2026-11-28: 12 builds, 5.8.1-r0 to the current 5.8.3-r4 (there is no 5.8.3-r0), for x86_64 and aarch64 (24 packages); the Alpine 3.23 and 3.24 indexes list the same package checksums for all of them, and each package was checked against its index checksum. The program in each package is byte-identical (same SHA-256) to /usr/bin/kustomize in the Debian kustomize-dev package of the same build and architecture (5.8.1-r0 and 5.8.1-0, and so on to 5.8.3-r4 and 5.8.3-4), all of which we downloaded, checked against the Debian index and unpacked. Each package holds one file, /usr/bin/kustomize (beside the usr and usr/bin directories): a statically linked Go program (no program interpreter, no shared-library dependencies) built with GOOS=linux, CGO_ENABLED=0 and -ldflags -s -w; the kustomize-dev programs are built without -trimpath. We read each program's Go build information and its function table (pclntab), which works on these stripped programs and finds runtime.main in every build, and searched its bytes, which also finds the names of inlined functions. The Go release in the build information, the same on both architectures, is: 5.8.1-r0 Go 1.26.4; 5.8.1-r1 and 5.8.1-r2 Go 1.26.5; 5.8.1-r3 Go 1.26.6; 5.8.1-r4 Go 1.26.7; 5.8.1-r5 to 5.8.2-r1 Go 1.26.8; 5.8.3-r1 Go 1.27.2; 5.8.3-r2 Go 1.27.3; 5.8.3-r3 and 5.8.3-r4 Go 1.27.4. Every build links net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse in its function table. 5.8.1-r0, 5.8.1-r1 and 5.8.1-r2 are built with Go 1.26.4 or 1.26.5, before the fix, and are affected. 5.8.1-r3 is the first build with Go 1.26.6, and every later build uses Go 1.26.6 to 1.26.8 or Go 1.27.2 to 1.27.4, all of which carry the fix. The function table shows the rewrite: the extent of net/url.resolvePath (the distance to the next function entry, padding included) is 1856 bytes on x86_64 and 1504 on aarch64 in 5.8.1-r0 to 5.8.1-r2, 1216 and 1104 from 5.8.1-r3 to 5.8.2-r1, and 1248 and 1120 in the Go 1.27 builds, the same as in a program we built with Go 1.27.1. The fixed version is the first build of this package that carries the fix."
     },
     {
       "vulnerability": {
@@ -170731,7 +170759,8 @@
           "@id": "pkg:apk/dhi/kustomize-fips-dev@5.8.3-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . The kustomize-fips-dev packages for Alpine 3.23 are not listed in the public indexes of the DHI Alpine repository, and the DHI security repository, which requires authentication, could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published kustomize-fips-dev build on both architectures, to establish which published builds carry the net/url fix (the first build using Go 1.26.6 or later). In the non-FIPS kustomize-dev packages, which we did inspect, every build links net/url.resolvePath, and the builds from the first one using Go 1.26.6 carry the fix. That is not evidence for the FIPS builds."
     },
     {
       "vulnerability": {
@@ -170778,7 +170807,8 @@
           "@id": "pkg:apk/dhi/kustomize-fips-dev@5.8.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . The kustomize-fips-dev packages for Alpine 3.24 are not listed in the public indexes of the DHI Alpine repository, and the DHI security repository, which requires authentication, could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published kustomize-fips-dev build on both architectures, to establish which published builds carry the net/url fix (the first build using Go 1.26.6 or later). In the non-FIPS kustomize-dev packages, which we did inspect, every build links net/url.resolvePath, and the builds from the first one using Go 1.26.6 carry the fix. That is not evidence for the FIPS builds."
     },
     {
       "vulnerability": {
@@ -170825,7 +170855,8 @@
           "@id": "pkg:apk/dhi/kustomize-fips@5.8.3-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . The kustomize-fips packages for Alpine 3.23 are not listed in the public indexes of the DHI Alpine repository, and the DHI security repository, which requires authentication, could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published kustomize-fips build on both architectures, to establish which published builds carry the net/url fix (the first build using Go 1.26.6 or later). In the non-FIPS kustomize packages, which we did inspect, every build links net/url.resolvePath, and the builds from the first one using Go 1.26.6 carry the fix. That is not evidence for the FIPS builds."
     },
     {
       "vulnerability": {
@@ -170872,7 +170903,8 @@
           "@id": "pkg:apk/dhi/kustomize-fips@5.8.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . The kustomize-fips packages for Alpine 3.24 are not listed in the public indexes of the DHI Alpine repository, and the DHI security repository, which requires authentication, could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published kustomize-fips build on both architectures, to establish which published builds carry the net/url fix (the first build using Go 1.26.6 or later). In the non-FIPS kustomize packages, which we did inspect, every build links net/url.resolvePath, and the builds from the first one using Go 1.26.6 carry the fix. That is not evidence for the FIPS builds."
     },
     {
       "vulnerability": {
@@ -170890,7 +170922,20 @@
         },
         {
           "@id": "pkg:apk/dhi/kustomize@5.8.1-r2?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update kustomize to 5.8.1-r3 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . We read every kustomize package in the Alpine 3.23 index of the DHI Alpine repository on 2026-11-28: 12 builds, 5.8.1-r0 to the current 5.8.3-r4 (there is no 5.8.3-r0), for x86_64 and aarch64 (24 packages); the Alpine 3.23 and 3.24 indexes list the same package checksums for all of them, and each package was checked against its index checksum. The program in each package is byte-identical (same SHA-256) to /usr/bin/kustomize in the Debian kustomize package of the same build and architecture (5.8.1-r0 and 5.8.1-0, and so on to 5.8.3-r4 and 5.8.3-4), all of which we downloaded, checked against the Debian index and unpacked. Each package holds one file, /usr/bin/kustomize (beside the usr and usr/bin directories): a statically linked Go program (no program interpreter, no shared-library dependencies) built with GOOS=linux, CGO_ENABLED=0 and -ldflags -s -w, and -trimpath. We read each program's Go build information and its function table (pclntab), which works on these stripped programs and finds runtime.main in every build, and searched its bytes, which also finds the names of inlined functions. The Go release in the build information, the same on both architectures, is: 5.8.1-r0 Go 1.26.4; 5.8.1-r1 and 5.8.1-r2 Go 1.26.5; 5.8.1-r3 Go 1.26.6; 5.8.1-r4 Go 1.26.7; 5.8.1-r5 to 5.8.2-r1 Go 1.26.8; 5.8.3-r1 Go 1.27.2; 5.8.3-r2 Go 1.27.3; 5.8.3-r3 and 5.8.3-r4 Go 1.27.4. Every build links net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse in its function table. 5.8.1-r0, 5.8.1-r1 and 5.8.1-r2 are built with Go 1.26.4 or 1.26.5, before the fix, and are affected. 5.8.1-r3 is the first build with Go 1.26.6, and every later build uses Go 1.26.6 to 1.26.8 or Go 1.27.2 to 1.27.4, all of which carry the fix. The function table shows the rewrite: the extent of net/url.resolvePath (the distance to the next function entry, padding included) is 1856 bytes on x86_64 and 1504 on aarch64 in 5.8.1-r0 to 5.8.1-r2, 1216 and 1104 from 5.8.1-r3 to 5.8.2-r1, and 1248 and 1120 in the Go 1.27 builds, the same as in a program we built with Go 1.27.1. The fixed version is the first build of this package that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/kustomize@5.8.1-r3?distro=dhi-3.23"
         },
@@ -170919,7 +170964,8 @@
           "@id": "pkg:apk/dhi/kustomize@5.8.3-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . We read every kustomize package in the Alpine 3.23 index of the DHI Alpine repository on 2026-11-28: 12 builds, 5.8.1-r0 to the current 5.8.3-r4 (there is no 5.8.3-r0), for x86_64 and aarch64 (24 packages); the Alpine 3.23 and 3.24 indexes list the same package checksums for all of them, and each package was checked against its index checksum. The program in each package is byte-identical (same SHA-256) to /usr/bin/kustomize in the Debian kustomize package of the same build and architecture (5.8.1-r0 and 5.8.1-0, and so on to 5.8.3-r4 and 5.8.3-4), all of which we downloaded, checked against the Debian index and unpacked. Each package holds one file, /usr/bin/kustomize (beside the usr and usr/bin directories): a statically linked Go program (no program interpreter, no shared-library dependencies) built with GOOS=linux, CGO_ENABLED=0 and -ldflags -s -w, and -trimpath. We read each program's Go build information and its function table (pclntab), which works on these stripped programs and finds runtime.main in every build, and searched its bytes, which also finds the names of inlined functions. The Go release in the build information, the same on both architectures, is: 5.8.1-r0 Go 1.26.4; 5.8.1-r1 and 5.8.1-r2 Go 1.26.5; 5.8.1-r3 Go 1.26.6; 5.8.1-r4 Go 1.26.7; 5.8.1-r5 to 5.8.2-r1 Go 1.26.8; 5.8.3-r1 Go 1.27.2; 5.8.3-r2 Go 1.27.3; 5.8.3-r3 and 5.8.3-r4 Go 1.27.4. Every build links net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse in its function table. 5.8.1-r0, 5.8.1-r1 and 5.8.1-r2 are built with Go 1.26.4 or 1.26.5, before the fix, and are affected. 5.8.1-r3 is the first build with Go 1.26.6, and every later build uses Go 1.26.6 to 1.26.8 or Go 1.27.2 to 1.27.4, all of which carry the fix. The function table shows the rewrite: the extent of net/url.resolvePath (the distance to the next function entry, padding included) is 1856 bytes on x86_64 and 1504 on aarch64 in 5.8.1-r0 to 5.8.1-r2, 1216 and 1104 from 5.8.1-r3 to 5.8.2-r1, and 1248 and 1120 in the Go 1.27 builds, the same as in a program we built with Go 1.27.1. The fixed version is the first build of this package that carries the fix."
     },
     {
       "vulnerability": {
@@ -170937,7 +170983,20 @@
         },
         {
           "@id": "pkg:apk/dhi/kustomize@5.8.1-r2?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update kustomize to 5.8.1-r3 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . We read every kustomize package in the Alpine 3.24 index of the DHI Alpine repository on 2026-11-28: 12 builds, 5.8.1-r0 to the current 5.8.3-r4 (there is no 5.8.3-r0), for x86_64 and aarch64 (24 packages); the Alpine 3.23 and 3.24 indexes list the same package checksums for all of them, and each package was checked against its index checksum. The program in each package is byte-identical (same SHA-256) to /usr/bin/kustomize in the Debian kustomize package of the same build and architecture (5.8.1-r0 and 5.8.1-0, and so on to 5.8.3-r4 and 5.8.3-4), all of which we downloaded, checked against the Debian index and unpacked. Each package holds one file, /usr/bin/kustomize (beside the usr and usr/bin directories): a statically linked Go program (no program interpreter, no shared-library dependencies) built with GOOS=linux, CGO_ENABLED=0 and -ldflags -s -w, and -trimpath. We read each program's Go build information and its function table (pclntab), which works on these stripped programs and finds runtime.main in every build, and searched its bytes, which also finds the names of inlined functions. The Go release in the build information, the same on both architectures, is: 5.8.1-r0 Go 1.26.4; 5.8.1-r1 and 5.8.1-r2 Go 1.26.5; 5.8.1-r3 Go 1.26.6; 5.8.1-r4 Go 1.26.7; 5.8.1-r5 to 5.8.2-r1 Go 1.26.8; 5.8.3-r1 Go 1.27.2; 5.8.3-r2 Go 1.27.3; 5.8.3-r3 and 5.8.3-r4 Go 1.27.4. Every build links net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse in its function table. 5.8.1-r0, 5.8.1-r1 and 5.8.1-r2 are built with Go 1.26.4 or 1.26.5, before the fix, and are affected. 5.8.1-r3 is the first build with Go 1.26.6, and every later build uses Go 1.26.6 to 1.26.8 or Go 1.27.2 to 1.27.4, all of which carry the fix. The function table shows the rewrite: the extent of net/url.resolvePath (the distance to the next function entry, padding included) is 1856 bytes on x86_64 and 1504 on aarch64 in 5.8.1-r0 to 5.8.1-r2, 1216 and 1104 from 5.8.1-r3 to 5.8.2-r1, and 1248 and 1120 in the Go 1.27 builds, the same as in a program we built with Go 1.27.1. The fixed version is the first build of this package that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/kustomize@5.8.1-r3?distro=dhi-3.24"
         },
@@ -170966,7 +171025,8 @@
           "@id": "pkg:apk/dhi/kustomize@5.8.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . We read every kustomize package in the Alpine 3.24 index of the DHI Alpine repository on 2026-11-28: 12 builds, 5.8.1-r0 to the current 5.8.3-r4 (there is no 5.8.3-r0), for x86_64 and aarch64 (24 packages); the Alpine 3.23 and 3.24 indexes list the same package checksums for all of them, and each package was checked against its index checksum. The program in each package is byte-identical (same SHA-256) to /usr/bin/kustomize in the Debian kustomize package of the same build and architecture (5.8.1-r0 and 5.8.1-0, and so on to 5.8.3-r4 and 5.8.3-4), all of which we downloaded, checked against the Debian index and unpacked. Each package holds one file, /usr/bin/kustomize (beside the usr and usr/bin directories): a statically linked Go program (no program interpreter, no shared-library dependencies) built with GOOS=linux, CGO_ENABLED=0 and -ldflags -s -w, and -trimpath. We read each program's Go build information and its function table (pclntab), which works on these stripped programs and finds runtime.main in every build, and searched its bytes, which also finds the names of inlined functions. The Go release in the build information, the same on both architectures, is: 5.8.1-r0 Go 1.26.4; 5.8.1-r1 and 5.8.1-r2 Go 1.26.5; 5.8.1-r3 Go 1.26.6; 5.8.1-r4 Go 1.26.7; 5.8.1-r5 to 5.8.2-r1 Go 1.26.8; 5.8.3-r1 Go 1.27.2; 5.8.3-r2 Go 1.27.3; 5.8.3-r3 and 5.8.3-r4 Go 1.27.4. Every build links net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse in its function table. 5.8.1-r0, 5.8.1-r1 and 5.8.1-r2 are built with Go 1.26.4 or 1.26.5, before the fix, and are affected. 5.8.1-r3 is the first build with Go 1.26.6, and every later build uses Go 1.26.6 to 1.26.8 or Go 1.27.2 to 1.27.4, all of which carry the fix. The function table shows the rewrite: the extent of net/url.resolvePath (the distance to the next function entry, padding included) is 1856 bytes on x86_64 and 1504 on aarch64 in 5.8.1-r0 to 5.8.1-r2, 1216 and 1104 from 5.8.1-r3 to 5.8.2-r1, and 1248 and 1120 in the Go 1.27 builds, the same as in a program we built with Go 1.27.1. The fixed version is the first build of this package that carries the fix."
     },
     {
       "vulnerability": {
@@ -242892,6 +242952,9 @@
           "@id": "pkg:apk/dhi/valkey-operator-dev@0.9.0-r1?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/valkey-operator-dev@0.9.0-r20?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/valkey-operator-dev@0.9.0-r2?distro=dhi-3.23"
         },
         {
@@ -243099,6 +243162,9 @@
         },
         {
           "@id": "pkg:apk/dhi/valkey-operator-dev@0.9.0-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/valkey-operator-dev@0.9.0-r20?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/valkey-operator-dev@0.9.0-r2?distro=dhi-3.24"
@@ -243310,6 +243376,9 @@
           "@id": "pkg:apk/dhi/valkey-operator-fips-dev@0.9.0-r1?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/valkey-operator-fips-dev@0.9.0-r20?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/valkey-operator-fips-dev@0.9.0-r2?distro=dhi-3.23"
         },
         {
@@ -243517,6 +243586,9 @@
         },
         {
           "@id": "pkg:apk/dhi/valkey-operator-fips-dev@0.9.0-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/valkey-operator-fips-dev@0.9.0-r20?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/valkey-operator-fips-dev@0.9.0-r2?distro=dhi-3.24"
@@ -243728,6 +243800,9 @@
           "@id": "pkg:apk/dhi/valkey-operator-fips@0.9.0-r1?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/valkey-operator-fips@0.9.0-r20?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/valkey-operator-fips@0.9.0-r2?distro=dhi-3.23"
         },
         {
@@ -243935,6 +244010,9 @@
         },
         {
           "@id": "pkg:apk/dhi/valkey-operator-fips@0.9.0-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/valkey-operator-fips@0.9.0-r20?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/valkey-operator-fips@0.9.0-r2?distro=dhi-3.24"
@@ -244146,6 +244224,9 @@
           "@id": "pkg:apk/dhi/valkey-operator@0.9.0-r1?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/valkey-operator@0.9.0-r20?distro=dhi-3.23"
+        },
+        {
           "@id": "pkg:apk/dhi/valkey-operator@0.9.0-r2?distro=dhi-3.23"
         },
         {
@@ -244353,6 +244434,9 @@
         },
         {
           "@id": "pkg:apk/dhi/valkey-operator@0.9.0-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/valkey-operator@0.9.0-r20?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/valkey-operator@0.9.0-r2?distro=dhi-3.24"
@@ -344435,7 +344519,20 @@
         },
         {
           "@id": "pkg:deb/dhi/kustomize-dev@5.8.1-2?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update kustomize-dev to 5.8.1-3 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . The DHI Debian repository lists 12 kustomize-dev builds on 2026-11-28, 5.8.1-0 to the current 5.8.3-4 (there is no 5.8.3-0), for amd64 and arm64. We downloaded all 24 packages, checked each against its index checksum and unpacked its data archive. Each package holds one file, /usr/bin/kustomize (beside the usr and usr/bin directories): a statically linked Go program (no program interpreter, no shared-library dependencies) built with GOOS=linux, CGO_ENABLED=0 and -ldflags -s -w; the kustomize-dev programs are built without -trimpath. We read each program's Go build information and its function table (pclntab), which works on these stripped programs and finds runtime.main in every build, and searched its bytes, which also finds the names of inlined functions. The Go release in the build information, the same on both architectures, is: 5.8.1-0 Go 1.26.4; 5.8.1-1 and 5.8.1-2 Go 1.26.5; 5.8.1-3 Go 1.26.6; 5.8.1-4 Go 1.26.7; 5.8.1-5 to 5.8.2-1 Go 1.26.8; 5.8.3-1 Go 1.27.2; 5.8.3-2 Go 1.27.3; 5.8.3-3 and 5.8.3-4 Go 1.27.4. Every build links net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse in its function table. 5.8.1-0, 5.8.1-1 and 5.8.1-2 are built with Go 1.26.4 or 1.26.5, before the fix, and are affected. 5.8.1-3 is the first build with Go 1.26.6, and every later build uses Go 1.26.6 to 1.26.8 or Go 1.27.2 to 1.27.4, all of which carry the fix. The function table shows the rewrite: the extent of net/url.resolvePath (the distance to the next function entry, padding included) is 1856 bytes on x86_64 and 1504 on aarch64 in 5.8.1-0 to 5.8.1-2, 1216 and 1104 from 5.8.1-3 to 5.8.2-1, and 1248 and 1120 in the Go 1.27 builds, the same as in a program we built with Go 1.27.1. The fixed version is the first build of this package that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/kustomize-dev@5.8.1-3?distro=dhi-13"
         },
@@ -344464,7 +344561,8 @@
           "@id": "pkg:deb/dhi/kustomize-dev@5.8.3-4?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . The DHI Debian repository lists 12 kustomize-dev builds on 2026-11-28, 5.8.1-0 to the current 5.8.3-4 (there is no 5.8.3-0), for amd64 and arm64. We downloaded all 24 packages, checked each against its index checksum and unpacked its data archive. Each package holds one file, /usr/bin/kustomize (beside the usr and usr/bin directories): a statically linked Go program (no program interpreter, no shared-library dependencies) built with GOOS=linux, CGO_ENABLED=0 and -ldflags -s -w; the kustomize-dev programs are built without -trimpath. We read each program's Go build information and its function table (pclntab), which works on these stripped programs and finds runtime.main in every build, and searched its bytes, which also finds the names of inlined functions. The Go release in the build information, the same on both architectures, is: 5.8.1-0 Go 1.26.4; 5.8.1-1 and 5.8.1-2 Go 1.26.5; 5.8.1-3 Go 1.26.6; 5.8.1-4 Go 1.26.7; 5.8.1-5 to 5.8.2-1 Go 1.26.8; 5.8.3-1 Go 1.27.2; 5.8.3-2 Go 1.27.3; 5.8.3-3 and 5.8.3-4 Go 1.27.4. Every build links net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse in its function table. 5.8.1-0, 5.8.1-1 and 5.8.1-2 are built with Go 1.26.4 or 1.26.5, before the fix, and are affected. 5.8.1-3 is the first build with Go 1.26.6, and every later build uses Go 1.26.6 to 1.26.8 or Go 1.27.2 to 1.27.4, all of which carry the fix. The function table shows the rewrite: the extent of net/url.resolvePath (the distance to the next function entry, padding included) is 1856 bytes on x86_64 and 1504 on aarch64 in 5.8.1-0 to 5.8.1-2, 1216 and 1104 from 5.8.1-3 to 5.8.2-1, and 1248 and 1120 in the Go 1.27 builds, the same as in a program we built with Go 1.27.1. The fixed version is the first build of this package that carries the fix."
     },
     {
       "vulnerability": {
@@ -344511,7 +344609,8 @@
           "@id": "pkg:deb/dhi/kustomize-fips-dev@5.8.3-4?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . The kustomize-fips-dev packages for Debian 13 are not listed in the public indexes of the DHI Debian repository, and the DHI security repository, which requires authentication, could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published kustomize-fips-dev build on both architectures, to establish which published builds carry the net/url fix (the first build using Go 1.26.6 or later). In the non-FIPS kustomize-dev packages, which we did inspect, every build links net/url.resolvePath, and the builds from the first one using Go 1.26.6 carry the fix. That is not evidence for the FIPS builds."
     },
     {
       "vulnerability": {
@@ -344558,7 +344657,8 @@
           "@id": "pkg:deb/dhi/kustomize-fips@5.8.3-4?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . The kustomize-fips packages for Debian 13 are not listed in the public indexes of the DHI Debian repository, and the DHI security repository, which requires authentication, could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published kustomize-fips build on both architectures, to establish which published builds carry the net/url fix (the first build using Go 1.26.6 or later). In the non-FIPS kustomize packages, which we did inspect, every build links net/url.resolvePath, and the builds from the first one using Go 1.26.6 carry the fix. That is not evidence for the FIPS builds."
     },
     {
       "vulnerability": {
@@ -344576,7 +344676,20 @@
         },
         {
           "@id": "pkg:deb/dhi/kustomize@5.8.1-2?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update kustomize to 5.8.1-3 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . The DHI Debian repository lists 12 builds of the kustomize source on 2026-11-28, 5.8.1-0 to the current 5.8.3-4 (there is no 5.8.3-0), each publishing the kustomize and kustomize-dev packages for amd64 and arm64. We downloaded all 48 packages, checked each against its index checksum and unpacked its data archive. Each package holds one file, /usr/bin/kustomize (beside the usr and usr/bin directories): a statically linked Go program (no program interpreter, no shared-library dependencies) built with GOOS=linux, CGO_ENABLED=0 and -ldflags -s -w (and -trimpath in the kustomize packages, not in the kustomize-dev packages). We read each program's Go build information and its function table (pclntab), which works on these stripped programs and finds runtime.main in every build, and searched its bytes, which also finds the names of inlined functions. The Go release in the build information, the same on both architectures, is: 5.8.1-0 Go 1.26.4; 5.8.1-1 and 5.8.1-2 Go 1.26.5; 5.8.1-3 Go 1.26.6; 5.8.1-4 Go 1.26.7; 5.8.1-5 to 5.8.2-1 Go 1.26.8; 5.8.3-1 Go 1.27.2; 5.8.3-2 Go 1.27.3; 5.8.3-3 and 5.8.3-4 Go 1.27.4. Every build links net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse in its function table. 5.8.1-0, 5.8.1-1 and 5.8.1-2 are built with Go 1.26.4 or 1.26.5, before the fix, and are affected. 5.8.1-3 is the first build with Go 1.26.6, and every later build uses Go 1.26.6 to 1.26.8 or Go 1.27.2 to 1.27.4, all of which carry the fix. The function table shows the rewrite: the extent of net/url.resolvePath (the distance to the next function entry, padding included) is 1856 bytes on x86_64 and 1504 on aarch64 in 5.8.1-0 to 5.8.1-2, 1216 and 1104 from 5.8.1-3 to 5.8.2-1, and 1248 and 1120 in the Go 1.27 builds, the same as in a program we built with Go 1.27.1. The fixed version is the first build of this package that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/kustomize@5.8.1-3?distro=dhi-13"
         },
@@ -344605,7 +344718,8 @@
           "@id": "pkg:deb/dhi/kustomize@5.8.3-4?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): in the Go standard library's net/url package, resolving a relative path with many '..' segments took quadratic time and memory, through URL.Parse, URL.ResolveReference and resolvePath. It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://groups.google.com/g/golang-announce/c/94pEornpRlI . The Go 1.26 fix, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (in Go 1.26.6, not in 1.26.5), rewrites resolvePath and changes only src/net/url/url.go and its test. The Debian tracker lists golang-1.24 in trixie as vulnerable and not to be fixed in a security update (no-dsa, minor issue) and golang-1.19 in bookworm as postponed, with fixes in golang-1.25 1.25.13-1, golang-1.26 1.26.6-1 and golang-1.27 1.27~rc3-1 in unstable: https://security-tracker.debian.org/tracker/CVE-2026-56860 . The DHI Debian repository lists 12 builds of the kustomize source on 2026-11-28, 5.8.1-0 to the current 5.8.3-4 (there is no 5.8.3-0), each publishing the kustomize and kustomize-dev packages for amd64 and arm64. We downloaded all 48 packages, checked each against its index checksum and unpacked its data archive. Each package holds one file, /usr/bin/kustomize (beside the usr and usr/bin directories): a statically linked Go program (no program interpreter, no shared-library dependencies) built with GOOS=linux, CGO_ENABLED=0 and -ldflags -s -w (and -trimpath in the kustomize packages, not in the kustomize-dev packages). We read each program's Go build information and its function table (pclntab), which works on these stripped programs and finds runtime.main in every build, and searched its bytes, which also finds the names of inlined functions. The Go release in the build information, the same on both architectures, is: 5.8.1-0 Go 1.26.4; 5.8.1-1 and 5.8.1-2 Go 1.26.5; 5.8.1-3 Go 1.26.6; 5.8.1-4 Go 1.26.7; 5.8.1-5 to 5.8.2-1 Go 1.26.8; 5.8.3-1 Go 1.27.2; 5.8.3-2 Go 1.27.3; 5.8.3-3 and 5.8.3-4 Go 1.27.4. Every build links net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse in its function table. 5.8.1-0, 5.8.1-1 and 5.8.1-2 are built with Go 1.26.4 or 1.26.5, before the fix, and are affected. 5.8.1-3 is the first build with Go 1.26.6, and every later build uses Go 1.26.6 to 1.26.8 or Go 1.27.2 to 1.27.4, all of which carry the fix. The function table shows the rewrite: the extent of net/url.resolvePath (the distance to the next function entry, padding included) is 1856 bytes on x86_64 and 1504 on aarch64 in 5.8.1-0 to 5.8.1-2, 1216 and 1104 from 5.8.1-3 to 5.8.2-1, and 1248 and 1120 in the Go 1.27 builds, the same as in a program we built with Go 1.27.1. The fixed version is the first build of this package that carries the fix."
     },
     {
       "vulnerability": {
@@ -382945,6 +383059,9 @@
           "@id": "pkg:deb/dhi/valkey-operator-dev@0.9.0-1?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/valkey-operator-dev@0.9.0-20?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/valkey-operator-dev@0.9.0-2?distro=dhi-13"
         },
         {
@@ -383152,6 +383269,9 @@
         },
         {
           "@id": "pkg:deb/dhi/valkey-operator-fips-dev@0.9.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/valkey-operator-fips-dev@0.9.0-20?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/valkey-operator-fips-dev@0.9.0-2?distro=dhi-13"
@@ -383363,6 +383483,9 @@
           "@id": "pkg:deb/dhi/valkey-operator-fips@0.9.0-1?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/valkey-operator-fips@0.9.0-20?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/valkey-operator-fips@0.9.0-2?distro=dhi-13"
         },
         {
@@ -383570,6 +383693,9 @@
         },
         {
           "@id": "pkg:deb/dhi/valkey-operator@0.9.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/valkey-operator@0.9.0-20?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/valkey-operator@0.9.0-2?distro=dhi-13"
