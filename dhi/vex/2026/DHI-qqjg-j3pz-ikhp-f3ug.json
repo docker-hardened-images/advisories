@@ -4,9 +4,37 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:56:08Z",
-  "last_updated": "2026-11-25T09:34:05Z",
-  "version": 5,
+  "last_updated": "2026-11-28T04:01:52Z",
+  "version": 6,
   "statements": [
+    {
+      "vulnerability": {
+        "name": "DHI-qqjg-j3pz-ikhp-f3ug",
+        "aliases": [
+          "GHSA-mjcv-p78q-w5fw"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/docker@29.5.2-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.5.2-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.5.3-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.5.3-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/docker@29.6.0-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update docker to 29.6.1-r0 or later.",
+      "status_notes": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before v0.4.1 places no limits on what it reads while parsing user and group database files, so a crafted /etc/passwd or /etc/group, for example from a container image, can exhaust memory. It is fixed in moby/sys/user v0.4.1: https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw, https://github.com/moby/sys/pull/221, https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe . Docker Engine 29.6.1 takes v0.4.1 in commit https://github.com/moby/moby/commit/d9bd5f039e7b2cbe79b23aba91d874284d3fd5d4 and lists the advisory in its release notes, https://github.com/moby/moby/releases/tag/docker-v29.6.1 . This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages (shell completions, documentation, OpenRC and systemd files, rootless extras). We covered every subpackage of every build published in the DHI Alpine 3.24 repository by 2026-11-27, 33 versions from 29.5.2-r0 to 29.10.1-r0, for x86_64 and aarch64, with each package matched to the index checksum. The only ELF files are three Go programs, all built for GOOS=linux: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli; no package holds a PE, Mach-O or static archive file. We read the function table of every Go program in every build from its Go line table, with runtime.main as a control, and its Go build information. dockerd links moby/sys/user and contains its parsing functions (ParsePasswdFileFilter, ParseGroupFileFilter) in every build. dockerd's build information shows github.com/moby/sys/user at 29.5.2-r0 to 29.6.0-r0 v0.4.0; 29.6.1-r0 to 29.9.3-r4 v0.4.1; 29.10.0-r0 to 29.10.0-r1 v0.5.0; 29.10.1-r0 v0.5.1. /usr/bin/docker contains a copy of moby/sys/user in every build (vendored under the docker/cli module path before 29.10.0-r1), but only its identity-mapping and directory-creation helpers (IdentityMapping.ToHost, IdentityMapping.ToContainer, toHost, toContainer, getRootUIDGID, and before 29.7.1-r0 also MkdirAllAndChown and mkdirAs), never the user and group file parsers the advisory names; docker-proxy does not contain the package. As a check on the boundary, openUserFile and limitedFile.Read, which v0.4.1 adds, are absent from dockerd's function table in every build before 29.6.1-r0 and present from 29.6.1-r0, on both architectures. FIXED at 29.6.1-r0."
+    },
     {
       "vulnerability": {
         "name": "DHI-qqjg-j3pz-ikhp-f3ug",
@@ -23,21 +51,6 @@
         },
         {
           "@id": "pkg:apk/dhi/docker@29.10.1-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.5.2-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.5.2-r1?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.5.3-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.5.3-r1?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/docker@29.6.0-r0?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/docker@29.6.1-r0?distro=dhi-3.24"
@@ -115,7 +128,8 @@
           "@id": "pkg:apk/dhi/docker@29.9.3-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-mjcv-p78q-w5fw (CVE-2026-61801, GO-2026-6686): github.com/moby/sys/user before v0.4.1 places no limits on what it reads while parsing user and group database files, so a crafted /etc/passwd or /etc/group, for example from a container image, can exhaust memory. It is fixed in moby/sys/user v0.4.1: https://github.com/moby/sys/security/advisories/GHSA-mjcv-p78q-w5fw, https://github.com/moby/sys/pull/221, https://github.com/moby/sys/commit/85a71bbe1faa36c552a960e6a5f3d0cfb632fbbe . Docker Engine 29.6.1 takes v0.4.1 in commit https://github.com/moby/moby/commit/d9bd5f039e7b2cbe79b23aba91d874284d3fd5d4 and lists the advisory in its release notes, https://github.com/moby/moby/releases/tag/docker-v29.6.1 . This owner covers the packages built from the Alpine docker recipe: docker, docker-engine, docker-cli and their support subpackages (shell completions, documentation, OpenRC and systemd files, rootless extras). We covered every subpackage of every build published in the DHI Alpine 3.24 repository by 2026-11-27, 33 versions from 29.5.2-r0 to 29.10.1-r0, for x86_64 and aarch64, with each package matched to the index checksum. The only ELF files are three Go programs, all built for GOOS=linux: /usr/bin/dockerd and /usr/bin/docker-proxy in docker-engine, and /usr/bin/docker in docker-cli; no package holds a PE, Mach-O or static archive file. We read the function table of every Go program in every build from its Go line table, with runtime.main as a control, and its Go build information. dockerd links moby/sys/user and contains its parsing functions (ParsePasswdFileFilter, ParseGroupFileFilter) in every build. dockerd's build information shows github.com/moby/sys/user at 29.5.2-r0 to 29.6.0-r0 v0.4.0; 29.6.1-r0 to 29.9.3-r4 v0.4.1; 29.10.0-r0 to 29.10.0-r1 v0.5.0; 29.10.1-r0 v0.5.1. /usr/bin/docker contains a copy of moby/sys/user in every build (vendored under the docker/cli module path before 29.10.0-r1), but only its identity-mapping and directory-creation helpers (IdentityMapping.ToHost, IdentityMapping.ToContainer, toHost, toContainer, getRootUIDGID, and before 29.7.1-r0 also MkdirAllAndChown and mkdirAs), never the user and group file parsers the advisory names; docker-proxy does not contain the package. As a check on the boundary, openUserFile and limitedFile.Read, which v0.4.1 adds, are absent from dockerd's function table in every build before 29.6.1-r0 and present from 29.6.1-r0, on both architectures. FIXED at 29.6.1-r0."
     }
   ]
 }
