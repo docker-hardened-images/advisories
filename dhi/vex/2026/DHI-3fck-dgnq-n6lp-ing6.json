@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T00:27:04Z",
-  "last_updated": "2026-11-27T15:26:57Z",
-  "version": 12,
+  "last_updated": "2026-11-28T08:04:26Z",
+  "version": 14,
   "statements": [
     {
       "vulnerability": {
@@ -26,7 +26,20 @@
         },
         {
           "@id": "pkg:deb/dhi/airflow@3.3.0-3?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update airflow to 3.3.1-0 or later.",
+      "status_notes": "CVE-2026-59242 (GHSA-fcmm-42r9-mmmm): Apache Airflow's XCom API checked submitted values for reserved serialization keys only in dicts and lists, so a value sent as a JSON string literal slipped past the check and was rebuilt on a deserialize=true read, letting a user with XCom write and read access instantiate arbitrary airflow.* classes on the API server. Airflow 3.3.1 fixes it (https://lists.apache.org/thread/dm0520yhh4mn7qknyoh45r2w6c5qg2mg, https://github.com/apache/airflow/pull/69378): the reserved-key check in airflow/api_fastapi/core_api/datamodels/xcom.py also decodes JSON string values and inspects the result. We read all 58 airflow packages for Debian 13 published in the DHI Debian repository by 2026-11-28, 3.3.0-0 to 3.4.0-17, amd64 and arm64 (116 package files). For every package we read its md5sums manifest, which lists every file the package installs with its digest, and matched the digests of the files that carry the fix against the same files in the released wheels on PyPI; we also unpacked the amd64 and arm64 packages of 3.3.0-0, 3.3.2-19, 3.4.0-0 and 3.4.0-17. Both architectures ship the same copy of those files in every version. 3.3.0-0 to 3.3.0-3 install Airflow 3.3.0, 3.3.1-0 to 3.3.1-15 install 3.3.1, 3.3.2-0 to 3.3.2-19 install 3.3.2 and 3.4.0-0 to 3.4.0-17 install 3.4.0, each with one copy of the file. In 3.3.0-0 to 3.3.0-3 xcom.py is byte for byte the file in the apache-airflow-core 3.3.0 wheel, whose check does not look inside strings. From 3.3.1-0 to 3.3.2-19 it is byte for byte the apache-airflow-core 3.3.1 wheel's, whose check decodes a string value with json.loads and walks the result. 3.4.0-0 to 3.4.0-17 ship one digest of xcom.py and of the helper it calls; in the unpacked 3.4.0-17 copy the check calls find_reserved_keys with decode_json_strings=True, which does the same. 3.3.1-0 is the first published package with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-3fck-dgnq-n6lp-ing6",
+        "aliases": [
+          "CVE-2026-59242"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/airflow@3.3.1-0?distro=dhi-13"
         },
@@ -163,6 +176,9 @@
           "@id": "pkg:deb/dhi/airflow@3.4.0-17?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/airflow@3.4.0-18?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/airflow@3.4.0-1?distro=dhi-13"
         },
         {
@@ -190,7 +206,8 @@
           "@id": "pkg:deb/dhi/airflow@3.4.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-59242 (GHSA-fcmm-42r9-mmmm): Apache Airflow's XCom API checked submitted values for reserved serialization keys only in dicts and lists, so a value sent as a JSON string literal slipped past the check and was rebuilt on a deserialize=true read, letting a user with XCom write and read access instantiate arbitrary airflow.* classes on the API server. Airflow 3.3.1 fixes it (https://lists.apache.org/thread/dm0520yhh4mn7qknyoh45r2w6c5qg2mg, https://github.com/apache/airflow/pull/69378): the reserved-key check in airflow/api_fastapi/core_api/datamodels/xcom.py also decodes JSON string values and inspects the result. We read all 58 airflow packages for Debian 13 published in the DHI Debian repository by 2026-11-28, 3.3.0-0 to 3.4.0-17, amd64 and arm64 (116 package files). For every package we read its md5sums manifest, which lists every file the package installs with its digest, and matched the digests of the files that carry the fix against the same files in the released wheels on PyPI; we also unpacked the amd64 and arm64 packages of 3.3.0-0, 3.3.2-19, 3.4.0-0 and 3.4.0-17. Both architectures ship the same copy of those files in every version. 3.3.0-0 to 3.3.0-3 install Airflow 3.3.0, 3.3.1-0 to 3.3.1-15 install 3.3.1, 3.3.2-0 to 3.3.2-19 install 3.3.2 and 3.4.0-0 to 3.4.0-17 install 3.4.0, each with one copy of the file. In 3.3.0-0 to 3.3.0-3 xcom.py is byte for byte the file in the apache-airflow-core 3.3.0 wheel, whose check does not look inside strings. From 3.3.1-0 to 3.3.2-19 it is byte for byte the apache-airflow-core 3.3.1 wheel's, whose check decodes a string value with json.loads and walks the result. 3.4.0-0 to 3.4.0-17 ship one digest of xcom.py and of the helper it calls; in the unpacked 3.4.0-17 copy the check calls find_reserved_keys with decode_json_strings=True, which does the same. 3.3.1-0 is the first published package with the fix."
     }
   ]
 }
