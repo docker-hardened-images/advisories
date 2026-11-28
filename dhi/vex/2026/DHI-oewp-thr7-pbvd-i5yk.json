@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-27T05:30:18Z",
-  "version": 27,
+  "last_updated": "2026-11-28T12:05:30Z",
+  "version": 28,
   "statements": [
     {
       "vulnerability": {
@@ -127,7 +127,8 @@
           "@id": "pkg:apk/dhi/alertmanager-fips@0.35.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-32289 (GO-2026-4865): the Go standard library's html/template did not track context across template branches or brace depth inside JavaScript template literals, so actions there could be escaped incorrectly, leading to XSS. Go before 1.25.9 and Go 1.26.0 to 1.26.1 are affected; it is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4865, https://go.dev/issue/78331, https://go.dev/cl/763762, https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU . The standard library is compiled into each Go program, so a build is fixed when it was built with one of those Go releases or a later one. The alertmanager-fips packages are published in a separate DHI repository that we have not inspected for this review, so no build has been checked yet. Pending: reading the Go toolchain version from each published alertmanager-fips build, on both architectures, before deciding this owner's status."
     },
     {
       "vulnerability": {
@@ -151,7 +152,20 @@
         },
         {
           "@id": "pkg:apk/dhi/alertmanager@0.31.1-r4?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update alertmanager to 0.31.1-r5 or later.",
+      "status_notes": "CVE-2026-32289 (GO-2026-4865): the Go standard library's html/template did not track context across template branches or brace depth inside JavaScript template literals, so actions there could be escaped incorrectly, leading to XSS. Go before 1.25.9 and Go 1.26.0 to 1.26.1 are affected; it is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4865, https://go.dev/issue/78331, https://go.dev/cl/763762, https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU . The standard library is compiled into each Go program, so a build is fixed when it was built with one of those Go releases or a later one. We downloaded every alertmanager package listed in the Alpine 3.23 index of the DHI Alpine repository on 2026-11-28: 37 builds, 0.31.1-r0 to the current 0.35.1-r0 (there is no 0.33.1-r4), for x86_64 and aarch64, each checked against the index checksum, and read both programs' Go build information and function tables (from the Go line table, which finds runtime.main in every program). Both architectures agree in every build. Each package installs exactly two files, /usr/bin/alertmanager and /usr/bin/amtool: statically linked Go programs with no program interpreter and no shared-library dependencies, built with CGO_ENABLED=0. Both programs are built with -trimpath and the -s -w linker flags. Both programs link html/template's (*escaper).escapeBranch, one of the advisory's symbols, in every build. Both programs are built with the same Go release in every build: 0.31.1-r0 is built with go1.25.7; 0.31.1-r1 to 0.31.1-r4 with go1.26.1; 0.31.1-r5 to 0.32.1-r0 with go1.26.2; 0.32.1-r1 and 0.32.1-r2 with go1.26.3; 0.32.1-r3 to 0.33.1-r0 with go1.26.4; 0.33.1-r1 to 0.33.1-r3 with go1.26.5; 0.33.1-r5 and 0.34.0-r0 with go1.26.6; 0.34.0-r1 with go1.26.7; 0.34.0-r2 to 0.34.1-r1 with go1.26.8; 0.34.1-r2 and 0.34.1-r3 with go1.26.9; 0.34.1-r4 to 0.35.0-r0 with go1.26.10; 0.35.0-r1 to 0.35.1-r0 with go1.26.11. The range ends at 0.31.1-r5, the first build made with a fixed Go release."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-oewp-thr7-pbvd-i5yk",
+        "aliases": [
+          "CVE-2026-32289"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/alertmanager@0.31.1-r5?distro=dhi-3.23"
         },
@@ -249,7 +263,8 @@
           "@id": "pkg:apk/dhi/alertmanager@0.35.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-32289 (GO-2026-4865): the Go standard library's html/template did not track context across template branches or brace depth inside JavaScript template literals, so actions there could be escaped incorrectly, leading to XSS. Go before 1.25.9 and Go 1.26.0 to 1.26.1 are affected; it is fixed in Go 1.25.9 and 1.26.2: https://pkg.go.dev/vuln/GO-2026-4865, https://go.dev/issue/78331, https://go.dev/cl/763762, https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU . The standard library is compiled into each Go program, so a build is fixed when it was built with one of those Go releases or a later one. We downloaded every alertmanager package listed in the Alpine 3.23 index of the DHI Alpine repository on 2026-11-28: 37 builds, 0.31.1-r0 to the current 0.35.1-r0 (there is no 0.33.1-r4), for x86_64 and aarch64, each checked against the index checksum, and read both programs' Go build information and function tables (from the Go line table, which finds runtime.main in every program). Both architectures agree in every build. Each package installs exactly two files, /usr/bin/alertmanager and /usr/bin/amtool: statically linked Go programs with no program interpreter and no shared-library dependencies, built with CGO_ENABLED=0. Both programs are built with -trimpath and the -s -w linker flags. Both programs link html/template's (*escaper).escapeBranch, one of the advisory's symbols, in every build. Both programs are built with the same Go release in every build: 0.31.1-r0 is built with go1.25.7; 0.31.1-r1 to 0.31.1-r4 with go1.26.1; 0.31.1-r5 to 0.32.1-r0 with go1.26.2; 0.32.1-r1 and 0.32.1-r2 with go1.26.3; 0.32.1-r3 to 0.33.1-r0 with go1.26.4; 0.33.1-r1 to 0.33.1-r3 with go1.26.5; 0.33.1-r5 and 0.34.0-r0 with go1.26.6; 0.34.0-r1 with go1.26.7; 0.34.0-r2 to 0.34.1-r1 with go1.26.8; 0.34.1-r2 and 0.34.1-r3 with go1.26.9; 0.34.1-r4 to 0.35.0-r0 with go1.26.10; 0.35.0-r1 to 0.35.1-r0 with go1.26.11. The range ends at 0.31.1-r5, the first build made with a fixed Go release."
     },
     {
       "vulnerability": {

@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T16:40:36Z",
-  "last_updated": "2026-11-27T07:03:16Z",
-  "version": 33,
+  "last_updated": "2026-11-28T12:05:38Z",
+  "version": 34,
   "statements": [
     {
       "vulnerability": {
@@ -127,7 +127,8 @@
           "@id": "pkg:apk/dhi/alertmanager-fips@0.35.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-33186 (GHSA-p77j-4mvh-x3m3, GO-2026-4762): before 1.79.3, the google.golang.org/grpc server accepted requests whose HTTP/2 :path omitted the leading slash and routed them, while path-based authorization interceptors (including grpc/authz) evaluated the non-canonical path, so deny rules written for canonical paths could be bypassed when a fallback allow rule exists. It is fixed in google.golang.org/grpc 1.79.3: https://github.com/grpc/grpc-go/security/advisories/GHSA-p77j-4mvh-x3m3, https://pkg.go.dev/vuln/GO-2026-4762 . The alertmanager-fips packages are published in a separate DHI repository that we have not inspected for this review, so no build has been checked yet. Pending: reading the google.golang.org/grpc module version from each published alertmanager-fips build, on both architectures, before deciding this owner's status."
     },
     {
       "vulnerability": {
@@ -148,7 +149,20 @@
         },
         {
           "@id": "pkg:apk/dhi/alertmanager@0.31.1-r3?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update alertmanager to 0.31.1-r4 or later.",
+      "status_notes": "CVE-2026-33186 (GHSA-p77j-4mvh-x3m3, GO-2026-4762): before 1.79.3, the google.golang.org/grpc server accepted requests whose HTTP/2 :path omitted the leading slash and routed them, while path-based authorization interceptors (including grpc/authz) evaluated the non-canonical path, so deny rules written for canonical paths could be bypassed when a fallback allow rule exists. It is fixed in google.golang.org/grpc 1.79.3: https://github.com/grpc/grpc-go/security/advisories/GHSA-p77j-4mvh-x3m3, https://pkg.go.dev/vuln/GO-2026-4762 . We downloaded every alertmanager package listed in the Alpine 3.23 index of the DHI Alpine repository on 2026-11-28: 37 builds, 0.31.1-r0 to the current 0.35.1-r0 (there is no 0.33.1-r4), for x86_64 and aarch64, each checked against the index checksum, and read both programs' Go build information and function tables (from the Go line table, which finds runtime.main in every program). Both architectures agree in every build. Each package installs exactly two files, /usr/bin/alertmanager and /usr/bin/amtool: statically linked Go programs with no program interpreter and no shared-library dependencies, built with CGO_ENABLED=0. Both programs are built with -trimpath and the -s -w linker flags. Both programs link the grpc server functions the advisory names, (*Server).Serve, (*Server).ServeHTTP and (*Server).handleStream, in every build. Their Go build information lists google.golang.org/grpc v1.78.0 in 0.31.1-r0 to 0.31.1-r3, inside the affected range; v1.79.3 in 0.31.1-r4 and 0.31.1-r5; then v1.80.0, v1.81.0, v1.81.1, v1.82.0, v1.82.1, v1.83.0, v1.83.1 and v1.83.2 through 0.34.0-r5; and from 0.34.0-r6 to 0.35.1-r0 a v1.84.0 or v1.85.0 requirement replaced with v1.83.2, which is the version compiled in. The range ends at 0.31.1-r4, the first build with v1.79.3 or later; no later build goes back below it."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-zu36-j764-pf7l-fo2k",
+        "aliases": [
+          "CVE-2026-33186"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/alertmanager@0.31.1-r4?distro=dhi-3.23"
         },
@@ -249,7 +263,8 @@
           "@id": "pkg:apk/dhi/alertmanager@0.35.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-33186 (GHSA-p77j-4mvh-x3m3, GO-2026-4762): before 1.79.3, the google.golang.org/grpc server accepted requests whose HTTP/2 :path omitted the leading slash and routed them, while path-based authorization interceptors (including grpc/authz) evaluated the non-canonical path, so deny rules written for canonical paths could be bypassed when a fallback allow rule exists. It is fixed in google.golang.org/grpc 1.79.3: https://github.com/grpc/grpc-go/security/advisories/GHSA-p77j-4mvh-x3m3, https://pkg.go.dev/vuln/GO-2026-4762 . We downloaded every alertmanager package listed in the Alpine 3.23 index of the DHI Alpine repository on 2026-11-28: 37 builds, 0.31.1-r0 to the current 0.35.1-r0 (there is no 0.33.1-r4), for x86_64 and aarch64, each checked against the index checksum, and read both programs' Go build information and function tables (from the Go line table, which finds runtime.main in every program). Both architectures agree in every build. Each package installs exactly two files, /usr/bin/alertmanager and /usr/bin/amtool: statically linked Go programs with no program interpreter and no shared-library dependencies, built with CGO_ENABLED=0. Both programs are built with -trimpath and the -s -w linker flags. Both programs link the grpc server functions the advisory names, (*Server).Serve, (*Server).ServeHTTP and (*Server).handleStream, in every build. Their Go build information lists google.golang.org/grpc v1.78.0 in 0.31.1-r0 to 0.31.1-r3, inside the affected range; v1.79.3 in 0.31.1-r4 and 0.31.1-r5; then v1.80.0, v1.81.0, v1.81.1, v1.82.0, v1.82.1, v1.83.0, v1.83.1 and v1.83.2 through 0.34.0-r5; and from 0.34.0-r6 to 0.35.1-r0 a v1.84.0 or v1.85.0 requirement replaced with v1.83.2, which is the version compiled in. The range ends at 0.31.1-r4, the first build with v1.79.3 or later; no later build goes back below it."
     },
     {
       "vulnerability": {
