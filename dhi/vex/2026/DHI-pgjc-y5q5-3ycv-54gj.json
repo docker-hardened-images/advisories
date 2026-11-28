@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T15:48:32Z",
-  "last_updated": "2026-11-27T01:14:41Z",
-  "version": 3,
+  "last_updated": "2026-11-28T06:25:00Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -29,7 +29,20 @@
         },
         {
           "@id": "pkg:deb/dhi/nss@2:3.110-1%2Bdeb13u4%2Bdhi0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nss to 2:3.110-1+deb13u4+dhi1 or later.",
+      "status_notes": "CVE-2026-6766 is an integer underflow in NSS's tls13_AEAD(): when a TLS 1.3 record's ciphertext is shorter than the AEAD tag, subtracting the tag length from the input length wraps. Mozilla fixed it in Firefox 150 and Firefox ESR 140.10: https://www.mozilla.org/en-US/security/advisories/mfsa2026-30/#CVE-2026-6766. The fix, Mozilla bug 2023207, makes tls13_AEAD() in lib/ssl/tls13con.c fail with SEC_ERROR_INPUT_LEN before the subtraction when the input is shorter than the tag: https://hg-edge.mozilla.org/projects/nss/rev/42da9a7f8a03. The NSS 3.131.1, 3.132 and 3.134 release tags contain it. Debian fixed it in trixie in 2:3.110-1+deb13u2, DSA-6290-1, and lists 2:3.123-1 as the fixed version in unstable: https://security-tracker.debian.org/tracker/CVE-2026-6766. The DHI Debian repository publishes four builds of nss for Debian 13: a rebuild of Debian's 2:3.110-1+deb13u4 and builds of NSS 3.131.1, 3.132 and 3.134. We checked the libnss3 and libnss3-dbgsym packages of each on amd64 and arm64, verified against the index checksums: in every one, the disassembled tls13_AEAD() in libssl3.so has an error path that sets SEC_ERROR_INPUT_LEN (0xffffe004), an error code tls13_AEAD() in the NSS 3.110 release source does not use, next to the SEC_ERROR_INVALID_ARGS and SEC_ERROR_OUTPUT_LEN paths that both versions have. The libnssutil3.so version strings confirm NSS 3.110, 3.131.1, 3.132 and 3.134. As a control, tls13_AEAD() in Debian's unfixed libnss3 2:3.110-1+deb13u1 for amd64, matched to its debug symbols by build ID, has no SEC_ERROR_INPUT_LEN path. The changelog shipped in the 2:3.110-1+deb13u4 rebuild lists this CVE under Debian's 2:3.110-1+deb13u2 entry. Every published build carries the fix, so the range closes at the lowest published build, the 2:3.110-1+deb13u4 rebuild."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-pgjc-y5q5-3ycv-54gj",
+        "aliases": [
+          "CVE-2026-6766"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/nss@2:3.110-1%2Bdeb13u4%2Bdhi1?distro=dhi-13"
         },
@@ -43,7 +56,8 @@
           "@id": "pkg:deb/dhi/nss@2:3.134-1%2Bdeb13u0%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-6766 is an integer underflow in NSS's tls13_AEAD(): when a TLS 1.3 record's ciphertext is shorter than the AEAD tag, subtracting the tag length from the input length wraps. Mozilla fixed it in Firefox 150 and Firefox ESR 140.10: https://www.mozilla.org/en-US/security/advisories/mfsa2026-30/#CVE-2026-6766. The fix, Mozilla bug 2023207, makes tls13_AEAD() in lib/ssl/tls13con.c fail with SEC_ERROR_INPUT_LEN before the subtraction when the input is shorter than the tag: https://hg-edge.mozilla.org/projects/nss/rev/42da9a7f8a03. The NSS 3.131.1, 3.132 and 3.134 release tags contain it. Debian fixed it in trixie in 2:3.110-1+deb13u2, DSA-6290-1, and lists 2:3.123-1 as the fixed version in unstable: https://security-tracker.debian.org/tracker/CVE-2026-6766. The DHI Debian repository publishes four builds of nss for Debian 13: a rebuild of Debian's 2:3.110-1+deb13u4 and builds of NSS 3.131.1, 3.132 and 3.134. We checked the libnss3 and libnss3-dbgsym packages of each on amd64 and arm64, verified against the index checksums: in every one, the disassembled tls13_AEAD() in libssl3.so has an error path that sets SEC_ERROR_INPUT_LEN (0xffffe004), an error code tls13_AEAD() in the NSS 3.110 release source does not use, next to the SEC_ERROR_INVALID_ARGS and SEC_ERROR_OUTPUT_LEN paths that both versions have. The libnssutil3.so version strings confirm NSS 3.110, 3.131.1, 3.132 and 3.134. As a control, tls13_AEAD() in Debian's unfixed libnss3 2:3.110-1+deb13u1 for amd64, matched to its debug symbols by build ID, has no SEC_ERROR_INPUT_LEN path. The changelog shipped in the 2:3.110-1+deb13u4 rebuild lists this CVE under Debian's 2:3.110-1+deb13u2 entry. Every published build carries the fix, so the range closes at the lowest published build, the 2:3.110-1+deb13u4 rebuild."
     }
   ]
 }

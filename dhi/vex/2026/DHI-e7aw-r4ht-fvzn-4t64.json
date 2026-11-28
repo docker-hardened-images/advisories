@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-14T02:01:31Z",
-  "last_updated": "2026-11-27T11:11:22Z",
-  "version": 22,
+  "last_updated": "2026-11-28T06:24:57Z",
+  "version": 23,
   "statements": [
     {
       "vulnerability": {
@@ -3149,7 +3149,9 @@
           "@id": "pkg:deb/dhi/nifi@2.12.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-53rm-773f-4q8c (RUSTSEC-2026-0523) affects the Rust crate quinn-proto from 0.11.0 to 0.11.18: after the handshake, a peer can send one MAX_STREAM_DATA frame naming a bidirectional stream index above the limit the endpoint advertised, and the endpoint then treats every stream up to that index as open, which can exhaust a quinn-based application's memory or keep it busy (a denial of service). quinn-proto 0.11.19 fixes it by checking the stream ID against the limit: https://github.com/quinn-rs/quinn/security/advisories/GHSA-53rm-773f-4q8c and https://rustsec.org/advisories/RUSTSEC-2026-0523.html . We read the file list and MD5 checksums (the md5sums control file) of every nifi package in the Debian 13 index of the DHI Debian repository (index read on 2026-11-28): ten builds, 2.12.0-1 to the current 2.12.0-10, for amd64 and arm64, with no debug-symbol packages. Every build lists the same 631 files: 119 NAR and 132 JAR Java archives, Python sources, shell scripts and Windows command scripts, configuration, documentation and images, and, outside the Java archives, one program, /usr/lib/nifi/.local/bin/uv. That file has the same MD5 checksum as the uv program in astral's uv release archive for the same architecture (uv-x86_64-unknown-linux-gnu.tar.gz or uv-aarch64-unknown-linux-gnu.tar.gz, each checked against its published SHA-256): uv 0.13.7 in 2.12.0-1 and 2.12.0-2, uv 0.13.8 in 2.12.0-3, uv 0.13.9 in 2.12.0-4 to 2.12.0-9 and uv 0.13.10 in 2.12.0-10 (https://github.com/astral-sh/uv/releases). We read those eight release programs: each is a dynamically linked Linux ELF program for x86-64 or AArch64 that links against the GNU C library, and the dependency list that cargo-auditable embeds in each, zlib-compressed, names quinn-proto 0.11.18 (with quinn 0.11.9 and quinn-udp 0.5.15); uv's Cargo.lock at the tags 0.13.7 to 0.13.10 pins the same versions. That list records the dependency graph cargo resolved, which is what scanners match, not the code the linker kept. In uv's lock file the only crate that depends on quinn is reqwest 0.13.5, where only the http3 feature enables it (https://github.com/seanmonstar/reqwest/blob/v0.13.5/Cargo.toml), and uv's workspace enables reqwest with rustls and http2 but not http3 at each of these tags (https://github.com/astral-sh/uv/blob/0.13.10/Cargo.toml). We searched the bytes of all eight release programs, ignoring case, for the string quinn: none contains it, so no quinn crate name, symbol or source path (such as a panic location) is present in the code, while the same search finds reqwest 41 times and rustls 72 or 73 times in each program (including 13 distinct reqwest and 41 or 42 distinct rustls source paths). So the uv program in every published nifi build contains no quinn-proto code. We also unpacked the current amd64 package, 2.12.0-10 (checked against its index SHA-256), in full, opening every Java archive in it and every archive nested inside those (5,813 archives): besides uv, its native code is files bundled inside the Java archives for many operating systems and processor architectures (4,490 ELF, 1,027 Mach-O and 900 native Windows PE files, none of them a managed .NET assembly, and no static archives), from snappy-java, lz4-java, jline-native, jna, zstd-jni, jansi, netty, conscrypt and hazelcast. In that package the string quinn appears, ignoring case, only as a personal name in the sample-data files of the datafaker library, and no file other than uv carries Rust url crate source paths or a cargo-auditable dependency list. In each of the other 19 packages every file except uv and two to nine NAR files has the same MD5 checksum as in that package; those NAR files were not unpacked."
     },
     {
       "vulnerability": {

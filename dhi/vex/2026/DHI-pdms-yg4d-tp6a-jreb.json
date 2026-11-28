@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-14T02:01:31Z",
-  "last_updated": "2026-11-27T11:12:48Z",
-  "version": 51,
+  "last_updated": "2026-11-28T06:24:58Z",
+  "version": 52,
   "statements": [
     {
       "vulnerability": {
@@ -3163,7 +3163,9 @@
           "@id": "pkg:deb/dhi/nifi@2.12.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-6pp4-4cxf-xf88 (RUSTSEC-2026-0538) is a receive-loop spin in the Rust crate quinn-udp below 0.5.16 (and 0.6.0 to 0.6.2): after a datagram larger than the receive buffer is dropped, the single-datagram receive path can keep seeing the old truncation flag and issue non-blocking receives in a loop. It affects only targets that read one datagram per recvmsg call (Apple platforms without the fast-apple-datapath feature, OpenBSD, NetBSD, Solaris and illumos); the advisory states that Linux, Android, FreeBSD and Windows use other receive paths and are not affected. quinn-udp 0.5.16 and 0.6.3 fix it: https://github.com/quinn-rs/quinn/security/advisories/GHSA-6pp4-4cxf-xf88 and https://rustsec.org/advisories/RUSTSEC-2026-0538.html . We read the file list and MD5 checksums (the md5sums control file) of every nifi package in the Debian 13 index of the DHI Debian repository (index read on 2026-11-28): ten builds, 2.12.0-1 to the current 2.12.0-10, for amd64 and arm64, with no debug-symbol packages. Every build lists the same 631 files: 119 NAR and 132 JAR Java archives, Python sources, shell scripts and Windows command scripts, configuration, documentation and images, and, outside the Java archives, one program, /usr/lib/nifi/.local/bin/uv. That file has the same MD5 checksum as the uv program in astral's uv release archive for the same architecture (uv-x86_64-unknown-linux-gnu.tar.gz or uv-aarch64-unknown-linux-gnu.tar.gz, each checked against its published SHA-256): uv 0.13.7 in 2.12.0-1 and 2.12.0-2, uv 0.13.8 in 2.12.0-3, uv 0.13.9 in 2.12.0-4 to 2.12.0-9 and uv 0.13.10 in 2.12.0-10 (https://github.com/astral-sh/uv/releases). We read those eight release programs: each is a dynamically linked Linux ELF program for x86-64 or AArch64 that links against the GNU C library, and the dependency list that cargo-auditable embeds in each, zlib-compressed, names quinn-udp 0.5.15 (with quinn 0.11.9 and quinn-proto 0.11.18); uv's Cargo.lock at the tags 0.13.7 to 0.13.10 pins the same version. In quinn-udp 0.5.15 the single-datagram receive function is compiled only for OpenBSD, NetBSD, Solaris, illumos and Apple targets without the fast datapath, and Linux builds compile the recvmmsg receive path instead (the cfg attributes on the two recv functions in quinn-udp/src/unix.rs: https://github.com/quinn-rs/quinn/blob/quinn-udp-0.5.15/quinn-udp/src/unix.rs). We also searched the bytes of all eight release programs, ignoring case, for the string quinn: none contains it, while the same search finds reqwest 41 times and rustls 72 or 73 times in each, so no quinn-udp code is linked into them at all. So the affected receive loop is not in the uv program of any published nifi build. We also unpacked the current amd64 package, 2.12.0-10 (checked against its index SHA-256), in full, opening every Java archive in it and every archive nested inside those (5,813 archives): besides uv, its native code is files bundled inside the Java archives for many operating systems and processor architectures (4,490 ELF, 1,027 Mach-O and 900 native Windows PE files, none of them a managed .NET assembly, and no static archives), from snappy-java, lz4-java, jline-native, jna, zstd-jni, jansi, netty, conscrypt and hazelcast. In that package the string quinn appears, ignoring case, only as a personal name in the sample-data files of the datafaker library, and no file other than uv carries Rust url crate source paths or a cargo-auditable dependency list. In each of the other 19 packages every file except uv and two to nine NAR files has the same MD5 checksum as in that package; those NAR files were not unpacked."
     },
     {
       "vulnerability": {

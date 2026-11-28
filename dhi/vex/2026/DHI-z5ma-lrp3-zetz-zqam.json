@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T00:55:26Z",
-  "last_updated": "2026-11-21T16:17:22Z",
-  "version": 2,
+  "last_updated": "2026-11-28T06:25:05Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -26,12 +26,26 @@
         },
         {
           "@id": "pkg:apk/dhi/perl@5.42.2-r1?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update perl to 5.42.2-r2 or later.",
+      "status_notes": "CVE-2026-57432: S_measure_struct in pp_pack.c adds each template item's size times its repeat count to a signed running total with no overflow check, so a large repeat count in a pack or unpack template wraps the total negative, and the @, X and x position codes then move the buffer pointer out of bounds, reading heap memory past the buffer. The CVE record lists Perl before 5.40.5-RC1, from 5.41.0 before 5.42.3-RC1 and from 5.43.0 before 5.43.11 as affected: https://www.cve.org/CVERecord?id=CVE-2026-57432, announced at https://lists.security.metacpan.org/cve-announce/msg/41780102/. The upstream fix is two commits: https://github.com/Perl/perl5/commit/5f7eb6bbbe0510964e3fb1d6bb691e5445913e55 makes S_measure_struct die with 'Pack template structure size is too large' when the total would overflow, and https://github.com/Perl/perl5/commit/40754edc72dd3e513d758153c0e2f0215897740e makes the B, b, H and h length rounding overflow-safe. The DHI perl packages for Alpine 3.23 are built from upstream 5.42.x releases, and DHI backports both pp_pack.c changes into its builds starting with 5.42.2-r2. We checked every perl, miniperl and perl-doc package published for Alpine 3.23 in the DHI Alpine repository, 5.42.0-r0, 5.42.1-r0, 5.42.2-r0, 5.42.2-r1 and 5.42.2-r2, on x86_64 and aarch64. The diagnostic 'Pack template structure size is too large', which the fix adds, is in libperl.so (perl package) and in the miniperl program of 5.42.2-r2 on both arches, and in no earlier build; another pack diagnostic, 'outside of string in %s', is present in every build. 5.42.2-r2's perldiag.pod in perl-doc documents the new diagnostic and earlier builds' do not. We also installed each perl and miniperl build in an Alpine 3.23 container and ran unpack with the template 'x[a4611686018427387904 a4611686018427387904]', whose structure size is 2^63 bytes: on 5.42.0-r0 through 5.42.2-r1 both programs accept it without error on both arches, which is the unchecked wrap; on 5.42.2-r2 both die with 'Pack template structure size is too large' on both arches. 5.42.2-r2 is the first published build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-z5ma-lrp3-zetz-zqam",
+        "aliases": [
+          "CVE-2026-57432"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/perl@5.42.2-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-57432: S_measure_struct in pp_pack.c adds each template item's size times its repeat count to a signed running total with no overflow check, so a large repeat count in a pack or unpack template wraps the total negative, and the @, X and x position codes then move the buffer pointer out of bounds, reading heap memory past the buffer. The CVE record lists Perl before 5.40.5-RC1, from 5.41.0 before 5.42.3-RC1 and from 5.43.0 before 5.43.11 as affected: https://www.cve.org/CVERecord?id=CVE-2026-57432, announced at https://lists.security.metacpan.org/cve-announce/msg/41780102/. The upstream fix is two commits: https://github.com/Perl/perl5/commit/5f7eb6bbbe0510964e3fb1d6bb691e5445913e55 makes S_measure_struct die with 'Pack template structure size is too large' when the total would overflow, and https://github.com/Perl/perl5/commit/40754edc72dd3e513d758153c0e2f0215897740e makes the B, b, H and h length rounding overflow-safe. The DHI perl packages for Alpine 3.23 are built from upstream 5.42.x releases, and DHI backports both pp_pack.c changes into its builds starting with 5.42.2-r2. We checked every perl, miniperl and perl-doc package published for Alpine 3.23 in the DHI Alpine repository, 5.42.0-r0, 5.42.1-r0, 5.42.2-r0, 5.42.2-r1 and 5.42.2-r2, on x86_64 and aarch64. The diagnostic 'Pack template structure size is too large', which the fix adds, is in libperl.so (perl package) and in the miniperl program of 5.42.2-r2 on both arches, and in no earlier build; another pack diagnostic, 'outside of string in %s', is present in every build. 5.42.2-r2's perldiag.pod in perl-doc documents the new diagnostic and earlier builds' do not. We also installed each perl and miniperl build in an Alpine 3.23 container and ran unpack with the template 'x[a4611686018427387904 a4611686018427387904]', whose structure size is 2^63 bytes: on 5.42.0-r0 through 5.42.2-r1 both programs accept it without error on both arches, which is the unchecked wrap; on 5.42.2-r2 both die with 'Pack template structure size is too large' on both arches. 5.42.2-r2 is the first published build that carries the fix."
     }
   ]
 }
