@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-12T02:25:58Z",
-  "version": 1,
+  "last_updated": "2026-11-28T05:39:02Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -24,7 +25,8 @@
           "@id": "pkg:deb/dhi/libevent@2.1.13-stable-1~deb13u1%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "This CVE covers two weaknesses in libevent's HTTP code, and only one is fixed. The obs-fold half is fixed by upstream commit https://github.com/libevent/libevent/commit/9170dd35e64714613e8d13b290587cfc28e258e2 (http: Reject headers containing CRLF), shipped in libevent 2.1.13 and in Debian's trixie update 2.1.13-stable-1~deb13u1 (DSA-6493-1), and the DHI build of that Debian version carries it: on amd64 and arm64 the inlined header-value check in evhttp_add_header no longer has the strspn continuation path that accepted folded values. The %00 half is not fixed: evhttp_decode_uri_internal still decodes %00 to a literal NUL byte in libevent 2.1.13 and in upstream master, its decoding logic is the same in every published DHI libevent build on amd64 and arm64 (the disassembly differs only in addresses and, in the arm64 libevent_extra library, in the form of one address load), and the CVE record itself says the reviewed patches do not clearly remediate it. Upstream issue https://github.com/libevent/libevent/issues/1904 tracks that half and is open with no fix merged. Pending: an upstream fix or a maintainer ruling on the %00 decoding; this owner can be decided once one exists. See https://security-tracker.debian.org/tracker/CVE-2026-63385 and https://github.com/libevent/libevent/security/advisories/GHSA-jcwh-pvf2-73p2."
     }
   ]
 }
