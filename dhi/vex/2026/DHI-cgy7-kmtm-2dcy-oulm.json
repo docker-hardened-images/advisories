@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:45:21Z",
-  "last_updated": "2026-11-27T16:58:33Z",
-  "version": 39,
+  "last_updated": "2026-11-28T04:17:59Z",
+  "version": 42,
   "statements": [
     {
       "vulnerability": {
@@ -12476,6 +12476,82 @@
           "@id": "pkg:apk/dhi/build-dev@2.20.0-r0?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/build-dev@2.20.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.20.0-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.20.0-r3?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.6.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.7.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.7.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.7.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.7.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.3-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.8.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.9.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.9.1-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.9.2-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build-dev to 2.20.0-r4 or later.",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . We read every build-dev package that the DHI Alpine 3.23 repository lists for x86_64 and aarch64 (index read on 2026-11-28), each download checked against its index checksum: 92 versions, 2.6.4-r0 to the current 2.30.0-r1, each for both architectures, except 2.6.4-r0, which is published for aarch64 only. The index lists 2.19.1-r1 three times, each entry with the same source commit; the copy the repository serves was read. Each package holds one file, /usr/bin/build, a statically linked Go program built for Linux (no program interpreter and no shared-library dependencies). The Go build information of /usr/bin/build names google.golang.org/grpc v1.76.0 (2.6.4-r0 to 2.8.4-r0), v1.79.3 (2.9.0-r0 to 2.16.8-r0) or v1.80.0 (2.17.0-r0 to 2.20.0-r3), and v1.82.1 (2.20.0-r4 to 2.20.0-r11), v1.83.1 (2.20.0-r12 and 2.20.0-r13) or v1.83.2 (from 2.20.0-r14 on), the same on both architectures, with no replace directive for grpc. As a check on the build information, the environment-variable name GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT, which grpc-go adds in 1.82.1 (it is in internal/envconfig/envconfig.go at v1.82.1 and not at v1.82.0), is absent from the 2.20.0-r3 build-dev program and present in the 2.20.0-r4 and 2.30.0-r1 ones, which we downloaded again for this check (x86_64 for 2.20.0-r3 and 2.20.0-r4, aarch64 for 2.30.0-r1). In each of those re-downloaded programs the function table lists methods of transport.(*http2Server), so the HTTP/2 server transport is linked, and no function of the xDS RBAC package. So 2.20.0-r4 is the first build with grpc 1.82.1 or later, and every earlier build has an older grpc."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cgy7-kmtm-2dcy-oulm",
+        "aliases": [
+          "GHSA-hrxh-6v49-42gf"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/build-dev@2.20.0-r10?distro=dhi-3.23"
         },
         {
@@ -12492,15 +12568,6 @@
         },
         {
           "@id": "pkg:apk/dhi/build-dev@2.20.0-r15?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.20.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.20.0-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.20.0-r3?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/build-dev@2.20.0-r4?distro=dhi-3.23"
@@ -12600,63 +12667,10 @@
         },
         {
           "@id": "pkg:apk/dhi/build-dev@2.30.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.7.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.7.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.7.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.7.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.3-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.3-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.8.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.9.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.9.1-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . We read every build-dev package that the DHI Alpine 3.23 repository lists for x86_64 and aarch64 (index read on 2026-11-28), each download checked against its index checksum: 92 versions, 2.6.4-r0 to the current 2.30.0-r1, each for both architectures, except 2.6.4-r0, which is published for aarch64 only. The index lists 2.19.1-r1 three times, each entry with the same source commit; the copy the repository serves was read. Each package holds one file, /usr/bin/build, a statically linked Go program built for Linux (no program interpreter and no shared-library dependencies). The Go build information of /usr/bin/build names google.golang.org/grpc v1.76.0 (2.6.4-r0 to 2.8.4-r0), v1.79.3 (2.9.0-r0 to 2.16.8-r0) or v1.80.0 (2.17.0-r0 to 2.20.0-r3), and v1.82.1 (2.20.0-r4 to 2.20.0-r11), v1.83.1 (2.20.0-r12 and 2.20.0-r13) or v1.83.2 (from 2.20.0-r14 on), the same on both architectures, with no replace directive for grpc. As a check on the build information, the environment-variable name GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT, which grpc-go adds in 1.82.1 (it is in internal/envconfig/envconfig.go at v1.82.1 and not at v1.82.0), is absent from the 2.20.0-r3 build-dev program and present in the 2.20.0-r4 and 2.30.0-r1 ones, which we downloaded again for this check (x86_64 for 2.20.0-r3 and 2.20.0-r4, aarch64 for 2.30.0-r1). In each of those re-downloaded programs the function table lists methods of transport.(*http2Server), so the HTTP/2 server transport is linked, and no function of the xDS RBAC package. So 2.20.0-r4 is the first build with grpc 1.82.1 or later, and every earlier build has an older grpc."
     },
     {
       "vulnerability": {
@@ -12694,6 +12708,28 @@
           "@id": "pkg:apk/dhi/build-dev@2.20.0-r0?distro=dhi-3.24"
         },
         {
+          "@id": "pkg:apk/dhi/build-dev@2.20.0-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.20.0-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/build-dev@2.20.0-r3?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build-dev to 2.20.0-r4 or later.",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . We read every build-dev package that the DHI Alpine 3.24 repository lists for x86_64 and aarch64 (index read on 2026-11-28): 51 versions, 2.17.3-r1 to the current 2.30.0-r1, each for both architectures. Each has the same index checksum as the Alpine 3.23 package of the same version and architecture (2.19.1-r1, listed three times in both indexes, has the same three checksums in each), so they are the same packages; we read them from the 3.23 repository and confirmed it by downloading two of them from the 3.24 repository, which were byte-identical to their 3.23 copies. Each package holds one file, /usr/bin/build, a statically linked Go program built for Linux (no program interpreter and no shared-library dependencies). The Go build information of /usr/bin/build names google.golang.org/grpc v1.80.0 (2.17.3-r1 to 2.20.0-r3), and v1.82.1 (2.20.0-r4 to 2.20.0-r11), v1.83.1 (2.20.0-r12 and 2.20.0-r13) or v1.83.2 (from 2.20.0-r14 on), the same on both architectures, with no replace directive for grpc. As a check on the build information, the environment-variable name GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT, which grpc-go adds in 1.82.1 (it is in internal/envconfig/envconfig.go at v1.82.1 and not at v1.82.0), is absent from the 2.20.0-r3 build-dev program and present in the 2.20.0-r4 and 2.30.0-r1 ones, which we downloaded again for this check (x86_64 for 2.20.0-r3 and 2.20.0-r4, aarch64 for 2.30.0-r1). In each of those re-downloaded programs the function table lists methods of transport.(*http2Server), so the HTTP/2 server transport is linked, and no function of the xDS RBAC package. So 2.20.0-r4 is the first build with grpc 1.82.1 or later, and every earlier build has an older grpc."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cgy7-kmtm-2dcy-oulm",
+        "aliases": [
+          "GHSA-hrxh-6v49-42gf"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/build-dev@2.20.0-r10?distro=dhi-3.24"
         },
         {
@@ -12710,15 +12746,6 @@
         },
         {
           "@id": "pkg:apk/dhi/build-dev@2.20.0-r15?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.20.0-r1?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.20.0-r2?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/build-dev@2.20.0-r3?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/build-dev@2.20.0-r4?distro=dhi-3.24"
@@ -12820,7 +12847,8 @@
           "@id": "pkg:apk/dhi/build-dev@2.30.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . We read every build-dev package that the DHI Alpine 3.24 repository lists for x86_64 and aarch64 (index read on 2026-11-28): 51 versions, 2.17.3-r1 to the current 2.30.0-r1, each for both architectures. Each has the same index checksum as the Alpine 3.23 package of the same version and architecture (2.19.1-r1, listed three times in both indexes, has the same three checksums in each), so they are the same packages; we read them from the 3.23 repository and confirmed it by downloading two of them from the 3.24 repository, which were byte-identical to their 3.23 copies. Each package holds one file, /usr/bin/build, a statically linked Go program built for Linux (no program interpreter and no shared-library dependencies). The Go build information of /usr/bin/build names google.golang.org/grpc v1.80.0 (2.17.3-r1 to 2.20.0-r3), and v1.82.1 (2.20.0-r4 to 2.20.0-r11), v1.83.1 (2.20.0-r12 and 2.20.0-r13) or v1.83.2 (from 2.20.0-r14 on), the same on both architectures, with no replace directive for grpc. As a check on the build information, the environment-variable name GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT, which grpc-go adds in 1.82.1 (it is in internal/envconfig/envconfig.go at v1.82.1 and not at v1.82.0), is absent from the 2.20.0-r3 build-dev program and present in the 2.20.0-r4 and 2.30.0-r1 ones, which we downloaded again for this check (x86_64 for 2.20.0-r3 and 2.20.0-r4, aarch64 for 2.30.0-r1). In each of those re-downloaded programs the function table lists methods of transport.(*http2Server), so the HTTP/2 server transport is linked, and no function of the xDS RBAC package. So 2.20.0-r4 is the first build with grpc 1.82.1 or later, and every earlier build has an older grpc."
     },
     {
       "vulnerability": {
@@ -13107,7 +13135,8 @@
           "@id": "pkg:apk/dhi/build-fips-dev@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . The build-fips-dev packages are published only in the DHI security repository, which requires authentication, and this assessment did not read them. Pending: the Go build information and function tables of every published build-fips-dev build on both architectures, which this decision will be based on once they are read."
     },
     {
       "vulnerability": {
@@ -13271,7 +13300,8 @@
           "@id": "pkg:apk/dhi/build-fips-dev@2.30.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . The build-fips-dev packages are published only in the DHI security repository, which requires authentication, and this assessment did not read them. Pending: the Go build information and function tables of every published build-fips-dev build on both architectures, which this decision will be based on once they are read."
     },
     {
       "vulnerability": {
@@ -13558,7 +13588,8 @@
           "@id": "pkg:apk/dhi/build-fips@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . The build-fips packages are published only in the DHI security repository, which requires authentication, and this assessment did not read them. Pending: the Go build information and function tables of every published build-fips build on both architectures, which this decision will be based on once they are read."
     },
     {
       "vulnerability": {
@@ -13722,7 +13753,8 @@
           "@id": "pkg:apk/dhi/build-fips@2.30.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . The build-fips packages are published only in the DHI security repository, which requires authentication, and this assessment did not read them. Pending: the Go build information and function tables of every published build-fips build on both architectures, which this decision will be based on once they are read."
     },
     {
       "vulnerability": {
@@ -13829,6 +13861,85 @@
           "@id": "pkg:apk/dhi/build@2.20.0-r0?distro=dhi-3.23"
         },
         {
+          "@id": "pkg:apk/dhi/build@2.20.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.20.0-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.20.0-r3?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.4.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.4-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.5-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.6.6-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.7.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.0-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.1-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.2-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.3-r1?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.3-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.8.4-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.9.0-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.9.1-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.9.2-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build to 2.20.0-r4 or later.",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . We read every build package that the DHI Alpine 3.23 repository lists for x86_64 and aarch64 (index read on 2026-11-28), each download checked against its index checksum: 93 versions, 2.4.4-r0 to the current 2.30.0-r1, each for both architectures, except 2.6.4-r0, which is published for aarch64 only. The index lists 2.19.1-r1 three times, each entry with the same source commit; the copy the repository serves was read. Every file in these packages is a statically linked ELF program built for Linux (no program interpreter and no shared-library dependencies) or, from 2.27.1-r1 on, one of two SPDX JSON files; there are no static archives, Windows PE files or Mach-O files. The Go programs are /usr/bin/build (installed at /opt/docker/dhi/build in 2.4.4-r0), /opt/docker/dhi/yq from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on; /opt/docker/dhi/uv, shipped from 2.27.1-r1 on, is a Rust program with no Go build information. The Go build information of the build program in every build (/usr/bin/build, or /opt/docker/dhi/build in 2.4.4-r0), and of /usr/bin/dhi-source from 2.28.0-r1 on, names google.golang.org/grpc v1.76.0 (2.4.4-r0 to 2.8.4-r0), v1.79.3 (2.9.0-r0 to 2.16.8-r0) or v1.80.0 (2.17.0-r0 to 2.20.0-r3), and v1.82.1 (2.20.0-r4 to 2.20.0-r11), v1.83.1 (2.20.0-r12 and 2.20.0-r13) or v1.83.2 (from 2.20.0-r14 on), the same on both architectures, with no replace directive for grpc. /opt/docker/dhi/yq does not include grpc, and uv is a Rust program. As a check on the build information, the environment-variable name GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT, which grpc-go adds in 1.82.1 (it is in internal/envconfig/envconfig.go at v1.82.1 and not at v1.82.0), is absent from /usr/bin/build in the 2.20.0-r3 packages and present in the 2.20.0-r4 packages for both architectures, and present in /usr/bin/build in 2.26.2-r1 (x86_64) and in /usr/bin/build and /usr/bin/dhi-source in 2.30.0-r1 (both architectures), which we downloaded again for this check. In each of those re-downloaded programs the function table lists methods of transport.(*http2Server), so the HTTP/2 server transport is linked, and no function of the xDS RBAC package. So 2.20.0-r4 is the first build with grpc 1.82.1 or later, and every earlier build has an older grpc."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cgy7-kmtm-2dcy-oulm",
+        "aliases": [
+          "GHSA-hrxh-6v49-42gf"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/build@2.20.0-r10?distro=dhi-3.23"
         },
         {
@@ -13845,15 +13956,6 @@
         },
         {
           "@id": "pkg:apk/dhi/build@2.20.0-r15?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.20.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.20.0-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.20.0-r3?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/build@2.20.0-r4?distro=dhi-3.23"
@@ -13953,66 +14055,10 @@
         },
         {
           "@id": "pkg:apk/dhi/build@2.30.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.4.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.4-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.5-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.6.6-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.7.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.0-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.1-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.2-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.3-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.3-r1?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.3-r2?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.8.4-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.9.0-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.9.1-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . We read every build package that the DHI Alpine 3.23 repository lists for x86_64 and aarch64 (index read on 2026-11-28), each download checked against its index checksum: 93 versions, 2.4.4-r0 to the current 2.30.0-r1, each for both architectures, except 2.6.4-r0, which is published for aarch64 only. The index lists 2.19.1-r1 three times, each entry with the same source commit; the copy the repository serves was read. Every file in these packages is a statically linked ELF program built for Linux (no program interpreter and no shared-library dependencies) or, from 2.27.1-r1 on, one of two SPDX JSON files; there are no static archives, Windows PE files or Mach-O files. The Go programs are /usr/bin/build (installed at /opt/docker/dhi/build in 2.4.4-r0), /opt/docker/dhi/yq from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on; /opt/docker/dhi/uv, shipped from 2.27.1-r1 on, is a Rust program with no Go build information. The Go build information of the build program in every build (/usr/bin/build, or /opt/docker/dhi/build in 2.4.4-r0), and of /usr/bin/dhi-source from 2.28.0-r1 on, names google.golang.org/grpc v1.76.0 (2.4.4-r0 to 2.8.4-r0), v1.79.3 (2.9.0-r0 to 2.16.8-r0) or v1.80.0 (2.17.0-r0 to 2.20.0-r3), and v1.82.1 (2.20.0-r4 to 2.20.0-r11), v1.83.1 (2.20.0-r12 and 2.20.0-r13) or v1.83.2 (from 2.20.0-r14 on), the same on both architectures, with no replace directive for grpc. /opt/docker/dhi/yq does not include grpc, and uv is a Rust program. As a check on the build information, the environment-variable name GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT, which grpc-go adds in 1.82.1 (it is in internal/envconfig/envconfig.go at v1.82.1 and not at v1.82.0), is absent from /usr/bin/build in the 2.20.0-r3 packages and present in the 2.20.0-r4 packages for both architectures, and present in /usr/bin/build in 2.26.2-r1 (x86_64) and in /usr/bin/build and /usr/bin/dhi-source in 2.30.0-r1 (both architectures), which we downloaded again for this check. In each of those re-downloaded programs the function table lists methods of transport.(*http2Server), so the HTTP/2 server transport is linked, and no function of the xDS RBAC package. So 2.20.0-r4 is the first build with grpc 1.82.1 or later, and every earlier build has an older grpc."
     },
     {
       "vulnerability": {
@@ -14050,6 +14096,28 @@
           "@id": "pkg:apk/dhi/build@2.20.0-r0?distro=dhi-3.24"
         },
         {
+          "@id": "pkg:apk/dhi/build@2.20.0-r1?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.20.0-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/build@2.20.0-r3?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build to 2.20.0-r4 or later.",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . We read every build package that the DHI Alpine 3.24 repository lists for x86_64 and aarch64 (index read on 2026-11-28): 51 versions, 2.17.3-r1 to the current 2.30.0-r1, each for both architectures. Each has the same index checksum as the Alpine 3.23 package of the same version and architecture (2.19.1-r1, listed three times in both indexes, has the same three checksums in each), so they are the same packages; we read them from the 3.23 repository and confirmed it by downloading two of them from the 3.24 repository, which were byte-identical to their 3.23 copies. Every file in these packages is a statically linked ELF program built for Linux (no program interpreter and no shared-library dependencies) or, from 2.27.1-r1 on, one of two SPDX JSON files; there are no static archives, Windows PE files or Mach-O files. The Go programs are /usr/bin/build, /opt/docker/dhi/yq from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on; /opt/docker/dhi/uv, shipped from 2.27.1-r1 on, is a Rust program with no Go build information. The Go build information of /usr/bin/build in every build, and of /usr/bin/dhi-source from 2.28.0-r1 on, names google.golang.org/grpc v1.80.0 (2.17.3-r1 to 2.20.0-r3), and v1.82.1 (2.20.0-r4 to 2.20.0-r11), v1.83.1 (2.20.0-r12 and 2.20.0-r13) or v1.83.2 (from 2.20.0-r14 on), the same on both architectures, with no replace directive for grpc. /opt/docker/dhi/yq does not include grpc, and uv is a Rust program. As a check on the build information, the environment-variable name GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT, which grpc-go adds in 1.82.1 (it is in internal/envconfig/envconfig.go at v1.82.1 and not at v1.82.0), is absent from /usr/bin/build in the 2.20.0-r3 packages and present in the 2.20.0-r4 packages for both architectures, and present in /usr/bin/build in 2.26.2-r1 (x86_64) and in /usr/bin/build and /usr/bin/dhi-source in 2.30.0-r1 (both architectures), which we downloaded again for this check. In each of those re-downloaded programs the function table lists methods of transport.(*http2Server), so the HTTP/2 server transport is linked, and no function of the xDS RBAC package. So 2.20.0-r4 is the first build with grpc 1.82.1 or later, and every earlier build has an older grpc."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cgy7-kmtm-2dcy-oulm",
+        "aliases": [
+          "GHSA-hrxh-6v49-42gf"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/build@2.20.0-r10?distro=dhi-3.24"
         },
         {
@@ -14066,15 +14134,6 @@
         },
         {
           "@id": "pkg:apk/dhi/build@2.20.0-r15?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.20.0-r1?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.20.0-r2?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/build@2.20.0-r3?distro=dhi-3.24"
         },
         {
           "@id": "pkg:apk/dhi/build@2.20.0-r4?distro=dhi-3.24"
@@ -14176,7 +14235,8 @@
           "@id": "pkg:apk/dhi/build@2.30.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . We read every build package that the DHI Alpine 3.24 repository lists for x86_64 and aarch64 (index read on 2026-11-28): 51 versions, 2.17.3-r1 to the current 2.30.0-r1, each for both architectures. Each has the same index checksum as the Alpine 3.23 package of the same version and architecture (2.19.1-r1, listed three times in both indexes, has the same three checksums in each), so they are the same packages; we read them from the 3.23 repository and confirmed it by downloading two of them from the 3.24 repository, which were byte-identical to their 3.23 copies. Every file in these packages is a statically linked ELF program built for Linux (no program interpreter and no shared-library dependencies) or, from 2.27.1-r1 on, one of two SPDX JSON files; there are no static archives, Windows PE files or Mach-O files. The Go programs are /usr/bin/build, /opt/docker/dhi/yq from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on; /opt/docker/dhi/uv, shipped from 2.27.1-r1 on, is a Rust program with no Go build information. The Go build information of /usr/bin/build in every build, and of /usr/bin/dhi-source from 2.28.0-r1 on, names google.golang.org/grpc v1.80.0 (2.17.3-r1 to 2.20.0-r3), and v1.82.1 (2.20.0-r4 to 2.20.0-r11), v1.83.1 (2.20.0-r12 and 2.20.0-r13) or v1.83.2 (from 2.20.0-r14 on), the same on both architectures, with no replace directive for grpc. /opt/docker/dhi/yq does not include grpc, and uv is a Rust program. As a check on the build information, the environment-variable name GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT, which grpc-go adds in 1.82.1 (it is in internal/envconfig/envconfig.go at v1.82.1 and not at v1.82.0), is absent from /usr/bin/build in the 2.20.0-r3 packages and present in the 2.20.0-r4 packages for both architectures, and present in /usr/bin/build in 2.26.2-r1 (x86_64) and in /usr/bin/build and /usr/bin/dhi-source in 2.30.0-r1 (both architectures), which we downloaded again for this check. In each of those re-downloaded programs the function table lists methods of transport.(*http2Server), so the HTTP/2 server transport is linked, and no function of the xDS RBAC package. So 2.20.0-r4 is the first build with grpc 1.82.1 or later, and every earlier build has an older grpc."
     },
     {
       "vulnerability": {
@@ -52281,6 +52341,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur-dev@3.14.0-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur-dev@3.14.1-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -52352,6 +52415,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur-dev@3.14.0-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur-dev@3.14.1-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -52423,6 +52489,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur-fips-dev@3.14.0-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur-fips-dev@3.14.1-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -52494,6 +52563,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur-fips-dev@3.14.0-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur-fips-dev@3.14.1-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -52565,6 +52637,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur-fips@3.14.0-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur-fips@3.14.1-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -52636,6 +52711,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur-fips@3.14.0-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur-fips@3.14.1-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -52707,6 +52785,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur@3.14.0-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur@3.14.1-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -52778,6 +52859,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur@3.14.0-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur@3.14.1-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -180972,6 +181056,28 @@
           "@id": "pkg:deb/dhi/build-dev@2.20.0-0?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/build-dev@2.20.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/build-dev@2.20.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/build-dev@2.20.0-3?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build-dev to 2.20.0-4 or later.",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . We read the file list and MD5 checksums (the md5sums control file) of every build-dev package in the Debian 13 index of the DHI Debian repository (index read on 2026-11-28), for amd64 and arm64, each package checked against its index SHA-256: 67 versions, 2.13.0-1 to the current 2.30.0-1. Every file in each of them has the same MD5 checksum as the file at the same path in the DHI Alpine 3.23 package of the same version and architecture (2.27.1-1 and 2.27.1-r1, for example), so the programs below were read from those Alpine packages. Each package holds one file, /usr/bin/build, a statically linked Go program built for Linux (no program interpreter and no shared-library dependencies). The Go build information of /usr/bin/build names google.golang.org/grpc v1.79.3 (2.13.0-1 to 2.16.8-0) or v1.80.0 (2.17.0-0 to 2.20.0-3), and v1.82.1 (2.20.0-4 to 2.20.0-11), v1.83.1 (2.20.0-12 and 2.20.0-13) or v1.83.2 (from 2.20.0-14 on), the same on both architectures, with no replace directive for grpc. As a check on the build information, the environment-variable name GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT, which grpc-go adds in 1.82.1 (it is in internal/envconfig/envconfig.go at v1.82.1 and not at v1.82.0), is absent from the 2.20.0-r3 build-dev program and present in the 2.20.0-r4 and 2.30.0-r1 ones, which we downloaded again for this check (x86_64 for 2.20.0-r3 and 2.20.0-r4, aarch64 for 2.30.0-r1). In each of those re-downloaded programs the function table lists methods of transport.(*http2Server), so the HTTP/2 server transport is linked, and no function of the xDS RBAC package. So 2.20.0-4 is the first build with grpc 1.82.1 or later, and every earlier build has an older grpc."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cgy7-kmtm-2dcy-oulm",
+        "aliases": [
+          "GHSA-hrxh-6v49-42gf"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/build-dev@2.20.0-10?distro=dhi-13"
         },
         {
@@ -180988,15 +181094,6 @@
         },
         {
           "@id": "pkg:deb/dhi/build-dev@2.20.0-15?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/build-dev@2.20.0-1?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/build-dev@2.20.0-2?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/build-dev@2.20.0-3?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/build-dev@2.20.0-4?distro=dhi-13"
@@ -181098,7 +181195,8 @@
           "@id": "pkg:deb/dhi/build-dev@2.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . We read the file list and MD5 checksums (the md5sums control file) of every build-dev package in the Debian 13 index of the DHI Debian repository (index read on 2026-11-28), for amd64 and arm64, each package checked against its index SHA-256: 67 versions, 2.13.0-1 to the current 2.30.0-1. Every file in each of them has the same MD5 checksum as the file at the same path in the DHI Alpine 3.23 package of the same version and architecture (2.27.1-1 and 2.27.1-r1, for example), so the programs below were read from those Alpine packages. Each package holds one file, /usr/bin/build, a statically linked Go program built for Linux (no program interpreter and no shared-library dependencies). The Go build information of /usr/bin/build names google.golang.org/grpc v1.79.3 (2.13.0-1 to 2.16.8-0) or v1.80.0 (2.17.0-0 to 2.20.0-3), and v1.82.1 (2.20.0-4 to 2.20.0-11), v1.83.1 (2.20.0-12 and 2.20.0-13) or v1.83.2 (from 2.20.0-14 on), the same on both architectures, with no replace directive for grpc. As a check on the build information, the environment-variable name GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT, which grpc-go adds in 1.82.1 (it is in internal/envconfig/envconfig.go at v1.82.1 and not at v1.82.0), is absent from the 2.20.0-r3 build-dev program and present in the 2.20.0-r4 and 2.30.0-r1 ones, which we downloaded again for this check (x86_64 for 2.20.0-r3 and 2.20.0-r4, aarch64 for 2.30.0-r1). In each of those re-downloaded programs the function table lists methods of transport.(*http2Server), so the HTTP/2 server transport is linked, and no function of the xDS RBAC package. So 2.20.0-4 is the first build with grpc 1.82.1 or later, and every earlier build has an older grpc."
     },
     {
       "vulnerability": {
@@ -181310,7 +181408,8 @@
           "@id": "pkg:deb/dhi/build-fips-dev@2.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . The build-fips-dev packages are published only in the DHI security repository, which requires authentication, and this assessment did not read them. Pending: the Go build information and function tables of every published build-fips-dev build on both architectures, which this decision will be based on once they are read."
     },
     {
       "vulnerability": {
@@ -181522,7 +181621,8 @@
           "@id": "pkg:deb/dhi/build-fips@2.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . The build-fips packages are published only in the DHI security repository, which requires authentication, and this assessment did not read them. Pending: the Go build information and function tables of every published build-fips build on both architectures, which this decision will be based on once they are read."
     },
     {
       "vulnerability": {
@@ -181608,6 +181708,28 @@
           "@id": "pkg:deb/dhi/build@2.20.0-0?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/build@2.20.0-1?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/build@2.20.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/build@2.20.0-3?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update build to 2.20.0-4 or later.",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . We read the file list and MD5 checksums (the md5sums control file) of every build package in the Debian 13 index of the DHI Debian repository (index read on 2026-11-28), for amd64 and arm64, each package checked against its index SHA-256: 67 versions, 2.13.0-1 to the current 2.30.0-1. Every file in each of them has the same MD5 checksum as the file at the same path in the DHI Alpine 3.23 package of the same version and architecture (2.27.1-1 and 2.27.1-r1, for example), so the programs below were read from those Alpine packages. Every file in these packages is a statically linked ELF program built for Linux (no program interpreter and no shared-library dependencies) or, from 2.27.1-1 on, one of two SPDX JSON files; there are no static archives, Windows PE files or Mach-O files. The Go programs are /usr/bin/build, /opt/docker/dhi/yq from 2.26.2-1 on and /usr/bin/dhi-source from 2.28.0-1 on; /opt/docker/dhi/uv, shipped from 2.27.1-1 on, is a Rust program with no Go build information. The Go build information of /usr/bin/build in every build, and of /usr/bin/dhi-source from 2.28.0-1 on, names google.golang.org/grpc v1.79.3 (2.13.0-1 to 2.16.8-0) or v1.80.0 (2.17.0-0 to 2.20.0-3), and v1.82.1 (2.20.0-4 to 2.20.0-11), v1.83.1 (2.20.0-12 and 2.20.0-13) or v1.83.2 (from 2.20.0-14 on), the same on both architectures, with no replace directive for grpc. /opt/docker/dhi/yq does not include grpc, and uv is a Rust program. As a check on the build information, the environment-variable name GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT, which grpc-go adds in 1.82.1 (it is in internal/envconfig/envconfig.go at v1.82.1 and not at v1.82.0), is absent from /usr/bin/build in the 2.20.0-r3 packages and present in the 2.20.0-r4 packages for both architectures, and present in /usr/bin/build in 2.26.2-r1 (x86_64) and in /usr/bin/build and /usr/bin/dhi-source in 2.30.0-r1 (both architectures), which we downloaded again for this check. In each of those re-downloaded programs the function table lists methods of transport.(*http2Server), so the HTTP/2 server transport is linked, and no function of the xDS RBAC package. So 2.20.0-4 is the first build with grpc 1.82.1 or later, and every earlier build has an older grpc."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cgy7-kmtm-2dcy-oulm",
+        "aliases": [
+          "GHSA-hrxh-6v49-42gf"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/build@2.20.0-10?distro=dhi-13"
         },
         {
@@ -181624,15 +181746,6 @@
         },
         {
           "@id": "pkg:deb/dhi/build@2.20.0-15?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/build@2.20.0-1?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/build@2.20.0-2?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/build@2.20.0-3?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/build@2.20.0-4?distro=dhi-13"
@@ -181734,7 +181847,8 @@
           "@id": "pkg:deb/dhi/build@2.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-hrxh-6v49-42gf (GO-2026-6061) affects google.golang.org/grpc before 1.82.1: the xDS RBAC engine silently ignored Metadata and RequestedServerName rules, so a policy that relied on them could fail open, and panicked on NOT rules around unsupported fields; and the HTTP/2 server transport's rapid-reset mitigation could be bypassed by floods of HEADERS and RST_STREAM frames, using high CPU. grpc-go 1.82.1 fixes all three (https://github.com/grpc/grpc-go/pull/9236, commit 4ea465d4ab98013f72a142fe0fc89c19770b2935): https://github.com/grpc/grpc-go/security/advisories/GHSA-hrxh-6v49-42gf , https://github.com/grpc/grpc-go/releases/tag/v1.82.1 . We read the file list and MD5 checksums (the md5sums control file) of every build package in the Debian 13 index of the DHI Debian repository (index read on 2026-11-28), for amd64 and arm64, each package checked against its index SHA-256: 67 versions, 2.13.0-1 to the current 2.30.0-1. Every file in each of them has the same MD5 checksum as the file at the same path in the DHI Alpine 3.23 package of the same version and architecture (2.27.1-1 and 2.27.1-r1, for example), so the programs below were read from those Alpine packages. Every file in these packages is a statically linked ELF program built for Linux (no program interpreter and no shared-library dependencies) or, from 2.27.1-1 on, one of two SPDX JSON files; there are no static archives, Windows PE files or Mach-O files. The Go programs are /usr/bin/build, /opt/docker/dhi/yq from 2.26.2-1 on and /usr/bin/dhi-source from 2.28.0-1 on; /opt/docker/dhi/uv, shipped from 2.27.1-1 on, is a Rust program with no Go build information. The Go build information of /usr/bin/build in every build, and of /usr/bin/dhi-source from 2.28.0-1 on, names google.golang.org/grpc v1.79.3 (2.13.0-1 to 2.16.8-0) or v1.80.0 (2.17.0-0 to 2.20.0-3), and v1.82.1 (2.20.0-4 to 2.20.0-11), v1.83.1 (2.20.0-12 and 2.20.0-13) or v1.83.2 (from 2.20.0-14 on), the same on both architectures, with no replace directive for grpc. /opt/docker/dhi/yq does not include grpc, and uv is a Rust program. As a check on the build information, the environment-variable name GRPC_GO_EXPERIMENTAL_CONTROL_BUFFER_THROTTLE_LIMIT, which grpc-go adds in 1.82.1 (it is in internal/envconfig/envconfig.go at v1.82.1 and not at v1.82.0), is absent from /usr/bin/build in the 2.20.0-r3 packages and present in the 2.20.0-r4 packages for both architectures, and present in /usr/bin/build in 2.26.2-r1 (x86_64) and in /usr/bin/build and /usr/bin/dhi-source in 2.30.0-r1 (both architectures), which we downloaded again for this check. In each of those re-downloaded programs the function table lists methods of transport.(*http2Server), so the HTTP/2 server transport is linked, and no function of the xDS RBAC package. So 2.20.0-4 is the first build with grpc 1.82.1 or later, and every earlier build has an older grpc."
     },
     {
       "vulnerability": {
@@ -192820,6 +192934,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.18-dev@1.18.17-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.18-dev@1.18.17-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -192915,6 +193032,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.18-fips-dev@1.18.17-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.18-fips-dev@1.18.17-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -193034,6 +193154,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.18-fips@1.18.17-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.18-fips@1.18.17-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -193153,6 +193276,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.18@1.18.17-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.18@1.18.17-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -193206,6 +193332,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19-dev@1.19.11-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.19-dev@1.19.11-1?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19-dev@1.19.4-3?distro=dhi-13"
@@ -193330,6 +193459,9 @@
           "@id": "pkg:deb/dhi/cilium-1.19-fips-dev@1.19.11-0?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/cilium-1.19-fips-dev@1.19.11-1?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/cilium-1.19-fips-dev@1.19.4-3?distro=dhi-13"
         },
         {
@@ -193423,6 +193555,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19-fips@1.19.11-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.19-fips@1.19.11-1?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19-fips@1.19.4-3?distro=dhi-13"
@@ -193545,6 +193680,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19@1.19.11-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.19@1.19.11-1?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19@1.19.4-3?distro=dhi-13"
@@ -202935,6 +203073,9 @@
         },
         {
           "@id": "pkg:deb/dhi/connaisseur-dev@3.14.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/connaisseur-dev@3.14.1-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -203006,6 +203147,9 @@
         },
         {
           "@id": "pkg:deb/dhi/connaisseur-fips-dev@3.14.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/connaisseur-fips-dev@3.14.1-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -203077,6 +203221,9 @@
         },
         {
           "@id": "pkg:deb/dhi/connaisseur-fips@3.14.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/connaisseur-fips@3.14.1-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -203148,6 +203295,9 @@
         },
         {
           "@id": "pkg:deb/dhi/connaisseur@3.14.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/connaisseur@3.14.1-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"

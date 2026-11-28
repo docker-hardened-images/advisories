@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-27T13:14:42Z",
-  "version": 34,
+  "last_updated": "2026-11-28T04:17:46Z",
+  "version": 35,
   "statements": [
     {
       "vulnerability": {
@@ -1248,7 +1248,9 @@
           "@id": "pkg:apk/dhi/build-dev@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39820 (GO-2026-4986): in the Go standard library's net/mail package, consumeComment builds a comment by repeated string concatenation, so crafted input reaching ParseAddress, ParseAddressList or ParseDate uses quadratic CPU time and memory. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4986, https://go.dev/issue/78566, https://go.dev/cl/759940, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . We read every build-dev package that the DHI Alpine 3.23 repository lists for x86_64 and aarch64 (index read on 2026-11-28), each download checked against its index checksum: 92 versions, 2.6.4-r0 to the current 2.30.0-r1, each for both architectures, except 2.6.4-r0, which is published for aarch64 only. The index lists 2.19.1-r1 three times, each entry with the same source commit; the copy the repository serves was read. Each package holds one file, /usr/bin/build, a statically linked Go program built for Linux (no program interpreter and no shared-library dependencies). The programs are built with Go 1.25.7 to 1.26.11, but net/mail is not linked into any of them: their function tables (pclntab) contain no net/mail function and their bytes contain no net/mail string in any build, while the same tables list runtime.main in every program and more than 800 net/http functions in /usr/bin/build. We repeated that check with go tool nm and a byte search on packages downloaded again for this assessment (the build-dev packages 2.20.0-r3 and 2.20.0-r4 for x86_64 and 2.30.0-r1 for aarch64), with the same result. Debian has not fixed this CVE in trixie's golang-1.24 (no-dsa, https://security-tracker.debian.org/tracker/CVE-2026-39820); this decision rests on the vulnerable code being absent from every published build-dev package, whichever Go release built it."
     },
     {
       "vulnerability": {
@@ -1535,7 +1537,8 @@
           "@id": "pkg:apk/dhi/build-fips-dev@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39820 (GO-2026-4986): in the Go standard library's net/mail package, consumeComment builds a comment by repeated string concatenation, so crafted input reaching ParseAddress, ParseAddressList or ParseDate uses quadratic CPU time and memory. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4986, https://go.dev/issue/78566, https://go.dev/cl/759940, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . The build-fips-dev packages are published only in the DHI security repository, which requires authentication, and this assessment did not read them. Pending: the Go build information and function tables of every published build-fips-dev build on both architectures, which this decision will be based on once they are read."
     },
     {
       "vulnerability": {
@@ -1822,7 +1825,8 @@
           "@id": "pkg:apk/dhi/build-fips@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39820 (GO-2026-4986): in the Go standard library's net/mail package, consumeComment builds a comment by repeated string concatenation, so crafted input reaching ParseAddress, ParseAddressList or ParseDate uses quadratic CPU time and memory. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4986, https://go.dev/issue/78566, https://go.dev/cl/759940, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . The build-fips packages are published only in the DHI security repository, which requires authentication, and this assessment did not read them. Pending: the Go build information and function tables of every published build-fips build on both architectures, which this decision will be based on once they are read."
     },
     {
       "vulnerability": {
@@ -2112,7 +2116,9 @@
           "@id": "pkg:apk/dhi/build@2.9.2-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39820 (GO-2026-4986): in the Go standard library's net/mail package, consumeComment builds a comment by repeated string concatenation, so crafted input reaching ParseAddress, ParseAddressList or ParseDate uses quadratic CPU time and memory. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4986, https://go.dev/issue/78566, https://go.dev/cl/759940, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . We read every build package that the DHI Alpine 3.23 repository lists for x86_64 and aarch64 (index read on 2026-11-28), each download checked against its index checksum: 93 versions, 2.4.4-r0 to the current 2.30.0-r1, each for both architectures, except 2.6.4-r0, which is published for aarch64 only. The index lists 2.19.1-r1 three times, each entry with the same source commit; the copy the repository serves was read. Every file in these packages is a statically linked ELF program built for Linux (no program interpreter and no shared-library dependencies) or, from 2.27.1-r1 on, one of two SPDX JSON files; there are no static archives, Windows PE files or Mach-O files. The Go programs are /usr/bin/build (installed at /opt/docker/dhi/build in 2.4.4-r0), /opt/docker/dhi/yq from 2.26.2-r1 on and /usr/bin/dhi-source from 2.28.0-r1 on; /opt/docker/dhi/uv, shipped from 2.27.1-r1 on, is a Rust program with no Go build information. The programs are built with Go 1.25.7 to 1.26.11, but net/mail is not linked into any of them: their function tables (pclntab) contain no net/mail function and their bytes contain no net/mail string in any build, while the same tables list runtime.main in every program and more than 800 net/http functions in /usr/bin/build and /usr/bin/dhi-source. We repeated that check with go tool nm and a byte search on packages downloaded again for this assessment (the build packages 2.20.0-r3, 2.20.0-r4 and 2.30.0-r1 for both architectures and 2.26.2-r1 for x86_64), with the same result. Debian has not fixed this CVE in trixie's golang-1.24 (no-dsa, https://security-tracker.debian.org/tracker/CVE-2026-39820); this decision rests on the vulnerable code being absent from every published build package, whichever Go release built it."
     },
     {
       "vulnerability": {
@@ -20917,7 +20923,9 @@
           "@id": "pkg:deb/dhi/build-dev@2.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39820 (GO-2026-4986): in the Go standard library's net/mail package, consumeComment builds a comment by repeated string concatenation, so crafted input reaching ParseAddress, ParseAddressList or ParseDate uses quadratic CPU time and memory. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4986, https://go.dev/issue/78566, https://go.dev/cl/759940, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . We read the file list and MD5 checksums (the md5sums control file) of every build-dev package in the Debian 13 index of the DHI Debian repository (index read on 2026-11-28), for amd64 and arm64, each package checked against its index SHA-256: 67 versions, 2.13.0-1 to the current 2.30.0-1. Every file in each of them has the same MD5 checksum as the file at the same path in the DHI Alpine 3.23 package of the same version and architecture (2.27.1-1 and 2.27.1-r1, for example), so the programs below were read from those Alpine packages. Each package holds one file, /usr/bin/build, a statically linked Go program built for Linux (no program interpreter and no shared-library dependencies). The programs are built with Go 1.26.2 to 1.26.11, but net/mail is not linked into any of them: their function tables (pclntab) contain no net/mail function and their bytes contain no net/mail string in any build, while the same tables list runtime.main in every program and more than 800 net/http functions in /usr/bin/build. We repeated that check with go tool nm and a byte search on packages downloaded again for this assessment (the build-dev packages 2.20.0-r3 and 2.20.0-r4 for x86_64 and 2.30.0-r1 for aarch64), with the same result. Debian has not fixed this CVE in trixie's golang-1.24 (no-dsa, https://security-tracker.debian.org/tracker/CVE-2026-39820); this decision rests on the vulnerable code being absent from every published build-dev package, whichever Go release built it."
     },
     {
       "vulnerability": {
@@ -21129,7 +21137,8 @@
           "@id": "pkg:deb/dhi/build-fips-dev@2.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39820 (GO-2026-4986): in the Go standard library's net/mail package, consumeComment builds a comment by repeated string concatenation, so crafted input reaching ParseAddress, ParseAddressList or ParseDate uses quadratic CPU time and memory. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4986, https://go.dev/issue/78566, https://go.dev/cl/759940, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . The build-fips-dev packages are published only in the DHI security repository, which requires authentication, and this assessment did not read them. Pending: the Go build information and function tables of every published build-fips-dev build on both architectures, which this decision will be based on once they are read."
     },
     {
       "vulnerability": {
@@ -21341,7 +21350,8 @@
           "@id": "pkg:deb/dhi/build-fips@2.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39820 (GO-2026-4986): in the Go standard library's net/mail package, consumeComment builds a comment by repeated string concatenation, so crafted input reaching ParseAddress, ParseAddressList or ParseDate uses quadratic CPU time and memory. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4986, https://go.dev/issue/78566, https://go.dev/cl/759940, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . The build-fips packages are published only in the DHI security repository, which requires authentication, and this assessment did not read them. Pending: the Go build information and function tables of every published build-fips build on both architectures, which this decision will be based on once they are read."
     },
     {
       "vulnerability": {
@@ -21553,7 +21563,9 @@
           "@id": "pkg:deb/dhi/build@2.30.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39820 (GO-2026-4986): in the Go standard library's net/mail package, consumeComment builds a comment by repeated string concatenation, so crafted input reaching ParseAddress, ParseAddressList or ParseDate uses quadratic CPU time and memory. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4986, https://go.dev/issue/78566, https://go.dev/cl/759940, https://groups.google.com/g/golang-announce/c/qcCIEXso47M . We read the file list and MD5 checksums (the md5sums control file) of every build package in the Debian 13 index of the DHI Debian repository (index read on 2026-11-28), for amd64 and arm64, each package checked against its index SHA-256: 67 versions, 2.13.0-1 to the current 2.30.0-1. Every file in each of them has the same MD5 checksum as the file at the same path in the DHI Alpine 3.23 package of the same version and architecture (2.27.1-1 and 2.27.1-r1, for example), so the programs below were read from those Alpine packages. Every file in these packages is a statically linked ELF program built for Linux (no program interpreter and no shared-library dependencies) or, from 2.27.1-1 on, one of two SPDX JSON files; there are no static archives, Windows PE files or Mach-O files. The Go programs are /usr/bin/build, /opt/docker/dhi/yq from 2.26.2-1 on and /usr/bin/dhi-source from 2.28.0-1 on; /opt/docker/dhi/uv, shipped from 2.27.1-1 on, is a Rust program with no Go build information. The programs are built with Go 1.26.2 to 1.26.11, but net/mail is not linked into any of them: their function tables (pclntab) contain no net/mail function and their bytes contain no net/mail string in any build, while the same tables list runtime.main in every program and more than 800 net/http functions in /usr/bin/build and /usr/bin/dhi-source. We repeated that check with go tool nm and a byte search on packages downloaded again for this assessment (the build packages 2.20.0-r3, 2.20.0-r4 and 2.30.0-r1 for both architectures and 2.26.2-r1 for x86_64), with the same result. Debian has not fixed this CVE in trixie's golang-1.24 (no-dsa, https://security-tracker.debian.org/tracker/CVE-2026-39820); this decision rests on the vulnerable code being absent from every published build package, whichever Go release built it."
     },
     {
       "vulnerability": {
