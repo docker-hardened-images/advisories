@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:38:30Z",
-  "last_updated": "2026-11-28T13:46:45Z",
-  "version": 51,
+  "last_updated": "2026-11-28T14:05:49Z",
+  "version": 52,
   "statements": [
     {
       "vulnerability": {
@@ -152600,7 +152600,20 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-state-metrics-dev@2.19.1-r3?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update kube-state-metrics-dev to 2.19.1-r4 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): resolvePath in the Go standard library's net/url package, which URL.ResolveReference and URL.Parse use to resolve a reference against a base URL, takes time quadratic in the number of path segments, so a crafted URL with a very long path can use excessive CPU. The Go vulnerability database lists URL.Parse, URL.ResolveReference and resolvePath in net/url as affected before Go 1.25.13, in Go 1.26 before 1.26.6 and in Go 1.27 before 1.27.0-rc.3. Sources: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the fix in Go 1.26.6) and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The Debian tracker (https://security-tracker.debian.org/tracker/CVE-2026-56860) lists golang-1.26 and golang-1.27 as fixed in forky and sid (fixed in unstable in 1.26.6-1 and 1.27~rc3-1, and golang-1.25 in 1.25.13-1), and golang-1.24 in trixie (no-dsa) and golang-1.19 in bookworm (postponed) as vulnerable. kube-state-metrics does not use those Debian packages: each program records in its Go build information the Go release it was built with, and that release decides this owner. On 2026-11-28 the DHI Alpine repository for Alpine 3.23 published 28 kube-state-metrics-dev builds, 2.18.0-r0 to the current 2.20.0-r13, as 54 packages on x86_64 and aarch64 (2.20.0-r7 and 2.20.0-r8 were published for aarch64 only). We downloaded every one of them and checked each against its index checksum and data hash. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). The kube-state-metrics-dev program is built without the -w linker flag and without -trimpath, with the same Go release and module versions as the kube-state-metrics program of the same build. go tool nm lists net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse as text symbols in every program we read, and the source file net/url/url.go is in its file table, so the vulnerable code is linked. resolvePath measures 1841/1861 (x86_64) or 1504/1520 (aarch64) bytes (go tool nm -size) in every program built with a Go release before 1.26.6 and 1202 (x86_64) or 1104 (aarch64) bytes in every program built with Go 1.26.6 or later, the size change of the rewritten function. The build information records the Go release (Go 1.25.7 in 2.18.0-r0, Go 1.26.1 in 2.18.0-r1 to 2.18.0-r3, Go 1.26.2 in 2.18.0-r4 to 2.18.0-r5, Go 1.26.3 in 2.18.0-r6 to 2.19.0-r0, Go 1.26.4 in 2.19.0-r1 to 2.19.1-r1, Go 1.26.5 in 2.19.1-r2 to 2.19.1-r3, Go 1.26.6 in 2.19.1-r4 to 2.20.0-r0, Go 1.26.7 in 2.20.0-r1 to 2.20.0-r2, Go 1.26.8 in 2.20.0-r3 to 2.20.0-r7, Go 1.26.9 in 2.20.0-r8 to 2.20.0-r9, Go 1.26.10 in 2.20.0-r10 to 2.20.0-r11, Go 1.26.11 in 2.20.0-r12 to 2.20.0-r13). 2.19.1-r4 is the first build built with Go 1.26.6 or later, and every later build is too; every earlier build was built with a Go release before 1.26.6. The fixed range therefore starts at 2.19.1-r4."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/kube-state-metrics-dev@2.19.1-r4?distro=dhi-3.23"
         },
@@ -152647,7 +152660,8 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-dev@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): resolvePath in the Go standard library's net/url package, which URL.ResolveReference and URL.Parse use to resolve a reference against a base URL, takes time quadratic in the number of path segments, so a crafted URL with a very long path can use excessive CPU. The Go vulnerability database lists URL.Parse, URL.ResolveReference and resolvePath in net/url as affected before Go 1.25.13, in Go 1.26 before 1.26.6 and in Go 1.27 before 1.27.0-rc.3. Sources: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the fix in Go 1.26.6) and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The Debian tracker (https://security-tracker.debian.org/tracker/CVE-2026-56860) lists golang-1.26 and golang-1.27 as fixed in forky and sid (fixed in unstable in 1.26.6-1 and 1.27~rc3-1, and golang-1.25 in 1.25.13-1), and golang-1.24 in trixie (no-dsa) and golang-1.19 in bookworm (postponed) as vulnerable. kube-state-metrics does not use those Debian packages: each program records in its Go build information the Go release it was built with, and that release decides this owner. On 2026-11-28 the DHI Alpine repository for Alpine 3.23 published 28 kube-state-metrics-dev builds, 2.18.0-r0 to the current 2.20.0-r13, as 54 packages on x86_64 and aarch64 (2.20.0-r7 and 2.20.0-r8 were published for aarch64 only). We downloaded every one of them and checked each against its index checksum and data hash. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). The kube-state-metrics-dev program is built without the -w linker flag and without -trimpath, with the same Go release and module versions as the kube-state-metrics program of the same build. go tool nm lists net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse as text symbols in every program we read, and the source file net/url/url.go is in its file table, so the vulnerable code is linked. resolvePath measures 1841/1861 (x86_64) or 1504/1520 (aarch64) bytes (go tool nm -size) in every program built with a Go release before 1.26.6 and 1202 (x86_64) or 1104 (aarch64) bytes in every program built with Go 1.26.6 or later, the size change of the rewritten function. The build information records the Go release (Go 1.25.7 in 2.18.0-r0, Go 1.26.1 in 2.18.0-r1 to 2.18.0-r3, Go 1.26.2 in 2.18.0-r4 to 2.18.0-r5, Go 1.26.3 in 2.18.0-r6 to 2.19.0-r0, Go 1.26.4 in 2.19.0-r1 to 2.19.1-r1, Go 1.26.5 in 2.19.1-r2 to 2.19.1-r3, Go 1.26.6 in 2.19.1-r4 to 2.20.0-r0, Go 1.26.7 in 2.20.0-r1 to 2.20.0-r2, Go 1.26.8 in 2.20.0-r3 to 2.20.0-r7, Go 1.26.9 in 2.20.0-r8 to 2.20.0-r9, Go 1.26.10 in 2.20.0-r10 to 2.20.0-r11, Go 1.26.11 in 2.20.0-r12 to 2.20.0-r13). 2.19.1-r4 is the first build built with Go 1.26.6 or later, and every later build is too; every earlier build was built with a Go release before 1.26.6. The fixed range therefore starts at 2.19.1-r4."
     },
     {
       "vulnerability": {
@@ -152671,7 +152685,20 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-state-metrics-dev@2.19.1-r3?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update kube-state-metrics-dev to 2.19.1-r4 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): resolvePath in the Go standard library's net/url package, which URL.ResolveReference and URL.Parse use to resolve a reference against a base URL, takes time quadratic in the number of path segments, so a crafted URL with a very long path can use excessive CPU. The Go vulnerability database lists URL.Parse, URL.ResolveReference and resolvePath in net/url as affected before Go 1.25.13, in Go 1.26 before 1.26.6 and in Go 1.27 before 1.27.0-rc.3. Sources: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the fix in Go 1.26.6) and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The Debian tracker (https://security-tracker.debian.org/tracker/CVE-2026-56860) lists golang-1.26 and golang-1.27 as fixed in forky and sid (fixed in unstable in 1.26.6-1 and 1.27~rc3-1, and golang-1.25 in 1.25.13-1), and golang-1.24 in trixie (no-dsa) and golang-1.19 in bookworm (postponed) as vulnerable. kube-state-metrics does not use those Debian packages: each program records in its Go build information the Go release it was built with, and that release decides this owner. On 2026-11-28 the DHI Alpine repository for Alpine 3.24 published 20 kube-state-metrics-dev builds, 2.19.0-r1 to the current 2.20.0-r13, as 38 packages on x86_64 and aarch64 (2.20.0-r7 and 2.20.0-r8 were published for aarch64 only). Each has the same index checksum as the Alpine 3.23 package of the same version and architecture, so they are the same packages; we downloaded every Alpine 3.23 package and checked each against its index checksum and data hash. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). The kube-state-metrics-dev program is built without the -w linker flag and without -trimpath, with the same Go release and module versions as the kube-state-metrics program of the same build. go tool nm lists net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse as text symbols in every program we read, and the source file net/url/url.go is in its file table, so the vulnerable code is linked. resolvePath measures 1841/1861 (x86_64) or 1504/1520 (aarch64) bytes (go tool nm -size) in every program built with a Go release before 1.26.6 and 1202 (x86_64) or 1104 (aarch64) bytes in every program built with Go 1.26.6 or later, the size change of the rewritten function. The build information records the Go release (Go 1.26.4 in 2.19.0-r1 to 2.19.1-r1, Go 1.26.5 in 2.19.1-r2 to 2.19.1-r3, Go 1.26.6 in 2.19.1-r4 to 2.20.0-r0, Go 1.26.7 in 2.20.0-r1 to 2.20.0-r2, Go 1.26.8 in 2.20.0-r3 to 2.20.0-r7, Go 1.26.9 in 2.20.0-r8 to 2.20.0-r9, Go 1.26.10 in 2.20.0-r10 to 2.20.0-r11, Go 1.26.11 in 2.20.0-r12 to 2.20.0-r13). 2.19.1-r4 is the first build built with Go 1.26.6 or later, and every later build is too; every earlier build was built with a Go release before 1.26.6. The fixed range therefore starts at 2.19.1-r4."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/kube-state-metrics-dev@2.19.1-r4?distro=dhi-3.24"
         },
@@ -152718,7 +152745,8 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-dev@2.20.0-r9?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): resolvePath in the Go standard library's net/url package, which URL.ResolveReference and URL.Parse use to resolve a reference against a base URL, takes time quadratic in the number of path segments, so a crafted URL with a very long path can use excessive CPU. The Go vulnerability database lists URL.Parse, URL.ResolveReference and resolvePath in net/url as affected before Go 1.25.13, in Go 1.26 before 1.26.6 and in Go 1.27 before 1.27.0-rc.3. Sources: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the fix in Go 1.26.6) and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The Debian tracker (https://security-tracker.debian.org/tracker/CVE-2026-56860) lists golang-1.26 and golang-1.27 as fixed in forky and sid (fixed in unstable in 1.26.6-1 and 1.27~rc3-1, and golang-1.25 in 1.25.13-1), and golang-1.24 in trixie (no-dsa) and golang-1.19 in bookworm (postponed) as vulnerable. kube-state-metrics does not use those Debian packages: each program records in its Go build information the Go release it was built with, and that release decides this owner. On 2026-11-28 the DHI Alpine repository for Alpine 3.24 published 20 kube-state-metrics-dev builds, 2.19.0-r1 to the current 2.20.0-r13, as 38 packages on x86_64 and aarch64 (2.20.0-r7 and 2.20.0-r8 were published for aarch64 only). Each has the same index checksum as the Alpine 3.23 package of the same version and architecture, so they are the same packages; we downloaded every Alpine 3.23 package and checked each against its index checksum and data hash. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). The kube-state-metrics-dev program is built without the -w linker flag and without -trimpath, with the same Go release and module versions as the kube-state-metrics program of the same build. go tool nm lists net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse as text symbols in every program we read, and the source file net/url/url.go is in its file table, so the vulnerable code is linked. resolvePath measures 1841/1861 (x86_64) or 1504/1520 (aarch64) bytes (go tool nm -size) in every program built with a Go release before 1.26.6 and 1202 (x86_64) or 1104 (aarch64) bytes in every program built with Go 1.26.6 or later, the size change of the rewritten function. The build information records the Go release (Go 1.26.4 in 2.19.0-r1 to 2.19.1-r1, Go 1.26.5 in 2.19.1-r2 to 2.19.1-r3, Go 1.26.6 in 2.19.1-r4 to 2.20.0-r0, Go 1.26.7 in 2.20.0-r1 to 2.20.0-r2, Go 1.26.8 in 2.20.0-r3 to 2.20.0-r7, Go 1.26.9 in 2.20.0-r8 to 2.20.0-r9, Go 1.26.10 in 2.20.0-r10 to 2.20.0-r11, Go 1.26.11 in 2.20.0-r12 to 2.20.0-r13). 2.19.1-r4 is the first build built with Go 1.26.6 or later, and every later build is too; every earlier build was built with a Go release before 1.26.6. The fixed range therefore starts at 2.19.1-r4."
     },
     {
       "vulnerability": {
@@ -152813,7 +152841,8 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-fips-dev@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips-dev packages for Alpine 3.23 are not in the public DHI Alpine repository index (checked 2026-11-28), so they have not been scanned for CVE-2026-56860 (GO-2026-6218). Pending: a per-build check of every published kube-state-metrics-fips-dev package to establish which Go release each build was built with (the fix is in Go 1.26.6) and whether it links net/url.resolvePath. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -152884,7 +152913,8 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-fips-dev@2.20.0-r9?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips-dev packages for Alpine 3.24 are not in the public DHI Alpine repository index (checked 2026-11-28), so they have not been scanned for CVE-2026-56860 (GO-2026-6218). Pending: a per-build check of every published kube-state-metrics-fips-dev package to establish which Go release each build was built with (the fix is in Go 1.26.6) and whether it links net/url.resolvePath. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -152979,7 +153009,8 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-fips@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips packages for Alpine 3.23 are not in the public DHI Alpine repository index (checked 2026-11-28), so they have not been scanned for CVE-2026-56860 (GO-2026-6218). Pending: a per-build check of every published kube-state-metrics-fips package to establish which Go release each build was built with (the fix is in Go 1.26.6) and whether it links net/url.resolvePath. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -153050,7 +153081,8 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-fips@2.20.0-r9?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips packages for Alpine 3.24 are not in the public DHI Alpine repository index (checked 2026-11-28), so they have not been scanned for CVE-2026-56860 (GO-2026-6218). Pending: a per-build check of every published kube-state-metrics-fips package to establish which Go release each build was built with (the fix is in Go 1.26.6) and whether it links net/url.resolvePath. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -153098,7 +153130,20 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-state-metrics@2.19.1-r3?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update kube-state-metrics to 2.19.1-r4 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): resolvePath in the Go standard library's net/url package, which URL.ResolveReference and URL.Parse use to resolve a reference against a base URL, takes time quadratic in the number of path segments, so a crafted URL with a very long path can use excessive CPU. The Go vulnerability database lists URL.Parse, URL.ResolveReference and resolvePath in net/url as affected before Go 1.25.13, in Go 1.26 before 1.26.6 and in Go 1.27 before 1.27.0-rc.3. Sources: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the fix in Go 1.26.6) and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The Debian tracker (https://security-tracker.debian.org/tracker/CVE-2026-56860) lists golang-1.26 and golang-1.27 as fixed in forky and sid (fixed in unstable in 1.26.6-1 and 1.27~rc3-1, and golang-1.25 in 1.25.13-1), and golang-1.24 in trixie (no-dsa) and golang-1.19 in bookworm (postponed) as vulnerable. kube-state-metrics does not use those Debian packages: each program records in its Go build information the Go release it was built with, and that release decides this owner. On 2026-11-28 the DHI Alpine repository for Alpine 3.23 published 28 kube-state-metrics builds, 2.18.0-r0 to the current 2.20.0-r13, as 54 packages on x86_64 and aarch64 (2.20.0-r7 and 2.20.0-r8 were published for aarch64 only). We downloaded every one of them and checked each against its index checksum and data hash. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). go tool nm lists net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse as text symbols in every program we read, and the source file net/url/url.go is in its file table, so the vulnerable code is linked. resolvePath measures 1841/1861 (x86_64) or 1504/1520 (aarch64) bytes (go tool nm -size) in every program built with a Go release before 1.26.6 and 1202 (x86_64) or 1104 (aarch64) bytes in every program built with Go 1.26.6 or later, the size change of the rewritten function. The build information records the Go release (Go 1.25.7 in 2.18.0-r0, Go 1.26.1 in 2.18.0-r1 to 2.18.0-r3, Go 1.26.2 in 2.18.0-r4 to 2.18.0-r5, Go 1.26.3 in 2.18.0-r6 to 2.19.0-r0, Go 1.26.4 in 2.19.0-r1 to 2.19.1-r1, Go 1.26.5 in 2.19.1-r2 to 2.19.1-r3, Go 1.26.6 in 2.19.1-r4 to 2.20.0-r0, Go 1.26.7 in 2.20.0-r1 to 2.20.0-r2, Go 1.26.8 in 2.20.0-r3 to 2.20.0-r7, Go 1.26.9 in 2.20.0-r8 to 2.20.0-r9, Go 1.26.10 in 2.20.0-r10 to 2.20.0-r11, Go 1.26.11 in 2.20.0-r12 to 2.20.0-r13). 2.19.1-r4 is the first build built with Go 1.26.6 or later, and every later build is too; every earlier build was built with a Go release before 1.26.6. The fixed range therefore starts at 2.19.1-r4."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/kube-state-metrics@2.19.1-r4?distro=dhi-3.23"
         },
@@ -153145,7 +153190,8 @@
           "@id": "pkg:apk/dhi/kube-state-metrics@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): resolvePath in the Go standard library's net/url package, which URL.ResolveReference and URL.Parse use to resolve a reference against a base URL, takes time quadratic in the number of path segments, so a crafted URL with a very long path can use excessive CPU. The Go vulnerability database lists URL.Parse, URL.ResolveReference and resolvePath in net/url as affected before Go 1.25.13, in Go 1.26 before 1.26.6 and in Go 1.27 before 1.27.0-rc.3. Sources: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the fix in Go 1.26.6) and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The Debian tracker (https://security-tracker.debian.org/tracker/CVE-2026-56860) lists golang-1.26 and golang-1.27 as fixed in forky and sid (fixed in unstable in 1.26.6-1 and 1.27~rc3-1, and golang-1.25 in 1.25.13-1), and golang-1.24 in trixie (no-dsa) and golang-1.19 in bookworm (postponed) as vulnerable. kube-state-metrics does not use those Debian packages: each program records in its Go build information the Go release it was built with, and that release decides this owner. On 2026-11-28 the DHI Alpine repository for Alpine 3.23 published 28 kube-state-metrics builds, 2.18.0-r0 to the current 2.20.0-r13, as 54 packages on x86_64 and aarch64 (2.20.0-r7 and 2.20.0-r8 were published for aarch64 only). We downloaded every one of them and checked each against its index checksum and data hash. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). go tool nm lists net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse as text symbols in every program we read, and the source file net/url/url.go is in its file table, so the vulnerable code is linked. resolvePath measures 1841/1861 (x86_64) or 1504/1520 (aarch64) bytes (go tool nm -size) in every program built with a Go release before 1.26.6 and 1202 (x86_64) or 1104 (aarch64) bytes in every program built with Go 1.26.6 or later, the size change of the rewritten function. The build information records the Go release (Go 1.25.7 in 2.18.0-r0, Go 1.26.1 in 2.18.0-r1 to 2.18.0-r3, Go 1.26.2 in 2.18.0-r4 to 2.18.0-r5, Go 1.26.3 in 2.18.0-r6 to 2.19.0-r0, Go 1.26.4 in 2.19.0-r1 to 2.19.1-r1, Go 1.26.5 in 2.19.1-r2 to 2.19.1-r3, Go 1.26.6 in 2.19.1-r4 to 2.20.0-r0, Go 1.26.7 in 2.20.0-r1 to 2.20.0-r2, Go 1.26.8 in 2.20.0-r3 to 2.20.0-r7, Go 1.26.9 in 2.20.0-r8 to 2.20.0-r9, Go 1.26.10 in 2.20.0-r10 to 2.20.0-r11, Go 1.26.11 in 2.20.0-r12 to 2.20.0-r13). 2.19.1-r4 is the first build built with Go 1.26.6 or later, and every later build is too; every earlier build was built with a Go release before 1.26.6. The fixed range therefore starts at 2.19.1-r4."
     },
     {
       "vulnerability": {
@@ -153169,7 +153215,20 @@
         },
         {
           "@id": "pkg:apk/dhi/kube-state-metrics@2.19.1-r3?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update kube-state-metrics to 2.19.1-r4 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): resolvePath in the Go standard library's net/url package, which URL.ResolveReference and URL.Parse use to resolve a reference against a base URL, takes time quadratic in the number of path segments, so a crafted URL with a very long path can use excessive CPU. The Go vulnerability database lists URL.Parse, URL.ResolveReference and resolvePath in net/url as affected before Go 1.25.13, in Go 1.26 before 1.26.6 and in Go 1.27 before 1.27.0-rc.3. Sources: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the fix in Go 1.26.6) and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The Debian tracker (https://security-tracker.debian.org/tracker/CVE-2026-56860) lists golang-1.26 and golang-1.27 as fixed in forky and sid (fixed in unstable in 1.26.6-1 and 1.27~rc3-1, and golang-1.25 in 1.25.13-1), and golang-1.24 in trixie (no-dsa) and golang-1.19 in bookworm (postponed) as vulnerable. kube-state-metrics does not use those Debian packages: each program records in its Go build information the Go release it was built with, and that release decides this owner. On 2026-11-28 the DHI Alpine repository for Alpine 3.24 published 20 kube-state-metrics builds, 2.19.0-r1 to the current 2.20.0-r13, as 38 packages on x86_64 and aarch64 (2.20.0-r7 and 2.20.0-r8 were published for aarch64 only). Each has the same index checksum as the Alpine 3.23 package of the same version and architecture, so they are the same packages; we downloaded every Alpine 3.23 package and checked each against its index checksum and data hash. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). go tool nm lists net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse as text symbols in every program we read, and the source file net/url/url.go is in its file table, so the vulnerable code is linked. resolvePath measures 1841/1861 (x86_64) or 1504/1520 (aarch64) bytes (go tool nm -size) in every program built with a Go release before 1.26.6 and 1202 (x86_64) or 1104 (aarch64) bytes in every program built with Go 1.26.6 or later, the size change of the rewritten function. The build information records the Go release (Go 1.26.4 in 2.19.0-r1 to 2.19.1-r1, Go 1.26.5 in 2.19.1-r2 to 2.19.1-r3, Go 1.26.6 in 2.19.1-r4 to 2.20.0-r0, Go 1.26.7 in 2.20.0-r1 to 2.20.0-r2, Go 1.26.8 in 2.20.0-r3 to 2.20.0-r7, Go 1.26.9 in 2.20.0-r8 to 2.20.0-r9, Go 1.26.10 in 2.20.0-r10 to 2.20.0-r11, Go 1.26.11 in 2.20.0-r12 to 2.20.0-r13). 2.19.1-r4 is the first build built with Go 1.26.6 or later, and every later build is too; every earlier build was built with a Go release before 1.26.6. The fixed range therefore starts at 2.19.1-r4."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/kube-state-metrics@2.19.1-r4?distro=dhi-3.24"
         },
@@ -153216,7 +153275,8 @@
           "@id": "pkg:apk/dhi/kube-state-metrics@2.20.0-r9?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): resolvePath in the Go standard library's net/url package, which URL.ResolveReference and URL.Parse use to resolve a reference against a base URL, takes time quadratic in the number of path segments, so a crafted URL with a very long path can use excessive CPU. The Go vulnerability database lists URL.Parse, URL.ResolveReference and resolvePath in net/url as affected before Go 1.25.13, in Go 1.26 before 1.26.6 and in Go 1.27 before 1.27.0-rc.3. Sources: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the fix in Go 1.26.6) and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The Debian tracker (https://security-tracker.debian.org/tracker/CVE-2026-56860) lists golang-1.26 and golang-1.27 as fixed in forky and sid (fixed in unstable in 1.26.6-1 and 1.27~rc3-1, and golang-1.25 in 1.25.13-1), and golang-1.24 in trixie (no-dsa) and golang-1.19 in bookworm (postponed) as vulnerable. kube-state-metrics does not use those Debian packages: each program records in its Go build information the Go release it was built with, and that release decides this owner. On 2026-11-28 the DHI Alpine repository for Alpine 3.24 published 20 kube-state-metrics builds, 2.19.0-r1 to the current 2.20.0-r13, as 38 packages on x86_64 and aarch64 (2.20.0-r7 and 2.20.0-r8 were published for aarch64 only). Each has the same index checksum as the Alpine 3.23 package of the same version and architecture, so they are the same packages; we downloaded every Alpine 3.23 package and checked each against its index checksum and data hash. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). go tool nm lists net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse as text symbols in every program we read, and the source file net/url/url.go is in its file table, so the vulnerable code is linked. resolvePath measures 1841/1861 (x86_64) or 1504/1520 (aarch64) bytes (go tool nm -size) in every program built with a Go release before 1.26.6 and 1202 (x86_64) or 1104 (aarch64) bytes in every program built with Go 1.26.6 or later, the size change of the rewritten function. The build information records the Go release (Go 1.26.4 in 2.19.0-r1 to 2.19.1-r1, Go 1.26.5 in 2.19.1-r2 to 2.19.1-r3, Go 1.26.6 in 2.19.1-r4 to 2.20.0-r0, Go 1.26.7 in 2.20.0-r1 to 2.20.0-r2, Go 1.26.8 in 2.20.0-r3 to 2.20.0-r7, Go 1.26.9 in 2.20.0-r8 to 2.20.0-r9, Go 1.26.10 in 2.20.0-r10 to 2.20.0-r11, Go 1.26.11 in 2.20.0-r12 to 2.20.0-r13). 2.19.1-r4 is the first build built with Go 1.26.6 or later, and every later build is too; every earlier build was built with a Go release before 1.26.6. The fixed range therefore starts at 2.19.1-r4."
     },
     {
       "vulnerability": {
@@ -335076,7 +335136,20 @@
         },
         {
           "@id": "pkg:deb/dhi/kube-state-metrics-dev@2.19.1-3?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update kube-state-metrics-dev to 2.19.1-4 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): resolvePath in the Go standard library's net/url package, which URL.ResolveReference and URL.Parse use to resolve a reference against a base URL, takes time quadratic in the number of path segments, so a crafted URL with a very long path can use excessive CPU. The Go vulnerability database lists URL.Parse, URL.ResolveReference and resolvePath in net/url as affected before Go 1.25.13, in Go 1.26 before 1.26.6 and in Go 1.27 before 1.27.0-rc.3. Sources: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the fix in Go 1.26.6) and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The Debian tracker (https://security-tracker.debian.org/tracker/CVE-2026-56860) lists golang-1.26 and golang-1.27 as fixed in forky and sid (fixed in unstable in 1.26.6-1 and 1.27~rc3-1, and golang-1.25 in 1.25.13-1), and golang-1.24 in trixie (no-dsa) and golang-1.19 in bookworm (postponed) as vulnerable. kube-state-metrics does not use those Debian packages: each program records in its Go build information the Go release it was built with, and that release decides this owner. On 2026-11-28 the DHI Debian repository for Debian 13 published 23 kube-state-metrics-dev builds, 2.18.0-5 to the current 2.20.0-13, as 44 packages on amd64 and arm64 (2.20.0-7 and 2.20.0-8 were published for arm64 only). Each package was downloaded in full and checked against its index checksum; its data archive holds one file, /usr/bin/kube-state-metrics, with the same MD5 as the program in the DHI Alpine package of the same version and architecture (2.18.0-5 matches 2.18.0-r5, and so on), which we read. The exception is the amd64 package of 2.20.0-4: the file served does not match the repository index checksum, so we read the program as served; it was built with Go 1.26.8, like the other 2.20.0-4 builds, and gives the same result below. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). The kube-state-metrics-dev program is built without the -w linker flag and without -trimpath, with the same Go release and module versions as the kube-state-metrics program of the same build. go tool nm lists net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse as text symbols in every program we read, and the source file net/url/url.go is in its file table, so the vulnerable code is linked. resolvePath measures 1841/1861 (x86_64) or 1504/1520 (aarch64) bytes (go tool nm -size) in every program built with a Go release before 1.26.6 and 1202 (x86_64) or 1104 (aarch64) bytes in every program built with Go 1.26.6 or later, the size change of the rewritten function. The build information records the Go release (Go 1.26.2 in 2.18.0-5, Go 1.26.3 in 2.18.0-6 to 2.19.0-0, Go 1.26.4 in 2.19.0-1 to 2.19.1-1, Go 1.26.5 in 2.19.1-2 to 2.19.1-3, Go 1.26.6 in 2.19.1-4 to 2.20.0-0, Go 1.26.7 in 2.20.0-1 to 2.20.0-2, Go 1.26.8 in 2.20.0-3 to 2.20.0-7, Go 1.26.9 in 2.20.0-8 to 2.20.0-9, Go 1.26.10 in 2.20.0-10 to 2.20.0-11, Go 1.26.11 in 2.20.0-12 to 2.20.0-13). 2.19.1-4 is the first build built with Go 1.26.6 or later, and every later build is too; every earlier build was built with a Go release before 1.26.6. The fixed range therefore starts at 2.19.1-4."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/kube-state-metrics-dev@2.19.1-4?distro=dhi-13"
         },
@@ -335123,7 +335196,8 @@
           "@id": "pkg:deb/dhi/kube-state-metrics-dev@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): resolvePath in the Go standard library's net/url package, which URL.ResolveReference and URL.Parse use to resolve a reference against a base URL, takes time quadratic in the number of path segments, so a crafted URL with a very long path can use excessive CPU. The Go vulnerability database lists URL.Parse, URL.ResolveReference and resolvePath in net/url as affected before Go 1.25.13, in Go 1.26 before 1.26.6 and in Go 1.27 before 1.27.0-rc.3. Sources: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the fix in Go 1.26.6) and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The Debian tracker (https://security-tracker.debian.org/tracker/CVE-2026-56860) lists golang-1.26 and golang-1.27 as fixed in forky and sid (fixed in unstable in 1.26.6-1 and 1.27~rc3-1, and golang-1.25 in 1.25.13-1), and golang-1.24 in trixie (no-dsa) and golang-1.19 in bookworm (postponed) as vulnerable. kube-state-metrics does not use those Debian packages: each program records in its Go build information the Go release it was built with, and that release decides this owner. On 2026-11-28 the DHI Debian repository for Debian 13 published 23 kube-state-metrics-dev builds, 2.18.0-5 to the current 2.20.0-13, as 44 packages on amd64 and arm64 (2.20.0-7 and 2.20.0-8 were published for arm64 only). Each package was downloaded in full and checked against its index checksum; its data archive holds one file, /usr/bin/kube-state-metrics, with the same MD5 as the program in the DHI Alpine package of the same version and architecture (2.18.0-5 matches 2.18.0-r5, and so on), which we read. The exception is the amd64 package of 2.20.0-4: the file served does not match the repository index checksum, so we read the program as served; it was built with Go 1.26.8, like the other 2.20.0-4 builds, and gives the same result below. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). The kube-state-metrics-dev program is built without the -w linker flag and without -trimpath, with the same Go release and module versions as the kube-state-metrics program of the same build. go tool nm lists net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse as text symbols in every program we read, and the source file net/url/url.go is in its file table, so the vulnerable code is linked. resolvePath measures 1841/1861 (x86_64) or 1504/1520 (aarch64) bytes (go tool nm -size) in every program built with a Go release before 1.26.6 and 1202 (x86_64) or 1104 (aarch64) bytes in every program built with Go 1.26.6 or later, the size change of the rewritten function. The build information records the Go release (Go 1.26.2 in 2.18.0-5, Go 1.26.3 in 2.18.0-6 to 2.19.0-0, Go 1.26.4 in 2.19.0-1 to 2.19.1-1, Go 1.26.5 in 2.19.1-2 to 2.19.1-3, Go 1.26.6 in 2.19.1-4 to 2.20.0-0, Go 1.26.7 in 2.20.0-1 to 2.20.0-2, Go 1.26.8 in 2.20.0-3 to 2.20.0-7, Go 1.26.9 in 2.20.0-8 to 2.20.0-9, Go 1.26.10 in 2.20.0-10 to 2.20.0-11, Go 1.26.11 in 2.20.0-12 to 2.20.0-13). 2.19.1-4 is the first build built with Go 1.26.6 or later, and every later build is too; every earlier build was built with a Go release before 1.26.6. The fixed range therefore starts at 2.19.1-4."
     },
     {
       "vulnerability": {
@@ -335203,7 +335277,8 @@
           "@id": "pkg:deb/dhi/kube-state-metrics-fips-dev@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips-dev packages for Debian 13 are not in the public DHI Debian repository index (checked 2026-11-28), so they have not been scanned for CVE-2026-56860 (GO-2026-6218). Pending: a per-build check of every published kube-state-metrics-fips-dev package to establish which Go release each build was built with (the fix is in Go 1.26.6) and whether it links net/url.resolvePath. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -335283,7 +335358,8 @@
           "@id": "pkg:deb/dhi/kube-state-metrics-fips@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips packages for Debian 13 are not in the public DHI Debian repository index (checked 2026-11-28), so they have not been scanned for CVE-2026-56860 (GO-2026-6218). Pending: a per-build check of every published kube-state-metrics-fips package to establish which Go release each build was built with (the fix is in Go 1.26.6) and whether it links net/url.resolvePath. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -335316,7 +335392,20 @@
         },
         {
           "@id": "pkg:deb/dhi/kube-state-metrics@2.19.1-3?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update kube-state-metrics to 2.19.1-4 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): resolvePath in the Go standard library's net/url package, which URL.ResolveReference and URL.Parse use to resolve a reference against a base URL, takes time quadratic in the number of path segments, so a crafted URL with a very long path can use excessive CPU. The Go vulnerability database lists URL.Parse, URL.ResolveReference and resolvePath in net/url as affected before Go 1.25.13, in Go 1.26 before 1.26.6 and in Go 1.27 before 1.27.0-rc.3. Sources: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the fix in Go 1.26.6) and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The Debian tracker (https://security-tracker.debian.org/tracker/CVE-2026-56860) lists golang-1.26 and golang-1.27 as fixed in forky and sid (fixed in unstable in 1.26.6-1 and 1.27~rc3-1, and golang-1.25 in 1.25.13-1), and golang-1.24 in trixie (no-dsa) and golang-1.19 in bookworm (postponed) as vulnerable. kube-state-metrics does not use those Debian packages: each program records in its Go build information the Go release it was built with, and that release decides this owner. On 2026-11-28 the DHI Debian repository for Debian 13 published 23 kube-state-metrics builds, 2.18.0-5 to the current 2.20.0-13, as 44 packages on amd64 and arm64 (2.20.0-7 and 2.20.0-8 were published for arm64 only). Each package was downloaded in full and checked against its index checksum; its data archive holds one file, /usr/bin/kube-state-metrics, with the same MD5 as the program in the DHI Alpine package of the same version and architecture (2.18.0-5 matches 2.18.0-r5, and so on), which we read. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). go tool nm lists net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse as text symbols in every program we read, and the source file net/url/url.go is in its file table, so the vulnerable code is linked. resolvePath measures 1841/1861 (x86_64) or 1504/1520 (aarch64) bytes (go tool nm -size) in every program built with a Go release before 1.26.6 and 1202 (x86_64) or 1104 (aarch64) bytes in every program built with Go 1.26.6 or later, the size change of the rewritten function. The build information records the Go release (Go 1.26.2 in 2.18.0-5, Go 1.26.3 in 2.18.0-6 to 2.19.0-0, Go 1.26.4 in 2.19.0-1 to 2.19.1-1, Go 1.26.5 in 2.19.1-2 to 2.19.1-3, Go 1.26.6 in 2.19.1-4 to 2.20.0-0, Go 1.26.7 in 2.20.0-1 to 2.20.0-2, Go 1.26.8 in 2.20.0-3 to 2.20.0-7, Go 1.26.9 in 2.20.0-8 to 2.20.0-9, Go 1.26.10 in 2.20.0-10 to 2.20.0-11, Go 1.26.11 in 2.20.0-12 to 2.20.0-13). 2.19.1-4 is the first build built with Go 1.26.6 or later, and every later build is too; every earlier build was built with a Go release before 1.26.6. The fixed range therefore starts at 2.19.1-4."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/kube-state-metrics@2.19.1-4?distro=dhi-13"
         },
@@ -335363,7 +335452,8 @@
           "@id": "pkg:deb/dhi/kube-state-metrics@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): resolvePath in the Go standard library's net/url package, which URL.ResolveReference and URL.Parse use to resolve a reference against a base URL, takes time quadratic in the number of path segments, so a crafted URL with a very long path can use excessive CPU. The Go vulnerability database lists URL.Parse, URL.ResolveReference and resolvePath in net/url as affected before Go 1.25.13, in Go 1.26 before 1.26.6 and in Go 1.27 before 1.27.0-rc.3. Sources: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://go.dev/cl/803681, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the fix in Go 1.26.6) and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The Debian tracker (https://security-tracker.debian.org/tracker/CVE-2026-56860) lists golang-1.26 and golang-1.27 as fixed in forky and sid (fixed in unstable in 1.26.6-1 and 1.27~rc3-1, and golang-1.25 in 1.25.13-1), and golang-1.24 in trixie (no-dsa) and golang-1.19 in bookworm (postponed) as vulnerable. kube-state-metrics does not use those Debian packages: each program records in its Go build information the Go release it was built with, and that release decides this owner. On 2026-11-28 the DHI Debian repository for Debian 13 published 23 kube-state-metrics builds, 2.18.0-5 to the current 2.20.0-13, as 44 packages on amd64 and arm64 (2.20.0-7 and 2.20.0-8 were published for arm64 only). Each package was downloaded in full and checked against its index checksum; its data archive holds one file, /usr/bin/kube-state-metrics, with the same MD5 as the program in the DHI Alpine package of the same version and architecture (2.18.0-5 matches 2.18.0-r5, and so on), which we read. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0, as its Go build information records (no program interpreter and no shared-library dependencies). go tool nm lists net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse as text symbols in every program we read, and the source file net/url/url.go is in its file table, so the vulnerable code is linked. resolvePath measures 1841/1861 (x86_64) or 1504/1520 (aarch64) bytes (go tool nm -size) in every program built with a Go release before 1.26.6 and 1202 (x86_64) or 1104 (aarch64) bytes in every program built with Go 1.26.6 or later, the size change of the rewritten function. The build information records the Go release (Go 1.26.2 in 2.18.0-5, Go 1.26.3 in 2.18.0-6 to 2.19.0-0, Go 1.26.4 in 2.19.0-1 to 2.19.1-1, Go 1.26.5 in 2.19.1-2 to 2.19.1-3, Go 1.26.6 in 2.19.1-4 to 2.20.0-0, Go 1.26.7 in 2.20.0-1 to 2.20.0-2, Go 1.26.8 in 2.20.0-3 to 2.20.0-7, Go 1.26.9 in 2.20.0-8 to 2.20.0-9, Go 1.26.10 in 2.20.0-10 to 2.20.0-11, Go 1.26.11 in 2.20.0-12 to 2.20.0-13). 2.19.1-4 is the first build built with Go 1.26.6 or later, and every later build is too; every earlier build was built with a Go release before 1.26.6. The fixed range therefore starts at 2.19.1-4."
     },
     {
       "vulnerability": {
