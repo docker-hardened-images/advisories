@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T00:34:46Z",
-  "last_updated": "2026-11-27T02:30:58Z",
-  "version": 57,
+  "last_updated": "2026-11-28T05:39:28Z",
+  "version": 59,
   "statements": [
     {
       "vulnerability": {
@@ -110437,7 +110437,9 @@
           "@id": "pkg:apk/dhi/metrics-server-dev@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-gcjh-h69q-9w9g (GO-2026-6094): in github.com/google/cel-go, ext.NativeTypes with ParseStructTag('json') registered struct fields tagged json:'-' under the literal name '-', so a user-supplied CEL expression could read fields the program meant to keep private. The vulnerable functions are NativeTypes and ParseStructTag in the cel-go ext package (https://github.com/cel-expr/cel-go/security/advisories/GHSA-gcjh-h69q-9w9g, https://pkg.go.dev/vuln/GO-2026-6094). The fix, https://github.com/google/cel-go/commit/83eed56b0fe697952d3bbae964e5539c16cf3a09, is in cel-go v0.30.0 and not in v0.29.0, so the advisory's first patched version of 0.29.0 is too early; vuln.go.dev gives 0.30.0. As of 2026-11-28 we read every published metrics-server-dev package for Alpine 3.23 in the DHI Alpine repository: 29 builds, 0.8.1-r0 to 0.9.1-r2, each for x86_64 and aarch64 (58 packages), each matched to its package index checksum. Each installs one file, /usr/bin/metrics-server, a statically linked Go program (no ELF interpreter and no dynamic section) built with CGO_ENABLED=0, built without the -w linker flag and without -trimpath. Its Go build information lists github.com/google/cel-go v0.23.2 in 0.8.1-r0 to 0.8.1-r12, v0.28.1 in 0.9.0-r0 and v0.30.0 in 0.9.0-r1 to 0.9.1-r2, with no replace directive for cel-go. The cel-go ext package is compiled into every build. In every build, the symbol table (go tool nm) has no function from ext.NativeTypes, ext.ParseStructTag, ext.fieldNameByTag or ext.isSkippedFieldName, including closures named after them, and a byte search of the whole program finds none of the strings ext.NativeTypes, ext.ParseStructTag, fieldNameByTag or newNativeTypes. In each build with cel-go v0.23.2 or v0.28.1 (0.8.1-r0 to 0.9.0-r0), a second read also finds no symbol whose name contains NativeTypes, ParseStructTag or newNativeType and no method of the nativeTypeProvider, nativeType or nativeObj types that carry the vulnerable field handling, and no byte string NativeTypes, ParseStructTag, nativeTypeProvider, newNativeType or fieldNameByTag. Positive control: the same searches find runtime.main in every build, and in test programs we built with go1.27.1, CGO_ENABLED=0, -trimpath and -ldflags=-w for linux/amd64 and linux/arm64 against cel-go v0.29.2 (a release without the fix) that call ext.NativeTypes(ext.ParseStructTag('json')) they find ext.NativeTypes.func1, ext.ParseStructTag.func1, ext.fieldNameByTag, ext.newNativeType and the nativeTypeProvider methods, and the byte search finds those strings. The NativeTypes code is not compiled into any published build of this package, including the builds with cel-go v0.23.2 or v0.28.1, so the vulnerable code is not present."
     },
     {
       "vulnerability": {
@@ -110505,7 +110507,9 @@
           "@id": "pkg:apk/dhi/metrics-server-dev@0.9.1-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-gcjh-h69q-9w9g (GO-2026-6094): in github.com/google/cel-go, ext.NativeTypes with ParseStructTag('json') registered struct fields tagged json:'-' under the literal name '-', so a user-supplied CEL expression could read fields the program meant to keep private. The vulnerable functions are NativeTypes and ParseStructTag in the cel-go ext package (https://github.com/cel-expr/cel-go/security/advisories/GHSA-gcjh-h69q-9w9g, https://pkg.go.dev/vuln/GO-2026-6094). The fix, https://github.com/google/cel-go/commit/83eed56b0fe697952d3bbae964e5539c16cf3a09, is in cel-go v0.30.0 and not in v0.29.0, so the advisory's first patched version of 0.29.0 is too early; vuln.go.dev gives 0.30.0. As of 2026-11-28 the DHI Alpine repository publishes 19 metrics-server-dev builds for Alpine 3.24, 0.8.1-r10 to 0.9.1-r2, each for x86_64 and aarch64 (38 packages). The index checksum of each equals that of the Alpine 3.23 metrics-server-dev package of the same version and architecture, so each is the same package, which we downloaded, matched to its checksum and read: it installs one file, /usr/bin/metrics-server, a statically linked Go program (no ELF interpreter and no dynamic section) built with CGO_ENABLED=0, built without the -w linker flag and without -trimpath. Its Go build information lists github.com/google/cel-go v0.23.2 in 0.8.1-r10 to 0.8.1-r12, v0.28.1 in 0.9.0-r0 and v0.30.0 in 0.9.0-r1 to 0.9.1-r2, with no replace directive for cel-go. The cel-go ext package is compiled into every build. In every build, the symbol table (go tool nm) has no function from ext.NativeTypes, ext.ParseStructTag, ext.fieldNameByTag or ext.isSkippedFieldName, including closures named after them, and a byte search of the whole program finds none of the strings ext.NativeTypes, ext.ParseStructTag, fieldNameByTag or newNativeTypes. In each build with cel-go v0.23.2 or v0.28.1 (0.8.1-r10 to 0.9.0-r0), a second read also finds no symbol whose name contains NativeTypes, ParseStructTag or newNativeType and no method of the nativeTypeProvider, nativeType or nativeObj types that carry the vulnerable field handling, and no byte string NativeTypes, ParseStructTag, nativeTypeProvider, newNativeType or fieldNameByTag. Positive control: the same searches find runtime.main in every build, and in test programs we built with go1.27.1, CGO_ENABLED=0, -trimpath and -ldflags=-w for linux/amd64 and linux/arm64 against cel-go v0.29.2 (a release without the fix) that call ext.NativeTypes(ext.ParseStructTag('json')) they find ext.NativeTypes.func1, ext.ParseStructTag.func1, ext.fieldNameByTag, ext.newNativeType and the nativeTypeProvider methods, and the byte search finds those strings. The NativeTypes code is not compiled into any published build of this package, including the builds with cel-go v0.23.2 or v0.28.1, so the vulnerable code is not present."
     },
     {
       "vulnerability": {
@@ -110603,7 +110607,8 @@
           "@id": "pkg:apk/dhi/metrics-server-fips-dev@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-gcjh-h69q-9w9g (GO-2026-6094): in github.com/google/cel-go, ext.NativeTypes with ParseStructTag('json') registered struct fields tagged json:'-' under the literal name '-', so a user-supplied CEL expression could read fields the program meant to keep private. The vulnerable functions are NativeTypes and ParseStructTag in the cel-go ext package (https://github.com/cel-expr/cel-go/security/advisories/GHSA-gcjh-h69q-9w9g, https://pkg.go.dev/vuln/GO-2026-6094). The fix, https://github.com/google/cel-go/commit/83eed56b0fe697952d3bbae964e5539c16cf3a09, is in cel-go v0.30.0 and not in v0.29.0, so the advisory's first patched version of 0.29.0 is too early; vuln.go.dev gives 0.30.0. Pending: whether the cel-go NativeTypes and ParseStructTag code is compiled into each published metrics-server-fips-dev build for Alpine 3.23. The metrics-server-fips-dev packages are published in the DHI security repository, and we have not yet read them for this assessment, so this package stays under investigation until every published build is scanned on both architectures."
     },
     {
       "vulnerability": {
@@ -110671,7 +110676,8 @@
           "@id": "pkg:apk/dhi/metrics-server-fips-dev@0.9.1-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-gcjh-h69q-9w9g (GO-2026-6094): in github.com/google/cel-go, ext.NativeTypes with ParseStructTag('json') registered struct fields tagged json:'-' under the literal name '-', so a user-supplied CEL expression could read fields the program meant to keep private. The vulnerable functions are NativeTypes and ParseStructTag in the cel-go ext package (https://github.com/cel-expr/cel-go/security/advisories/GHSA-gcjh-h69q-9w9g, https://pkg.go.dev/vuln/GO-2026-6094). The fix, https://github.com/google/cel-go/commit/83eed56b0fe697952d3bbae964e5539c16cf3a09, is in cel-go v0.30.0 and not in v0.29.0, so the advisory's first patched version of 0.29.0 is too early; vuln.go.dev gives 0.30.0. Pending: whether the cel-go NativeTypes and ParseStructTag code is compiled into each published metrics-server-fips-dev build for Alpine 3.24. The metrics-server-fips-dev packages are published in the DHI security repository, and we have not yet read them for this assessment, so this package stays under investigation until every published build is scanned on both architectures."
     },
     {
       "vulnerability": {
@@ -110769,7 +110775,8 @@
           "@id": "pkg:apk/dhi/metrics-server-fips@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-gcjh-h69q-9w9g (GO-2026-6094): in github.com/google/cel-go, ext.NativeTypes with ParseStructTag('json') registered struct fields tagged json:'-' under the literal name '-', so a user-supplied CEL expression could read fields the program meant to keep private. The vulnerable functions are NativeTypes and ParseStructTag in the cel-go ext package (https://github.com/cel-expr/cel-go/security/advisories/GHSA-gcjh-h69q-9w9g, https://pkg.go.dev/vuln/GO-2026-6094). The fix, https://github.com/google/cel-go/commit/83eed56b0fe697952d3bbae964e5539c16cf3a09, is in cel-go v0.30.0 and not in v0.29.0, so the advisory's first patched version of 0.29.0 is too early; vuln.go.dev gives 0.30.0. Pending: whether the cel-go NativeTypes and ParseStructTag code is compiled into each published metrics-server-fips build for Alpine 3.23. The metrics-server-fips packages are published in the DHI security repository, and we have not yet read them for this assessment, so this package stays under investigation until every published build is scanned on both architectures."
     },
     {
       "vulnerability": {
@@ -110837,7 +110844,8 @@
           "@id": "pkg:apk/dhi/metrics-server-fips@0.9.1-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-gcjh-h69q-9w9g (GO-2026-6094): in github.com/google/cel-go, ext.NativeTypes with ParseStructTag('json') registered struct fields tagged json:'-' under the literal name '-', so a user-supplied CEL expression could read fields the program meant to keep private. The vulnerable functions are NativeTypes and ParseStructTag in the cel-go ext package (https://github.com/cel-expr/cel-go/security/advisories/GHSA-gcjh-h69q-9w9g, https://pkg.go.dev/vuln/GO-2026-6094). The fix, https://github.com/google/cel-go/commit/83eed56b0fe697952d3bbae964e5539c16cf3a09, is in cel-go v0.30.0 and not in v0.29.0, so the advisory's first patched version of 0.29.0 is too early; vuln.go.dev gives 0.30.0. Pending: whether the cel-go NativeTypes and ParseStructTag code is compiled into each published metrics-server-fips build for Alpine 3.24. The metrics-server-fips packages are published in the DHI security repository, and we have not yet read them for this assessment, so this package stays under investigation until every published build is scanned on both architectures."
     },
     {
       "vulnerability": {
@@ -110935,7 +110943,9 @@
           "@id": "pkg:apk/dhi/metrics-server@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-gcjh-h69q-9w9g (GO-2026-6094): in github.com/google/cel-go, ext.NativeTypes with ParseStructTag('json') registered struct fields tagged json:'-' under the literal name '-', so a user-supplied CEL expression could read fields the program meant to keep private. The vulnerable functions are NativeTypes and ParseStructTag in the cel-go ext package (https://github.com/cel-expr/cel-go/security/advisories/GHSA-gcjh-h69q-9w9g, https://pkg.go.dev/vuln/GO-2026-6094). The fix, https://github.com/google/cel-go/commit/83eed56b0fe697952d3bbae964e5539c16cf3a09, is in cel-go v0.30.0 and not in v0.29.0, so the advisory's first patched version of 0.29.0 is too early; vuln.go.dev gives 0.30.0. As of 2026-11-28 we read every published metrics-server package for Alpine 3.23 in the DHI Alpine repository: 29 builds, 0.8.1-r0 to 0.9.1-r2, each for x86_64 and aarch64 (58 packages), each matched to its package index checksum. Each installs one file, /usr/bin/metrics-server, a statically linked Go program (no ELF interpreter and no dynamic section) built with CGO_ENABLED=0. Its Go build information lists github.com/google/cel-go v0.23.2 in 0.8.1-r0 to 0.8.1-r12, v0.28.1 in 0.9.0-r0 and v0.30.0 in 0.9.0-r1 to 0.9.1-r2, with no replace directive for cel-go. The cel-go ext package is compiled into every build. In every build, the symbol table (go tool nm) has no function from ext.NativeTypes, ext.ParseStructTag, ext.fieldNameByTag or ext.isSkippedFieldName, including closures named after them, and a byte search of the whole program finds none of the strings ext.NativeTypes, ext.ParseStructTag, fieldNameByTag or newNativeTypes. In each build with cel-go v0.23.2 or v0.28.1 (0.8.1-r0 to 0.9.0-r0), a second read also finds no symbol whose name contains NativeTypes, ParseStructTag or newNativeType and no method of the nativeTypeProvider, nativeType or nativeObj types that carry the vulnerable field handling, and no byte string NativeTypes, ParseStructTag, nativeTypeProvider, newNativeType or fieldNameByTag. Positive control: the same searches find runtime.main in every build, and in test programs we built with go1.27.1, CGO_ENABLED=0, -trimpath and -ldflags=-w for linux/amd64 and linux/arm64 against cel-go v0.29.2 (a release without the fix) that call ext.NativeTypes(ext.ParseStructTag('json')) they find ext.NativeTypes.func1, ext.ParseStructTag.func1, ext.fieldNameByTag, ext.newNativeType and the nativeTypeProvider methods, and the byte search finds those strings. The NativeTypes code is not compiled into any published build of this package, including the builds with cel-go v0.23.2 or v0.28.1, so the vulnerable code is not present."
     },
     {
       "vulnerability": {
@@ -111003,7 +111013,9 @@
           "@id": "pkg:apk/dhi/metrics-server@0.9.1-r2?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-gcjh-h69q-9w9g (GO-2026-6094): in github.com/google/cel-go, ext.NativeTypes with ParseStructTag('json') registered struct fields tagged json:'-' under the literal name '-', so a user-supplied CEL expression could read fields the program meant to keep private. The vulnerable functions are NativeTypes and ParseStructTag in the cel-go ext package (https://github.com/cel-expr/cel-go/security/advisories/GHSA-gcjh-h69q-9w9g, https://pkg.go.dev/vuln/GO-2026-6094). The fix, https://github.com/google/cel-go/commit/83eed56b0fe697952d3bbae964e5539c16cf3a09, is in cel-go v0.30.0 and not in v0.29.0, so the advisory's first patched version of 0.29.0 is too early; vuln.go.dev gives 0.30.0. As of 2026-11-28 the DHI Alpine repository publishes 19 metrics-server builds for Alpine 3.24, 0.8.1-r10 to 0.9.1-r2, each for x86_64 and aarch64 (38 packages). The index checksum of each equals that of the Alpine 3.23 metrics-server package of the same version and architecture, so each is the same package, which we downloaded, matched to its checksum and read: it installs one file, /usr/bin/metrics-server, a statically linked Go program (no ELF interpreter and no dynamic section) built with CGO_ENABLED=0. Its Go build information lists github.com/google/cel-go v0.23.2 in 0.8.1-r10 to 0.8.1-r12, v0.28.1 in 0.9.0-r0 and v0.30.0 in 0.9.0-r1 to 0.9.1-r2, with no replace directive for cel-go. The cel-go ext package is compiled into every build. In every build, the symbol table (go tool nm) has no function from ext.NativeTypes, ext.ParseStructTag, ext.fieldNameByTag or ext.isSkippedFieldName, including closures named after them, and a byte search of the whole program finds none of the strings ext.NativeTypes, ext.ParseStructTag, fieldNameByTag or newNativeTypes. In each build with cel-go v0.23.2 or v0.28.1 (0.8.1-r10 to 0.9.0-r0), a second read also finds no symbol whose name contains NativeTypes, ParseStructTag or newNativeType and no method of the nativeTypeProvider, nativeType or nativeObj types that carry the vulnerable field handling, and no byte string NativeTypes, ParseStructTag, nativeTypeProvider, newNativeType or fieldNameByTag. Positive control: the same searches find runtime.main in every build, and in test programs we built with go1.27.1, CGO_ENABLED=0, -trimpath and -ldflags=-w for linux/amd64 and linux/arm64 against cel-go v0.29.2 (a release without the fix) that call ext.NativeTypes(ext.ParseStructTag('json')) they find ext.NativeTypes.func1, ext.ParseStructTag.func1, ext.fieldNameByTag, ext.newNativeType and the nativeTypeProvider methods, and the byte search finds those strings. The NativeTypes code is not compiled into any published build of this package, including the builds with cel-go v0.23.2 or v0.28.1, so the vulnerable code is not present."
     },
     {
       "vulnerability": {
@@ -131587,6 +131599,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.18-dev@1.18.17-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.18-dev@1.18.17-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -131682,6 +131697,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.18-fips-dev@1.18.17-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.18-fips-dev@1.18.17-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -131836,6 +131854,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.18-fips@1.18.17-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.18-fips@1.18.17-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -131955,6 +131976,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.18@1.18.17-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.18@1.18.17-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -132008,6 +132032,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19-dev@1.19.11-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.19-dev@1.19.11-1?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19-dev@1.19.4-3?distro=dhi-13"
@@ -132130,6 +132157,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19-fips-dev@1.19.11-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.19-fips-dev@1.19.11-1?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19-fips-dev@1.19.4-3?distro=dhi-13"
@@ -132265,6 +132295,9 @@
           "@id": "pkg:deb/dhi/cilium-1.19-fips@1.19.11-0?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/cilium-1.19-fips@1.19.11-1?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/cilium-1.19-fips@1.19.4-3?distro=dhi-13"
         },
         {
@@ -132385,6 +132418,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19@1.19.11-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.19@1.19.11-1?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19@1.19.4-3?distro=dhi-13"
@@ -132552,6 +132588,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.20-dev@1.20.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.20-dev@1.20.5-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -178895,7 +178934,9 @@
           "@id": "pkg:deb/dhi/metrics-server-dev@0.9.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-gcjh-h69q-9w9g (GO-2026-6094): in github.com/google/cel-go, ext.NativeTypes with ParseStructTag('json') registered struct fields tagged json:'-' under the literal name '-', so a user-supplied CEL expression could read fields the program meant to keep private. The vulnerable functions are NativeTypes and ParseStructTag in the cel-go ext package (https://github.com/cel-expr/cel-go/security/advisories/GHSA-gcjh-h69q-9w9g, https://pkg.go.dev/vuln/GO-2026-6094). The fix, https://github.com/google/cel-go/commit/83eed56b0fe697952d3bbae964e5539c16cf3a09, is in cel-go v0.30.0 and not in v0.29.0, so the advisory's first patched version of 0.29.0 is too early; vuln.go.dev gives 0.30.0. As of 2026-11-28 the DHI Debian repository publishes 23 metrics-server-dev builds for Debian 13, 0.8.1-6 to 0.9.1-2, each for amd64 and arm64 (46 packages). Each installs one file, /usr/bin/metrics-server, and the MD5 its md5sums records for that file equals the MD5 of /usr/bin/metrics-server in the Alpine 3.23 metrics-server-dev package of the same version and architecture (for example 0.8.1-6 matches 0.8.1-r6; amd64 matches x86_64 and arm64 matches aarch64), so each holds the same statically linked Go program (no ELF interpreter and no dynamic section) built with CGO_ENABLED=0, built without the -w linker flag and without -trimpath, which we read in those Alpine packages. Its Go build information lists github.com/google/cel-go v0.23.2 in 0.8.1-6 to 0.8.1-12, v0.28.1 in 0.9.0-0 and v0.30.0 in 0.9.0-1 to 0.9.1-2, with no replace directive for cel-go. The cel-go ext package is compiled into every build. In every build, the symbol table (go tool nm) has no function from ext.NativeTypes, ext.ParseStructTag, ext.fieldNameByTag or ext.isSkippedFieldName, including closures named after them, and a byte search of the whole program finds none of the strings ext.NativeTypes, ext.ParseStructTag, fieldNameByTag or newNativeTypes. In each build with cel-go v0.23.2 or v0.28.1 (0.8.1-6 to 0.9.0-0), a second read also finds no symbol whose name contains NativeTypes, ParseStructTag or newNativeType and no method of the nativeTypeProvider, nativeType or nativeObj types that carry the vulnerable field handling, and no byte string NativeTypes, ParseStructTag, nativeTypeProvider, newNativeType or fieldNameByTag. Positive control: the same searches find runtime.main in every build, and in test programs we built with go1.27.1, CGO_ENABLED=0, -trimpath and -ldflags=-w for linux/amd64 and linux/arm64 against cel-go v0.29.2 (a release without the fix) that call ext.NativeTypes(ext.ParseStructTag('json')) they find ext.NativeTypes.func1, ext.ParseStructTag.func1, ext.fieldNameByTag, ext.newNativeType and the nativeTypeProvider methods, and the byte search finds those strings. The NativeTypes code is not compiled into any published build of this package, including the builds with cel-go v0.23.2 or v0.28.1, so the vulnerable code is not present."
     },
     {
       "vulnerability": {
@@ -178975,7 +179016,8 @@
           "@id": "pkg:deb/dhi/metrics-server-fips-dev@0.9.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-gcjh-h69q-9w9g (GO-2026-6094): in github.com/google/cel-go, ext.NativeTypes with ParseStructTag('json') registered struct fields tagged json:'-' under the literal name '-', so a user-supplied CEL expression could read fields the program meant to keep private. The vulnerable functions are NativeTypes and ParseStructTag in the cel-go ext package (https://github.com/cel-expr/cel-go/security/advisories/GHSA-gcjh-h69q-9w9g, https://pkg.go.dev/vuln/GO-2026-6094). The fix, https://github.com/google/cel-go/commit/83eed56b0fe697952d3bbae964e5539c16cf3a09, is in cel-go v0.30.0 and not in v0.29.0, so the advisory's first patched version of 0.29.0 is too early; vuln.go.dev gives 0.30.0. Pending: whether the cel-go NativeTypes and ParseStructTag code is compiled into each published metrics-server-fips-dev build for Debian 13. The metrics-server-fips-dev packages are published in the DHI security repository, and we have not yet read them for this assessment, so this package stays under investigation until every published build is scanned on both architectures."
     },
     {
       "vulnerability": {
@@ -179055,7 +179097,8 @@
           "@id": "pkg:deb/dhi/metrics-server-fips@0.9.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-gcjh-h69q-9w9g (GO-2026-6094): in github.com/google/cel-go, ext.NativeTypes with ParseStructTag('json') registered struct fields tagged json:'-' under the literal name '-', so a user-supplied CEL expression could read fields the program meant to keep private. The vulnerable functions are NativeTypes and ParseStructTag in the cel-go ext package (https://github.com/cel-expr/cel-go/security/advisories/GHSA-gcjh-h69q-9w9g, https://pkg.go.dev/vuln/GO-2026-6094). The fix, https://github.com/google/cel-go/commit/83eed56b0fe697952d3bbae964e5539c16cf3a09, is in cel-go v0.30.0 and not in v0.29.0, so the advisory's first patched version of 0.29.0 is too early; vuln.go.dev gives 0.30.0. Pending: whether the cel-go NativeTypes and ParseStructTag code is compiled into each published metrics-server-fips build for Debian 13. The metrics-server-fips packages are published in the DHI security repository, and we have not yet read them for this assessment, so this package stays under investigation until every published build is scanned on both architectures."
     },
     {
       "vulnerability": {
@@ -179135,7 +179178,9 @@
           "@id": "pkg:deb/dhi/metrics-server@0.9.1-2?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-gcjh-h69q-9w9g (GO-2026-6094): in github.com/google/cel-go, ext.NativeTypes with ParseStructTag('json') registered struct fields tagged json:'-' under the literal name '-', so a user-supplied CEL expression could read fields the program meant to keep private. The vulnerable functions are NativeTypes and ParseStructTag in the cel-go ext package (https://github.com/cel-expr/cel-go/security/advisories/GHSA-gcjh-h69q-9w9g, https://pkg.go.dev/vuln/GO-2026-6094). The fix, https://github.com/google/cel-go/commit/83eed56b0fe697952d3bbae964e5539c16cf3a09, is in cel-go v0.30.0 and not in v0.29.0, so the advisory's first patched version of 0.29.0 is too early; vuln.go.dev gives 0.30.0. As of 2026-11-28 the DHI Debian repository publishes 23 metrics-server builds for Debian 13, 0.8.1-6 to 0.9.1-2, each for amd64 and arm64 (46 packages). Each installs one file, /usr/bin/metrics-server, and the MD5 its md5sums records for that file equals the MD5 of /usr/bin/metrics-server in the Alpine 3.23 metrics-server package of the same version and architecture (for example 0.8.1-6 matches 0.8.1-r6; amd64 matches x86_64 and arm64 matches aarch64), so each holds the same statically linked Go program (no ELF interpreter and no dynamic section) built with CGO_ENABLED=0, which we read in those Alpine packages. Its Go build information lists github.com/google/cel-go v0.23.2 in 0.8.1-6 to 0.8.1-12, v0.28.1 in 0.9.0-0 and v0.30.0 in 0.9.0-1 to 0.9.1-2, with no replace directive for cel-go. The cel-go ext package is compiled into every build. In every build, the symbol table (go tool nm) has no function from ext.NativeTypes, ext.ParseStructTag, ext.fieldNameByTag or ext.isSkippedFieldName, including closures named after them, and a byte search of the whole program finds none of the strings ext.NativeTypes, ext.ParseStructTag, fieldNameByTag or newNativeTypes. In each build with cel-go v0.23.2 or v0.28.1 (0.8.1-6 to 0.9.0-0), a second read also finds no symbol whose name contains NativeTypes, ParseStructTag or newNativeType and no method of the nativeTypeProvider, nativeType or nativeObj types that carry the vulnerable field handling, and no byte string NativeTypes, ParseStructTag, nativeTypeProvider, newNativeType or fieldNameByTag. Positive control: the same searches find runtime.main in every build, and in test programs we built with go1.27.1, CGO_ENABLED=0, -trimpath and -ldflags=-w for linux/amd64 and linux/arm64 against cel-go v0.29.2 (a release without the fix) that call ext.NativeTypes(ext.ParseStructTag('json')) they find ext.NativeTypes.func1, ext.ParseStructTag.func1, ext.fieldNameByTag, ext.newNativeType and the nativeTypeProvider methods, and the byte search finds those strings. The NativeTypes code is not compiled into any published build of this package, including the builds with cel-go v0.23.2 or v0.28.1, so the vulnerable code is not present."
     },
     {
       "vulnerability": {
