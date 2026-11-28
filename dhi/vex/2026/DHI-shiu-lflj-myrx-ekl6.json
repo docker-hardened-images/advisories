@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T22:11:01Z",
-  "last_updated": "2026-11-27T02:29:08Z",
-  "version": 11,
+  "last_updated": "2026-11-28T20:18:11Z",
+  "version": 12,
   "statements": [
     {
       "vulnerability": {
@@ -886,7 +886,8 @@
           "@id": "pkg:apk/dhi/python-3.15@3.15.2-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "A TLS server whose sni_callback switches SSLSocket.context to another SSLContext could crash or call through a freed pointer when nothing else kept the original context alive, triggerable by a remote unauthenticated client. Upstream fixed it in https://github.com/python/cpython/issues/156293 (3.15 commit https://github.com/python/cpython/commit/63fab143d94cafae71850831acfb52041ba44af7) before the 3.15.0 final release: the fix first shipped in CPython 3.15.0rc3, and the CVE record lists 3.15 as affected only before 3.15.0rc3; see https://mail.python.org/archives/list/security-announce@python.org/thread/QMQIUQB6WGGC3MI7I3WKQXOYOBDSPPS3/ and https://www.cve.org/CVERecord?id=CVE-2026-19445. The fix stops registering the context as the servername callback argument (SSL_CTX_set_tlsext_servername_arg, which calls SSL_CTX_ctrl with SSL_CTRL_SET_TLSEXT_SERVERNAME_ARG) and adds a servername-callback reset when a context is freed, so Modules/_ssl.c goes from one servername-arg call and two servername-callback calls in 3.15.0rc2 to none and three in 3.15.0rc3, 3.15.0 and 3.15.2. Disassembled the compiled _ssl extension module in the python-3.15 package of every build published in the DHI Alpine 3.23 repository by 2026-11-27 (3.15.0-r0 and 3.15.2-r0 to 3.15.2-r4), on x86_64 and aarch64 (each build is CPython 3.15.0 or 3.15.2 by the version string in its libpython3.15.so): every build calls SSL_CTX_ctrl with SSL_CTRL_SET_TLSEXT_SERVERNAME_ARG zero times and SSL_CTX_callback_ctrl with SSL_CTRL_SET_TLSEXT_SERVERNAME_CB three times, matching the fixed source; the same count finds the servername-arg call once in the _ssl module of an earlier unfixed DHI Python build (python-3.14 3.14.3-r0). Every published build carries the fix, so the range ends at the lowest published build, 3.15.0-r0."
     },
     {
       "vulnerability": {
