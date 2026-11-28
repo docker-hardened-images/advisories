@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-27T12:41:57Z",
-  "version": 36,
+  "last_updated": "2026-11-28T14:05:37Z",
+  "version": 37,
   "statements": [
     {
       "vulnerability": {
@@ -8966,7 +8966,9 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-dev@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39836 (GO-2026-4971): on Windows, net.Dial and net.LookupPort in the Go standard library panic when given input that contains a NUL byte. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4971, https://go.dev/issue/79006, https://go.dev/cl/775320, the release-branch.go1.26 backport https://github.com/golang/go/commit/3baf3eec3b2247bbfbdeac4193c88baa7acc0842 (in go1.26.3, not go1.26.2) and https://groups.google.com/g/golang-announce/c/qcCIEXso47M. The Debian security tracker marks every golang source package it lists (golang-1.15, golang-1.19, golang-1.24, golang-1.25 and golang-1.26) not affected as Windows-specific: https://security-tracker.debian.org/tracker/CVE-2026-39836. The bug is only in Windows code: the fix replaces calls to syscall.StringToUTF16Ptr, which panics on a NUL byte, with syscall.UTF16PtrFromString, which returns an error, and apart from a test case in src/net/lookup_test.go it changes only src/net/lookup_windows.go and src/syscall/syscall_windows.go, which the _windows file name limits to Windows builds, and key.go and value.go of internal/syscall/windows/registry, which are Windows-only. Go compiles none of those files for GOOS=linux. We checked every published kube-state-metrics-dev package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28: 28 builds, 2.18.0-r0 to the current 2.20.0-r13, 54 packages, on x86_64 and aarch64 except 2.20.0-r7 and 2.20.0-r8, which were published for aarch64 only. We downloaded each package and checked it against its index checksum. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0 for GOOS=linux, as its Go build information records (no program interpreter and no shared-library dependencies). The kube-state-metrics-dev program is built without the -w linker flag and without -trimpath, with the same Go release and module versions as the kube-state-metrics program of the same build, so its source file table names standard library files by their full path under /usr/lib/go/src. The function table of every program, read with go tool nm, contains net functions the advisory lists, among them net.(*Dialer).DialContext and net.(*Resolver).LookupPort, but no internal/syscall/windows function; its source file table lists net/lookup.go and net/lookup_unix.go and no net/lookup_windows.go; and a byte search of every program finds neither the text lookup_windows.go nor internal/syscall/windows. As a check, a test program built with Go 1.27.1 (CGO_ENABLED=0, -trimpath, -ldflags=-w) that calls net.(*Dialer).DialContext and net.(*Resolver).LookupPort has 34 functions from internal/syscall/windows and its subpackages (go tool nm, T and t symbols) and the file name net/lookup_windows.go when built for windows/amd64, and none of them when built for linux/amd64 and linux/arm64, where it names net/lookup_unix.go instead; the same reader finds runtime.main in every kube-state-metrics program. The vulnerable Windows code is therefore not compiled into any published build of this package. (The programs were built with Go 1.25.7 to Go 1.26.11.)"
     },
     {
       "vulnerability": {
@@ -9061,7 +9063,8 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-fips-dev@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips-dev packages for Alpine 3.23 are published in the DHI security repository, separately from the kube-state-metrics and kube-state-metrics-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-39836. Pending: a per-build check of every published kube-state-metrics-fips-dev package to establish that every build is built for GOOS=linux and carries none of the Windows-only code the fix changes. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -9156,7 +9159,8 @@
           "@id": "pkg:apk/dhi/kube-state-metrics-fips@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips packages for Alpine 3.23 are published in the DHI security repository, separately from the kube-state-metrics and kube-state-metrics-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-39836. Pending: a per-build check of every published kube-state-metrics-fips package to establish that every build is built for GOOS=linux and carries none of the Windows-only code the fix changes. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -9251,7 +9255,9 @@
           "@id": "pkg:apk/dhi/kube-state-metrics@2.20.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39836 (GO-2026-4971): on Windows, net.Dial and net.LookupPort in the Go standard library panic when given input that contains a NUL byte. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4971, https://go.dev/issue/79006, https://go.dev/cl/775320, the release-branch.go1.26 backport https://github.com/golang/go/commit/3baf3eec3b2247bbfbdeac4193c88baa7acc0842 (in go1.26.3, not go1.26.2) and https://groups.google.com/g/golang-announce/c/qcCIEXso47M. The Debian security tracker marks every golang source package it lists (golang-1.15, golang-1.19, golang-1.24, golang-1.25 and golang-1.26) not affected as Windows-specific: https://security-tracker.debian.org/tracker/CVE-2026-39836. The bug is only in Windows code: the fix replaces calls to syscall.StringToUTF16Ptr, which panics on a NUL byte, with syscall.UTF16PtrFromString, which returns an error, and apart from a test case in src/net/lookup_test.go it changes only src/net/lookup_windows.go and src/syscall/syscall_windows.go, which the _windows file name limits to Windows builds, and key.go and value.go of internal/syscall/windows/registry, which are Windows-only. Go compiles none of those files for GOOS=linux. We checked every published kube-state-metrics package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28: 28 builds, 2.18.0-r0 to the current 2.20.0-r13, 54 packages, on x86_64 and aarch64 except 2.20.0-r7 and 2.20.0-r8, which were published for aarch64 only. We downloaded each package and checked it against its index checksum. Each package holds one file, /usr/bin/kube-state-metrics, a statically linked Go program for Linux built with CGO_ENABLED=0 for GOOS=linux, as its Go build information records (no program interpreter and no shared-library dependencies). The function table of every program, read with go tool nm, contains net functions the advisory lists, among them net.(*Dialer).DialContext and net.(*Resolver).LookupPort, but no internal/syscall/windows function; its source file table lists net/lookup.go and net/lookup_unix.go and no net/lookup_windows.go; and a byte search of every program finds neither the text lookup_windows.go nor internal/syscall/windows. As a check, a test program built with Go 1.27.1 (CGO_ENABLED=0, -trimpath, -ldflags=-w) that calls net.(*Dialer).DialContext and net.(*Resolver).LookupPort has 34 functions from internal/syscall/windows and its subpackages (go tool nm, T and t symbols) and the file name net/lookup_windows.go when built for windows/amd64, and none of them when built for linux/amd64 and linux/arm64, where it names net/lookup_unix.go instead; the same reader finds runtime.main in every kube-state-metrics program. The vulnerable Windows code is therefore not compiled into any published build of this package. (The programs were built with Go 1.25.7 to Go 1.26.11.)"
     },
     {
       "vulnerability": {
@@ -16747,6 +16753,9 @@
         },
         {
           "@id": "pkg:apk/dhi/runc@1.5.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/runc@1.6.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -26642,7 +26651,9 @@
           "@id": "pkg:deb/dhi/kube-state-metrics-dev@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39836 (GO-2026-4971): on Windows, net.Dial and net.LookupPort in the Go standard library panic when given input that contains a NUL byte. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4971, https://go.dev/issue/79006, https://go.dev/cl/775320, the release-branch.go1.26 backport https://github.com/golang/go/commit/3baf3eec3b2247bbfbdeac4193c88baa7acc0842 (in go1.26.3, not go1.26.2) and https://groups.google.com/g/golang-announce/c/qcCIEXso47M. The Debian security tracker marks every golang source package it lists (golang-1.15, golang-1.19, golang-1.24, golang-1.25 and golang-1.26) not affected as Windows-specific: https://security-tracker.debian.org/tracker/CVE-2026-39836. The bug is only in Windows code: the fix replaces calls to syscall.StringToUTF16Ptr, which panics on a NUL byte, with syscall.UTF16PtrFromString, which returns an error, and apart from a test case in src/net/lookup_test.go it changes only src/net/lookup_windows.go and src/syscall/syscall_windows.go, which the _windows file name limits to Windows builds, and key.go and value.go of internal/syscall/windows/registry, which are Windows-only. Go compiles none of those files for GOOS=linux. We checked every published kube-state-metrics-dev package for Debian 13 in the DHI Debian repository as of 2026-11-28: 23 builds, 2.18.0-5 to the current 2.20.0-13, 44 packages, on amd64 and arm64 except 2.20.0-7 and 2.20.0-8, which were published for arm64 only. We downloaded each package in full and checked it against the repository index checksum. Its data archive holds one file, /usr/bin/kube-state-metrics, with the same MD5 as the program in the DHI Alpine package of the same version and architecture (2.18.0-5 matches 2.18.0-r5, and so on), so the Alpine results below apply to it. The exception is the amd64 kube-state-metrics-dev package of 2.20.0-4: on every download the file served did not match the repository index checksum, so we read it as served; its program was built with the same Go release (Go 1.26.8) and module versions as the other 2.20.0-4 builds and gives the same result below. The program is a statically linked Go program for Linux built with CGO_ENABLED=0 for GOOS=linux, as its Go build information records (no program interpreter and no shared-library dependencies). The kube-state-metrics-dev program is built without the -w linker flag and without -trimpath, with the same Go release and module versions as the kube-state-metrics program of the same build, so its source file table names standard library files by their full path under /usr/lib/go/src. The function table of every program, read with go tool nm, contains net functions the advisory lists, among them net.(*Dialer).DialContext and net.(*Resolver).LookupPort, but no internal/syscall/windows function; its source file table lists net/lookup.go and net/lookup_unix.go and no net/lookup_windows.go; and a byte search of every program finds neither the text lookup_windows.go nor internal/syscall/windows. As a check, a test program built with Go 1.27.1 (CGO_ENABLED=0, -trimpath, -ldflags=-w) that calls net.(*Dialer).DialContext and net.(*Resolver).LookupPort has 34 functions from internal/syscall/windows and its subpackages (go tool nm, T and t symbols) and the file name net/lookup_windows.go when built for windows/amd64, and none of them when built for linux/amd64 and linux/arm64, where it names net/lookup_unix.go instead; the same reader finds runtime.main in every kube-state-metrics program. The vulnerable Windows code is therefore not compiled into any published build of this package. (The programs were built with Go 1.26.2 to Go 1.26.11.)"
     },
     {
       "vulnerability": {
@@ -26722,7 +26733,8 @@
           "@id": "pkg:deb/dhi/kube-state-metrics-fips-dev@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips-dev packages for Debian 13 are published in the DHI security repository, separately from the kube-state-metrics and kube-state-metrics-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-39836. Pending: a per-build check of every published kube-state-metrics-fips-dev package to establish that every build is built for GOOS=linux and carries none of the Windows-only code the fix changes. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -26802,7 +26814,8 @@
           "@id": "pkg:deb/dhi/kube-state-metrics-fips@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The kube-state-metrics-fips packages for Debian 13 are published in the DHI security repository, separately from the kube-state-metrics and kube-state-metrics-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-39836. Pending: a per-build check of every published kube-state-metrics-fips package to establish that every build is built for GOOS=linux and carries none of the Windows-only code the fix changes. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -26882,7 +26895,9 @@
           "@id": "pkg:deb/dhi/kube-state-metrics@2.20.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39836 (GO-2026-4971): on Windows, net.Dial and net.LookupPort in the Go standard library panic when given input that contains a NUL byte. It is fixed in Go 1.25.10 and 1.26.3: https://pkg.go.dev/vuln/GO-2026-4971, https://go.dev/issue/79006, https://go.dev/cl/775320, the release-branch.go1.26 backport https://github.com/golang/go/commit/3baf3eec3b2247bbfbdeac4193c88baa7acc0842 (in go1.26.3, not go1.26.2) and https://groups.google.com/g/golang-announce/c/qcCIEXso47M. The Debian security tracker marks every golang source package it lists (golang-1.15, golang-1.19, golang-1.24, golang-1.25 and golang-1.26) not affected as Windows-specific: https://security-tracker.debian.org/tracker/CVE-2026-39836. The bug is only in Windows code: the fix replaces calls to syscall.StringToUTF16Ptr, which panics on a NUL byte, with syscall.UTF16PtrFromString, which returns an error, and apart from a test case in src/net/lookup_test.go it changes only src/net/lookup_windows.go and src/syscall/syscall_windows.go, which the _windows file name limits to Windows builds, and key.go and value.go of internal/syscall/windows/registry, which are Windows-only. Go compiles none of those files for GOOS=linux. We checked every published kube-state-metrics package for Debian 13 in the DHI Debian repository as of 2026-11-28: 23 builds, 2.18.0-5 to the current 2.20.0-13, 44 packages, on amd64 and arm64 except 2.20.0-7 and 2.20.0-8, which were published for arm64 only. We downloaded each package in full and checked it against the repository index checksum. Its data archive holds one file, /usr/bin/kube-state-metrics, with the same MD5 as the program in the DHI Alpine package of the same version and architecture (2.18.0-5 matches 2.18.0-r5, and so on), so the Alpine results below apply to it. The program is a statically linked Go program for Linux built with CGO_ENABLED=0 for GOOS=linux, as its Go build information records (no program interpreter and no shared-library dependencies). The function table of every program, read with go tool nm, contains net functions the advisory lists, among them net.(*Dialer).DialContext and net.(*Resolver).LookupPort, but no internal/syscall/windows function; its source file table lists net/lookup.go and net/lookup_unix.go and no net/lookup_windows.go; and a byte search of every program finds neither the text lookup_windows.go nor internal/syscall/windows. As a check, a test program built with Go 1.27.1 (CGO_ENABLED=0, -trimpath, -ldflags=-w) that calls net.(*Dialer).DialContext and net.(*Resolver).LookupPort has 34 functions from internal/syscall/windows and its subpackages (go tool nm, T and t symbols) and the file name net/lookup_windows.go when built for windows/amd64, and none of them when built for linux/amd64 and linux/arm64, where it names net/lookup_unix.go instead; the same reader finds runtime.main in every kube-state-metrics program. The vulnerable Windows code is therefore not compiled into any published build of this package. (The programs were built with Go 1.26.2 to Go 1.26.11.)"
     },
     {
       "vulnerability": {

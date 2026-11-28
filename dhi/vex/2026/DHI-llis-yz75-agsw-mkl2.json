@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T20:58:00Z",
-  "last_updated": "2026-11-23T20:50:39Z",
-  "version": 2,
+  "last_updated": "2026-11-28T14:05:51Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -43,7 +43,9 @@
           "@id": "pkg:deb/dhi/libpng1.6@1.6.48-1%2Bdeb13u6%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-3713 is a heap overflow from an integer overflow of row_bytes in do_pnm2png, in contrib/pngminus/pnm2png.c, a sample PNM-to-PNG converter in libpng's source tree that is not part of the library (https://github.com/pnggroup/libpng/issues/794, still open upstream with no fix on 2026-11-28). The Debian tracker lists libpng1.6 as vulnerable and unfixed in bookworm, bookworm (security), trixie and trixie (security) (1.6.48-1+deb13u6), and forky and sid, with urgency unimportant and the note that pnm2png is not built in binary packages (https://security-tracker.debian.org/tracker/CVE-2026-3713), so we checked our own packages rather than rely on that note. On 2026-11-28 the DHI Debian repository published one build of the libpng1.6 source, a rebuild of Debian 1.6.48-1+deb13u6, as 10 binary packages for amd64 and arm64: libpng16-16t64, libpng-dev, libpng-tools and the libpng16-16t64 and libpng-tools debug symbol packages. We downloaded and unpacked all 10. None ships a pnm2png program. No installed file contains the strings pnm2png or pngminus except the upstream change log, the README's description of the contrib directory, and the licence stanza for contrib/pngminus in the Debian copyright file of libpng16-16t64, libpng-dev and libpng-tools. The ELF programs and libraries are libpng16.so.16.48.0 and the pngfix and png-fix-itxt tools, each dynamically linked against the system libc.so.6, plus the separate debug files in the debug symbol packages: their debug information names the library sources (pngrutil.c), pngfix.c and png-fix-itxt.c, and never pnm2png. libpng-dev also has the libpng16-config shell script with its libpng-config symlink, and the static archive libpng16.a (with a libpng.a symlink), whose members are the library's own objects: png.c, pngerror.c, pngget.c, pngmem.c, pngpread.c, pngread.c, pngrio.c, pngrtran.c, pngrutil.c, pngset.c, pngtrans.c, pngwio.c, pngwrite.c, pngwtran.c and pngwutil.c, plus intel_init.c and filter_sse2_intrinsics.c on amd64, or arm_init.c, filter_neon_intrinsics.c and palette_neon_intrinsics.c on arm64. No PE or Mach-O file is present. libpng-dev's examples directory holds the example.c and pngtest.c sources and pngtest.png. The vulnerable pnm2png code is not built into any shipped binary."
     }
   ]
 }

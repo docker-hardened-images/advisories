@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-26T20:09:08Z",
-  "version": 25,
+  "last_updated": "2026-11-28T14:06:03Z",
+  "version": 26,
   "statements": [
     {
       "vulnerability": {
@@ -5528,7 +5528,8 @@
           "@id": "pkg:apk/dhi/metrics-server-fips@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-32282 (GO-2026-4864): on Linux, os.Root.Chmod could follow a symlink swapped in during the operation and change a file outside the root. Go is affected before 1.25.9 and from 1.26.0 before 1.26.2: https://pkg.go.dev/vuln/GO-2026-4864, https://go.dev/issue/78293. The metrics-server-fips packages for Alpine 3.23 are built from the same metrics-server source as metrics-server, with Go's FIPS 140-3 mode enabled, but they are published in a separate DHI repository that this review could not read, so no metrics-server-fips build has been inspected for this advisory. Pending: reading the Go release and whether internal/syscall/unix.Fchmodat or os.Root is linked in every published metrics-server-fips build for Alpine 3.23 (x86_64 and aarch64) to place each build against the fix, as was done for the metrics-server packages."
     },
     {
       "vulnerability": {
@@ -5626,7 +5627,9 @@
           "@id": "pkg:apk/dhi/metrics-server@0.9.1-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-32282 (GO-2026-4864): on Linux, os.Root.Chmod could change the mode of a file outside the root if its target was replaced with a symlink between the check and the operation, because the fchmodat system call ignores AT_SYMLINK_NOFOLLOW. The vulnerable code is internal/syscall/unix.Fchmodat, which os.Root.Chmod calls. Go is affected before 1.25.9 and from 1.26.0 before 1.26.2: https://pkg.go.dev/vuln/GO-2026-4864, https://go.dev/issue/78293, https://go.dev/cl/763761, https://groups.google.com/g/golang-announce/c/0uYbvbPZRWU . We read every metrics-server package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28: 29 builds, 0.8.1-r0 to the current 0.9.1-r2, each for x86_64 and aarch64 (58 packages), each download checked against the size and control checksum in the package index. Each package installs one file, /usr/bin/metrics-server, a statically linked Go program (no ELF interpreter and no dynamic section) built with GOOS=linux and CGO_ENABLED=0, with -trimpath, with the -w linker flag, with no DWARF debug sections in every build; both architectures record the same Go release and module versions in every build. The Go release recorded in each program's build information is: Go 1.25.7 in 0.8.1-r0; Go 1.26.1 in 0.8.1-r1 to 0.8.1-r4; Go 1.26.2 in 0.8.1-r5 to 0.8.1-r7; Go 1.26.3 in 0.8.1-r8 to 0.8.1-r9; Go 1.26.4 in 0.8.1-r10 to 0.8.1-r11; Go 1.26.5 in 0.8.1-r12 to 0.9.0-r1; Go 1.26.6 in 0.9.0-r2; Go 1.26.7 in 0.9.0-r3 to 0.9.0-r4; Go 1.26.8 in 0.9.0-r5 to 0.9.0-r9; Go 1.26.9 in 0.9.0-r10; Go 1.26.10 in 0.9.0-r11 to 0.9.1-r0; Go 1.26.11 in 0.9.1-r1 to 0.9.1-r2. We listed the function names the Go linker records in each program (its symbol table, read with go tool nm) in every build on both architectures: none contains internal/syscall/unix.Fchmodat, os.rootChmod, os.chmodat or any os.Root method or os.OpenRoot, while runtime.main and main.main are found in every one, and a byte search of every program finds no internal/syscall/unix.Fchmodat name. As a positive control, the same listing of a program built with Go 1.27.1 for linux/amd64 and linux/arm64 with CGO_ENABLED=0 that calls os.Root.Chmod finds internal/syscall/unix.Fchmodat, os.rootChmod and os.chmodat.1. The vulnerable code is not compiled into any published build, including those built with an affected Go release."
     },
     {
       "vulnerability": {
