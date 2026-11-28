@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T15:37:37Z",
-  "version": 1,
+  "last_updated": "2026-11-28T00:41:31Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -69,7 +70,9 @@
           "@id": "pkg:apk/dhi/rust@1.99.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-33055 (GHSA-gchp-q4r4-x4ff, RUSTSEC-2026-0068): the Rust tar crate 0.4.44 and earlier ignores a PAX size header when the base header's size field is nonzero, so a crafted archive can unpack differently with this crate than with other tar parsers. It is fixed in tar 0.4.45 by commit de1a587: https://github.com/alexcrichton/tar-rs/security/advisories/GHSA-gchp-q4r4-x4ff, https://rustsec.org/advisories/RUSTSEC-2026-0068.html, https://github.com/alexcrichton/tar-rs/commit/de1a5870e603758f430073688691165f21a33946. Scanned every package of this owner published in the DHI Alpine 3.23 repository, for x86_64 and aarch64: all 17 packages (rust, cargo, rustc-dev, rustfmt, rust-clippy, rust-dbg, rust-src, rust-wasm, rust-uefi, rust-gdb, rust-lldb and the doc and completion packages) of builds 1.91.1-r0, 1.91.1-r3 and 1.91.1-r4, and build 1.91.1-r2, which publishes only rust and cargo. Every file, including the .rlib archives and the .rmeta compiler metadata, was searched for the crate's source paths, which name the crate version it was built from. The cargo program (/usr/bin/cargo) in every one of those builds, on both architectures, is compiled with tar 0.4.44, whose src/archive.rs applies the PAX size only when the header size is zero. Alpine's patch for CVE-2026-33056, which builds 1.91.1-r2 to -r4 carry, changes only the directory-unpacking code and not this logic. Apart from cargo and its debug symbols in rust-dbg, no file in these packages contains the tar crate's source paths. No published build of this owner carries a fixed tar version, so every published build is affected."
     }
   ]
 }

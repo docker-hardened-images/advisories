@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T16:49:23Z",
-  "version": 1,
+  "last_updated": "2026-11-28T00:41:39Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -69,7 +70,9 @@
           "@id": "pkg:apk/dhi/rust@1.99.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "CVE-2026-6654 (GHSA-xphw-cqx3-667j, RUSTSEC-2026-0103): in the Rust thin-vec crate before 0.2.16, IntoIter::drop and ThinVec::clear do not reset the length when an element's destructor panics, so unwinding drops the same elements again (double free or use after free) from safe code. It is fixed in thin-vec 0.2.16, which adds a guard that resets the length during unwinding: https://github.com/mozilla/thin-vec/security/advisories/GHSA-xphw-cqx3-667j, https://rustsec.org/advisories/RUSTSEC-2026-0103.html. Scanned every package of this owner published in the DHI Alpine 3.23 repository, for x86_64 and aarch64: all 17 packages (rust, cargo, rustc-dev, rustfmt, rust-clippy, rust-dbg, rust-src, rust-wasm, rust-uefi, rust-gdb, rust-lldb and the doc and completion packages) of builds 1.91.1-r0, 1.91.1-r3 and 1.91.1-r4, and build 1.91.1-r2, which publishes only rust and cargo. Every file, including the .rlib archives and the .rmeta compiler metadata, was searched for the crate's source paths, which name the crate version it was built from. In every one of those builds, on both architectures, the compiler library /usr/lib/librustc_driver-*.so in the rust package is compiled with thin-vec 0.2.14, as are /usr/bin/rustdoc (rust package), /usr/bin/rustfmt (rustfmt) and /usr/bin/clippy-driver (rust-clippy) in builds 1.91.1-r0, -r3 and -r4, and rustc-dev ships that crate's 0.2.14 compiled metadata for compiler extensions. thin-vec 0.2.14's IntoIter::drop and ThinVec::clear have no such guard, and the published debug symbols (rust-dbg, x86_64 and aarch64, 1.91.1-r0, -r3 and -r4) show 20 compiled copies of IntoIter's drop_non_singleton in librustc_driver. No published build of this owner carries a fixed thin-vec version, so every published build is affected."
     }
   ]
 }
