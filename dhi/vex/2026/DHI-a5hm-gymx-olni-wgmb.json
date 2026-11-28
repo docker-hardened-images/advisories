@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T00:34:27Z",
-  "last_updated": "2026-11-26T06:54:42Z",
-  "version": 3,
+  "last_updated": "2026-11-28T01:12:46Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -34,7 +34,8 @@
           "@id": "pkg:deb/dhi/gnutls28@3.8.9-3%2Bdeb13u4%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-95210: GnuTLS accepts a certificate whose critical keyUsage extension cannot be processed, for example when its extnValue is an ASN.1 NULL (05 00) instead of a BIT STRING, although RFC 5280 section 4.2 asks that a critical extension that cannot be processed cause rejection (https://www.cve.org/CVERecord?id=CVE-2026-95210, proof of concept https://github.com/lkloliver/poc/tree/main/CVE-2026-95210). In GnuTLS 3.8.9, the version this owner ships, check_for_unknown_exts() in lib/x509/verify.c accepts a critical extension by its OID alone, and path validation does not parse the end-entity certificate's keyUsage value (https://gitlab.com/gnutls/gnutls/-/blob/3.8.9/lib/x509/verify.c). GnuTLS 3.8.14 has the same function and its release notes list no change for this (https://gitlab.com/gnutls/gnutls/-/blob/3.8.14/NEWS), so there is no upstream fix. The GnuTLS maintainers dispute the CVE as outside their threat model, because the certificate has to be issued by a CA the user trusts (https://gitlab.com/gnutls/gnutls/-/work_items/1965, https://gitlab.com/gnutls/gnutls/-/blob/e2169a87c7fb91935c2845088204b102baed4c5f/SECURITY.md), and the CVE record is tagged disputed. Debian lists trixie's gnutls28 3.8.9-3+deb13u4 as unfixed with urgency unimportant (https://security-tracker.debian.org/tracker/CVE-2026-95210, Debian bug 1150522). The DHI Debian repository publishes two builds of this owner for Debian 13, both made from that Debian version, and neither changes this check: in libgnutls.so.30 of both builds on amd64 and arm64, check_for_unknown_exts is the same size and at the same address, read from the symbol tables in the -dbgsym packages. Pending: a maintainer decision on whether upstream's trust-boundary reason holds for every image that uses this owner, given that the issuing CA can be a name-constrained subordinate CA that a customer does not fully trust; until then this owner is not published as not affected, and no fix exists to ship."
     }
   ]
 }

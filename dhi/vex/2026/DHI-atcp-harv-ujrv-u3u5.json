@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T00:27:18Z",
-  "last_updated": "2026-11-26T06:54:42Z",
-  "version": 3,
+  "last_updated": "2026-11-28T01:12:42Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -34,7 +34,9 @@
           "@id": "pkg:deb/dhi/gnutls28@3.8.9-3%2Bdeb13u4%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
+      "impact_statement": "CVE-2026-95209 was assigned because GnuTLS applies a dNSName name constraint to the subject common name (CN) of a TLS server certificate that has no DNS subjectAltName, so a leaf CN=random.host.org issued under a CA constrained to permitted dNSName example.com is rejected; the reporter described that rejection as a denial of service (https://github.com/lkloliver/poc/tree/main/CVE-2026-95209, summarised in https://gitlab.com/gnutls/gnutls/-/work_items/1965). The CVE record is rejected: its CNA withdrew it because further investigation showed it was not a security issue (https://www.cve.org/CVERecord?id=CVE-2026-95209, updated 2026-11-04), and Debian's tracker no longer lists any package for it (https://security-tracker.debian.org/tracker/CVE-2026-95209). The GnuTLS maintainers had already disputed it with the CVE program (same work item). The behaviour is deliberate: in GnuTLS 3.8.9, the version this owner ships, gnutls_x509_name_constraints_check_crt() in lib/x509/name_constraints.c checks the CN against dNSName constraints only when the certificate has no DNS subjectAltName and is marked for TLS WWW server use, because that is where the CN identifies the server, as its source comment says (https://gitlab.com/gnutls/gnutls/-/blob/3.8.9/lib/x509/name_constraints.c). The check can only make verification fail; it never makes a certificate acceptable that would otherwise be rejected. Whether it fires depends only on how the server's own CA issued the server's certificate, so an attacker cannot use it to make a legitimate server's certificate fail, and an attacker who presents such a certificate only has its own certificate rejected. The DHI Debian repository publishes two builds of this owner for Debian 13, both made from Debian's 3.8.9-3+deb13u4; we checked the name_constraints.o object in the static libgnutls.a (libgnutls28-dev) of both builds on amd64 and arm64, verified against the repository index checksums, and gnutls_x509_name_constraints_check_crt in both still has this CN check (it calls _gnutls_check_key_purpose and gnutls_x509_crt_get_dn_by_oid), so the behaviour is the one described above."
     }
   ]
 }
