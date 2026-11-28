@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:02:09Z",
-  "last_updated": "2026-11-21T04:04:03Z",
-  "version": 2,
+  "last_updated": "2026-11-28T04:01:45Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -20,12 +20,6 @@
         },
         {
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.13-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.14-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.15-r0?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.2-r0?distro=dhi-3.23"
@@ -52,7 +46,27 @@
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update dotnet10-runtime to 10.0.14-r0 or later.",
+      "status_notes": "CVE-2026-70165 is a .NET SDK elevation of privilege issue in workload installation and advertising manifests: a junction planted over the workload startup-marker path can redirect an elevated write into the Windows Common Startup directory and enable code execution. Microsoft lists Windows as the only affected platform and, in the 10.0.1xx feature band, .NET SDK 10.0.100 through 10.0.112 as affected and 10.0.113 as fixed (https://github.com/dotnet/announcements/issues/455, https://github.com/dotnet/sdk/issues/56611). The .NET 10 fix is dotnet/dotnet commit 6cf5f5437e11b694d7bb5e61b14b1e6e9584d452 (Harden machine-wide workload state), which is in tag v10.0.113 and not in v10.0.112: it adds Windows-only checks on the machine-wide workload directory (the TrustedMachinePath class) and, on every platform, rejects workload, manifest and pack IDs that are not a valid single path component (the new PathComponentUtilities class and the message 'must be a valid path component'). The elevated writes are made only by the MSI-based workload installer, which the SDK refuses to use when the operating system is not Windows (WorkloadInstallerFactory, https://github.com/dotnet/dotnet/blob/v10.0.113/src/sdk/src/Cli/dotnet/Commands/Workload/Install/WorkloadInstallerFactory.cs), so the Windows attack itself does not run on these Linux builds; this decision records which builds carry the fixed SDK code, which also runs on Linux. DHI dotnet10-runtime for Alpine 3.23 builds .NET 10 for Linux from Microsoft's source release: each build 10.0.N-r0 ships the .NET 10.0.N runtime, and its shared framework reports the dotnet/dotnet source commit it was built from, which for every build from 10.0.3-r0 on is the commit of release tag v10.0.1NN (10.0.9-r0 is v10.0.109, 10.0.10-r0 is v10.0.110 and 10.0.13-r0 is v10.0.113, https://github.com/dotnet/dotnet/releases/tag/v10.0.113) and for 10.0.2-r0 is one commit after tag v10.0.102. The SDK command-line and workload code (dotnet.dll in the Microsoft.DotNet.Cli nupkg, and Microsoft.NET.Sdk.WorkloadManifestReader.dll in its own nupkg and inside the Microsoft.DotNet.Build.Tasks.Workloads build-tool nupkg) is in dotnet10-runtime-artifacts, and dotnet10-runtime-bootstrap holds a .NET SDK. Scanned the dotnet10-runtime, dotnet10-runtime-dbg, dotnet10-targeting-pack, dotnet10-apphost-pack, dotnet10-hostfxr, dotnet-host, aspnetcore10-runtime, aspnetcore10-runtime-dbg and aspnetcore10-targeting-pack packages of all 12 published builds (10.0.2-r0, 10.0.3-r0, 10.0.4-r0, 10.0.5-r0, 10.0.6-r0, 10.0.7-r0, 10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0, as listed in the DHI Alpine 3.23 repository on 2026-11-28) for x86_64 and aarch64, which hold no SDK workload code, and unpacked the dotnet10-runtime-artifacts package of the x86_64 10.0.9-r0, 10.0.10-r0 and 10.0.13-r0 builds and the aarch64 10.0.10-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0 builds, including the files inside their nupkg archives. In the x86_64 10.0.9-r0 package and the x86_64 and aarch64 10.0.10-r0 packages these assemblies are version 10.0.109 and 10.0.110 and lack the fix (no PathComponentUtilities or TrustedMachinePath type, and WorkloadManifestReader still has the older message that an ID 'cannot be null or empty'). In the x86_64 10.0.13-r0 package and the aarch64 10.0.14-r0 and 10.0.15-r0 packages every copy carries the fix. The aarch64 10.0.13-r0 package carries it in dotnet.dll and in the SDK's WorkloadManifestReader, but its Microsoft.DotNet.Build.Tasks.Workloads nupkg holds the 10.0.110 copy of WorkloadManifestReader, which lacks it. Builds 10.0.2-r0 to 10.0.8-r0 are built from earlier .NET 10 sources, which predate the fix. Of the dotnet10-runtime-bootstrap packages, which hold a .NET SDK, the .NET and ASP.NET Core runtime archives and the runtime packs built from the same source, only the aarch64 10.0.10-r0 package was unpacked. Its SDK 10.0.110 dotnet.dll, the copy used by dotnet-watch and its WorkloadManifestReader.dll lack the fix, as expected for a build before 10.0.13-r0. The range ends at 10.0.14-r0 because it is the first published build with no copy that lacks the fix on either architecture; the x86_64 10.0.13-r0 package already carries the fix in every copy, but the version cannot tell the two architectures apart."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7vvd-zhl7-ud2p-w62y",
+        "aliases": [
+          "CVE-2026-70165"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.14-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.15-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE-2026-70165 is a .NET SDK elevation of privilege issue in workload installation and advertising manifests: a junction planted over the workload startup-marker path can redirect an elevated write into the Windows Common Startup directory and enable code execution. Microsoft lists Windows as the only affected platform and, in the 10.0.1xx feature band, .NET SDK 10.0.100 through 10.0.112 as affected and 10.0.113 as fixed (https://github.com/dotnet/announcements/issues/455, https://github.com/dotnet/sdk/issues/56611). The .NET 10 fix is dotnet/dotnet commit 6cf5f5437e11b694d7bb5e61b14b1e6e9584d452 (Harden machine-wide workload state), which is in tag v10.0.113 and not in v10.0.112: it adds Windows-only checks on the machine-wide workload directory (the TrustedMachinePath class) and, on every platform, rejects workload, manifest and pack IDs that are not a valid single path component (the new PathComponentUtilities class and the message 'must be a valid path component'). The elevated writes are made only by the MSI-based workload installer, which the SDK refuses to use when the operating system is not Windows (WorkloadInstallerFactory, https://github.com/dotnet/dotnet/blob/v10.0.113/src/sdk/src/Cli/dotnet/Commands/Workload/Install/WorkloadInstallerFactory.cs), so the Windows attack itself does not run on these Linux builds; this decision records which builds carry the fixed SDK code, which also runs on Linux. DHI dotnet10-runtime for Alpine 3.23 builds .NET 10 for Linux from Microsoft's source release: each build 10.0.N-r0 ships the .NET 10.0.N runtime, and its shared framework reports the dotnet/dotnet source commit it was built from, which for every build from 10.0.3-r0 on is the commit of release tag v10.0.1NN (10.0.9-r0 is v10.0.109, 10.0.10-r0 is v10.0.110 and 10.0.13-r0 is v10.0.113, https://github.com/dotnet/dotnet/releases/tag/v10.0.113) and for 10.0.2-r0 is one commit after tag v10.0.102. The SDK command-line and workload code (dotnet.dll in the Microsoft.DotNet.Cli nupkg, and Microsoft.NET.Sdk.WorkloadManifestReader.dll in its own nupkg and inside the Microsoft.DotNet.Build.Tasks.Workloads build-tool nupkg) is in dotnet10-runtime-artifacts, and dotnet10-runtime-bootstrap holds a .NET SDK. Scanned the dotnet10-runtime, dotnet10-runtime-dbg, dotnet10-targeting-pack, dotnet10-apphost-pack, dotnet10-hostfxr, dotnet-host, aspnetcore10-runtime, aspnetcore10-runtime-dbg and aspnetcore10-targeting-pack packages of all 12 published builds (10.0.2-r0, 10.0.3-r0, 10.0.4-r0, 10.0.5-r0, 10.0.6-r0, 10.0.7-r0, 10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0, as listed in the DHI Alpine 3.23 repository on 2026-11-28) for x86_64 and aarch64, which hold no SDK workload code, and unpacked the dotnet10-runtime-artifacts package of the x86_64 10.0.9-r0, 10.0.10-r0 and 10.0.13-r0 builds and the aarch64 10.0.10-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0 builds, including the files inside their nupkg archives. In the x86_64 10.0.9-r0 package and the x86_64 and aarch64 10.0.10-r0 packages these assemblies are version 10.0.109 and 10.0.110 and lack the fix (no PathComponentUtilities or TrustedMachinePath type, and WorkloadManifestReader still has the older message that an ID 'cannot be null or empty'). In the x86_64 10.0.13-r0 package and the aarch64 10.0.14-r0 and 10.0.15-r0 packages every copy carries the fix. The aarch64 10.0.13-r0 package carries it in dotnet.dll and in the SDK's WorkloadManifestReader, but its Microsoft.DotNet.Build.Tasks.Workloads nupkg holds the 10.0.110 copy of WorkloadManifestReader, which lacks it. Builds 10.0.2-r0 to 10.0.8-r0 are built from earlier .NET 10 sources, which predate the fix. Of the dotnet10-runtime-bootstrap packages, which hold a .NET SDK, the .NET and ASP.NET Core runtime archives and the runtime packs built from the same source, only the aarch64 10.0.10-r0 package was unpacked. Its SDK 10.0.110 dotnet.dll, the copy used by dotnet-watch and its WorkloadManifestReader.dll lack the fix, as expected for a build before 10.0.13-r0. The range ends at 10.0.14-r0 because it is the first published build with no copy that lacks the fix on either architecture; the x86_64 10.0.13-r0 package already carries the fix in every copy, but the version cannot tell the two architectures apart."
     },
     {
       "vulnerability": {
@@ -69,6 +83,25 @@
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.12-r0?distro=dhi-3.24"
         },
         {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.8-r0?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update dotnet10-runtime to 10.0.13-r0 or later.",
+      "status_notes": "CVE-2026-70165 is a .NET SDK elevation of privilege issue in workload installation and advertising manifests: a junction planted over the workload startup-marker path can redirect an elevated write into the Windows Common Startup directory and enable code execution. Microsoft lists Windows as the only affected platform and, in the 10.0.1xx feature band, .NET SDK 10.0.100 through 10.0.112 as affected and 10.0.113 as fixed (https://github.com/dotnet/announcements/issues/455, https://github.com/dotnet/sdk/issues/56611). The .NET 10 fix is dotnet/dotnet commit 6cf5f5437e11b694d7bb5e61b14b1e6e9584d452 (Harden machine-wide workload state), which is in tag v10.0.113 and not in v10.0.112: it adds Windows-only checks on the machine-wide workload directory (the TrustedMachinePath class) and, on every platform, rejects workload, manifest and pack IDs that are not a valid single path component (the new PathComponentUtilities class and the message 'must be a valid path component'). The elevated writes are made only by the MSI-based workload installer, which the SDK refuses to use when the operating system is not Windows (WorkloadInstallerFactory, https://github.com/dotnet/dotnet/blob/v10.0.113/src/sdk/src/Cli/dotnet/Commands/Workload/Install/WorkloadInstallerFactory.cs), so the Windows attack itself does not run on these Linux builds; this decision records which builds carry the fixed SDK code, which also runs on Linux. DHI dotnet10-runtime for Alpine 3.24 builds .NET 10 for Linux from Microsoft's source release: each build 10.0.N-r0 ships the .NET 10.0.N runtime, and its shared framework reports the dotnet/dotnet source commit it was built from, which for every build from 10.0.3-r0 on is the commit of release tag v10.0.1NN (10.0.9-r0 is v10.0.109, 10.0.10-r0 is v10.0.110 and 10.0.13-r0 is v10.0.113, https://github.com/dotnet/dotnet/releases/tag/v10.0.113) and for 10.0.2-r0 is one commit after tag v10.0.102. The SDK command-line and workload code (dotnet.dll in the Microsoft.DotNet.Cli nupkg, and Microsoft.NET.Sdk.WorkloadManifestReader.dll in its own nupkg and inside the Microsoft.DotNet.Build.Tasks.Workloads build-tool nupkg) is in dotnet10-runtime-artifacts, and dotnet10-runtime-bootstrap holds a .NET SDK. Scanned the dotnet10-runtime, dotnet10-runtime-dbg, dotnet10-targeting-pack, dotnet10-apphost-pack, dotnet10-hostfxr, dotnet-host, aspnetcore10-runtime, aspnetcore10-runtime-dbg and aspnetcore10-targeting-pack packages of all 7 published builds (10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.12-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0, as listed in the DHI Alpine 3.24 repository on 2026-11-28) for x86_64 and aarch64, which hold no SDK workload code, and unpacked the dotnet10-runtime-artifacts package of the x86_64 and aarch64 10.0.13-r0 builds, including the files inside their nupkg archives. In both 10.0.13-r0 packages every copy of these assemblies is version 10.0.113 and carries the fix (the PathComponentUtilities and TrustedMachinePath types, and the message 'must be a valid path component' in WorkloadManifestReader), and in the x86_64 bootstrap package the SDK 10.0.113 dotnet.dll, the copy used by dotnet-watch and WorkloadManifestReader.dll carry it too. Builds 10.0.8-r0 to 10.0.12-r0 are built from tags v10.0.108 to v10.0.112, which predate the fix, and the 10.0.14-r0 and 10.0.15-r0 builds from tags v10.0.114 and v10.0.115, which contain it. Of the dotnet10-runtime-bootstrap packages, which hold a .NET SDK, the .NET and ASP.NET Core runtime archives and the runtime packs built from the same source, only the x86_64 10.0.13-r0 package was unpacked. The range ends at 10.0.13-r0 because it is the first published build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7vvd-zhl7-ud2p-w62y",
+        "aliases": [
+          "CVE-2026-70165"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.13-r0?distro=dhi-3.24"
         },
         {
@@ -76,15 +109,10 @@
         },
         {
           "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.15-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.8-r0?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/dotnet10-runtime@10.0.9-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-70165 is a .NET SDK elevation of privilege issue in workload installation and advertising manifests: a junction planted over the workload startup-marker path can redirect an elevated write into the Windows Common Startup directory and enable code execution. Microsoft lists Windows as the only affected platform and, in the 10.0.1xx feature band, .NET SDK 10.0.100 through 10.0.112 as affected and 10.0.113 as fixed (https://github.com/dotnet/announcements/issues/455, https://github.com/dotnet/sdk/issues/56611). The .NET 10 fix is dotnet/dotnet commit 6cf5f5437e11b694d7bb5e61b14b1e6e9584d452 (Harden machine-wide workload state), which is in tag v10.0.113 and not in v10.0.112: it adds Windows-only checks on the machine-wide workload directory (the TrustedMachinePath class) and, on every platform, rejects workload, manifest and pack IDs that are not a valid single path component (the new PathComponentUtilities class and the message 'must be a valid path component'). The elevated writes are made only by the MSI-based workload installer, which the SDK refuses to use when the operating system is not Windows (WorkloadInstallerFactory, https://github.com/dotnet/dotnet/blob/v10.0.113/src/sdk/src/Cli/dotnet/Commands/Workload/Install/WorkloadInstallerFactory.cs), so the Windows attack itself does not run on these Linux builds; this decision records which builds carry the fixed SDK code, which also runs on Linux. DHI dotnet10-runtime for Alpine 3.24 builds .NET 10 for Linux from Microsoft's source release: each build 10.0.N-r0 ships the .NET 10.0.N runtime, and its shared framework reports the dotnet/dotnet source commit it was built from, which for every build from 10.0.3-r0 on is the commit of release tag v10.0.1NN (10.0.9-r0 is v10.0.109, 10.0.10-r0 is v10.0.110 and 10.0.13-r0 is v10.0.113, https://github.com/dotnet/dotnet/releases/tag/v10.0.113) and for 10.0.2-r0 is one commit after tag v10.0.102. The SDK command-line and workload code (dotnet.dll in the Microsoft.DotNet.Cli nupkg, and Microsoft.NET.Sdk.WorkloadManifestReader.dll in its own nupkg and inside the Microsoft.DotNet.Build.Tasks.Workloads build-tool nupkg) is in dotnet10-runtime-artifacts, and dotnet10-runtime-bootstrap holds a .NET SDK. Scanned the dotnet10-runtime, dotnet10-runtime-dbg, dotnet10-targeting-pack, dotnet10-apphost-pack, dotnet10-hostfxr, dotnet-host, aspnetcore10-runtime, aspnetcore10-runtime-dbg and aspnetcore10-targeting-pack packages of all 7 published builds (10.0.8-r0, 10.0.9-r0, 10.0.10-r0, 10.0.12-r0, 10.0.13-r0, 10.0.14-r0 and 10.0.15-r0, as listed in the DHI Alpine 3.24 repository on 2026-11-28) for x86_64 and aarch64, which hold no SDK workload code, and unpacked the dotnet10-runtime-artifacts package of the x86_64 and aarch64 10.0.13-r0 builds, including the files inside their nupkg archives. In both 10.0.13-r0 packages every copy of these assemblies is version 10.0.113 and carries the fix (the PathComponentUtilities and TrustedMachinePath types, and the message 'must be a valid path component' in WorkloadManifestReader), and in the x86_64 bootstrap package the SDK 10.0.113 dotnet.dll, the copy used by dotnet-watch and WorkloadManifestReader.dll carry it too. Builds 10.0.8-r0 to 10.0.12-r0 are built from tags v10.0.108 to v10.0.112, which predate the fix, and the 10.0.14-r0 and 10.0.15-r0 builds from tags v10.0.114 and v10.0.115, which contain it. Of the dotnet10-runtime-bootstrap packages, which hold a .NET SDK, the .NET and ASP.NET Core runtime archives and the runtime packs built from the same source, only the x86_64 10.0.13-r0 package was unpacked. The range ends at 10.0.13-r0 because it is the first published build with the fix."
     },
     {
       "vulnerability": {
