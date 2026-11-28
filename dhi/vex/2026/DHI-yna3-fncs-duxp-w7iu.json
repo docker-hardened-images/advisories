@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T16:59:50Z",
-  "last_updated": "2026-11-21T23:01:18Z",
-  "version": 5,
+  "last_updated": "2026-11-28T02:40:14Z",
+  "version": 6,
   "statements": [
     {
       "vulnerability": {
@@ -129,7 +129,9 @@
           "@id": "pkg:apk/dhi/dotnet8-runtime@8.0.34-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "CVE-2026-45490 is a .NET SDK elevation of privilege issue: the dotnet workload command uses a named pipe with a weak access control list, so one local user can create or truncate files as another local user. Microsoft states that it only affects .NET on Windows operating systems, and lists .NET 8.0 SDK 8.0.100 through 8.0.127 as affected and 8.0.128 as fixed for the 8.0.1xx feature band (https://github.com/dotnet/announcements/issues/403, https://github.com/dotnet/sdk/issues/54652, https://github.com/dotnet/core/blob/main/release-notes/8.0/8.0.28/8.0.28.md). The named pipes belong to the SDK's elevated MSI workload installer server, which is marked as supported only on Windows (https://github.com/dotnet/sdk/blob/v8.0.127/src/Cli/dotnet/commands/dotnet-workload/install/NetSdkMsiInstallerServer.cs), and the SDK selects the MSI installer only for MSI installs and throws an error instead when the operating system is not Windows (https://github.com/dotnet/sdk/blob/v8.0.127/src/Cli/dotnet/commands/dotnet-workload/install/WorkloadInstallerFactory.cs). DHI dotnet8-runtime for Alpine 3.23 builds .NET 8 for Linux (linux-musl) from Microsoft's source release, and each build's version is the .NET runtime version it carries. We read all 220 packages of the ten builds published for Alpine 3.23 as of 2026-11-27 (8.0.23-r0, 8.0.24-r0, 8.0.25-r0, 8.0.26-r0, 8.0.27-r0, 8.0.29-r0, 8.0.31-r0, 8.0.32-r0, 8.0.33-r0 and 8.0.34-r0), every subpackage including the -dbg debug packages, for x86_64 and aarch64, recursing into the nupkg, zip and tar.gz archives they hold, and recorded every .NET assembly with its file version and every ELF, PE and Mach-O file. Every build is a Linux SDK and runtime for x86_64 and aarch64 with no native Windows PE file, so dotnet workload commands use the file-based installer and the Windows named-pipe code, which is present in the SDK's dotnet.dll, is never reached in any published build. For reference, the .NET SDK held by dotnet8-runtime-bootstrap is SDK 8.0.123 to 8.0.127 in 8.0.23-r0 to 8.0.27-r0 and 8.0.129 or later from 8.0.29-r0 on."
     },
     {
       "vulnerability": {

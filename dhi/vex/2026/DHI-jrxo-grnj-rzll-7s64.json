@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T05:56:16Z",
-  "last_updated": "2026-11-27T13:54:19Z",
-  "version": 13,
+  "last_updated": "2026-11-28T02:40:09Z",
+  "version": 15,
   "statements": [
     {
       "vulnerability": {
@@ -252,6 +252,22 @@
           "@id": "pkg:deb/dhi/dotnet-runtime-10@10.0.13-0?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/dotnet-runtime-10@10.0.9-0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update dotnet-runtime-10 to 10.0.14-0 or later.",
+      "status_notes": "GHSA-p3jp-9v83-76w9 (CVE-2026-111497) is an out-of-bounds write in the Brotli decoder that the .NET runtime compiles into libSystem.IO.Compression.Native.so, reached through BrotliStream, BrotliDecoder, ASP.NET Core request decompression with br, or HttpClient automatic decompression that includes Brotli. It affects .NET 10 runtime 10.0.0 to 10.0.13 and is fixed in 10.0.14 (https://github.com/dotnet/runtime/security/advisories/GHSA-p3jp-9v83-76w9, https://github.com/dotnet/announcements/issues/494; the 10.0.14 entry of https://github.com/dotnet/core/blob/main/release-notes/10.0/releases.json lists CVE-2026-111497). This package repackages Microsoft's dotnet-runtime-linux tarball under /usr/lib/dotnet. We read the file manifest (md5sums) of every dotnet-runtime-10 and dotnet-runtime-10-oci-config build in the Debian 13 index of the DHI Debian repository on 2026-11-27, for amd64 and arm64: 10.0.9-0, 10.0.10-0, 10.0.11-0, 10.0.12-0 and 10.0.13-0 ship runtimes 10.0.9 to 10.0.13, 10.0.14-0 ships runtime 10.0.14, and 10.0.15-0 and 10.0.15-1 ship runtime 10.0.15. Every runtime build carries the Brotli decoder once, in shared/Microsoft.NETCore.App/<version>/libSystem.IO.Compression.Native.so, with its managed wrapper System.IO.Compression.Brotli.dll; there is no single-file host, app host or NativeAOT component in the package, and the oci-config package holds only an OCI configuration file and its changelog. All 193 files under /usr/lib/dotnet in 10.0.13-0 have the same MD5 as Microsoft's dotnet-runtime-10.0.13 tarball, and all 193 files of 10.0.14-0 the same as the 10.0.14 tarball, on each architecture (tarballs checked against the SHA-512 in releases.json). 10.0.15-0 and 10.0.15-1 match Microsoft's dotnet-runtime-10.0.15 tarball file for file on each architecture. The first fixed build is therefore 10.0.14-0, and every earlier build is affected. Exposure needs an application that decompresses attacker-controlled Brotli data, as the advisory describes; ASP.NET Core request decompression and HttpClient automatic decompression are off by default."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-jrxo-grnj-rzll-7s64",
+        "aliases": [
+          "GHSA-p3jp-9v83-76w9"
+        ]
+      },
+      "products": [
+        {
           "@id": "pkg:deb/dhi/dotnet-runtime-10@10.0.14-0?distro=dhi-13"
         },
         {
@@ -259,12 +275,10 @@
         },
         {
           "@id": "pkg:deb/dhi/dotnet-runtime-10@10.0.15-1?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/dotnet-runtime-10@10.0.9-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-p3jp-9v83-76w9 (CVE-2026-111497) is an out-of-bounds write in the Brotli decoder that the .NET runtime compiles into libSystem.IO.Compression.Native.so, reached through BrotliStream, BrotliDecoder, ASP.NET Core request decompression with br, or HttpClient automatic decompression that includes Brotli. It affects .NET 10 runtime 10.0.0 to 10.0.13 and is fixed in 10.0.14 (https://github.com/dotnet/runtime/security/advisories/GHSA-p3jp-9v83-76w9, https://github.com/dotnet/announcements/issues/494; the 10.0.14 entry of https://github.com/dotnet/core/blob/main/release-notes/10.0/releases.json lists CVE-2026-111497). This package repackages Microsoft's dotnet-runtime-linux tarball under /usr/lib/dotnet. We read the file manifest (md5sums) of every dotnet-runtime-10 and dotnet-runtime-10-oci-config build in the Debian 13 index of the DHI Debian repository on 2026-11-27, for amd64 and arm64: 10.0.9-0, 10.0.10-0, 10.0.11-0, 10.0.12-0 and 10.0.13-0 ship runtimes 10.0.9 to 10.0.13, 10.0.14-0 ships runtime 10.0.14, and 10.0.15-0 and 10.0.15-1 ship runtime 10.0.15. Every runtime build carries the Brotli decoder once, in shared/Microsoft.NETCore.App/<version>/libSystem.IO.Compression.Native.so, with its managed wrapper System.IO.Compression.Brotli.dll; there is no single-file host, app host or NativeAOT component in the package, and the oci-config package holds only an OCI configuration file and its changelog. All 193 files under /usr/lib/dotnet in 10.0.13-0 have the same MD5 as Microsoft's dotnet-runtime-10.0.13 tarball, and all 193 files of 10.0.14-0 the same as the 10.0.14 tarball, on each architecture (tarballs checked against the SHA-512 in releases.json). 10.0.15-0 and 10.0.15-1 match Microsoft's dotnet-runtime-10.0.15 tarball file for file on each architecture. The first fixed build is therefore 10.0.14-0, and every earlier build is affected. Exposure needs an application that decompresses attacker-controlled Brotli data, as the advisory describes; ASP.NET Core request decompression and HttpClient automatic decompression are off by default."
     },
     {
       "vulnerability": {
@@ -323,7 +337,20 @@
         },
         {
           "@id": "pkg:deb/dhi/dotnet-runtime-9@9.0.21-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update dotnet-runtime-9 to 9.0.22-0 or later.",
+      "status_notes": "GHSA-p3jp-9v83-76w9 (CVE-2026-111497) is an out-of-bounds write in the Brotli decoder that .NET compiles into its native compression library: an application that decompresses attacker-controlled Brotli data (ASP.NET Core request decompression with Brotli, HttpClient automatic decompression that includes Brotli, or the BrotliStream and BrotliDecoder APIs) can have process memory read or corrupted. Microsoft lists Microsoft.NETCore.App.Runtime.linux-x64 and linux-arm64 9.0 as affected before 9.0.22 and fixed in .NET 9.0.22, an out-of-band release that updates the bundled Brotli library to 1.1.1 (https://github.com/dotnet/runtime/security/advisories/GHSA-p3jp-9v83-76w9, https://github.com/dotnet/announcements/issues/494, https://github.com/dotnet/runtime/pull/136471, https://github.com/dotnet/core/blob/main/release-notes/9.0/9.0.22/9.0.22.md). DHI dotnet-runtime-9 for Debian 13 repackages Microsoft's prebuilt .NET Runtime Linux binaries, checked at build time against the SHA-512 hash Microsoft publishes in https://github.com/dotnet/core/blob/main/release-notes/9.0/releases.json, and each build's version starts with the .NET runtime version it carries. We unpacked every dotnet-runtime-9 and dotnet-runtime-9-oci-config package published in the DHI Debian repository as of 2026-11-28: eight builds, 9.0.17-0 to 9.0.23-1, with dotnet-runtime-9 for amd64 and arm64 (16 packages) and one architecture-independent oci-config package per build (8 packages), each matched to the repository's SHA-256 checksum. Each dotnet-runtime-9 package holds one shared framework, /usr/lib/dotnet/shared/Microsoft.NETCore.App/<version>, and the Brotli decoder is compiled only into its libSystem.IO.Compression.Native.so; System.IO.Compression.Brotli.dll is the managed wrapper that calls that library. The oci-config packages hold a configuration file and a changelog and no .NET code. The builds 9.0.17-0 through 9.0.21-0 carry .NET Runtime 9.0.17 through 9.0.21 and are affected; the 9.0.21-0 libSystem.IO.Compression.Native.so is byte-identical, on both architectures, to the one in Microsoft's unfixed 9.0.21 runtime. The 9.0.22-0 build carries .NET Runtime 9.0.22, and 9.0.23-0 and 9.0.23-1 carry .NET Runtime 9.0.23. In each of them, on both architectures, libSystem.IO.Compression.Native.so is byte-identical to the one in Microsoft's dotnet-runtime-9.0.22 or dotnet-runtime-9.0.23 linux-x64 or linux-arm64 tarball of the same version, which carries the fix. The range ends at 9.0.22-0 because it is the first published build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-jrxo-grnj-rzll-7s64",
+        "aliases": [
+          "GHSA-p3jp-9v83-76w9"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/dotnet-runtime-9@9.0.22-0?distro=dhi-13"
         },
@@ -334,7 +361,8 @@
           "@id": "pkg:deb/dhi/dotnet-runtime-9@9.0.23-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-p3jp-9v83-76w9 (CVE-2026-111497) is an out-of-bounds write in the Brotli decoder that .NET compiles into its native compression library: an application that decompresses attacker-controlled Brotli data (ASP.NET Core request decompression with Brotli, HttpClient automatic decompression that includes Brotli, or the BrotliStream and BrotliDecoder APIs) can have process memory read or corrupted. Microsoft lists Microsoft.NETCore.App.Runtime.linux-x64 and linux-arm64 9.0 as affected before 9.0.22 and fixed in .NET 9.0.22, an out-of-band release that updates the bundled Brotli library to 1.1.1 (https://github.com/dotnet/runtime/security/advisories/GHSA-p3jp-9v83-76w9, https://github.com/dotnet/announcements/issues/494, https://github.com/dotnet/runtime/pull/136471, https://github.com/dotnet/core/blob/main/release-notes/9.0/9.0.22/9.0.22.md). DHI dotnet-runtime-9 for Debian 13 repackages Microsoft's prebuilt .NET Runtime Linux binaries, checked at build time against the SHA-512 hash Microsoft publishes in https://github.com/dotnet/core/blob/main/release-notes/9.0/releases.json, and each build's version starts with the .NET runtime version it carries. We unpacked every dotnet-runtime-9 and dotnet-runtime-9-oci-config package published in the DHI Debian repository as of 2026-11-28: eight builds, 9.0.17-0 to 9.0.23-1, with dotnet-runtime-9 for amd64 and arm64 (16 packages) and one architecture-independent oci-config package per build (8 packages), each matched to the repository's SHA-256 checksum. Each dotnet-runtime-9 package holds one shared framework, /usr/lib/dotnet/shared/Microsoft.NETCore.App/<version>, and the Brotli decoder is compiled only into its libSystem.IO.Compression.Native.so; System.IO.Compression.Brotli.dll is the managed wrapper that calls that library. The oci-config packages hold a configuration file and a changelog and no .NET code. The builds 9.0.17-0 through 9.0.21-0 carry .NET Runtime 9.0.17 through 9.0.21 and are affected; the 9.0.21-0 libSystem.IO.Compression.Native.so is byte-identical, on both architectures, to the one in Microsoft's unfixed 9.0.21 runtime. The 9.0.22-0 build carries .NET Runtime 9.0.22, and 9.0.23-0 and 9.0.23-1 carry .NET Runtime 9.0.23. In each of them, on both architectures, libSystem.IO.Compression.Native.so is byte-identical to the one in Microsoft's dotnet-runtime-9.0.22 or dotnet-runtime-9.0.23 linux-x64 or linux-arm64 tarball of the same version, which carries the fix. The range ends at 9.0.22-0 because it is the first published build with the fix."
     },
     {
       "vulnerability": {
