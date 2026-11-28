@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T08:18:45Z",
-  "last_updated": "2026-11-23T06:23:17Z",
-  "version": 2,
+  "last_updated": "2026-11-28T06:40:45Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -22,16 +22,30 @@
           "@id": "pkg:deb/dhi/sudo@1.9.16p2-3%2Bdeb13u2%2Bdhi2?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/sudo@1.9.16p2-3%2Bdeb13u2%2Bdhi3?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/sudo@1.9.16p2-3%2Bdeb13u2dhi0?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update sudo to 1.9.16p2-3+deb13u2+dhi3 or later.",
+      "status_notes": "sudo's ptrace-based intercept mode (src/exec_ptrace.c) let execveat(2) through without any policy check, so a user allowed to run a specific command under intercept could run a denied program by calling execveat or fexecve directly. Upstream fixed it in commit https://github.com/sudo-project/sudo/commit/71fbe42dcd5a1c8f799540583a2dfb2ae6221edf ('Add intercept and log_subcmds support for execveat(2)'), which the Debian tracker names as the fix for this CVE (https://security-tracker.debian.org/tracker/CVE-2026-82474, Debian bug 1146136); Debian has not fixed it in trixie (urgency unimportant). DHI's sudo carries that change. DHI checked the sudo program (/usr/bin/sudo) in the sudo and sudo-ldap packages of both sudo builds published in the DHI Debian repository as of 2026-11-28, on amd64 and arm64. Each contains the strings the fix adds to the exec argument reader ('unable to read execveat pathname for process %d', 'unable to read link /proc/%d/fd/%d', 'out of space storing path for process %d' and the trace format that adds dirfd and flags) and neither of the strings it replaces ('unable to read execve pathname for process %d' and the trace format without dirfd and flags). Debian's own trixie sudo 1.9.16p2-3+deb13u5, which lacks the fix, shows the opposite: the old strings are present and the new ones absent. The fixed version is the lower of the two published builds, since both carry the fix. Earlier sudo builds are no longer published and were not inspected, so they read as affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-povy-uih7-ova6-b6cg",
+        "aliases": [
+          "CVE-2026-82474"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/sudo@1.9.16p2-3%2Bdeb13u2%2Bdhi3?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/sudo@1.9.16p2-3%2Bdeb13u5%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "sudo's ptrace-based intercept mode (src/exec_ptrace.c) let execveat(2) through without any policy check, so a user allowed to run a specific command under intercept could run a denied program by calling execveat or fexecve directly. Upstream fixed it in commit https://github.com/sudo-project/sudo/commit/71fbe42dcd5a1c8f799540583a2dfb2ae6221edf ('Add intercept and log_subcmds support for execveat(2)'), which the Debian tracker names as the fix for this CVE (https://security-tracker.debian.org/tracker/CVE-2026-82474, Debian bug 1146136); Debian has not fixed it in trixie (urgency unimportant). DHI's sudo carries that change. DHI checked the sudo program (/usr/bin/sudo) in the sudo and sudo-ldap packages of both sudo builds published in the DHI Debian repository as of 2026-11-28, on amd64 and arm64. Each contains the strings the fix adds to the exec argument reader ('unable to read execveat pathname for process %d', 'unable to read link /proc/%d/fd/%d', 'out of space storing path for process %d' and the trace format that adds dirfd and flags) and neither of the strings it replaces ('unable to read execve pathname for process %d' and the trace format without dirfd and flags). Debian's own trixie sudo 1.9.16p2-3+deb13u5, which lacks the fix, shows the opposite: the old strings are present and the new ones absent. The fixed version is the lower of the two published builds, since both carry the fix. Earlier sudo builds are no longer published and were not inspected, so they read as affected."
     }
   ]
 }

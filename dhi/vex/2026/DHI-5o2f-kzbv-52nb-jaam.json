@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T10:42:52Z",
-  "last_updated": "2026-11-23T21:20:43Z",
-  "version": 2,
+  "last_updated": "2026-11-28T06:40:42Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -31,7 +31,9 @@
           "@id": "pkg:deb/dhi/tiff@4.7.0-3%2Bdeb13u3%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "The integer overflow is in cvtRaster() of the rgb2ycbcr program (tools/rgb2ycbcr.c), not in the library. Upstream builds rgb2ycbcr only as a test program and never installs it (tools/CMakeLists.txt at v4.7.0: 'rgb2ycbcr and thumbnail are intended to *NOT* be installed. They are for testing purposes only'; tools/Makefile.am lists it only under EXTRA_PROGRAMS and check_PROGRAMS). Debian has no fix in any release and rates it unimportant as a crash in a CLI tool (https://security-tracker.debian.org/tracker/CVE-2026-52492), so the absence was checked in what DHI ships. DHI unpacked every tiff package in the DHI Debian repository as of 2026-11-28 (one build, on amd64 and arm64: libtiff6, libtiffxx6, libtiff-dev, libtiff5-dev, libtiff-tools, libtiff-opengl and the four -dbgsym packages). libtiff-tools installs 18 programs (fax2ps, fax2tiff, pal2rgb, ppm2tiff, raw2tiff, tiff2bw, tiff2pdf, tiff2ps, tiff2rgba, tiffcmp, tiffcp, tiffcrop, tiffdither, tiffdump, tiffinfo, tiffmedian, tiffset, tiffsplit) and no rgb2ycbcr program; only the rgb2ycbcr(1) manual page ships. Apart from the upstream ChangeLog text that six of these packages ship (usr/share/doc/<package>/changelog.gz, whose history mentions rgb2ycbcr.c and cvtRaster), no file in these packages contains the source name rgb2ycbcr.c or its functions cvtRaster, cvtStrip, cvtClump and setupLumaTables: not an ELF program or library, not a member of the libtiff.a and libtiffxx.a static archives, and not a detached debug file (searched with its compressed debug sections decompressed). The same search finds the source name and functions of shipped tools (tiff2bw.c and compresscontig from tiff2bw, readSeparateTilesIntoBuffer from tiffcrop). Earlier tiff builds are no longer published and were not unpacked; they come from the same upstream build rules and the same Debian packaging, which installs only the programs upstream installs."
     }
   ]
 }
