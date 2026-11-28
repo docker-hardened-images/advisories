@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-09T23:59:52Z",
-  "last_updated": "2026-11-26T06:54:42Z",
-  "version": 3,
+  "last_updated": "2026-11-28T01:12:35Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -29,12 +29,26 @@
         },
         {
           "@id": "pkg:deb/dhi/gnutls28@3.8.9-3%2Bdeb13u4%2Bdhi2?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update gnutls28 to 3.8.9-3+deb13u4+dhi3 or later.",
+      "status_notes": "CVE-2026-88648: GnuTLS path validation never checks a leaf certificate's Microsoft UPN or SRV otherName subject alternative names against an issuing CA's name constraints, so a leaf carrying exactly a name the CA's excludedSubtrees forbid is still trusted (https://www.cve.org/CVERecord?id=CVE-2026-88648; reproduced against Debian's 3.8.9-3+deb13u4 in https://gitlab.com/gnutls/gnutls/-/work_items/1965). The GnuTLS maintainers dispute it as outside the threat model in their SECURITY.md, because a CA the user trusts has to issue the certificate, and Debian lists gnutls28 in trixie as unfixed (unimportant): https://security-tracker.debian.org/tracker/CVE-2026-88648. GnuTLS 3.8.14 changed path validation to check every subject alternative name type against name constraints and to reject a certificate carrying a name of a type that has a constraint GnuTLS cannot match (https://gitlab.com/gnutls/gnutls/-/commit/261c718f998351e71db3590a8df78b15961e7e26, https://gitlab.com/gnutls/gnutls/-/commit/6e11fea0d5c5886bd215b81fb35baf10b031c8d8, https://gitlab.com/gnutls/gnutls/-/commit/988f435abdd33c66c75ca2069118e9f1c7fb0206, https://gitlab.com/gnutls/gnutls/-/commit/5d1d734f596d89842c7134d5b43c25f45f0306ec). The DHI gnutls28 build at the fixed version below carries a backport of those four commits. Checked in the published libgnutls30t64 packages for amd64 and arm64: in the build published before it, made from the same Debian 3.8.9-3+deb13u4 source, the end-entity name constraint check runs only for DNS, RFC 822, directoryName, URI and IP address names; in the fixed build it runs over a table of eleven name types that includes the Microsoft UPN and SRV otherName types, and the check for unsupported types consults permitted as well as excluded constraints, so a leaf carrying an excluded UPN or SRV name is rejected. As in GnuTLS 3.8.14, unsupported constraint types fail closed: a directoryName constraint rejects any leaf with a non-empty subject, because DN subtrees are not matched. Builds of Debian's earlier 3.8.9-3+deb13u2 and 3.8.9-3+deb13u3 sources sort below the boundary and are reported as affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wrjn-qbpz-mcst-icgz",
+        "aliases": [
+          "CVE-2026-88648"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/gnutls28@3.8.9-3%2Bdeb13u4%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-88648: GnuTLS path validation never checks a leaf certificate's Microsoft UPN or SRV otherName subject alternative names against an issuing CA's name constraints, so a leaf carrying exactly a name the CA's excludedSubtrees forbid is still trusted (https://www.cve.org/CVERecord?id=CVE-2026-88648; reproduced against Debian's 3.8.9-3+deb13u4 in https://gitlab.com/gnutls/gnutls/-/work_items/1965). The GnuTLS maintainers dispute it as outside the threat model in their SECURITY.md, because a CA the user trusts has to issue the certificate, and Debian lists gnutls28 in trixie as unfixed (unimportant): https://security-tracker.debian.org/tracker/CVE-2026-88648. GnuTLS 3.8.14 changed path validation to check every subject alternative name type against name constraints and to reject a certificate carrying a name of a type that has a constraint GnuTLS cannot match (https://gitlab.com/gnutls/gnutls/-/commit/261c718f998351e71db3590a8df78b15961e7e26, https://gitlab.com/gnutls/gnutls/-/commit/6e11fea0d5c5886bd215b81fb35baf10b031c8d8, https://gitlab.com/gnutls/gnutls/-/commit/988f435abdd33c66c75ca2069118e9f1c7fb0206, https://gitlab.com/gnutls/gnutls/-/commit/5d1d734f596d89842c7134d5b43c25f45f0306ec). The DHI gnutls28 build at the fixed version below carries a backport of those four commits. Checked in the published libgnutls30t64 packages for amd64 and arm64: in the build published before it, made from the same Debian 3.8.9-3+deb13u4 source, the end-entity name constraint check runs only for DNS, RFC 822, directoryName, URI and IP address names; in the fixed build it runs over a table of eleven name types that includes the Microsoft UPN and SRV otherName types, and the check for unsupported types consults permitted as well as excluded constraints, so a leaf carrying an excluded UPN or SRV name is rejected. As in GnuTLS 3.8.14, unsupported constraint types fail closed: a directoryName constraint rejects any leaf with a non-empty subject, because DN subtrees are not matched. Builds of Debian's earlier 3.8.9-3+deb13u2 and 3.8.9-3+deb13u3 sources sort below the boundary and are reported as affected."
     }
   ]
 }
