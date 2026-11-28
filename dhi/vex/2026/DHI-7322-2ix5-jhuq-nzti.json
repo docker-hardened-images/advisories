@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T16:59:06Z",
-  "last_updated": "2026-11-27T16:57:46Z",
-  "version": 24,
+  "last_updated": "2026-11-28T06:55:52Z",
+  "version": 25,
   "statements": [
     {
       "vulnerability": {
@@ -4159,7 +4159,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.160.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-dev to 0.160.0-r1 or later.",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . We read every opentelemetry-collector-contrib-dev package in the Alpine 3.23 index of the DHI Alpine repository: 24 builds listed on 28 November 2026, 0.156.0-r0 to 0.166.0-r1, for x86_64 and aarch64. Each package installs /usr/bin/otelcol-contrib, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r3, 0.162.0-r1 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The program links github.com/rabbitmq/amqp091-go, used by the RabbitMQ components, including DialConfig and (*Channel).Qos, in every build on both architectures. The Go build information lists, the same on both architectures: 0.156.0-r0 to 0.160.0-r0 v1.12.0; 0.160.0-r1 to 0.161.0-r0 v1.13.0; 0.162.0-r0 to 0.164.0-r2 v1.15.0; 0.165.0-r0 to 0.166.0-r1 v1.16.0. In every build before 0.160.0-r1, which has v1.12.0, the function table has (*Channel).Qos and no validateQos; in every build from 0.160.0-r1 it has both (*Channel).Qos and the validateQos check the fix adds. So every build before 0.160.0-r1 is affected and every build from 0.160.0-r1 is fixed; the range ends at 0.160.0-r1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7322-2ix5-jhuq-nzti",
+        "aliases": [
+          "CVE-2026-77406"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.160.0-r1?distro=dhi-3.23"
         },
@@ -4206,7 +4219,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . We read every opentelemetry-collector-contrib-dev package in the Alpine 3.23 index of the DHI Alpine repository: 24 builds listed on 28 November 2026, 0.156.0-r0 to 0.166.0-r1, for x86_64 and aarch64. Each package installs /usr/bin/otelcol-contrib, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r3, 0.162.0-r1 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The program links github.com/rabbitmq/amqp091-go, used by the RabbitMQ components, including DialConfig and (*Channel).Qos, in every build on both architectures. The Go build information lists, the same on both architectures: 0.156.0-r0 to 0.160.0-r0 v1.12.0; 0.160.0-r1 to 0.161.0-r0 v1.13.0; 0.162.0-r0 to 0.164.0-r2 v1.15.0; 0.165.0-r0 to 0.166.0-r1 v1.16.0. In every build before 0.160.0-r1, which has v1.12.0, the function table has (*Channel).Qos and no validateQos; in every build from 0.160.0-r1 it has both (*Channel).Qos and the validateQos check the fix adds. So every build before 0.160.0-r1 is affected and every build from 0.160.0-r1 is fixed; the range ends at 0.160.0-r1."
     },
     {
       "vulnerability": {
@@ -4242,7 +4256,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.160.0-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-dev to 0.160.0-r1 or later.",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The Alpine 3.24 index of the DHI Alpine repository lists the same 24 opentelemetry-collector-contrib-dev builds on 28 November 2026, 0.156.0-r0 to 0.166.0-r1, with the same package checksums as the Alpine 3.23 index on x86_64 and aarch64, so they are the same files; we read the Alpine 3.23 copies. Each package installs /usr/bin/otelcol-contrib, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r3, 0.162.0-r1 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The program links github.com/rabbitmq/amqp091-go, used by the RabbitMQ components, including DialConfig and (*Channel).Qos, in every build on both architectures. The Go build information lists, the same on both architectures: 0.156.0-r0 to 0.160.0-r0 v1.12.0; 0.160.0-r1 to 0.161.0-r0 v1.13.0; 0.162.0-r0 to 0.164.0-r2 v1.15.0; 0.165.0-r0 to 0.166.0-r1 v1.16.0. In every build before 0.160.0-r1, which has v1.12.0, the function table has (*Channel).Qos and no validateQos; in every build from 0.160.0-r1 it has both (*Channel).Qos and the validateQos check the fix adds. So every build before 0.160.0-r1 is affected and every build from 0.160.0-r1 is fixed; the range ends at 0.160.0-r1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7322-2ix5-jhuq-nzti",
+        "aliases": [
+          "CVE-2026-77406"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.160.0-r1?distro=dhi-3.24"
         },
@@ -4289,7 +4316,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The Alpine 3.24 index of the DHI Alpine repository lists the same 24 opentelemetry-collector-contrib-dev builds on 28 November 2026, 0.156.0-r0 to 0.166.0-r1, with the same package checksums as the Alpine 3.23 index on x86_64 and aarch64, so they are the same files; we read the Alpine 3.23 copies. Each package installs /usr/bin/otelcol-contrib, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r3, 0.162.0-r1 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The program links github.com/rabbitmq/amqp091-go, used by the RabbitMQ components, including DialConfig and (*Channel).Qos, in every build on both architectures. The Go build information lists, the same on both architectures: 0.156.0-r0 to 0.160.0-r0 v1.12.0; 0.160.0-r1 to 0.161.0-r0 v1.13.0; 0.162.0-r0 to 0.164.0-r2 v1.15.0; 0.165.0-r0 to 0.166.0-r1 v1.16.0. In every build before 0.160.0-r1, which has v1.12.0, the function table has (*Channel).Qos and no validateQos; in every build from 0.160.0-r1 it has both (*Channel).Qos and the validateQos check the fix adds. So every build before 0.160.0-r1 is affected and every build from 0.160.0-r1 is fixed; the range ends at 0.160.0-r1."
     },
     {
       "vulnerability": {
@@ -4372,7 +4400,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The opentelemetry-collector-contrib-fips-dev packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips-dev build on both architectures, to establish which github.com/rabbitmq/amqp091-go version, if any, each one links and whether it links Channel.Qos. In the non-FIPS opentelemetry-collector-contrib-dev packages, which we did inspect, every build before 0.160.0-r1 links Channel.Qos from github.com/rabbitmq/amqp091-go v1.12.0, and every build from 0.160.0-r1 has v1.13.0 or later. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -4455,7 +4484,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The opentelemetry-collector-contrib-fips-dev packages for Alpine 3.24 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips-dev build on both architectures, to establish which github.com/rabbitmq/amqp091-go version, if any, each one links and whether it links Channel.Qos. In the non-FIPS opentelemetry-collector-contrib-dev packages, which we did inspect, every build before 0.160.0-r1 links Channel.Qos from github.com/rabbitmq/amqp091-go v1.12.0, and every build from 0.160.0-r1 has v1.13.0 or later. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -4538,7 +4568,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The opentelemetry-collector-contrib-fips packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips build on both architectures, to establish which github.com/rabbitmq/amqp091-go version, if any, each one links and whether it links Channel.Qos. In the non-FIPS opentelemetry-collector-contrib packages, which we did inspect, every build before 0.160.0-r1 links Channel.Qos from github.com/rabbitmq/amqp091-go v1.12.0, and every build from 0.160.0-r1 has v1.13.0 or later. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -4621,7 +4652,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib-fips@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The opentelemetry-collector-contrib-fips packages for Alpine 3.24 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips build on both architectures, to establish which github.com/rabbitmq/amqp091-go version, if any, each one links and whether it links Channel.Qos. In the non-FIPS opentelemetry-collector-contrib packages, which we did inspect, every build before 0.160.0-r1 links Channel.Qos from github.com/rabbitmq/amqp091-go v1.12.0, and every build from 0.160.0-r1 has v1.13.0 or later. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -4657,7 +4689,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.160.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib to 0.160.0-r1 or later.",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . We read every opentelemetry-collector-contrib package in the Alpine 3.23 index of the DHI Alpine repository: 24 builds listed on 28 November 2026, 0.156.0-r0 to 0.166.0-r1, for x86_64 and aarch64. Each package installs /usr/bin/otelcol-contrib, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r3, 0.162.0-r1 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The program links github.com/rabbitmq/amqp091-go, used by the RabbitMQ components, including DialConfig and (*Channel).Qos, in every build on both architectures. The Go build information lists, the same on both architectures: 0.156.0-r0 to 0.160.0-r0 v1.12.0; 0.160.0-r1 to 0.161.0-r0 v1.13.0; 0.162.0-r0 to 0.164.0-r2 v1.15.0; 0.165.0-r0 to 0.166.0-r1 v1.16.0. In every build before 0.160.0-r1, which has v1.12.0, the function table has (*Channel).Qos and no validateQos; in every build from 0.160.0-r1 it has both (*Channel).Qos and the validateQos check the fix adds. So every build before 0.160.0-r1 is affected and every build from 0.160.0-r1 is fixed; the range ends at 0.160.0-r1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7322-2ix5-jhuq-nzti",
+        "aliases": [
+          "CVE-2026-77406"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.160.0-r1?distro=dhi-3.23"
         },
@@ -4704,7 +4749,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . We read every opentelemetry-collector-contrib package in the Alpine 3.23 index of the DHI Alpine repository: 24 builds listed on 28 November 2026, 0.156.0-r0 to 0.166.0-r1, for x86_64 and aarch64. Each package installs /usr/bin/otelcol-contrib, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r3, 0.162.0-r1 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The program links github.com/rabbitmq/amqp091-go, used by the RabbitMQ components, including DialConfig and (*Channel).Qos, in every build on both architectures. The Go build information lists, the same on both architectures: 0.156.0-r0 to 0.160.0-r0 v1.12.0; 0.160.0-r1 to 0.161.0-r0 v1.13.0; 0.162.0-r0 to 0.164.0-r2 v1.15.0; 0.165.0-r0 to 0.166.0-r1 v1.16.0. In every build before 0.160.0-r1, which has v1.12.0, the function table has (*Channel).Qos and no validateQos; in every build from 0.160.0-r1 it has both (*Channel).Qos and the validateQos check the fix adds. So every build before 0.160.0-r1 is affected and every build from 0.160.0-r1 is fixed; the range ends at 0.160.0-r1."
     },
     {
       "vulnerability": {
@@ -4740,7 +4786,20 @@
         },
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.160.0-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib to 0.160.0-r1 or later.",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The Alpine 3.24 index of the DHI Alpine repository lists the same 24 opentelemetry-collector-contrib builds on 28 November 2026, 0.156.0-r0 to 0.166.0-r1, with the same package checksums as the Alpine 3.23 index on x86_64 and aarch64, so they are the same files; we read the Alpine 3.23 copies. Each package installs /usr/bin/otelcol-contrib, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r3, 0.162.0-r1 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The program links github.com/rabbitmq/amqp091-go, used by the RabbitMQ components, including DialConfig and (*Channel).Qos, in every build on both architectures. The Go build information lists, the same on both architectures: 0.156.0-r0 to 0.160.0-r0 v1.12.0; 0.160.0-r1 to 0.161.0-r0 v1.13.0; 0.162.0-r0 to 0.164.0-r2 v1.15.0; 0.165.0-r0 to 0.166.0-r1 v1.16.0. In every build before 0.160.0-r1, which has v1.12.0, the function table has (*Channel).Qos and no validateQos; in every build from 0.160.0-r1 it has both (*Channel).Qos and the validateQos check the fix adds. So every build before 0.160.0-r1 is affected and every build from 0.160.0-r1 is fixed; the range ends at 0.160.0-r1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7322-2ix5-jhuq-nzti",
+        "aliases": [
+          "CVE-2026-77406"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.160.0-r1?distro=dhi-3.24"
         },
@@ -4787,7 +4846,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-contrib@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The Alpine 3.24 index of the DHI Alpine repository lists the same 24 opentelemetry-collector-contrib builds on 28 November 2026, 0.156.0-r0 to 0.166.0-r1, with the same package checksums as the Alpine 3.23 index on x86_64 and aarch64, so they are the same files; we read the Alpine 3.23 copies. Each package installs /usr/bin/otelcol-contrib, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r3, 0.162.0-r1 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The program links github.com/rabbitmq/amqp091-go, used by the RabbitMQ components, including DialConfig and (*Channel).Qos, in every build on both architectures. The Go build information lists, the same on both architectures: 0.156.0-r0 to 0.160.0-r0 v1.12.0; 0.160.0-r1 to 0.161.0-r0 v1.13.0; 0.162.0-r0 to 0.164.0-r2 v1.15.0; 0.165.0-r0 to 0.166.0-r1 v1.16.0. In every build before 0.160.0-r1, which has v1.12.0, the function table has (*Channel).Qos and no validateQos; in every build from 0.160.0-r1 it has both (*Channel).Qos and the validateQos check the fix adds. So every build before 0.160.0-r1 is affected and every build from 0.160.0-r1 is fixed; the range ends at 0.160.0-r1."
     },
     {
       "vulnerability": {
@@ -4870,7 +4930,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . We read every opentelemetry-collector-dev package in the Alpine 3.23 index of the DHI Alpine repository: 24 builds listed on 28 November 2026, 0.156.0-r0 to 0.166.0-r1, for x86_64 and aarch64. Each package installs /usr/bin/otelcol, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r2, 0.160.0-r1, 0.162.0-r1, 0.164.0-r2 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. No build lists github.com/rabbitmq/amqp091-go in its Go build information, and no build has a function from that package, on either architecture, while the same scan finds 570 to 658 such functions, including DialConfig, in every opentelemetry-collector-contrib-dev build. The vulnerable AMQP client is not part of this package. Debian has not fixed this CVE in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-77406), which says nothing about this package; the module is absent from every build."
     },
     {
       "vulnerability": {
@@ -4953,7 +5015,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The Alpine 3.24 index of the DHI Alpine repository lists the same 24 opentelemetry-collector-dev builds on 28 November 2026, 0.156.0-r0 to 0.166.0-r1, with the same package checksums as the Alpine 3.23 index on x86_64 and aarch64, so they are the same files; we read the Alpine 3.23 copies. Each package installs /usr/bin/otelcol, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r2, 0.160.0-r1, 0.162.0-r1, 0.164.0-r2 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. No build lists github.com/rabbitmq/amqp091-go in its Go build information, and no build has a function from that package, on either architecture, while the same scan finds 570 to 658 such functions, including DialConfig, in every opentelemetry-collector-contrib-dev build. The vulnerable AMQP client is not part of this package. Debian has not fixed this CVE in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-77406), which says nothing about this package; the module is absent from every build."
     },
     {
       "vulnerability": {
@@ -5036,7 +5100,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The opentelemetry-collector-fips-dev packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips-dev build on both architectures, to establish which github.com/rabbitmq/amqp091-go version, if any, each one links and whether it links Channel.Qos. In the non-FIPS opentelemetry-collector-dev packages, which we did inspect, no build links github.com/rabbitmq/amqp091-go. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -5119,7 +5184,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips-dev@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The opentelemetry-collector-fips-dev packages for Alpine 3.24 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips-dev build on both architectures, to establish which github.com/rabbitmq/amqp091-go version, if any, each one links and whether it links Channel.Qos. In the non-FIPS opentelemetry-collector-dev packages, which we did inspect, no build links github.com/rabbitmq/amqp091-go. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -5202,7 +5268,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The opentelemetry-collector-fips packages for Alpine 3.23 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips build on both architectures, to establish which github.com/rabbitmq/amqp091-go version, if any, each one links and whether it links Channel.Qos. In the non-FIPS opentelemetry-collector packages, which we did inspect, no build links github.com/rabbitmq/amqp091-go. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -5285,7 +5352,8 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector-fips@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The opentelemetry-collector-fips packages for Alpine 3.24 are published only in the DHI Alpine security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips build on both architectures, to establish which github.com/rabbitmq/amqp091-go version, if any, each one links and whether it links Channel.Qos. In the non-FIPS opentelemetry-collector packages, which we did inspect, no build links github.com/rabbitmq/amqp091-go. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -5368,7 +5436,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . We read every opentelemetry-collector package in the Alpine 3.23 index of the DHI Alpine repository: 24 builds listed on 28 November 2026, 0.156.0-r0 to 0.166.0-r1, for x86_64 and aarch64. Each package installs /usr/bin/otelcol, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r2, 0.160.0-r1, 0.162.0-r1, 0.164.0-r2 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. No build lists github.com/rabbitmq/amqp091-go in its Go build information, and no build has a function from that package, on either architecture, while the same scan finds 570 to 658 such functions, including DialConfig, in every opentelemetry-collector-contrib build. The vulnerable AMQP client is not part of this package. Debian has not fixed this CVE in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-77406), which says nothing about this package; the module is absent from every build."
     },
     {
       "vulnerability": {
@@ -5451,7 +5521,9 @@
           "@id": "pkg:apk/dhi/opentelemetry-collector@0.166.0-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The Alpine 3.24 index of the DHI Alpine repository lists the same 24 opentelemetry-collector builds on 28 November 2026, 0.156.0-r0 to 0.166.0-r1, with the same package checksums as the Alpine 3.23 index on x86_64 and aarch64, so they are the same files; we read the Alpine 3.23 copies. Each package installs /usr/bin/otelcol, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r2, 0.160.0-r1, 0.162.0-r1, 0.164.0-r2 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. No build lists github.com/rabbitmq/amqp091-go in its Go build information, and no build has a function from that package, on either architecture, while the same scan finds 570 to 658 such functions, including DialConfig, in every opentelemetry-collector-contrib build. The vulnerable AMQP client is not part of this package. Debian has not fixed this CVE in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-77406), which says nothing about this package; the module is absent from every build."
     },
     {
       "vulnerability": {
@@ -10364,7 +10436,20 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.160.0-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib-dev to 0.160.0-1 or later.",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The DHI Debian repository lists 24 opentelemetry-collector-contrib-dev builds on 28 November 2026, 0.156.0-0 to 0.166.0-1, for amd64 and arm64. In each, the control archive file list names only /usr/bin/otelcol-contrib, and the Go build ID of that program, which ends in a hash of the program content, equals the one in the Alpine 3.23 package of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-1 and 0.166.0-r1), so each Debian build ships the same program as the Alpine build we read. In the Alpine packages: Each package installs /usr/bin/otelcol-contrib, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r3, 0.162.0-r1 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The program links github.com/rabbitmq/amqp091-go, used by the RabbitMQ components, including DialConfig and (*Channel).Qos, in every build on both architectures. The Go build information lists, the same on both architectures: 0.156.0-0 to 0.160.0-0 v1.12.0; 0.160.0-1 to 0.161.0-0 v1.13.0; 0.162.0-0 to 0.164.0-2 v1.15.0; 0.165.0-0 to 0.166.0-1 v1.16.0. In every build before 0.160.0-1, which has v1.12.0, the function table has (*Channel).Qos and no validateQos; in every build from 0.160.0-1 it has both (*Channel).Qos and the validateQos check the fix adds. So every build before 0.160.0-1 is affected and every build from 0.160.0-1 is fixed; the range ends at 0.160.0-1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7322-2ix5-jhuq-nzti",
+        "aliases": [
+          "CVE-2026-77406"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.160.0-1?distro=dhi-13"
         },
@@ -10411,7 +10496,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-dev@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The DHI Debian repository lists 24 opentelemetry-collector-contrib-dev builds on 28 November 2026, 0.156.0-0 to 0.166.0-1, for amd64 and arm64. In each, the control archive file list names only /usr/bin/otelcol-contrib, and the Go build ID of that program, which ends in a hash of the program content, equals the one in the Alpine 3.23 package of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-1 and 0.166.0-r1), so each Debian build ships the same program as the Alpine build we read. In the Alpine packages: Each package installs /usr/bin/otelcol-contrib, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r3, 0.162.0-r1 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The program links github.com/rabbitmq/amqp091-go, used by the RabbitMQ components, including DialConfig and (*Channel).Qos, in every build on both architectures. The Go build information lists, the same on both architectures: 0.156.0-0 to 0.160.0-0 v1.12.0; 0.160.0-1 to 0.161.0-0 v1.13.0; 0.162.0-0 to 0.164.0-2 v1.15.0; 0.165.0-0 to 0.166.0-1 v1.16.0. In every build before 0.160.0-1, which has v1.12.0, the function table has (*Channel).Qos and no validateQos; in every build from 0.160.0-1 it has both (*Channel).Qos and the validateQos check the fix adds. So every build before 0.160.0-1 is affected and every build from 0.160.0-1 is fixed; the range ends at 0.160.0-1."
     },
     {
       "vulnerability": {
@@ -10494,7 +10580,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips-dev@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The opentelemetry-collector-contrib-fips-dev packages are published only in the DHI Debian security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips-dev build on both architectures, to establish which github.com/rabbitmq/amqp091-go version, if any, each one links and whether it links Channel.Qos. In the non-FIPS opentelemetry-collector-contrib-dev packages, which we did inspect, every build before 0.160.0-1 links Channel.Qos from github.com/rabbitmq/amqp091-go v1.12.0, and every build from 0.160.0-1 has v1.13.0 or later. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -10577,7 +10664,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib-fips@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The opentelemetry-collector-contrib-fips packages are published only in the DHI Debian security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-contrib-fips build on both architectures, to establish which github.com/rabbitmq/amqp091-go version, if any, each one links and whether it links Channel.Qos. In the non-FIPS opentelemetry-collector-contrib packages, which we did inspect, every build before 0.160.0-1 links Channel.Qos from github.com/rabbitmq/amqp091-go v1.12.0, and every build from 0.160.0-1 has v1.13.0 or later. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -10613,7 +10701,20 @@
         },
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.160.0-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update opentelemetry-collector-contrib to 0.160.0-1 or later.",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The DHI Debian repository lists 24 opentelemetry-collector-contrib builds on 28 November 2026, 0.156.0-0 to 0.166.0-1, for amd64 and arm64. In each, the control archive file list names only /usr/bin/otelcol-contrib, and the Go build ID of that program, which ends in a hash of the program content, equals the one in the Alpine 3.23 package of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-1 and 0.166.0-r1), so each Debian build ships the same program as the Alpine build we read. In the Alpine packages: Each package installs /usr/bin/otelcol-contrib, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r3, 0.162.0-r1 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The program links github.com/rabbitmq/amqp091-go, used by the RabbitMQ components, including DialConfig and (*Channel).Qos, in every build on both architectures. The Go build information lists, the same on both architectures: 0.156.0-0 to 0.160.0-0 v1.12.0; 0.160.0-1 to 0.161.0-0 v1.13.0; 0.162.0-0 to 0.164.0-2 v1.15.0; 0.165.0-0 to 0.166.0-1 v1.16.0. In every build before 0.160.0-1, which has v1.12.0, the function table has (*Channel).Qos and no validateQos; in every build from 0.160.0-1 it has both (*Channel).Qos and the validateQos check the fix adds. So every build before 0.160.0-1 is affected and every build from 0.160.0-1 is fixed; the range ends at 0.160.0-1."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-7322-2ix5-jhuq-nzti",
+        "aliases": [
+          "CVE-2026-77406"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.160.0-1?distro=dhi-13"
         },
@@ -10660,7 +10761,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-contrib@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The DHI Debian repository lists 24 opentelemetry-collector-contrib builds on 28 November 2026, 0.156.0-0 to 0.166.0-1, for amd64 and arm64. In each, the control archive file list names only /usr/bin/otelcol-contrib, and the Go build ID of that program, which ends in a hash of the program content, equals the one in the Alpine 3.23 package of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-1 and 0.166.0-r1), so each Debian build ships the same program as the Alpine build we read. In the Alpine packages: Each package installs /usr/bin/otelcol-contrib, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r3, 0.162.0-r1 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. The program links github.com/rabbitmq/amqp091-go, used by the RabbitMQ components, including DialConfig and (*Channel).Qos, in every build on both architectures. The Go build information lists, the same on both architectures: 0.156.0-0 to 0.160.0-0 v1.12.0; 0.160.0-1 to 0.161.0-0 v1.13.0; 0.162.0-0 to 0.164.0-2 v1.15.0; 0.165.0-0 to 0.166.0-1 v1.16.0. In every build before 0.160.0-1, which has v1.12.0, the function table has (*Channel).Qos and no validateQos; in every build from 0.160.0-1 it has both (*Channel).Qos and the validateQos check the fix adds. So every build before 0.160.0-1 is affected and every build from 0.160.0-1 is fixed; the range ends at 0.160.0-1."
     },
     {
       "vulnerability": {
@@ -10743,7 +10845,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-dev@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The DHI Debian repository lists 24 opentelemetry-collector-dev builds on 28 November 2026, 0.156.0-0 to 0.166.0-1, for amd64 and arm64. In each, the control archive file list names only /usr/bin/otelcol, and the Go build ID of that program, which ends in a hash of the program content, equals the one in the Alpine 3.23 package of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-1 and 0.166.0-r1), so each Debian build ships the same program as the Alpine build we read. In the Alpine packages: Each package installs /usr/bin/otelcol, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r2, 0.160.0-r1, 0.162.0-r1, 0.164.0-r2 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. No build lists github.com/rabbitmq/amqp091-go in its Go build information, and no build has a function from that package, on either architecture, while the same scan finds 570 to 658 such functions, including DialConfig, in every opentelemetry-collector-contrib-dev build. The vulnerable AMQP client is not part of this package. Debian has not fixed this CVE in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-77406), which says nothing about this package; the module is absent from every build."
     },
     {
       "vulnerability": {
@@ -10826,7 +10930,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips-dev@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The opentelemetry-collector-fips-dev packages are published only in the DHI Debian security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips-dev build on both architectures, to establish which github.com/rabbitmq/amqp091-go version, if any, each one links and whether it links Channel.Qos. In the non-FIPS opentelemetry-collector-dev packages, which we did inspect, no build links github.com/rabbitmq/amqp091-go. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -10909,7 +11014,8 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector-fips@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The opentelemetry-collector-fips packages are published only in the DHI Debian security repository, which requires authentication and could not be read for this review, so no build of this owner was inspected. Pending: an inspection of every published opentelemetry-collector-fips build on both architectures, to establish which github.com/rabbitmq/amqp091-go version, if any, each one links and whether it links Channel.Qos. In the non-FIPS opentelemetry-collector packages, which we did inspect, no build links github.com/rabbitmq/amqp091-go. That is not evidence for the FIPS builds, which are built separately."
     },
     {
       "vulnerability": {
@@ -10992,7 +11098,9 @@
           "@id": "pkg:deb/dhi/opentelemetry-collector@0.166.0-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-77406 (GHSA-rm6m-hrcw-jw33, GO-2026-6502): in RabbitMQ's Go AMQP 0.9.1 client github.com/rabbitmq/amqp091-go before v1.13.0, Channel.Qos in channel.go accepts negative prefetchCount and prefetchSize values and converts them to the unsigned fields of the basic.qos method, so -1 becomes 65535 or 4294967295; an application that lets untrusted input set these values can ask the broker for a practically unlimited prefetch and run out of memory. It is fixed in v1.13.0 by commit https://github.com/rabbitmq/amqp091-go/commit/3b879e1d1d25b544e26b3bc3d7db3213203c0f3b (https://github.com/rabbitmq/amqp091-go/pull/351), which adds a validateQos check that rejects negative values and is in the v1.13.0 tag and not in v1.12.0: https://github.com/rabbitmq/amqp091-go/security/advisories/GHSA-rm6m-hrcw-jw33, https://pkg.go.dev/vuln/GO-2026-6502 . The DHI Debian repository lists 24 opentelemetry-collector builds on 28 November 2026, 0.156.0-0 to 0.166.0-1, for amd64 and arm64. In each, the control archive file list names only /usr/bin/otelcol, and the Go build ID of that program, which ends in a hash of the program content, equals the one in the Alpine 3.23 package of the same build and architecture (0.156.0-0 and 0.156.0-r0, and so on to 0.166.0-1 and 0.166.0-r1), so each Debian build ships the same program as the Alpine build we read. In the Alpine packages: Each package installs /usr/bin/otelcol, a Go program for Linux built with CGO_ENABLED=0. For each distinct program we checked the control section against its index checksum and read the start of the data archive up to and including the Go build information, which covers the function table (pclntab) and read-only data but not the debug sections at the end of the file; we read the Go release and module versions and the function names in the function table, which also records the names of functions inlined into others, and runtime.main is present in every build as a control. 0.159.0-r2, 0.160.0-r1, 0.162.0-r1, 0.164.0-r2 and 0.166.0-r1 carry the same Go build ID, which ends in a hash of the program content, as the revision before them, so they ship the same program. No build lists github.com/rabbitmq/amqp091-go in its Go build information, and no build has a function from that package, on either architecture, while the same scan finds 570 to 658 such functions, including DialConfig, in every opentelemetry-collector-contrib build. The vulnerable AMQP client is not part of this package. Debian has not fixed this CVE in trixie (no DSA, minor issue: https://security-tracker.debian.org/tracker/CVE-2026-77406), which says nothing about this package; the module is absent from every build."
     },
     {
       "vulnerability": {

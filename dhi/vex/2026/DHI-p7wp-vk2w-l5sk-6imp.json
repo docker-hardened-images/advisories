@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T15:48:32Z",
-  "last_updated": "2026-11-27T01:14:41Z",
-  "version": 3,
+  "last_updated": "2026-11-28T06:55:54Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -43,7 +43,9 @@
           "@id": "pkg:deb/dhi/nss@2:3.134-1%2Bdeb13u0%2Bdhi0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-6767 is a flaw in the name-constraint checks of mozilla::pkix, a certificate-verification library kept in the NSS source tree under lib/mozpkix: a permittedSubtrees constraint such as foo.example.com accepted a certificate's wildcard name *.example.com, although that certificate could also be valid for bar.example.com, outside the permitted tree. Mozilla fixed it in Firefox 150, Firefox ESR 115.35 and Firefox ESR 140.10: https://www.mozilla.org/en-US/security/advisories/mfsa2026-30/#CVE-2026-6767. The fix, Mozilla bug 2023209, changes only lib/mozpkix/lib/pkixnames.cpp and its unit test: https://hg.mozilla.org/projects/nss/rev/4e693e8b5c0d. Debian fixed it in trixie in 2:3.110-1+deb13u2, DSA-6290-1: https://security-tracker.debian.org/tracker/CVE-2026-6767. The DHI nss packages for Debian 13 do not compile that file. We unpacked every package built from the nss source in the DHI Debian repository (libnss3, libnss3-dev, libnss3-tools, libnss3-dbgsym and libnss3-tools-dbgsym) for all four published builds, a rebuild of Debian's 2:3.110-1+deb13u4 and builds of NSS 3.131.1, 3.132 and 3.134, on amd64 and arm64, verified against the index checksums. Every ELF library and program in libnss3 and libnss3-tools has a debug file, matched by build ID, whose symbol table names the source files it was built from. None names pkixnames.cpp, and none has a mozilla::pkix name-matching symbol such as CheckNameConstraints, CheckCertHostname or MatchPresentedDNSIDWithReferenceDNSID. The 3.110, 3.131.1 and 3.132 builds contain no mozilla::pkix code at all. In the 3.134 build, libssl3.so and the rsaperf program include four other mozilla::pkix files, pkixcert.cpp, pkixder.cpp, pkixnss.cpp and mozpkixwrappers.cpp, which parse certificates and check signatures and hold no name-constraint code. The same symbol tables name the TLS source file tls13con.c in libssl3.so, which shows the search reads them. libnss3-dev holds C headers, the nssck.api include file, the nss-config script, pkg-config data and, in the 3.110 build only, the static archive libcrmf.a, whose 17 objects are NSS's CRMF code; it carries no mozilla::pkix headers or objects. Certificate verification in libnss3.so uses NSS's own name-constraint code, which the fix does not change. As a control, Debian's unfixed libnss3 2:3.110-1+deb13u1 for amd64 also has no mozilla::pkix code in its debug symbol tables."
     }
   ]
 }

@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T00:55:26Z",
-  "last_updated": "2026-11-21T16:17:22Z",
-  "version": 2,
+  "last_updated": "2026-11-28T06:55:55Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -31,7 +31,8 @@
           "@id": "pkg:apk/dhi/perl@5.42.2-r2?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-8376: when Perl compiles a regular expression with a quantified fixed string, Perl_study_chunk in regcomp_study.c grows a buffer to mincount * l + 1 bytes, where l is the string's length in bytes, without checking that product for overflow; the existing size check counts characters, not bytes. On a 32-bit perl a pattern such as /\\x{10000}{1073741824}/ wraps the product, the allocation is too small and the copy writes past it. The CVE record and the CPAN Security Group announcement scope the issue to 32-bit builds: https://www.cve.org/CVERecord?id=CVE-2026-8376 and https://lists.security.metacpan.org/cve-announce/msg/40396161/. The upstream fix, https://github.com/Perl/perl5/commit/5e7f119eb2bb1181be908701f22bf7068e722f1c, adds the byte-length check and is in the Perl 5.42.3 release. We unpacked every perl, miniperl, perl-dev, perl-utils and perl-doc package published for Alpine 3.23 in the DHI Alpine repository, 5.42.0-r0, 5.42.1-r0, 5.42.2-r0, 5.42.2-r1 and 5.42.2-r2, on x86_64 and aarch64. Each build has 52 ELF files (51 in perl, including libperl.so, and the miniperl program), all 64-bit for the package's own architecture; perl-dev, perl-utils and perl-doc contain no ELF, PE, Mach-O or static archive files, and the shipped Config reports ptrsize 8 in every build. None of these builds is a 32-bit perl, and none carries the upstream check. Pending: on a 64-bit perl a repeat count can be at most 2147483646 (a larger one fails with 'Quantifier in {,} bigger than 2147483646'), so the unchecked product can wrap only when the repeated fixed string is longer than 8 GiB (2^33 bytes). We have not yet established whether these builds can compile a pattern that large, which decides between not affected for these 64-bit builds and carrying the upstream check."
     }
   ]
 }

@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-12T06:10:31Z",
-  "last_updated": "2026-11-21T05:48:46Z",
-  "version": 2,
+  "last_updated": "2026-11-28T06:55:58Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -65,7 +65,20 @@
         },
         {
           "@id": "pkg:apk/dhi/trivy-dev@0.70.0-r6?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update trivy-dev to 0.71.0-r0 or later.",
+      "status_notes": "GHSA-q3fv-x8vg-qqm4 (CVE-2026-54448): when Trivy scans a Helm chart archive (.tgz) for misconfigurations, its own tar unpacker read each entry with io.ReadAll and no size limit, so a small crafted archive that decompresses to gigabytes could exhaust memory and get the Trivy process killed. Fixed in Trivy 0.71.0 by https://github.com/aquasecurity/trivy/pull/10718 (commit https://github.com/aquasecurity/trivy/commit/441251e51ae46cbcf7f436547e0a5766b25328b4), which replaces the custom unpacker with the Helm v4 SDK archive loader that enforces size limits; see https://github.com/aquasecurity/trivy/security/advisories/GHSA-q3fv-x8vg-qqm4 and https://github.com/aquasecurity/trivy/releases/tag/v0.71.0. Each trivy-dev package installs one file, /usr/bin/trivy, a Go program for Linux whose build information (go version -m) records CGO_ENABLED=0. We read every trivy-dev build published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 38 builds, 0.69.1-r0 to 0.74.0-r12, each on x86_64 and aarch64 (76 packages), each checked against its index entry. We read the Go build information of every package, and both architectures of each build report the same Go release and the same module versions, except that 0.69.3-r0 records github.com/letsencrypt/boulder v0.20260225.0 on x86_64 and v0.20260303.0 on aarch64. We listed the program's function names from its symbol table (go tool nm), or, for the 15 packages that were read only up to the build information (0.69.1-r0 on aarch64 and 0.69.3-r0 to 0.69.3-r6 on both architectures), from the Go function table (pclntab), which also names inlined functions; runtime.main is among them in every package. The Trivy release by build: 0.69.1-r0, 0.69.2-r0 and 0.69.3-r0 to 0.69.3-r7 build Trivy 0.69.1, 0.69.2 and 0.69.3; 0.70.0-r0 to 0.70.0-r6 build 0.70.0; 0.71.0-r0 and 0.71.0-r1 build 0.71.0; 0.71.2-r0 to 0.71.2-r3 build 0.71.2; 0.73.0-r0 and 0.73.0-r2 build 0.73.0; 0.74.0-r0 to 0.74.0-r12 build 0.74.0, as recorded in each program's build information. No 0.72 build was published. The custom unpacker the fix removes, pkg/iac/scanners/helm/parser (*Parser).unpackArchive, is in every build from 0.69.1-r0 to 0.70.0-r6 (Trivy 0.69.1 to 0.70.0) and in none from 0.71.0-r0 on; those later builds link the Helm v4 loader the fix adopts (helm.sh/helm/v4/pkg/chart/loader/archive.LoadArchiveFiles) and the new pkg/iac/scanners/helm locateCharts in its place. 0.71.0-r0 is the first build with the fix; the earlier builds are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-za7i-j5mp-npum-bizg",
+        "aliases": [
+          "GHSA-q3fv-x8vg-qqm4"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/trivy-dev@0.71.0-r0?distro=dhi-3.23"
         },
@@ -130,7 +143,8 @@
           "@id": "pkg:apk/dhi/trivy-dev@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-q3fv-x8vg-qqm4 (CVE-2026-54448): when Trivy scans a Helm chart archive (.tgz) for misconfigurations, its own tar unpacker read each entry with io.ReadAll and no size limit, so a small crafted archive that decompresses to gigabytes could exhaust memory and get the Trivy process killed. Fixed in Trivy 0.71.0 by https://github.com/aquasecurity/trivy/pull/10718 (commit https://github.com/aquasecurity/trivy/commit/441251e51ae46cbcf7f436547e0a5766b25328b4), which replaces the custom unpacker with the Helm v4 SDK archive loader that enforces size limits; see https://github.com/aquasecurity/trivy/security/advisories/GHSA-q3fv-x8vg-qqm4 and https://github.com/aquasecurity/trivy/releases/tag/v0.71.0. Each trivy-dev package installs one file, /usr/bin/trivy, a Go program for Linux whose build information (go version -m) records CGO_ENABLED=0. We read every trivy-dev build published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 38 builds, 0.69.1-r0 to 0.74.0-r12, each on x86_64 and aarch64 (76 packages), each checked against its index entry. We read the Go build information of every package, and both architectures of each build report the same Go release and the same module versions, except that 0.69.3-r0 records github.com/letsencrypt/boulder v0.20260225.0 on x86_64 and v0.20260303.0 on aarch64. We listed the program's function names from its symbol table (go tool nm), or, for the 15 packages that were read only up to the build information (0.69.1-r0 on aarch64 and 0.69.3-r0 to 0.69.3-r6 on both architectures), from the Go function table (pclntab), which also names inlined functions; runtime.main is among them in every package. The Trivy release by build: 0.69.1-r0, 0.69.2-r0 and 0.69.3-r0 to 0.69.3-r7 build Trivy 0.69.1, 0.69.2 and 0.69.3; 0.70.0-r0 to 0.70.0-r6 build 0.70.0; 0.71.0-r0 and 0.71.0-r1 build 0.71.0; 0.71.2-r0 to 0.71.2-r3 build 0.71.2; 0.73.0-r0 and 0.73.0-r2 build 0.73.0; 0.74.0-r0 to 0.74.0-r12 build 0.74.0, as recorded in each program's build information. No 0.72 build was published. The custom unpacker the fix removes, pkg/iac/scanners/helm/parser (*Parser).unpackArchive, is in every build from 0.69.1-r0 to 0.70.0-r6 (Trivy 0.69.1 to 0.70.0) and in none from 0.71.0-r0 on; those later builds link the Helm v4 loader the fix adopts (helm.sh/helm/v4/pkg/chart/loader/archive.LoadArchiveFiles) and the new pkg/iac/scanners/helm locateCharts in its place. 0.71.0-r0 is the first build with the fix; the earlier builds are affected."
     },
     {
       "vulnerability": {
@@ -255,7 +269,8 @@
           "@id": "pkg:apk/dhi/trivy-fips-dev@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-q3fv-x8vg-qqm4 (CVE-2026-54448): when Trivy scans a Helm chart archive (.tgz) for misconfigurations, its own tar unpacker read each entry with io.ReadAll and no size limit, so a small crafted archive that decompresses to gigabytes could exhaust memory and get the Trivy process killed. Fixed in Trivy 0.71.0 by https://github.com/aquasecurity/trivy/pull/10718 (commit https://github.com/aquasecurity/trivy/commit/441251e51ae46cbcf7f436547e0a5766b25328b4), which replaces the custom unpacker with the Helm v4 SDK archive loader that enforces size limits; see https://github.com/aquasecurity/trivy/security/advisories/GHSA-q3fv-x8vg-qqm4 and https://github.com/aquasecurity/trivy/releases/tag/v0.71.0. The trivy-fips-dev packages for Alpine 3.23 are published in the DHI security repository, which requires authentication, and their builds have not been read for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to find the first build that carries the Trivy 0.71.0 Helm archive fix, so that a fixed boundary can be set from what each build ships. The non-FIPS trivy-dev package of the same releases carries it from 0.71.0-r0 on."
     },
     {
       "vulnerability": {
@@ -380,7 +395,8 @@
           "@id": "pkg:apk/dhi/trivy-fips@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "GHSA-q3fv-x8vg-qqm4 (CVE-2026-54448): when Trivy scans a Helm chart archive (.tgz) for misconfigurations, its own tar unpacker read each entry with io.ReadAll and no size limit, so a small crafted archive that decompresses to gigabytes could exhaust memory and get the Trivy process killed. Fixed in Trivy 0.71.0 by https://github.com/aquasecurity/trivy/pull/10718 (commit https://github.com/aquasecurity/trivy/commit/441251e51ae46cbcf7f436547e0a5766b25328b4), which replaces the custom unpacker with the Helm v4 SDK archive loader that enforces size limits; see https://github.com/aquasecurity/trivy/security/advisories/GHSA-q3fv-x8vg-qqm4 and https://github.com/aquasecurity/trivy/releases/tag/v0.71.0. The trivy-fips packages for Alpine 3.23 are published in the DHI security repository, which requires authentication, and their builds have not been read for this advisory. Pending: reading /usr/bin/trivy in each published build of this package to find the first build that carries the Trivy 0.71.0 Helm archive fix, so that a fixed boundary can be set from what each build ships. The non-FIPS trivy package of the same releases carries it from 0.71.0-r0 on."
     },
     {
       "vulnerability": {
@@ -440,7 +456,20 @@
         },
         {
           "@id": "pkg:apk/dhi/trivy@0.70.0-r6?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update trivy to 0.71.0-r0 or later.",
+      "status_notes": "GHSA-q3fv-x8vg-qqm4 (CVE-2026-54448): when Trivy scans a Helm chart archive (.tgz) for misconfigurations, its own tar unpacker read each entry with io.ReadAll and no size limit, so a small crafted archive that decompresses to gigabytes could exhaust memory and get the Trivy process killed. Fixed in Trivy 0.71.0 by https://github.com/aquasecurity/trivy/pull/10718 (commit https://github.com/aquasecurity/trivy/commit/441251e51ae46cbcf7f436547e0a5766b25328b4), which replaces the custom unpacker with the Helm v4 SDK archive loader that enforces size limits; see https://github.com/aquasecurity/trivy/security/advisories/GHSA-q3fv-x8vg-qqm4 and https://github.com/aquasecurity/trivy/releases/tag/v0.71.0. Each trivy package installs one file, /usr/bin/trivy, a Go program for Linux whose build information (go version -m) records CGO_ENABLED=0. We read every trivy build published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 38 builds, 0.69.1-r0 to 0.74.0-r12, each on x86_64 and aarch64 (76 packages), each checked against its index entry. We read the Go build information of every package, and both architectures of each build report the same Go release and the same module versions, except that 0.69.3-r0 records github.com/letsencrypt/boulder v0.20260225.0 on x86_64 and v0.20260303.0 on aarch64. We listed the program's function names from its symbol table (go tool nm); runtime.main is among them in every package. The Trivy release by build: 0.69.1-r0, 0.69.2-r0 and 0.69.3-r0 to 0.69.3-r7 build Trivy 0.69.1, 0.69.2 and 0.69.3; 0.70.0-r0 to 0.70.0-r6 build 0.70.0; 0.71.0-r0 and 0.71.0-r1 build 0.71.0; 0.71.2-r0 to 0.71.2-r3 build 0.71.2; 0.73.0-r0 and 0.73.0-r2 build 0.73.0; 0.74.0-r0 to 0.74.0-r12 build 0.74.0, as recorded in each program's build information. No 0.72 build was published. The custom unpacker the fix removes, pkg/iac/scanners/helm/parser (*Parser).unpackArchive, is in every build from 0.69.1-r0 to 0.70.0-r6 (Trivy 0.69.1 to 0.70.0) and in none from 0.71.0-r0 on; those later builds link the Helm v4 loader the fix adopts (helm.sh/helm/v4/pkg/chart/loader/archive.LoadArchiveFiles) and the new pkg/iac/scanners/helm locateCharts in its place. 0.71.0-r0 is the first build with the fix; the earlier builds are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-za7i-j5mp-npum-bizg",
+        "aliases": [
+          "GHSA-q3fv-x8vg-qqm4"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/trivy@0.71.0-r0?distro=dhi-3.23"
         },
@@ -505,7 +534,8 @@
           "@id": "pkg:apk/dhi/trivy@0.74.0-r9?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-q3fv-x8vg-qqm4 (CVE-2026-54448): when Trivy scans a Helm chart archive (.tgz) for misconfigurations, its own tar unpacker read each entry with io.ReadAll and no size limit, so a small crafted archive that decompresses to gigabytes could exhaust memory and get the Trivy process killed. Fixed in Trivy 0.71.0 by https://github.com/aquasecurity/trivy/pull/10718 (commit https://github.com/aquasecurity/trivy/commit/441251e51ae46cbcf7f436547e0a5766b25328b4), which replaces the custom unpacker with the Helm v4 SDK archive loader that enforces size limits; see https://github.com/aquasecurity/trivy/security/advisories/GHSA-q3fv-x8vg-qqm4 and https://github.com/aquasecurity/trivy/releases/tag/v0.71.0. Each trivy package installs one file, /usr/bin/trivy, a Go program for Linux whose build information (go version -m) records CGO_ENABLED=0. We read every trivy build published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 38 builds, 0.69.1-r0 to 0.74.0-r12, each on x86_64 and aarch64 (76 packages), each checked against its index entry. We read the Go build information of every package, and both architectures of each build report the same Go release and the same module versions, except that 0.69.3-r0 records github.com/letsencrypt/boulder v0.20260225.0 on x86_64 and v0.20260303.0 on aarch64. We listed the program's function names from its symbol table (go tool nm); runtime.main is among them in every package. The Trivy release by build: 0.69.1-r0, 0.69.2-r0 and 0.69.3-r0 to 0.69.3-r7 build Trivy 0.69.1, 0.69.2 and 0.69.3; 0.70.0-r0 to 0.70.0-r6 build 0.70.0; 0.71.0-r0 and 0.71.0-r1 build 0.71.0; 0.71.2-r0 to 0.71.2-r3 build 0.71.2; 0.73.0-r0 and 0.73.0-r2 build 0.73.0; 0.74.0-r0 to 0.74.0-r12 build 0.74.0, as recorded in each program's build information. No 0.72 build was published. The custom unpacker the fix removes, pkg/iac/scanners/helm/parser (*Parser).unpackArchive, is in every build from 0.69.1-r0 to 0.70.0-r6 (Trivy 0.69.1 to 0.70.0) and in none from 0.71.0-r0 on; those later builds link the Helm v4 loader the fix adopts (helm.sh/helm/v4/pkg/chart/loader/archive.LoadArchiveFiles) and the new pkg/iac/scanners/helm locateCharts in its place. 0.71.0-r0 is the first build with the fix; the earlier builds are affected."
     }
   ]
 }
