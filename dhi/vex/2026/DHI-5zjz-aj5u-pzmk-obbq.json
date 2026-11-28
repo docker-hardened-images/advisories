@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:54:50Z",
-  "last_updated": "2026-11-27T17:41:48Z",
-  "version": 4,
+  "last_updated": "2026-11-28T20:54:30Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -57,7 +57,9 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "PostgreSQL fixed CVE-2026-6477 (PostgreSQL libpq lo_* functions let server superuser overwrite client stack memory) in 17.10 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-6477/, https://www.postgresql.org/docs/release/17.10/. The fix, commit https://github.com/postgres/postgres/commit/d88c7be156bbde61ccff337152bf640387b2c629 on the REL_17_STABLE branch (tagged Security: CVE-2026-6477), changes only the libpq client library (src/interfaces/libpq/fe-exec.c, fe-lobj.c, fe-protocol3.c and libpq-int.h) and its documentation. The postgresql17 owner does not build or ship libpq. Alpine's postgresql17 APKBUILD is a non-default PostgreSQL aport (it sets _default_ver=false in every revision the published 17.7-r0 to 17.12-r0 builds came from, since Alpine made PostgreSQL 18 its default), so it applies external-libpq.patch.txt, which removes src/interfaces from the build and links every program against the system libpq instead: https://github.com/alpinelinux/aports/blob/2949d6752d74a3fb36bd772b9f993331fa6917e2/main/postgresql17/external-libpq.patch.txt. We checked every postgresql17 package published for Alpine 3.23 in the DHI package repository as of 2026-11-27: all 13 packages built from this source (postgresql17 and its -client, -contrib, -contrib-jit, -dev, -doc, -jit, -openrc, -plperl, -plperl-contrib, -plpython3, -plpython3-contrib and -pltcl packages) of 17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0, on both x86_64 and aarch64, with package checksums verified against the package index. None of them contains a copy of the libpq library: there is no libpq.so.5 and no libpq.a, the only static archives (in postgresql17-dev) are libpgcommon.a, libpgcommon_shlib.a, libpgport.a, libpgport_shlib.a and libpgfeutils.a, none of which holds a libpq object, and there are no PE or Mach-O files. postgresql17-jit and postgresql17-contrib-jit also carry LLVM bitcode (.bc) files for JIT inlining: 763 per build in postgresql17-jit (764 in 17.12-r0), all from the server: 762 (763 in 17.12-r0) each compiled from one server source file and named after it, including llvmjit_types.bc (the files under postgres/libpq/ are the server side of the protocol, such as auth, hba and pqcomm), plus the postgres.index.bc ThinLTO summary index; and 199 per build in postgresql17-contrib-jit for the contrib modules, 147 named after the module source files they were compiled from plus 52 ThinLTO summary indexes named after their modules (such as amcheck.index.bc); none is compiled from the libpq client library sources (no fe-exec, fe-lobj or fe-protocol3 bitcode). In every one of these builds, libpq.so.5 is a dynamic dependency of psql, pg_dump and every other program in postgresql17-client except pg_verifybackup; of initdb, pg_rewind, pg_upgrade, pg_createsubscriber and the replication module libpqwalreceiver.so in postgresql17; of the vacuumlo and oid2name programs and the dblink and postgres_fdw modules in postgresql17-contrib; and of the pg_regress, pg_isolation_regress and isolationtester test programs in postgresql17-dev; no other file in these packages lists it. No file in them contains the error message this fix adds to libpq ('server returned too much data'), while the same byte search does find the 'PostgreSQL 17.x' version string in each build's server binary. The lo_read() code that psql's lo_export command and pg_dump use therefore runs from libpq.so.5, which the DHI repository ships in the separate libpq package built from the postgresql18 source; that package carries this advisory's fix from its 18.4 release and is assessed on its own. Updating postgresql17 does not change this exposure, and updating libpq does."
     },
     {
       "vulnerability": {
