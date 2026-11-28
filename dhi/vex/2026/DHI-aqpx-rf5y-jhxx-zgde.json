@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-20T04:19:04Z",
-  "last_updated": "2026-11-28T07:57:39Z",
-  "version": 23,
+  "last_updated": "2026-11-28T09:26:10Z",
+  "version": 24,
   "statements": [
     {
       "vulnerability": {
@@ -5592,7 +5592,9 @@
           "@id": "pkg:apk/dhi/mimir-dev@3.2.6-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-81872 (GHSA-hjf4-fphr-2h65, GO-2026-6615): under exporter backpressure the BatchProcessor in go.opentelemetry.io/otel/sdk/log can spin in a tight loop, because its poll goroutine immediately retriggers itself when the non-blocking export buffer is full, so high-volume log emission can exhaust CPU. It is fixed in sdk/log 0.21.0, which replaces the poll loop and buffered exporter with a single worker (https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hjf4-fphr-2h65, https://pkg.go.dev/vuln/GO-2026-6615, https://github.com/open-telemetry/opentelemetry-go/issues/6797, fix https://github.com/open-telemetry/opentelemetry-go/commit/ba71b09e6ed272e93a669aeaec1e98b1df4cc582). We read every mimir-dev package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each package was downloaded and checked against its index checksum. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its DWARF debug information and Go symbol table. We read its Go build information and its Go function table (.gopclntab). go.opentelemetry.io/otel/sdk/log is v0.19.0 in 3.1.4-r0 and 3.1.4-r1, v0.20.0 in 3.2.0-r0 to 3.2.1-r0, v0.22.0 in 3.2.1-r2 and v1.47.0 from 3.2.1-r3, but every build links only its log record and attribute helpers ((*Record) methods, dedup, init and similar; 53 to 60 sdk/log functions per build). No build's function table has NewBatchProcessor, any BatchProcessor method (including the poll loop, which runs as its own goroutine and so cannot be inlined away) or the bufferExporter, and the strings BatchProcessor and bufferExporter occur nowhere in any of the programs. As a positive control, a stripped linux/amd64 and linux/arm64 program built against sdk/log v0.19.0 that calls NewBatchProcessor shows 14 BatchProcessor and bufferExporter functions in the same table and 9 occurrences of the string BatchProcessor. The vulnerable processor is not present, so no build is affected, whatever its module version."
     },
     {
       "vulnerability": {
@@ -5666,7 +5668,9 @@
           "@id": "pkg:apk/dhi/mimir-dev@3.2.6-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-81872 (GHSA-hjf4-fphr-2h65, GO-2026-6615): under exporter backpressure the BatchProcessor in go.opentelemetry.io/otel/sdk/log can spin in a tight loop, because its poll goroutine immediately retriggers itself when the non-blocking export buffer is full, so high-volume log emission can exhaust CPU. It is fixed in sdk/log 0.21.0, which replaces the poll loop and buffered exporter with a single worker (https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hjf4-fphr-2h65, https://pkg.go.dev/vuln/GO-2026-6615, https://github.com/open-telemetry/opentelemetry-go/issues/6797, fix https://github.com/open-telemetry/opentelemetry-go/commit/ba71b09e6ed272e93a669aeaec1e98b1df4cc582). We read every mimir-dev package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same name, version and architecture, which we downloaded, checked against that checksum and read. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its DWARF debug information and Go symbol table. We read its Go build information and its Go function table (.gopclntab). go.opentelemetry.io/otel/sdk/log is v0.19.0 in 3.1.4-r0 and 3.1.4-r1, v0.20.0 in 3.2.0-r0 to 3.2.1-r0, v0.22.0 in 3.2.1-r2 and v1.47.0 from 3.2.1-r3, but every build links only its log record and attribute helpers ((*Record) methods, dedup, init and similar; 53 to 60 sdk/log functions per build). No build's function table has NewBatchProcessor, any BatchProcessor method (including the poll loop, which runs as its own goroutine and so cannot be inlined away) or the bufferExporter, and the strings BatchProcessor and bufferExporter occur nowhere in any of the programs. As a positive control, a stripped linux/amd64 and linux/arm64 program built against sdk/log v0.19.0 that calls NewBatchProcessor shows 14 BatchProcessor and bufferExporter functions in the same table and 9 occurrences of the string BatchProcessor. The vulnerable processor is not present, so no build is affected, whatever its module version."
     },
     {
       "vulnerability": {
@@ -5740,7 +5744,8 @@
           "@id": "pkg:apk/dhi/mimir-fips-dev@3.2.6-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-81872 (GHSA-hjf4-fphr-2h65, GO-2026-6615): under exporter backpressure the BatchProcessor in go.opentelemetry.io/otel/sdk/log can spin in a tight loop, because its poll goroutine immediately retriggers itself when the non-blocking export buffer is full, so high-volume log emission can exhaust CPU. It is fixed in sdk/log 0.21.0, which replaces the poll loop and buffered exporter with a single worker (https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hjf4-fphr-2h65, https://pkg.go.dev/vuln/GO-2026-6615, https://github.com/open-telemetry/opentelemetry-go/issues/6797, fix https://github.com/open-telemetry/opentelemetry-go/commit/ba71b09e6ed272e93a669aeaec1e98b1df4cc582). The mimir-fips-dev packages for Alpine 3.23 are published only in the DHI security repository, which this review could not read, so no mimir-fips-dev build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips-dev build, to establish whether the vulnerable code is linked, as it is not in the non-FIPS mimir packages of the same versions."
     },
     {
       "vulnerability": {
@@ -5814,7 +5819,8 @@
           "@id": "pkg:apk/dhi/mimir-fips-dev@3.2.6-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-81872 (GHSA-hjf4-fphr-2h65, GO-2026-6615): under exporter backpressure the BatchProcessor in go.opentelemetry.io/otel/sdk/log can spin in a tight loop, because its poll goroutine immediately retriggers itself when the non-blocking export buffer is full, so high-volume log emission can exhaust CPU. It is fixed in sdk/log 0.21.0, which replaces the poll loop and buffered exporter with a single worker (https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hjf4-fphr-2h65, https://pkg.go.dev/vuln/GO-2026-6615, https://github.com/open-telemetry/opentelemetry-go/issues/6797, fix https://github.com/open-telemetry/opentelemetry-go/commit/ba71b09e6ed272e93a669aeaec1e98b1df4cc582). The mimir-fips-dev packages for Alpine 3.24 are published only in the DHI security repository, which this review could not read, so no mimir-fips-dev build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips-dev build, to establish whether the vulnerable code is linked, as it is not in the non-FIPS mimir packages of the same versions."
     },
     {
       "vulnerability": {
@@ -5888,7 +5894,8 @@
           "@id": "pkg:apk/dhi/mimir-fips@3.2.6-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-81872 (GHSA-hjf4-fphr-2h65, GO-2026-6615): under exporter backpressure the BatchProcessor in go.opentelemetry.io/otel/sdk/log can spin in a tight loop, because its poll goroutine immediately retriggers itself when the non-blocking export buffer is full, so high-volume log emission can exhaust CPU. It is fixed in sdk/log 0.21.0, which replaces the poll loop and buffered exporter with a single worker (https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hjf4-fphr-2h65, https://pkg.go.dev/vuln/GO-2026-6615, https://github.com/open-telemetry/opentelemetry-go/issues/6797, fix https://github.com/open-telemetry/opentelemetry-go/commit/ba71b09e6ed272e93a669aeaec1e98b1df4cc582). The mimir-fips packages for Alpine 3.23 are published only in the DHI security repository, which this review could not read, so no mimir-fips build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips build, to establish whether the vulnerable code is linked, as it is not in the non-FIPS mimir packages of the same versions."
     },
     {
       "vulnerability": {
@@ -5962,7 +5969,8 @@
           "@id": "pkg:apk/dhi/mimir-fips@3.2.6-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-81872 (GHSA-hjf4-fphr-2h65, GO-2026-6615): under exporter backpressure the BatchProcessor in go.opentelemetry.io/otel/sdk/log can spin in a tight loop, because its poll goroutine immediately retriggers itself when the non-blocking export buffer is full, so high-volume log emission can exhaust CPU. It is fixed in sdk/log 0.21.0, which replaces the poll loop and buffered exporter with a single worker (https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hjf4-fphr-2h65, https://pkg.go.dev/vuln/GO-2026-6615, https://github.com/open-telemetry/opentelemetry-go/issues/6797, fix https://github.com/open-telemetry/opentelemetry-go/commit/ba71b09e6ed272e93a669aeaec1e98b1df4cc582). The mimir-fips packages for Alpine 3.24 are published only in the DHI security repository, which this review could not read, so no mimir-fips build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips build, to establish whether the vulnerable code is linked, as it is not in the non-FIPS mimir packages of the same versions."
     },
     {
       "vulnerability": {
@@ -6036,7 +6044,9 @@
           "@id": "pkg:apk/dhi/mimir@3.2.6-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-81872 (GHSA-hjf4-fphr-2h65, GO-2026-6615): under exporter backpressure the BatchProcessor in go.opentelemetry.io/otel/sdk/log can spin in a tight loop, because its poll goroutine immediately retriggers itself when the non-blocking export buffer is full, so high-volume log emission can exhaust CPU. It is fixed in sdk/log 0.21.0, which replaces the poll loop and buffered exporter with a single worker (https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hjf4-fphr-2h65, https://pkg.go.dev/vuln/GO-2026-6615, https://github.com/open-telemetry/opentelemetry-go/issues/6797, fix https://github.com/open-telemetry/opentelemetry-go/commit/ba71b09e6ed272e93a669aeaec1e98b1df4cc582). We read every mimir package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each package was downloaded and checked against its index checksum. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its Go symbol table but no DWARF debug information. We read its Go build information and its Go function table (.gopclntab). go.opentelemetry.io/otel/sdk/log is v0.19.0 in 3.1.4-r0 and 3.1.4-r1, v0.20.0 in 3.2.0-r0 to 3.2.1-r0, v0.22.0 in 3.2.1-r2 and v1.47.0 from 3.2.1-r3, but every build links only its log record and attribute helpers ((*Record) methods, dedup, init and similar; 53 to 60 sdk/log functions per build). No build's function table has NewBatchProcessor, any BatchProcessor method (including the poll loop, which runs as its own goroutine and so cannot be inlined away) or the bufferExporter, and the strings BatchProcessor and bufferExporter occur nowhere in any of the programs. As a positive control, a stripped linux/amd64 and linux/arm64 program built against sdk/log v0.19.0 that calls NewBatchProcessor shows 14 BatchProcessor and bufferExporter functions in the same table and 9 occurrences of the string BatchProcessor. The vulnerable processor is not present, so no build is affected, whatever its module version."
     },
     {
       "vulnerability": {
@@ -6110,7 +6120,9 @@
           "@id": "pkg:apk/dhi/mimir@3.2.6-r0?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-81872 (GHSA-hjf4-fphr-2h65, GO-2026-6615): under exporter backpressure the BatchProcessor in go.opentelemetry.io/otel/sdk/log can spin in a tight loop, because its poll goroutine immediately retriggers itself when the non-blocking export buffer is full, so high-volume log emission can exhaust CPU. It is fixed in sdk/log 0.21.0, which replaces the poll loop and buffered exporter with a single worker (https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hjf4-fphr-2h65, https://pkg.go.dev/vuln/GO-2026-6615, https://github.com/open-telemetry/opentelemetry-go/issues/6797, fix https://github.com/open-telemetry/opentelemetry-go/commit/ba71b09e6ed272e93a669aeaec1e98b1df4cc582). We read every mimir package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 21 versions, 3.1.4-r0 to 3.2.6-r0, for x86_64 and aarch64 except 3.2.2-r0, which is published for aarch64 only. Each Alpine 3.24 package has the same index checksum as the Alpine 3.23 package of the same name, version and architecture, which we downloaded, checked against that checksum and read. Each package installs one file, usr/bin/mimir, a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its Go symbol table but no DWARF debug information. We read its Go build information and its Go function table (.gopclntab). go.opentelemetry.io/otel/sdk/log is v0.19.0 in 3.1.4-r0 and 3.1.4-r1, v0.20.0 in 3.2.0-r0 to 3.2.1-r0, v0.22.0 in 3.2.1-r2 and v1.47.0 from 3.2.1-r3, but every build links only its log record and attribute helpers ((*Record) methods, dedup, init and similar; 53 to 60 sdk/log functions per build). No build's function table has NewBatchProcessor, any BatchProcessor method (including the poll loop, which runs as its own goroutine and so cannot be inlined away) or the bufferExporter, and the strings BatchProcessor and bufferExporter occur nowhere in any of the programs. As a positive control, a stripped linux/amd64 and linux/arm64 program built against sdk/log v0.19.0 that calls NewBatchProcessor shows 14 BatchProcessor and bufferExporter functions in the same table and 9 occurrences of the string BatchProcessor. The vulnerable processor is not present, so no build is affected, whatever its module version."
     },
     {
       "vulnerability": {
@@ -20452,7 +20464,9 @@
           "@id": "pkg:deb/dhi/mimir-dev@3.2.6-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-81872 (GHSA-hjf4-fphr-2h65, GO-2026-6615): under exporter backpressure the BatchProcessor in go.opentelemetry.io/otel/sdk/log can spin in a tight loop, because its poll goroutine immediately retriggers itself when the non-blocking export buffer is full, so high-volume log emission can exhaust CPU. It is fixed in sdk/log 0.21.0, which replaces the poll loop and buffered exporter with a single worker (https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hjf4-fphr-2h65, https://pkg.go.dev/vuln/GO-2026-6615, https://github.com/open-telemetry/opentelemetry-go/issues/6797, fix https://github.com/open-telemetry/opentelemetry-go/commit/ba71b09e6ed272e93a669aeaec1e98b1df4cc582). We read every mimir-dev package published for Debian 13 in the DHI Debian repository as of 2026-11-27: 21 versions, 3.1.4-0 to 3.2.6-0, for amd64 and arm64 except 3.2.2-0, which is published for arm64 only. Each package lists one file, usr/bin/mimir, in its md5sums, and that checksum equals the md5 of usr/bin/mimir in the Alpine mimir-dev package of the same version and architecture (Debian 3.2.0-3 is Alpine 3.2.0-r3), which we downloaded, checked against its index checksum and read. The program is a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its DWARF debug information and Go symbol table. We read its Go build information and its Go function table (.gopclntab). go.opentelemetry.io/otel/sdk/log is v0.19.0 in 3.1.4-0 and 3.1.4-1, v0.20.0 in 3.2.0-0 to 3.2.1-0, v0.22.0 in 3.2.1-2 and v1.47.0 from 3.2.1-3, but every build links only its log record and attribute helpers ((*Record) methods, dedup, init and similar; 53 to 60 sdk/log functions per build). No build's function table has NewBatchProcessor, any BatchProcessor method (including the poll loop, which runs as its own goroutine and so cannot be inlined away) or the bufferExporter, and the strings BatchProcessor and bufferExporter occur nowhere in any of the programs. As a positive control, a stripped linux/amd64 and linux/arm64 program built against sdk/log v0.19.0 that calls NewBatchProcessor shows 14 BatchProcessor and bufferExporter functions in the same table and 9 occurrences of the string BatchProcessor. The vulnerable processor is not present, so no build is affected, whatever its module version."
     },
     {
       "vulnerability": {
@@ -20526,7 +20540,8 @@
           "@id": "pkg:deb/dhi/mimir-fips-dev@3.2.6-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-81872 (GHSA-hjf4-fphr-2h65, GO-2026-6615): under exporter backpressure the BatchProcessor in go.opentelemetry.io/otel/sdk/log can spin in a tight loop, because its poll goroutine immediately retriggers itself when the non-blocking export buffer is full, so high-volume log emission can exhaust CPU. It is fixed in sdk/log 0.21.0, which replaces the poll loop and buffered exporter with a single worker (https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hjf4-fphr-2h65, https://pkg.go.dev/vuln/GO-2026-6615, https://github.com/open-telemetry/opentelemetry-go/issues/6797, fix https://github.com/open-telemetry/opentelemetry-go/commit/ba71b09e6ed272e93a669aeaec1e98b1df4cc582). The mimir-fips-dev packages for Debian 13 are published only in the DHI security repository, which this review could not read, so no mimir-fips-dev build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips-dev build, to establish whether the vulnerable code is linked, as it is not in the non-FIPS mimir packages of the same versions."
     },
     {
       "vulnerability": {
@@ -20600,7 +20615,8 @@
           "@id": "pkg:deb/dhi/mimir-fips@3.2.6-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-81872 (GHSA-hjf4-fphr-2h65, GO-2026-6615): under exporter backpressure the BatchProcessor in go.opentelemetry.io/otel/sdk/log can spin in a tight loop, because its poll goroutine immediately retriggers itself when the non-blocking export buffer is full, so high-volume log emission can exhaust CPU. It is fixed in sdk/log 0.21.0, which replaces the poll loop and buffered exporter with a single worker (https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hjf4-fphr-2h65, https://pkg.go.dev/vuln/GO-2026-6615, https://github.com/open-telemetry/opentelemetry-go/issues/6797, fix https://github.com/open-telemetry/opentelemetry-go/commit/ba71b09e6ed272e93a669aeaec1e98b1df4cc582). The mimir-fips packages for Debian 13 are published only in the DHI security repository, which this review could not read, so no mimir-fips build was inspected. Pending: a read of the Go build information and function table of usr/bin/mimir in every published mimir-fips build, to establish whether the vulnerable code is linked, as it is not in the non-FIPS mimir packages of the same versions."
     },
     {
       "vulnerability": {
@@ -20674,7 +20690,9 @@
           "@id": "pkg:deb/dhi/mimir@3.2.6-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-81872 (GHSA-hjf4-fphr-2h65, GO-2026-6615): under exporter backpressure the BatchProcessor in go.opentelemetry.io/otel/sdk/log can spin in a tight loop, because its poll goroutine immediately retriggers itself when the non-blocking export buffer is full, so high-volume log emission can exhaust CPU. It is fixed in sdk/log 0.21.0, which replaces the poll loop and buffered exporter with a single worker (https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-hjf4-fphr-2h65, https://pkg.go.dev/vuln/GO-2026-6615, https://github.com/open-telemetry/opentelemetry-go/issues/6797, fix https://github.com/open-telemetry/opentelemetry-go/commit/ba71b09e6ed272e93a669aeaec1e98b1df4cc582). We read every mimir package published for Debian 13 in the DHI Debian repository as of 2026-11-27: 21 versions, 3.1.4-0 to 3.2.6-0, for amd64 and arm64 except 3.2.2-0, which is published for arm64 only. Each package lists one file, usr/bin/mimir, in its md5sums, and that checksum equals the md5 of usr/bin/mimir in the Alpine mimir package of the same version and architecture (Debian 3.2.0-3 is Alpine 3.2.0-r3), which we downloaded, checked against its index checksum and read. The program is a statically linked Go program (built with CGO_ENABLED=0; no program interpreter and no shared-library dependencies) that keeps its Go symbol table but no DWARF debug information. We read its Go build information and its Go function table (.gopclntab). go.opentelemetry.io/otel/sdk/log is v0.19.0 in 3.1.4-0 and 3.1.4-1, v0.20.0 in 3.2.0-0 to 3.2.1-0, v0.22.0 in 3.2.1-2 and v1.47.0 from 3.2.1-3, but every build links only its log record and attribute helpers ((*Record) methods, dedup, init and similar; 53 to 60 sdk/log functions per build). No build's function table has NewBatchProcessor, any BatchProcessor method (including the poll loop, which runs as its own goroutine and so cannot be inlined away) or the bufferExporter, and the strings BatchProcessor and bufferExporter occur nowhere in any of the programs. As a positive control, a stripped linux/amd64 and linux/arm64 program built against sdk/log v0.19.0 that calls NewBatchProcessor shows 14 BatchProcessor and bufferExporter functions in the same table and 9 occurrences of the string BatchProcessor. The vulnerable processor is not present, so no build is affected, whatever its module version."
     },
     {
       "vulnerability": {
