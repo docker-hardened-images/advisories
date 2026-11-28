@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:45:21Z",
-  "last_updated": "2026-11-27T19:16:50Z",
-  "version": 39,
+  "last_updated": "2026-11-28T05:05:49Z",
+  "version": 43,
   "statements": [
     {
       "vulnerability": {
@@ -72213,6 +72213,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur-dev@3.14.0-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur-dev@3.14.1-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -72284,6 +72287,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur-dev@3.14.0-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur-dev@3.14.1-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -72355,6 +72361,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur-fips-dev@3.14.0-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur-fips-dev@3.14.1-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -72426,6 +72435,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur-fips-dev@3.14.0-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur-fips-dev@3.14.1-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -72497,6 +72509,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur-fips@3.14.0-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur-fips@3.14.1-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -72568,6 +72583,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur-fips@3.14.0-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur-fips@3.14.1-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -72639,6 +72657,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur@3.14.0-r2?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur@3.14.1-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -72710,6 +72731,9 @@
         },
         {
           "@id": "pkg:apk/dhi/connaisseur@3.14.0-r2?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/connaisseur@3.14.1-r0?distro=dhi-3.24"
         }
       ],
       "status": "under_investigation"
@@ -123224,7 +123248,20 @@
         },
         {
           "@id": "pkg:apk/dhi/jaeger-dev@2.20.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update jaeger-dev to 2.20.0-r1 or later.",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template tracks JavaScript regular-expression context incorrectly, so pathological template input can close an unescaped '/' early and let attacker-controlled data inject unescaped content (cross-site scripting). It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The fix on the Go 1.26 release branch, commit https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d ('Fixes CVE-2026-56858'), changes src/html/template/transition.go. We checked every jaeger-dev package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 21 builds, 2.19.0-r1 to the current 2.23.0-r4, on x86_64 and aarch64 (42 packages). Each package was downloaded and checked against its index checksum and the data hash recorded in its control section. Each package holds one file, /usr/bin/jaeger, a statically linked Go program for Linux (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0 and GOOS=linux, as its Go build information records. We read the Go release from that build information, the same on both architectures: Go 1.26.4 in 2.19.0-r1; Go 1.26.5 in 2.19.0-r2 to 2.20.0-r0; Go 1.26.6 in 2.20.0-r1; Go 1.26.7 in 2.20.0-r2; Go 1.26.8 in 2.20.0-r3 to 2.20.0-r5; Go 1.27.1 in 2.21.0-r0 to 2.22.0-r0; Go 1.27.2 in 2.22.0-r1; Go 1.27.3 in 2.22.0-r2 to 2.23.0-r1; Go 1.27.4 in 2.23.0-r2 to 2.23.0-r4. The function table (pclntab) of every build contains html/template.(*Template).Execute, html/template.(*Template).ExecuteTemplate and html/template.tJS, functions the advisory lists (runtime.main found in every build as a control). As a cross-check on the shipped code, the distance from the entry of html/template.tJS to the next function's entry in the Go function table (pclntab), which includes alignment padding and so can be larger than go tool nm -size reports, changes from 2.20.0-r0 to 2.20.0-r1 (x86_64 1504 to 1664 bytes, aarch64 1696 to 1808 bytes), and no earlier build has a distance that any fixed build has. For the same two builds go tool nm -size reports html/template.tJS as 1497 to 1656 bytes on x86_64 and 1696 to 1808 bytes on aarch64. So 2.20.0-r1 is the first build with a fixed Go release (1.26.6), every later build uses a fixed release (the Go 1.27 releases in these builds are newer than 1.27.0-rc.3), and every earlier build uses an affected one."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-x6c6-voee-oaty-7vix",
+        "aliases": [
+          "CVE-2026-56858"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/jaeger-dev@2.20.0-r1?distro=dhi-3.23"
         },
@@ -123274,7 +123311,8 @@
           "@id": "pkg:apk/dhi/jaeger-dev@2.23.0-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template tracks JavaScript regular-expression context incorrectly, so pathological template input can close an unescaped '/' early and let attacker-controlled data inject unescaped content (cross-site scripting). It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The fix on the Go 1.26 release branch, commit https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d ('Fixes CVE-2026-56858'), changes src/html/template/transition.go. We checked every jaeger-dev package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 21 builds, 2.19.0-r1 to the current 2.23.0-r4, on x86_64 and aarch64 (42 packages). Each package was downloaded and checked against its index checksum and the data hash recorded in its control section. Each package holds one file, /usr/bin/jaeger, a statically linked Go program for Linux (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0 and GOOS=linux, as its Go build information records. We read the Go release from that build information, the same on both architectures: Go 1.26.4 in 2.19.0-r1; Go 1.26.5 in 2.19.0-r2 to 2.20.0-r0; Go 1.26.6 in 2.20.0-r1; Go 1.26.7 in 2.20.0-r2; Go 1.26.8 in 2.20.0-r3 to 2.20.0-r5; Go 1.27.1 in 2.21.0-r0 to 2.22.0-r0; Go 1.27.2 in 2.22.0-r1; Go 1.27.3 in 2.22.0-r2 to 2.23.0-r1; Go 1.27.4 in 2.23.0-r2 to 2.23.0-r4. The function table (pclntab) of every build contains html/template.(*Template).Execute, html/template.(*Template).ExecuteTemplate and html/template.tJS, functions the advisory lists (runtime.main found in every build as a control). As a cross-check on the shipped code, the distance from the entry of html/template.tJS to the next function's entry in the Go function table (pclntab), which includes alignment padding and so can be larger than go tool nm -size reports, changes from 2.20.0-r0 to 2.20.0-r1 (x86_64 1504 to 1664 bytes, aarch64 1696 to 1808 bytes), and no earlier build has a distance that any fixed build has. For the same two builds go tool nm -size reports html/template.tJS as 1497 to 1656 bytes on x86_64 and 1696 to 1808 bytes on aarch64. So 2.20.0-r1 is the first build with a fixed Go release (1.26.6), every later build uses a fixed release (the Go 1.27 releases in these builds are newer than 1.27.0-rc.3), and every earlier build uses an affected one."
     },
     {
       "vulnerability": {
@@ -123298,7 +123336,20 @@
         },
         {
           "@id": "pkg:apk/dhi/jaeger-dev@2.20.0-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update jaeger-dev to 2.20.0-r1 or later.",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template tracks JavaScript regular-expression context incorrectly, so pathological template input can close an unescaped '/' early and let attacker-controlled data inject unescaped content (cross-site scripting). It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The fix on the Go 1.26 release branch, commit https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d ('Fixes CVE-2026-56858'), changes src/html/template/transition.go. We checked every jaeger-dev package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 21 builds, 2.19.0-r1 to the current 2.23.0-r4, on x86_64 and aarch64 (42 packages). The Alpine 3.24 index gives every one of these packages the same checksum as the Alpine 3.23 package of the same name, version and architecture, which we downloaded and checked, so they are the same packages. Each package holds one file, /usr/bin/jaeger, a statically linked Go program for Linux (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0 and GOOS=linux, as its Go build information records. We read the Go release from that build information, the same on both architectures: Go 1.26.4 in 2.19.0-r1; Go 1.26.5 in 2.19.0-r2 to 2.20.0-r0; Go 1.26.6 in 2.20.0-r1; Go 1.26.7 in 2.20.0-r2; Go 1.26.8 in 2.20.0-r3 to 2.20.0-r5; Go 1.27.1 in 2.21.0-r0 to 2.22.0-r0; Go 1.27.2 in 2.22.0-r1; Go 1.27.3 in 2.22.0-r2 to 2.23.0-r1; Go 1.27.4 in 2.23.0-r2 to 2.23.0-r4. The function table (pclntab) of every build contains html/template.(*Template).Execute, html/template.(*Template).ExecuteTemplate and html/template.tJS, functions the advisory lists (runtime.main found in every build as a control). As a cross-check on the shipped code, the distance from the entry of html/template.tJS to the next function's entry in the Go function table (pclntab), which includes alignment padding and so can be larger than go tool nm -size reports, changes from 2.20.0-r0 to 2.20.0-r1 (x86_64 1504 to 1664 bytes, aarch64 1696 to 1808 bytes), and no earlier build has a distance that any fixed build has. For the same two builds go tool nm -size reports html/template.tJS as 1497 to 1656 bytes on x86_64 and 1696 to 1808 bytes on aarch64. So 2.20.0-r1 is the first build with a fixed Go release (1.26.6), every later build uses a fixed release (the Go 1.27 releases in these builds are newer than 1.27.0-rc.3), and every earlier build uses an affected one."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-x6c6-voee-oaty-7vix",
+        "aliases": [
+          "CVE-2026-56858"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/jaeger-dev@2.20.0-r1?distro=dhi-3.24"
         },
@@ -123348,7 +123399,8 @@
           "@id": "pkg:apk/dhi/jaeger-dev@2.23.0-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template tracks JavaScript regular-expression context incorrectly, so pathological template input can close an unescaped '/' early and let attacker-controlled data inject unescaped content (cross-site scripting). It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The fix on the Go 1.26 release branch, commit https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d ('Fixes CVE-2026-56858'), changes src/html/template/transition.go. We checked every jaeger-dev package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 21 builds, 2.19.0-r1 to the current 2.23.0-r4, on x86_64 and aarch64 (42 packages). The Alpine 3.24 index gives every one of these packages the same checksum as the Alpine 3.23 package of the same name, version and architecture, which we downloaded and checked, so they are the same packages. Each package holds one file, /usr/bin/jaeger, a statically linked Go program for Linux (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0 and GOOS=linux, as its Go build information records. We read the Go release from that build information, the same on both architectures: Go 1.26.4 in 2.19.0-r1; Go 1.26.5 in 2.19.0-r2 to 2.20.0-r0; Go 1.26.6 in 2.20.0-r1; Go 1.26.7 in 2.20.0-r2; Go 1.26.8 in 2.20.0-r3 to 2.20.0-r5; Go 1.27.1 in 2.21.0-r0 to 2.22.0-r0; Go 1.27.2 in 2.22.0-r1; Go 1.27.3 in 2.22.0-r2 to 2.23.0-r1; Go 1.27.4 in 2.23.0-r2 to 2.23.0-r4. The function table (pclntab) of every build contains html/template.(*Template).Execute, html/template.(*Template).ExecuteTemplate and html/template.tJS, functions the advisory lists (runtime.main found in every build as a control). As a cross-check on the shipped code, the distance from the entry of html/template.tJS to the next function's entry in the Go function table (pclntab), which includes alignment padding and so can be larger than go tool nm -size reports, changes from 2.20.0-r0 to 2.20.0-r1 (x86_64 1504 to 1664 bytes, aarch64 1696 to 1808 bytes), and no earlier build has a distance that any fixed build has. For the same two builds go tool nm -size reports html/template.tJS as 1497 to 1656 bytes on x86_64 and 1696 to 1808 bytes on aarch64. So 2.20.0-r1 is the first build with a fixed Go release (1.26.6), every later build uses a fixed release (the Go 1.27 releases in these builds are newer than 1.27.0-rc.3), and every earlier build uses an affected one."
     },
     {
       "vulnerability": {
@@ -123422,7 +123474,8 @@
           "@id": "pkg:apk/dhi/jaeger-fips-dev@2.23.0-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The jaeger-fips-dev packages for Alpine 3.23 are published in the DHI security repository, separately from the jaeger and jaeger-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-56858. Pending: a per-build check of the Go release recorded in every published jaeger-fips-dev package, to place the first build that uses Go 1.26.6 or later. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -123496,7 +123549,8 @@
           "@id": "pkg:apk/dhi/jaeger-fips-dev@2.23.0-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The jaeger-fips-dev packages for Alpine 3.24 are published in the DHI security repository, separately from the jaeger and jaeger-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-56858. Pending: a per-build check of the Go release recorded in every published jaeger-fips-dev package, to place the first build that uses Go 1.26.6 or later. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -123570,7 +123624,8 @@
           "@id": "pkg:apk/dhi/jaeger-fips@2.23.0-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The jaeger-fips packages for Alpine 3.23 are published in the DHI security repository, separately from the jaeger and jaeger-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-56858. Pending: a per-build check of the Go release recorded in every published jaeger-fips package, to place the first build that uses Go 1.26.6 or later. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -123644,7 +123699,8 @@
           "@id": "pkg:apk/dhi/jaeger-fips@2.23.0-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The jaeger-fips packages for Alpine 3.24 are published in the DHI security repository, separately from the jaeger and jaeger-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-56858. Pending: a per-build check of the Go release recorded in every published jaeger-fips package, to place the first build that uses Go 1.26.6 or later. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -123668,7 +123724,20 @@
         },
         {
           "@id": "pkg:apk/dhi/jaeger@2.20.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update jaeger to 2.20.0-r1 or later.",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template tracks JavaScript regular-expression context incorrectly, so pathological template input can close an unescaped '/' early and let attacker-controlled data inject unescaped content (cross-site scripting). It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The fix on the Go 1.26 release branch, commit https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d ('Fixes CVE-2026-56858'), changes src/html/template/transition.go. We checked every jaeger package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 21 builds, 2.19.0-r1 to the current 2.23.0-r4, on x86_64 and aarch64 (42 packages). Each package was downloaded and checked against its index checksum and the data hash recorded in its control section. Each package holds one file, /usr/bin/jaeger, a statically linked Go program for Linux (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0 and GOOS=linux, as its Go build information records. We read the Go release from that build information, the same on both architectures: Go 1.26.4 in 2.19.0-r1; Go 1.26.5 in 2.19.0-r2 to 2.20.0-r0; Go 1.26.6 in 2.20.0-r1; Go 1.26.7 in 2.20.0-r2; Go 1.26.8 in 2.20.0-r3 to 2.20.0-r5; Go 1.27.1 in 2.21.0-r0 to 2.22.0-r0; Go 1.27.2 in 2.22.0-r1; Go 1.27.3 in 2.22.0-r2 to 2.23.0-r1; Go 1.27.4 in 2.23.0-r2 to 2.23.0-r4. The function table (pclntab) of every build contains html/template.(*Template).Execute, html/template.(*Template).ExecuteTemplate and html/template.tJS, functions the advisory lists (runtime.main found in every build as a control). As a cross-check on the shipped code, the distance from the entry of html/template.tJS to the next function's entry in the Go function table (pclntab), which includes alignment padding and so can be larger than go tool nm -size reports, changes from 2.20.0-r0 to 2.20.0-r1 (x86_64 1504 to 1664 bytes, aarch64 1696 to 1808 bytes), and no earlier build has a distance that any fixed build has. For the same two builds go tool nm -size reports html/template.tJS as 1497 to 1656 bytes on x86_64 and 1696 to 1808 bytes on aarch64. So 2.20.0-r1 is the first build with a fixed Go release (1.26.6), every later build uses a fixed release (the Go 1.27 releases in these builds are newer than 1.27.0-rc.3), and every earlier build uses an affected one."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-x6c6-voee-oaty-7vix",
+        "aliases": [
+          "CVE-2026-56858"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/jaeger@2.20.0-r1?distro=dhi-3.23"
         },
@@ -123718,7 +123787,8 @@
           "@id": "pkg:apk/dhi/jaeger@2.23.0-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template tracks JavaScript regular-expression context incorrectly, so pathological template input can close an unescaped '/' early and let attacker-controlled data inject unescaped content (cross-site scripting). It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The fix on the Go 1.26 release branch, commit https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d ('Fixes CVE-2026-56858'), changes src/html/template/transition.go. We checked every jaeger package published for Alpine 3.23 in the DHI Alpine repository as of 2026-11-27: 21 builds, 2.19.0-r1 to the current 2.23.0-r4, on x86_64 and aarch64 (42 packages). Each package was downloaded and checked against its index checksum and the data hash recorded in its control section. Each package holds one file, /usr/bin/jaeger, a statically linked Go program for Linux (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0 and GOOS=linux, as its Go build information records. We read the Go release from that build information, the same on both architectures: Go 1.26.4 in 2.19.0-r1; Go 1.26.5 in 2.19.0-r2 to 2.20.0-r0; Go 1.26.6 in 2.20.0-r1; Go 1.26.7 in 2.20.0-r2; Go 1.26.8 in 2.20.0-r3 to 2.20.0-r5; Go 1.27.1 in 2.21.0-r0 to 2.22.0-r0; Go 1.27.2 in 2.22.0-r1; Go 1.27.3 in 2.22.0-r2 to 2.23.0-r1; Go 1.27.4 in 2.23.0-r2 to 2.23.0-r4. The function table (pclntab) of every build contains html/template.(*Template).Execute, html/template.(*Template).ExecuteTemplate and html/template.tJS, functions the advisory lists (runtime.main found in every build as a control). As a cross-check on the shipped code, the distance from the entry of html/template.tJS to the next function's entry in the Go function table (pclntab), which includes alignment padding and so can be larger than go tool nm -size reports, changes from 2.20.0-r0 to 2.20.0-r1 (x86_64 1504 to 1664 bytes, aarch64 1696 to 1808 bytes), and no earlier build has a distance that any fixed build has. For the same two builds go tool nm -size reports html/template.tJS as 1497 to 1656 bytes on x86_64 and 1696 to 1808 bytes on aarch64. So 2.20.0-r1 is the first build with a fixed Go release (1.26.6), every later build uses a fixed release (the Go 1.27 releases in these builds are newer than 1.27.0-rc.3), and every earlier build uses an affected one."
     },
     {
       "vulnerability": {
@@ -123742,7 +123812,20 @@
         },
         {
           "@id": "pkg:apk/dhi/jaeger@2.20.0-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update jaeger to 2.20.0-r1 or later.",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template tracks JavaScript regular-expression context incorrectly, so pathological template input can close an unescaped '/' early and let attacker-controlled data inject unescaped content (cross-site scripting). It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The fix on the Go 1.26 release branch, commit https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d ('Fixes CVE-2026-56858'), changes src/html/template/transition.go. We checked every jaeger package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 21 builds, 2.19.0-r1 to the current 2.23.0-r4, on x86_64 and aarch64 (42 packages). The Alpine 3.24 index gives every one of these packages the same checksum as the Alpine 3.23 package of the same name, version and architecture, which we downloaded and checked, so they are the same packages. Each package holds one file, /usr/bin/jaeger, a statically linked Go program for Linux (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0 and GOOS=linux, as its Go build information records. We read the Go release from that build information, the same on both architectures: Go 1.26.4 in 2.19.0-r1; Go 1.26.5 in 2.19.0-r2 to 2.20.0-r0; Go 1.26.6 in 2.20.0-r1; Go 1.26.7 in 2.20.0-r2; Go 1.26.8 in 2.20.0-r3 to 2.20.0-r5; Go 1.27.1 in 2.21.0-r0 to 2.22.0-r0; Go 1.27.2 in 2.22.0-r1; Go 1.27.3 in 2.22.0-r2 to 2.23.0-r1; Go 1.27.4 in 2.23.0-r2 to 2.23.0-r4. The function table (pclntab) of every build contains html/template.(*Template).Execute, html/template.(*Template).ExecuteTemplate and html/template.tJS, functions the advisory lists (runtime.main found in every build as a control). As a cross-check on the shipped code, the distance from the entry of html/template.tJS to the next function's entry in the Go function table (pclntab), which includes alignment padding and so can be larger than go tool nm -size reports, changes from 2.20.0-r0 to 2.20.0-r1 (x86_64 1504 to 1664 bytes, aarch64 1696 to 1808 bytes), and no earlier build has a distance that any fixed build has. For the same two builds go tool nm -size reports html/template.tJS as 1497 to 1656 bytes on x86_64 and 1696 to 1808 bytes on aarch64. So 2.20.0-r1 is the first build with a fixed Go release (1.26.6), every later build uses a fixed release (the Go 1.27 releases in these builds are newer than 1.27.0-rc.3), and every earlier build uses an affected one."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-x6c6-voee-oaty-7vix",
+        "aliases": [
+          "CVE-2026-56858"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/jaeger@2.20.0-r1?distro=dhi-3.24"
         },
@@ -123792,7 +123875,8 @@
           "@id": "pkg:apk/dhi/jaeger@2.23.0-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template tracks JavaScript regular-expression context incorrectly, so pathological template input can close an unescaped '/' early and let attacker-controlled data inject unescaped content (cross-site scripting). It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The fix on the Go 1.26 release branch, commit https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d ('Fixes CVE-2026-56858'), changes src/html/template/transition.go. We checked every jaeger package published for Alpine 3.24 in the DHI Alpine repository as of 2026-11-27: 21 builds, 2.19.0-r1 to the current 2.23.0-r4, on x86_64 and aarch64 (42 packages). The Alpine 3.24 index gives every one of these packages the same checksum as the Alpine 3.23 package of the same name, version and architecture, which we downloaded and checked, so they are the same packages. Each package holds one file, /usr/bin/jaeger, a statically linked Go program for Linux (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0 and GOOS=linux, as its Go build information records. We read the Go release from that build information, the same on both architectures: Go 1.26.4 in 2.19.0-r1; Go 1.26.5 in 2.19.0-r2 to 2.20.0-r0; Go 1.26.6 in 2.20.0-r1; Go 1.26.7 in 2.20.0-r2; Go 1.26.8 in 2.20.0-r3 to 2.20.0-r5; Go 1.27.1 in 2.21.0-r0 to 2.22.0-r0; Go 1.27.2 in 2.22.0-r1; Go 1.27.3 in 2.22.0-r2 to 2.23.0-r1; Go 1.27.4 in 2.23.0-r2 to 2.23.0-r4. The function table (pclntab) of every build contains html/template.(*Template).Execute, html/template.(*Template).ExecuteTemplate and html/template.tJS, functions the advisory lists (runtime.main found in every build as a control). As a cross-check on the shipped code, the distance from the entry of html/template.tJS to the next function's entry in the Go function table (pclntab), which includes alignment padding and so can be larger than go tool nm -size reports, changes from 2.20.0-r0 to 2.20.0-r1 (x86_64 1504 to 1664 bytes, aarch64 1696 to 1808 bytes), and no earlier build has a distance that any fixed build has. For the same two builds go tool nm -size reports html/template.tJS as 1497 to 1656 bytes on x86_64 and 1696 to 1808 bytes on aarch64. So 2.20.0-r1 is the first build with a fixed Go release (1.26.6), every later build uses a fixed release (the Go 1.27 releases in these builds are newer than 1.27.0-rc.3), and every earlier build uses an affected one."
     },
     {
       "vulnerability": {
@@ -276965,6 +277049,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.18-dev@1.18.17-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.18-dev@1.18.17-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -277060,6 +277147,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.18-fips-dev@1.18.17-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.18-fips-dev@1.18.17-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -277214,6 +277304,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.18-fips@1.18.17-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.18-fips@1.18.17-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -277333,6 +277426,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.18@1.18.17-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.18@1.18.17-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -277386,6 +277482,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19-dev@1.19.11-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.19-dev@1.19.11-1?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19-dev@1.19.4-3?distro=dhi-13"
@@ -277508,6 +277607,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19-fips-dev@1.19.11-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.19-fips-dev@1.19.11-1?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19-fips-dev@1.19.4-3?distro=dhi-13"
@@ -277643,6 +277745,9 @@
           "@id": "pkg:deb/dhi/cilium-1.19-fips@1.19.11-0?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/cilium-1.19-fips@1.19.11-1?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/cilium-1.19-fips@1.19.4-3?distro=dhi-13"
         },
         {
@@ -277763,6 +277868,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19@1.19.11-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.19@1.19.11-1?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.19@1.19.4-3?distro=dhi-13"
@@ -277930,6 +278038,9 @@
         },
         {
           "@id": "pkg:deb/dhi/cilium-1.20-dev@1.20.5-0?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/cilium-1.20-dev@1.20.5-1?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -291488,6 +291599,9 @@
         },
         {
           "@id": "pkg:deb/dhi/connaisseur-dev@3.14.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/connaisseur-dev@3.14.1-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -291559,6 +291673,9 @@
         },
         {
           "@id": "pkg:deb/dhi/connaisseur-fips-dev@3.14.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/connaisseur-fips-dev@3.14.1-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -291630,6 +291747,9 @@
         },
         {
           "@id": "pkg:deb/dhi/connaisseur-fips@3.14.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/connaisseur-fips@3.14.1-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -291701,6 +291821,9 @@
         },
         {
           "@id": "pkg:deb/dhi/connaisseur@3.14.0-2?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/connaisseur@3.14.1-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -300902,6 +301025,9 @@
         },
         {
           "@id": "pkg:deb/dhi/docker-compose-plugin@5.8.0-6?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/docker-compose-plugin@5.8.1-0?distro=dhi-13"
         }
       ],
       "status": "under_investigation"
@@ -319168,7 +319294,20 @@
         },
         {
           "@id": "pkg:deb/dhi/jaeger-dev@2.20.0-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update jaeger-dev to 2.20.0-1 or later.",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template tracks JavaScript regular-expression context incorrectly, so pathological template input can close an unescaped '/' early and let attacker-controlled data inject unescaped content (cross-site scripting). It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The fix on the Go 1.26 release branch, commit https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d ('Fixes CVE-2026-56858'), changes src/html/template/transition.go. We checked every jaeger-dev package published for Debian 13 in the DHI Debian repository as of 2026-11-27: 21 builds, 2.19.0-1 to the current 2.23.0-4, on amd64 and arm64 (42 packages). The MD5 manifest in each package's control archive lists one file, /usr/bin/jaeger, with the same MD5 as the program in the DHI Alpine 3.23 package of the same version and architecture (2.19.0-1 matches 2.19.0-r1, and so on), which we downloaded and checked against the Alpine index checksum. Each package holds one file, /usr/bin/jaeger, a statically linked Go program for Linux (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0 and GOOS=linux, as its Go build information records. We read the Go release from that build information, the same on both architectures: Go 1.26.4 in 2.19.0-1; Go 1.26.5 in 2.19.0-2 to 2.20.0-0; Go 1.26.6 in 2.20.0-1; Go 1.26.7 in 2.20.0-2; Go 1.26.8 in 2.20.0-3 to 2.20.0-5; Go 1.27.1 in 2.21.0-0 to 2.22.0-0; Go 1.27.2 in 2.22.0-1; Go 1.27.3 in 2.22.0-2 to 2.23.0-1; Go 1.27.4 in 2.23.0-2 to 2.23.0-4. The function table (pclntab) of every build contains html/template.(*Template).Execute, html/template.(*Template).ExecuteTemplate and html/template.tJS, functions the advisory lists (runtime.main found in every build as a control). As a cross-check on the shipped code, the distance from the entry of html/template.tJS to the next function's entry in the Go function table (pclntab), which includes alignment padding and so can be larger than go tool nm -size reports, changes from 2.20.0-0 to 2.20.0-1 (amd64 1504 to 1664 bytes, arm64 1696 to 1808 bytes), and no earlier build has a distance that any fixed build has. For the same two builds go tool nm -size reports html/template.tJS as 1497 to 1656 bytes on amd64 and 1696 to 1808 bytes on arm64. So 2.20.0-1 is the first build with a fixed Go release (1.26.6), every later build uses a fixed release (the Go 1.27 releases in these builds are newer than 1.27.0-rc.3), and every earlier build uses an affected one."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-x6c6-voee-oaty-7vix",
+        "aliases": [
+          "CVE-2026-56858"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/jaeger-dev@2.20.0-1?distro=dhi-13"
         },
@@ -319218,7 +319357,8 @@
           "@id": "pkg:deb/dhi/jaeger-dev@2.23.0-4?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template tracks JavaScript regular-expression context incorrectly, so pathological template input can close an unescaped '/' early and let attacker-controlled data inject unescaped content (cross-site scripting). It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The fix on the Go 1.26 release branch, commit https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d ('Fixes CVE-2026-56858'), changes src/html/template/transition.go. We checked every jaeger-dev package published for Debian 13 in the DHI Debian repository as of 2026-11-27: 21 builds, 2.19.0-1 to the current 2.23.0-4, on amd64 and arm64 (42 packages). The MD5 manifest in each package's control archive lists one file, /usr/bin/jaeger, with the same MD5 as the program in the DHI Alpine 3.23 package of the same version and architecture (2.19.0-1 matches 2.19.0-r1, and so on), which we downloaded and checked against the Alpine index checksum. Each package holds one file, /usr/bin/jaeger, a statically linked Go program for Linux (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0 and GOOS=linux, as its Go build information records. We read the Go release from that build information, the same on both architectures: Go 1.26.4 in 2.19.0-1; Go 1.26.5 in 2.19.0-2 to 2.20.0-0; Go 1.26.6 in 2.20.0-1; Go 1.26.7 in 2.20.0-2; Go 1.26.8 in 2.20.0-3 to 2.20.0-5; Go 1.27.1 in 2.21.0-0 to 2.22.0-0; Go 1.27.2 in 2.22.0-1; Go 1.27.3 in 2.22.0-2 to 2.23.0-1; Go 1.27.4 in 2.23.0-2 to 2.23.0-4. The function table (pclntab) of every build contains html/template.(*Template).Execute, html/template.(*Template).ExecuteTemplate and html/template.tJS, functions the advisory lists (runtime.main found in every build as a control). As a cross-check on the shipped code, the distance from the entry of html/template.tJS to the next function's entry in the Go function table (pclntab), which includes alignment padding and so can be larger than go tool nm -size reports, changes from 2.20.0-0 to 2.20.0-1 (amd64 1504 to 1664 bytes, arm64 1696 to 1808 bytes), and no earlier build has a distance that any fixed build has. For the same two builds go tool nm -size reports html/template.tJS as 1497 to 1656 bytes on amd64 and 1696 to 1808 bytes on arm64. So 2.20.0-1 is the first build with a fixed Go release (1.26.6), every later build uses a fixed release (the Go 1.27 releases in these builds are newer than 1.27.0-rc.3), and every earlier build uses an affected one."
     },
     {
       "vulnerability": {
@@ -319292,7 +319432,8 @@
           "@id": "pkg:deb/dhi/jaeger-fips-dev@2.23.0-4?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The jaeger-fips-dev packages for Debian 13 are published in the DHI security repository, separately from the jaeger and jaeger-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-56858. Pending: a per-build check of the Go release recorded in every published jaeger-fips-dev package, to place the first build that uses Go 1.26.6 or later. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -319366,7 +319507,8 @@
           "@id": "pkg:deb/dhi/jaeger-fips@2.23.0-4?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "The jaeger-fips packages for Debian 13 are published in the DHI security repository, separately from the jaeger and jaeger-dev packages decided in this assessment, and have not yet been scanned for CVE-2026-56858. Pending: a per-build check of the Go release recorded in every published jaeger-fips package, to place the first build that uses Go 1.26.6 or later. Until that check is done this owner stays under investigation."
     },
     {
       "vulnerability": {
@@ -319390,7 +319532,20 @@
         },
         {
           "@id": "pkg:deb/dhi/jaeger@2.20.0-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update jaeger to 2.20.0-1 or later.",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template tracks JavaScript regular-expression context incorrectly, so pathological template input can close an unescaped '/' early and let attacker-controlled data inject unescaped content (cross-site scripting). It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The fix on the Go 1.26 release branch, commit https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d ('Fixes CVE-2026-56858'), changes src/html/template/transition.go. We checked every jaeger package published for Debian 13 in the DHI Debian repository as of 2026-11-27: 21 builds, 2.19.0-1 to the current 2.23.0-4, on amd64 and arm64 (42 packages). The MD5 manifest in each package's control archive lists one file, /usr/bin/jaeger, with the same MD5 as the program in the DHI Alpine 3.23 package of the same version and architecture (2.19.0-1 matches 2.19.0-r1, and so on), which we downloaded and checked against the Alpine index checksum. Each package holds one file, /usr/bin/jaeger, a statically linked Go program for Linux (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0 and GOOS=linux, as its Go build information records. We read the Go release from that build information, the same on both architectures: Go 1.26.4 in 2.19.0-1; Go 1.26.5 in 2.19.0-2 to 2.20.0-0; Go 1.26.6 in 2.20.0-1; Go 1.26.7 in 2.20.0-2; Go 1.26.8 in 2.20.0-3 to 2.20.0-5; Go 1.27.1 in 2.21.0-0 to 2.22.0-0; Go 1.27.2 in 2.22.0-1; Go 1.27.3 in 2.22.0-2 to 2.23.0-1; Go 1.27.4 in 2.23.0-2 to 2.23.0-4. The function table (pclntab) of every build contains html/template.(*Template).Execute, html/template.(*Template).ExecuteTemplate and html/template.tJS, functions the advisory lists (runtime.main found in every build as a control). As a cross-check on the shipped code, the distance from the entry of html/template.tJS to the next function's entry in the Go function table (pclntab), which includes alignment padding and so can be larger than go tool nm -size reports, changes from 2.20.0-0 to 2.20.0-1 (amd64 1504 to 1664 bytes, arm64 1696 to 1808 bytes), and no earlier build has a distance that any fixed build has. For the same two builds go tool nm -size reports html/template.tJS as 1497 to 1656 bytes on amd64 and 1696 to 1808 bytes on arm64. So 2.20.0-1 is the first build with a fixed Go release (1.26.6), every later build uses a fixed release (the Go 1.27 releases in these builds are newer than 1.27.0-rc.3), and every earlier build uses an affected one."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-x6c6-voee-oaty-7vix",
+        "aliases": [
+          "CVE-2026-56858"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/jaeger@2.20.0-1?distro=dhi-13"
         },
@@ -319440,7 +319595,8 @@
           "@id": "pkg:deb/dhi/jaeger@2.23.0-4?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56858 (GO-2026-6091): html/template tracks JavaScript regular-expression context incorrectly, so pathological template input can close an unescaped '/' early and let attacker-controlled data inject unescaped content (cross-site scripting). It is fixed in Go 1.25.13, 1.26.6 and 1.27.0-rc.3: https://pkg.go.dev/vuln/GO-2026-6091, https://go.dev/issue/80435, https://go.dev/cl/807100 and https://groups.google.com/g/golang-announce/c/94pEornpRlI. The fix on the Go 1.26 release branch, commit https://github.com/golang/go/commit/33ecb966ca47e55034272a9146e23e9909507f6d ('Fixes CVE-2026-56858'), changes src/html/template/transition.go. We checked every jaeger package published for Debian 13 in the DHI Debian repository as of 2026-11-27: 21 builds, 2.19.0-1 to the current 2.23.0-4, on amd64 and arm64 (42 packages). The MD5 manifest in each package's control archive lists one file, /usr/bin/jaeger, with the same MD5 as the program in the DHI Alpine 3.23 package of the same version and architecture (2.19.0-1 matches 2.19.0-r1, and so on), which we downloaded and checked against the Alpine index checksum. Each package holds one file, /usr/bin/jaeger, a statically linked Go program for Linux (no program interpreter and no shared-library dependencies) built with CGO_ENABLED=0 and GOOS=linux, as its Go build information records. We read the Go release from that build information, the same on both architectures: Go 1.26.4 in 2.19.0-1; Go 1.26.5 in 2.19.0-2 to 2.20.0-0; Go 1.26.6 in 2.20.0-1; Go 1.26.7 in 2.20.0-2; Go 1.26.8 in 2.20.0-3 to 2.20.0-5; Go 1.27.1 in 2.21.0-0 to 2.22.0-0; Go 1.27.2 in 2.22.0-1; Go 1.27.3 in 2.22.0-2 to 2.23.0-1; Go 1.27.4 in 2.23.0-2 to 2.23.0-4. The function table (pclntab) of every build contains html/template.(*Template).Execute, html/template.(*Template).ExecuteTemplate and html/template.tJS, functions the advisory lists (runtime.main found in every build as a control). As a cross-check on the shipped code, the distance from the entry of html/template.tJS to the next function's entry in the Go function table (pclntab), which includes alignment padding and so can be larger than go tool nm -size reports, changes from 2.20.0-0 to 2.20.0-1 (amd64 1504 to 1664 bytes, arm64 1696 to 1808 bytes), and no earlier build has a distance that any fixed build has. For the same two builds go tool nm -size reports html/template.tJS as 1497 to 1656 bytes on amd64 and 1696 to 1808 bytes on arm64. So 2.20.0-1 is the first build with a fixed Go release (1.26.6), every later build uses a fixed release (the Go 1.27 releases in these builds are newer than 1.27.0-rc.3), and every earlier build uses an affected one."
     },
     {
       "vulnerability": {
