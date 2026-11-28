@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T16:09:43Z",
-  "last_updated": "2026-11-20T14:20:51Z",
-  "version": 3,
+  "last_updated": "2026-11-28T05:06:30Z",
+  "version": 4,
   "statements": [
     {
       "vulnerability": {
@@ -92,12 +92,6 @@
           "@id": "pkg:apk/dhi/ruby-4.0@4.0.1-r1?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/ruby-4.0@4.0.10-r4?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/ruby-4.0@4.0.10-r5?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/ruby-4.0@4.0.2-r1?distro=dhi-3.23"
         },
         {
@@ -117,6 +111,25 @@
         },
         {
           "@id": "pkg:apk/dhi/ruby-4.0@4.0.6-r3?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update ruby-4.0 to 4.0.6-r4 or later.",
+      "status_notes": "CVE-2026-54696 (GHSA-x2f5-4prf-w687): in the Ruby json gem from 2.9.0 and before 2.19.9, JSON.dump(obj, io) and JSON::State#generate(obj, io) can write past the generator's internal buffer when a streamed string lands near the 16 KB IO buffer size, because fbuffer_do_inc_capa compared the request with the buffer's total capacity instead of the space left (a heap out-of-bounds write, demonstrated as a crash): https://github.com/ruby/json/security/advisories/GHSA-x2f5-4prf-w687. It is fixed in json 2.19.9 by https://github.com/ruby/json/commit/996bac686d64e4e3aaeae03b14a7f9ee9695ebdb, released in v2.19.9 as https://github.com/ruby/json/commit/fd6a65bd08e5f3a429c03919ebfd8dd19158f095, which reworks fbuffer_do_inc_capa in ext/json/ext/fbuffer/fbuffer.h so the IO path flushes and then sizes the buffer from the bytes already held; it drops the IO path's comparison of the buffer capacity with 16383 (FBUFFER_IO_BUFFER_SIZE): https://github.com/ruby/json/releases/tag/v2.19.9. Every Ruby 4.0 release bundles json 2.18 (2.18.0, and 2.18.3 in 4.0.10), so the fixed json in the builds below is a DHI update of the json default gem. The DHI ruby-4.0 package for Alpine 3.23 is published as 4.0.1-r0, 4.0.1-r1, 4.0.2-r1, 4.0.2-r2, 4.0.3-r2, 4.0.4-r2, 4.0.4-r3, 4.0.5-r3, 4.0.6-r3, 4.0.6-r4, 4.0.7-r4, 4.0.9-r4, 4.0.10-r4 and 4.0.10-r5, for x86_64 and aarch64. We downloaded every package built from the ruby-4.0 source in the DHI Alpine 3.23 repository as published on 2026-11-28, 654 package files across both architectures, checked each against its repository index checksum and listed every file in them. The json default gem, with its compiled generator.so, ships in ruby-4.0-libs. Other packages from this source carry json-named files that are not the json library, such as debug symbols for the json extensions (ruby-4.0-dbg), ri documentation (ruby-4.0-doc), rbs's json.rbs type signature and JSON Schema files (ruby4.0-rbs), rdoc's JSON index generator (ruby4.0-rdoc) and typeprof's typeprof.conf.jsonc (ruby4.0-typeprof). The json gem's usr/lib/ruby/4.0.0/json/version.rb, identical to the upstream release file, reads 2.18.0 in 4.0.1-r0, 4.0.1-r1 and 4.0.2-r1, 2.19.2 in 4.0.2-r2 through 4.0.6-r3, and 2.19.9 in 4.0.6-r4 and every later build. We also disassembled fbuffer_do_inc_capa in generator.so of every published ruby-4.0-libs build on both architectures, locating it with the symbol table in the matching ruby-4.0-dbg package: up to and including 4.0.6-r3 it still compares the buffer capacity with 16383 and grows the buffer to 16383 on the IO path, the code the fix removes, and from 4.0.6-r4 that comparison is gone. Both architectures agree for every build. The range is introduced at the first published build and fixed at 4.0.6-r4, the first build with json 2.19.9."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-sdnn-k4rf-jnx4-sc35",
+        "aliases": [
+          "CVE-2026-54696"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/ruby-4.0@4.0.10-r4?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/ruby-4.0@4.0.10-r5?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/ruby-4.0@4.0.6-r4?distro=dhi-3.23"
@@ -128,7 +141,27 @@
           "@id": "pkg:apk/dhi/ruby-4.0@4.0.9-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-54696 (GHSA-x2f5-4prf-w687): in the Ruby json gem from 2.9.0 and before 2.19.9, JSON.dump(obj, io) and JSON::State#generate(obj, io) can write past the generator's internal buffer when a streamed string lands near the 16 KB IO buffer size, because fbuffer_do_inc_capa compared the request with the buffer's total capacity instead of the space left (a heap out-of-bounds write, demonstrated as a crash): https://github.com/ruby/json/security/advisories/GHSA-x2f5-4prf-w687. It is fixed in json 2.19.9 by https://github.com/ruby/json/commit/996bac686d64e4e3aaeae03b14a7f9ee9695ebdb, released in v2.19.9 as https://github.com/ruby/json/commit/fd6a65bd08e5f3a429c03919ebfd8dd19158f095, which reworks fbuffer_do_inc_capa in ext/json/ext/fbuffer/fbuffer.h so the IO path flushes and then sizes the buffer from the bytes already held; it drops the IO path's comparison of the buffer capacity with 16383 (FBUFFER_IO_BUFFER_SIZE): https://github.com/ruby/json/releases/tag/v2.19.9. Every Ruby 4.0 release bundles json 2.18 (2.18.0, and 2.18.3 in 4.0.10), so the fixed json in the builds below is a DHI update of the json default gem. The DHI ruby-4.0 package for Alpine 3.23 is published as 4.0.1-r0, 4.0.1-r1, 4.0.2-r1, 4.0.2-r2, 4.0.3-r2, 4.0.4-r2, 4.0.4-r3, 4.0.5-r3, 4.0.6-r3, 4.0.6-r4, 4.0.7-r4, 4.0.9-r4, 4.0.10-r4 and 4.0.10-r5, for x86_64 and aarch64. We downloaded every package built from the ruby-4.0 source in the DHI Alpine 3.23 repository as published on 2026-11-28, 654 package files across both architectures, checked each against its repository index checksum and listed every file in them. The json default gem, with its compiled generator.so, ships in ruby-4.0-libs. Other packages from this source carry json-named files that are not the json library, such as debug symbols for the json extensions (ruby-4.0-dbg), ri documentation (ruby-4.0-doc), rbs's json.rbs type signature and JSON Schema files (ruby4.0-rbs), rdoc's JSON index generator (ruby4.0-rdoc) and typeprof's typeprof.conf.jsonc (ruby4.0-typeprof). The json gem's usr/lib/ruby/4.0.0/json/version.rb, identical to the upstream release file, reads 2.18.0 in 4.0.1-r0, 4.0.1-r1 and 4.0.2-r1, 2.19.2 in 4.0.2-r2 through 4.0.6-r3, and 2.19.9 in 4.0.6-r4 and every later build. We also disassembled fbuffer_do_inc_capa in generator.so of every published ruby-4.0-libs build on both architectures, locating it with the symbol table in the matching ruby-4.0-dbg package: up to and including 4.0.6-r3 it still compares the buffer capacity with 16383 and grows the buffer to 16383 on the IO path, the code the fix removes, and from 4.0.6-r4 that comparison is gone. Both architectures agree for every build. The range is introduced at the first published build and fixed at 4.0.6-r4, the first build with json 2.19.9."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-sdnn-k4rf-jnx4-sc35",
+        "aliases": [
+          "CVE-2026-54696"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/ruby-4.0@4.0.5-r3?distro=dhi-3.24"
+        },
+        {
+          "@id": "pkg:apk/dhi/ruby-4.0@4.0.6-r3?distro=dhi-3.24"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update ruby-4.0 to 4.0.6-r4 or later.",
+      "status_notes": "CVE-2026-54696 (GHSA-x2f5-4prf-w687): in the Ruby json gem from 2.9.0 and before 2.19.9, JSON.dump(obj, io) and JSON::State#generate(obj, io) can write past the generator's internal buffer when a streamed string lands near the 16 KB IO buffer size, because fbuffer_do_inc_capa compared the request with the buffer's total capacity instead of the space left (a heap out-of-bounds write, demonstrated as a crash): https://github.com/ruby/json/security/advisories/GHSA-x2f5-4prf-w687. It is fixed in json 2.19.9 by https://github.com/ruby/json/commit/996bac686d64e4e3aaeae03b14a7f9ee9695ebdb, released in v2.19.9 as https://github.com/ruby/json/commit/fd6a65bd08e5f3a429c03919ebfd8dd19158f095, which reworks fbuffer_do_inc_capa in ext/json/ext/fbuffer/fbuffer.h so the IO path flushes and then sizes the buffer from the bytes already held; it drops the IO path's comparison of the buffer capacity with 16383 (FBUFFER_IO_BUFFER_SIZE): https://github.com/ruby/json/releases/tag/v2.19.9. Every Ruby 4.0 release bundles json 2.18 (2.18.0, and 2.18.3 in 4.0.10), so the fixed json in the builds below is a DHI update of the json default gem. The DHI ruby-4.0 package for Alpine 3.24 is published as 4.0.5-r3, 4.0.6-r3, 4.0.6-r4, 4.0.7-r4, 4.0.9-r4, 4.0.10-r4 and 4.0.10-r5, for x86_64 and aarch64. We downloaded every package built from the ruby-4.0 source in the DHI Alpine 3.24 repository as published on 2026-11-28, 326 package files across both architectures, checked each against its repository index checksum and listed every file in them. The json default gem, with its compiled generator.so, ships in ruby-4.0-libs. Other packages from this source carry json-named files that are not the json library, such as debug symbols for the json extensions (ruby-4.0-dbg), ri documentation (ruby-4.0-doc), rbs's json.rbs type signature and JSON Schema files (ruby4.0-rbs), rdoc's JSON index generator (ruby4.0-rdoc) and typeprof's typeprof.conf.jsonc (ruby4.0-typeprof). The json gem's usr/lib/ruby/4.0.0/json/version.rb, identical to the upstream release file, reads 2.19.2 in 4.0.5-r3 and 4.0.6-r3 and 2.19.9 in 4.0.6-r4 and every later build. We also disassembled fbuffer_do_inc_capa in generator.so of every published ruby-4.0-libs build on both architectures, locating it with the symbol table in the matching ruby-4.0-dbg package: up to and including 4.0.6-r3 it still compares the buffer capacity with 16383 and grows the buffer to 16383 on the IO path, the code the fix removes, and from 4.0.6-r4 that comparison is gone. Both architectures agree for every build. The range is introduced at the first published build and fixed at 4.0.6-r4, the first build with json 2.19.9."
     },
     {
       "vulnerability": {
@@ -145,12 +178,6 @@
           "@id": "pkg:apk/dhi/ruby-4.0@4.0.10-r5?distro=dhi-3.24"
         },
         {
-          "@id": "pkg:apk/dhi/ruby-4.0@4.0.5-r3?distro=dhi-3.24"
-        },
-        {
-          "@id": "pkg:apk/dhi/ruby-4.0@4.0.6-r3?distro=dhi-3.24"
-        },
-        {
           "@id": "pkg:apk/dhi/ruby-4.0@4.0.6-r4?distro=dhi-3.24"
         },
         {
@@ -160,7 +187,8 @@
           "@id": "pkg:apk/dhi/ruby-4.0@4.0.9-r4?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-54696 (GHSA-x2f5-4prf-w687): in the Ruby json gem from 2.9.0 and before 2.19.9, JSON.dump(obj, io) and JSON::State#generate(obj, io) can write past the generator's internal buffer when a streamed string lands near the 16 KB IO buffer size, because fbuffer_do_inc_capa compared the request with the buffer's total capacity instead of the space left (a heap out-of-bounds write, demonstrated as a crash): https://github.com/ruby/json/security/advisories/GHSA-x2f5-4prf-w687. It is fixed in json 2.19.9 by https://github.com/ruby/json/commit/996bac686d64e4e3aaeae03b14a7f9ee9695ebdb, released in v2.19.9 as https://github.com/ruby/json/commit/fd6a65bd08e5f3a429c03919ebfd8dd19158f095, which reworks fbuffer_do_inc_capa in ext/json/ext/fbuffer/fbuffer.h so the IO path flushes and then sizes the buffer from the bytes already held; it drops the IO path's comparison of the buffer capacity with 16383 (FBUFFER_IO_BUFFER_SIZE): https://github.com/ruby/json/releases/tag/v2.19.9. Every Ruby 4.0 release bundles json 2.18 (2.18.0, and 2.18.3 in 4.0.10), so the fixed json in the builds below is a DHI update of the json default gem. The DHI ruby-4.0 package for Alpine 3.24 is published as 4.0.5-r3, 4.0.6-r3, 4.0.6-r4, 4.0.7-r4, 4.0.9-r4, 4.0.10-r4 and 4.0.10-r5, for x86_64 and aarch64. We downloaded every package built from the ruby-4.0 source in the DHI Alpine 3.24 repository as published on 2026-11-28, 326 package files across both architectures, checked each against its repository index checksum and listed every file in them. The json default gem, with its compiled generator.so, ships in ruby-4.0-libs. Other packages from this source carry json-named files that are not the json library, such as debug symbols for the json extensions (ruby-4.0-dbg), ri documentation (ruby-4.0-doc), rbs's json.rbs type signature and JSON Schema files (ruby4.0-rbs), rdoc's JSON index generator (ruby4.0-rdoc) and typeprof's typeprof.conf.jsonc (ruby4.0-typeprof). The json gem's usr/lib/ruby/4.0.0/json/version.rb, identical to the upstream release file, reads 2.19.2 in 4.0.5-r3 and 4.0.6-r3 and 2.19.9 in 4.0.6-r4 and every later build. We also disassembled fbuffer_do_inc_capa in generator.so of every published ruby-4.0-libs build on both architectures, locating it with the symbol table in the matching ruby-4.0-dbg package: up to and including 4.0.6-r3 it still compares the buffer capacity with 16383 and grows the buffer to 16383 on the IO path, the code the fix removes, and from 4.0.6-r4 that comparison is gone. Both architectures agree for every build. The range is introduced at the first published build and fixed at 4.0.6-r4, the first build with json 2.19.9."
     },
     {
       "vulnerability": {
@@ -513,9 +541,6 @@
       },
       "products": [
         {
-          "@id": "pkg:deb/dhi/ruby-4.0@4.0.10-0?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/ruby-4.0@4.0.5-0?distro=dhi-13"
         },
         {
@@ -693,6 +718,25 @@
           "@id": "pkg:deb/dhi/ruby-4.0@4.0.7-0?distro=dhi-13"
         },
         {
+          "@id": "pkg:deb/dhi/ruby-4.0@4.0.7-1?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update ruby-4.0 to 4.0.7-2 or later.",
+      "status_notes": "CVE-2026-54696 (GHSA-x2f5-4prf-w687): in the Ruby json gem from 2.9.0 and before 2.19.9, JSON.dump(obj, io) and JSON::State#generate(obj, io) can write past the generator's internal buffer when a streamed string lands near the 16 KB IO buffer size, because fbuffer_do_inc_capa compared the request with the buffer's total capacity instead of the space left (a heap out-of-bounds write, demonstrated as a crash): https://github.com/ruby/json/security/advisories/GHSA-x2f5-4prf-w687. It is fixed in json 2.19.9 by https://github.com/ruby/json/commit/996bac686d64e4e3aaeae03b14a7f9ee9695ebdb, released in v2.19.9 as https://github.com/ruby/json/commit/fd6a65bd08e5f3a429c03919ebfd8dd19158f095, which reworks fbuffer_do_inc_capa in ext/json/ext/fbuffer/fbuffer.h so the IO path flushes and then sizes the buffer from the bytes already held; it drops the IO path's comparison of the buffer capacity with 16383 (FBUFFER_IO_BUFFER_SIZE): https://github.com/ruby/json/releases/tag/v2.19.9. Every Ruby 4.0 release bundles json 2.18 (2.18.0, and 2.18.3 in 4.0.10), so the fixed json in the builds below is a DHI update of the json default gem. The DHI Debian 13 repository publishes the ruby-4.0 source as the ruby-4.0 and ruby-4.0-dev packages, 81 versions on amd64 and arm64: 4.0.5-0 to 4.0.5-6, 4.0.6-0 to 4.0.6-50, 4.0.7-0 to 4.0.7-19, 4.0.9-0, 4.0.9-1 and 4.0.10-0. The json default gem, with its compiled generator.so, ships in ruby-4.0; ruby-4.0-dev contains no json file. We read the md5sums manifest in the control archive of every published ruby-4.0 and ruby-4.0-dev package on both architectures as published on 2026-11-28: usr/lib/ruby/4.0.0/json/version.rb matches the json 2.19.2 release file in ruby-4.0 4.0.5-0 through 4.0.7-1 and the json 2.19.9 release file in 4.0.7-2 through 4.0.10-0. We downloaded ruby-4.0 4.0.5-0, 4.0.6-50, 4.0.7-1, 4.0.7-2 and 4.0.10-0 on both architectures, checked against the repository index SHA256, and disassembled their generator.so: 4.0.5-0, 4.0.6-50 and 4.0.7-1 still compare the buffer capacity with 16383 on the IO path, the code the fix removes, and 4.0.7-2 and 4.0.10-0 do not. Both architectures agree for every build. The range is introduced at the first published build and fixed at 4.0.7-2, the first build with json 2.19.9."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-sdnn-k4rf-jnx4-sc35",
+        "aliases": [
+          "CVE-2026-54696"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/ruby-4.0@4.0.10-0?distro=dhi-13"
+        },
+        {
           "@id": "pkg:deb/dhi/ruby-4.0@4.0.7-10?distro=dhi-13"
         },
         {
@@ -721,9 +765,6 @@
         },
         {
           "@id": "pkg:deb/dhi/ruby-4.0@4.0.7-19?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/ruby-4.0@4.0.7-1?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/ruby-4.0@4.0.7-2?distro=dhi-13"
@@ -756,7 +797,8 @@
           "@id": "pkg:deb/dhi/ruby-4.0@4.0.9-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-54696 (GHSA-x2f5-4prf-w687): in the Ruby json gem from 2.9.0 and before 2.19.9, JSON.dump(obj, io) and JSON::State#generate(obj, io) can write past the generator's internal buffer when a streamed string lands near the 16 KB IO buffer size, because fbuffer_do_inc_capa compared the request with the buffer's total capacity instead of the space left (a heap out-of-bounds write, demonstrated as a crash): https://github.com/ruby/json/security/advisories/GHSA-x2f5-4prf-w687. It is fixed in json 2.19.9 by https://github.com/ruby/json/commit/996bac686d64e4e3aaeae03b14a7f9ee9695ebdb, released in v2.19.9 as https://github.com/ruby/json/commit/fd6a65bd08e5f3a429c03919ebfd8dd19158f095, which reworks fbuffer_do_inc_capa in ext/json/ext/fbuffer/fbuffer.h so the IO path flushes and then sizes the buffer from the bytes already held; it drops the IO path's comparison of the buffer capacity with 16383 (FBUFFER_IO_BUFFER_SIZE): https://github.com/ruby/json/releases/tag/v2.19.9. Every Ruby 4.0 release bundles json 2.18 (2.18.0, and 2.18.3 in 4.0.10), so the fixed json in the builds below is a DHI update of the json default gem. The DHI Debian 13 repository publishes the ruby-4.0 source as the ruby-4.0 and ruby-4.0-dev packages, 81 versions on amd64 and arm64: 4.0.5-0 to 4.0.5-6, 4.0.6-0 to 4.0.6-50, 4.0.7-0 to 4.0.7-19, 4.0.9-0, 4.0.9-1 and 4.0.10-0. The json default gem, with its compiled generator.so, ships in ruby-4.0; ruby-4.0-dev contains no json file. We read the md5sums manifest in the control archive of every published ruby-4.0 and ruby-4.0-dev package on both architectures as published on 2026-11-28: usr/lib/ruby/4.0.0/json/version.rb matches the json 2.19.2 release file in ruby-4.0 4.0.5-0 through 4.0.7-1 and the json 2.19.9 release file in 4.0.7-2 through 4.0.10-0. We downloaded ruby-4.0 4.0.5-0, 4.0.6-50, 4.0.7-1, 4.0.7-2 and 4.0.10-0 on both architectures, checked against the repository index SHA256, and disassembled their generator.so: 4.0.5-0, 4.0.6-50 and 4.0.7-1 still compare the buffer capacity with 16383 on the IO path, the code the fix removes, and 4.0.7-2 and 4.0.10-0 do not. Both architectures agree for every build. The range is introduced at the first published build and fixed at 4.0.7-2, the first build with json 2.19.9."
     }
   ]
 }
