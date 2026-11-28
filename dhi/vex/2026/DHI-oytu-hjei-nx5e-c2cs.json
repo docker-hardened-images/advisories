@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T21:09:05Z",
-  "last_updated": "2026-11-26T20:09:08Z",
-  "version": 35,
+  "last_updated": "2026-11-28T13:13:18Z",
+  "version": 36,
   "statements": [
     {
       "vulnerability": {
@@ -5850,7 +5850,9 @@
           "@id": "pkg:apk/dhi/external-dns-dev@0.24.0-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-33811 (GO-2026-4981): when net.LookupCNAME in the Go standard library uses the cgo DNS resolver, a very long CNAME response can trigger a double free of C memory and a crash. The vulnerable code is net.cgoResSearch in net/cgo_unix.go, and the fix changes only that file: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, Go 1.26 branch fix https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. It is fixed in Go 1.25.10 and 1.26.3. The Debian tracker lists golang-1.24 in trixie and golang-1.19 in bookworm as vulnerable with no DSA (minor issue), and golang-1.26 in forky and sid as fixed: https://security-tracker.debian.org/tracker/CVE-2026-33811. Read every external-dns-dev package for Alpine 3.23 published in the DHI Alpine repository on 2026-11-28: 33 builds, 0.20.0-r0 to 0.24.0-r5, each for x86_64 and aarch64. Each package installs one file, /usr/bin/external-dns, a statically linked Go program (no ELF interpreter and no shared library dependencies) built with CGO_ENABLED=0, without -trimpath, linked without -w (with DWARF). The program's Go build information lists the Go toolchain go1.25.7 in 0.20.0-r0; go1.26.1 in 0.20.0-r1 to 0.21.0-r0; go1.26.2 in 0.21.0-r1 to 0.21.0-r2; go1.26.3 in 0.21.0-r3 to 0.21.0-r5; go1.26.4 in 0.21.0-r6 to 0.21.0-r7; go1.26.5 in 0.21.0-r8 to 0.21.0-r11; go1.26.6 in 0.21.0-r12; go1.26.7 in 0.21.0-r13 to 0.22.0-r0; go1.26.8 in 0.22.0-r1 to 0.22.0-r3; go1.27.1 in 0.23.0-r1 to 0.23.0-r2; go1.27.2 in 0.23.0-r3; go1.27.3 in 0.23.0-r4 to 0.24.0-r2; go1.27.4 in 0.24.0-r3 to 0.24.0-r5. Because every build is compiled with CGO_ENABLED=0, the net package is built with its cgo stub (net/cgo_stub.go) in place of net/cgo_unix.go, so the cgo resolver cannot be used. In the Go function table of every program, on both architectures, there is no net.cgoResSearch and no other net function from the cgo resolver, net/cgo_unix.go is not in the source file table, and a byte search of each whole program finds neither cgoResSearch nor cgo_unix.go; the same reads find net.(*Resolver).LookupCNAME, the pure Go resolver's net.(*Resolver).goLookupCNAME, and net/cgo_stub.go and net/dnsclient_unix.go in the file table. LookupCNAME in these programs always uses the pure Go resolver, which does not contain the double free."
     },
     {
       "vulnerability": {
@@ -5960,7 +5962,8 @@
           "@id": "pkg:apk/dhi/external-dns-fips-dev@0.24.0-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-33811 (GO-2026-4981): when net.LookupCNAME in the Go standard library uses the cgo DNS resolver, a very long CNAME response can trigger a double free of C memory and a crash. The vulnerable code is net.cgoResSearch in net/cgo_unix.go, and the fix changes only that file: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, Go 1.26 branch fix https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. It is fixed in Go 1.25.10 and 1.26.3. The Debian tracker lists golang-1.24 in trixie and golang-1.19 in bookworm as vulnerable with no DSA (minor issue), and golang-1.26 in forky and sid as fixed: https://security-tracker.debian.org/tracker/CVE-2026-33811. The external-dns-fips-dev packages for Alpine 3.23 are published only in the DHI security repository, which needs authenticated access, and have not been read for this assessment. Pending: a read of every published external-dns-fips-dev build on both architectures for whether every build is compiled with CGO_ENABLED=0 and leaves net.cgoResSearch and net/cgo_unix.go out of its program. The non-FIPS external-dns builds are separate packages, so their results are not carried over to this owner."
     },
     {
       "vulnerability": {
@@ -6070,7 +6073,8 @@
           "@id": "pkg:apk/dhi/external-dns-fips@0.24.0-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-33811 (GO-2026-4981): when net.LookupCNAME in the Go standard library uses the cgo DNS resolver, a very long CNAME response can trigger a double free of C memory and a crash. The vulnerable code is net.cgoResSearch in net/cgo_unix.go, and the fix changes only that file: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, Go 1.26 branch fix https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. It is fixed in Go 1.25.10 and 1.26.3. The Debian tracker lists golang-1.24 in trixie and golang-1.19 in bookworm as vulnerable with no DSA (minor issue), and golang-1.26 in forky and sid as fixed: https://security-tracker.debian.org/tracker/CVE-2026-33811. The external-dns-fips packages for Alpine 3.23 are published only in the DHI security repository, which needs authenticated access, and have not been read for this assessment. Pending: a read of every published external-dns-fips build on both architectures for whether every build is compiled with CGO_ENABLED=0 and leaves net.cgoResSearch and net/cgo_unix.go out of its program. The non-FIPS external-dns builds are separate packages, so their results are not carried over to this owner."
     },
     {
       "vulnerability": {
@@ -6180,7 +6184,9 @@
           "@id": "pkg:apk/dhi/external-dns@0.24.0-r5?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-33811 (GO-2026-4981): when net.LookupCNAME in the Go standard library uses the cgo DNS resolver, a very long CNAME response can trigger a double free of C memory and a crash. The vulnerable code is net.cgoResSearch in net/cgo_unix.go, and the fix changes only that file: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, Go 1.26 branch fix https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. It is fixed in Go 1.25.10 and 1.26.3. The Debian tracker lists golang-1.24 in trixie and golang-1.19 in bookworm as vulnerable with no DSA (minor issue), and golang-1.26 in forky and sid as fixed: https://security-tracker.debian.org/tracker/CVE-2026-33811. Read every external-dns package for Alpine 3.23 published in the DHI Alpine repository on 2026-11-28: 33 builds, 0.20.0-r0 to 0.24.0-r5, each for x86_64 and aarch64. Each package installs one file, /usr/bin/external-dns, a statically linked Go program (no ELF interpreter and no shared library dependencies) built with CGO_ENABLED=0 and -trimpath, linked with -w (no DWARF). The program's Go build information lists the Go toolchain go1.25.7 in 0.20.0-r0; go1.26.1 in 0.20.0-r1 to 0.21.0-r0; go1.26.2 in 0.21.0-r1 to 0.21.0-r2; go1.26.3 in 0.21.0-r3 to 0.21.0-r5; go1.26.4 in 0.21.0-r6 to 0.21.0-r7; go1.26.5 in 0.21.0-r8 to 0.21.0-r11; go1.26.6 in 0.21.0-r12; go1.26.7 in 0.21.0-r13 to 0.22.0-r0; go1.26.8 in 0.22.0-r1 to 0.22.0-r3; go1.27.1 in 0.23.0-r1 to 0.23.0-r2; go1.27.2 in 0.23.0-r3; go1.27.3 in 0.23.0-r4 to 0.24.0-r2; go1.27.4 in 0.24.0-r3 to 0.24.0-r5. Because every build is compiled with CGO_ENABLED=0, the net package is built with its cgo stub (net/cgo_stub.go) in place of net/cgo_unix.go, so the cgo resolver cannot be used. In the Go function table of every program, on both architectures, there is no net.cgoResSearch and no other net function from the cgo resolver, net/cgo_unix.go is not in the source file table, and a byte search of each whole program finds neither cgoResSearch nor cgo_unix.go; the same reads find net.(*Resolver).LookupCNAME, the pure Go resolver's net.(*Resolver).goLookupCNAME, and net/cgo_stub.go and net/dnsclient_unix.go in the file table. LookupCNAME in these programs always uses the pure Go resolver, which does not contain the double free."
     },
     {
       "vulnerability": {
@@ -16761,6 +16767,9 @@
         },
         {
           "@id": "pkg:apk/dhi/runc@1.5.3-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/runc@1.6.0-r0?distro=dhi-3.23"
         }
       ],
       "status": "under_investigation"
@@ -24488,7 +24497,9 @@
           "@id": "pkg:deb/dhi/external-dns-dev@0.24.0-5?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-33811 (GO-2026-4981): when net.LookupCNAME in the Go standard library uses the cgo DNS resolver, a very long CNAME response can trigger a double free of C memory and a crash. The vulnerable code is net.cgoResSearch in net/cgo_unix.go, and the fix changes only that file: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, Go 1.26 branch fix https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. It is fixed in Go 1.25.10 and 1.26.3. The Debian tracker lists golang-1.24 in trixie and golang-1.19 in bookworm as vulnerable with no DSA (minor issue), and golang-1.26 in forky and sid as fixed: https://security-tracker.debian.org/tracker/CVE-2026-33811. Read every external-dns-dev package for Debian 13 published in the DHI Debian repository on 2026-11-28: 26 builds, 0.21.0-2 to 0.24.0-5, each for amd64 and arm64. In each build the package's md5sums entry for /usr/bin/external-dns is the same MD5 as the program in the Alpine 3.23 external-dns-dev package of the matching revision (0.21.0-2 matches 0.21.0-r2, through 0.24.0-5 matching 0.24.0-r5), which was read in full: a statically linked Go program (no ELF interpreter and no shared library dependencies) built with CGO_ENABLED=0, without -trimpath, linked without -w (with DWARF). The program's Go build information lists the Go toolchain go1.26.2 in 0.21.0-2; go1.26.3 in 0.21.0-3 to 0.21.0-5; go1.26.4 in 0.21.0-6 to 0.21.0-7; go1.26.5 in 0.21.0-8 to 0.21.0-11; go1.26.6 in 0.21.0-12; go1.26.7 in 0.21.0-13 to 0.22.0-0; go1.26.8 in 0.22.0-1 to 0.22.0-3; go1.27.1 in 0.23.0-1 to 0.23.0-2; go1.27.2 in 0.23.0-3; go1.27.3 in 0.23.0-4 to 0.24.0-2; go1.27.4 in 0.24.0-3 to 0.24.0-5. Because every build is compiled with CGO_ENABLED=0, the net package is built with its cgo stub (net/cgo_stub.go) in place of net/cgo_unix.go, so the cgo resolver cannot be used. In the Go function table of every program, on both architectures, there is no net.cgoResSearch and no other net function from the cgo resolver, net/cgo_unix.go is not in the source file table, and a byte search of each whole program finds neither cgoResSearch nor cgo_unix.go; the same reads find net.(*Resolver).LookupCNAME, the pure Go resolver's net.(*Resolver).goLookupCNAME, and net/cgo_stub.go and net/dnsclient_unix.go in the file table. LookupCNAME in these programs always uses the pure Go resolver, which does not contain the double free."
     },
     {
       "vulnerability": {
@@ -24577,7 +24588,8 @@
           "@id": "pkg:deb/dhi/external-dns-fips-dev@0.24.0-5?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-33811 (GO-2026-4981): when net.LookupCNAME in the Go standard library uses the cgo DNS resolver, a very long CNAME response can trigger a double free of C memory and a crash. The vulnerable code is net.cgoResSearch in net/cgo_unix.go, and the fix changes only that file: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, Go 1.26 branch fix https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. It is fixed in Go 1.25.10 and 1.26.3. The Debian tracker lists golang-1.24 in trixie and golang-1.19 in bookworm as vulnerable with no DSA (minor issue), and golang-1.26 in forky and sid as fixed: https://security-tracker.debian.org/tracker/CVE-2026-33811. The external-dns-fips-dev packages for Debian 13 are published only in the DHI security repository, which needs authenticated access, and have not been read for this assessment. Pending: a read of every published external-dns-fips-dev build on both architectures for whether every build is compiled with CGO_ENABLED=0 and leaves net.cgoResSearch and net/cgo_unix.go out of its program. The non-FIPS external-dns builds are separate packages, so their results are not carried over to this owner."
     },
     {
       "vulnerability": {
@@ -24666,7 +24678,8 @@
           "@id": "pkg:deb/dhi/external-dns-fips@0.24.0-5?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-33811 (GO-2026-4981): when net.LookupCNAME in the Go standard library uses the cgo DNS resolver, a very long CNAME response can trigger a double free of C memory and a crash. The vulnerable code is net.cgoResSearch in net/cgo_unix.go, and the fix changes only that file: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, Go 1.26 branch fix https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. It is fixed in Go 1.25.10 and 1.26.3. The Debian tracker lists golang-1.24 in trixie and golang-1.19 in bookworm as vulnerable with no DSA (minor issue), and golang-1.26 in forky and sid as fixed: https://security-tracker.debian.org/tracker/CVE-2026-33811. The external-dns-fips packages for Debian 13 are published only in the DHI security repository, which needs authenticated access, and have not been read for this assessment. Pending: a read of every published external-dns-fips build on both architectures for whether every build is compiled with CGO_ENABLED=0 and leaves net.cgoResSearch and net/cgo_unix.go out of its program. The non-FIPS external-dns builds are separate packages, so their results are not carried over to this owner."
     },
     {
       "vulnerability": {
@@ -24755,7 +24768,9 @@
           "@id": "pkg:deb/dhi/external-dns@0.24.0-5?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-33811 (GO-2026-4981): when net.LookupCNAME in the Go standard library uses the cgo DNS resolver, a very long CNAME response can trigger a double free of C memory and a crash. The vulnerable code is net.cgoResSearch in net/cgo_unix.go, and the fix changes only that file: https://pkg.go.dev/vuln/GO-2026-4981, https://go.dev/issue/78803, https://go.dev/cl/767860, Go 1.26 branch fix https://github.com/golang/go/commit/e0f5c054cb123da461a4ac858ad6dd0e3fcc6f92, https://groups.google.com/g/golang-announce/c/qcCIEXso47M. It is fixed in Go 1.25.10 and 1.26.3. The Debian tracker lists golang-1.24 in trixie and golang-1.19 in bookworm as vulnerable with no DSA (minor issue), and golang-1.26 in forky and sid as fixed: https://security-tracker.debian.org/tracker/CVE-2026-33811. Read every external-dns package for Debian 13 published in the DHI Debian repository on 2026-11-28: 26 builds, 0.21.0-2 to 0.24.0-5, each for amd64 and arm64. In each build the package's md5sums entry for /usr/bin/external-dns is the same MD5 as the program in the Alpine 3.23 external-dns package of the matching revision (0.21.0-2 matches 0.21.0-r2, through 0.24.0-5 matching 0.24.0-r5), which was read in full: a statically linked Go program (no ELF interpreter and no shared library dependencies) built with CGO_ENABLED=0 and -trimpath, linked with -w (no DWARF). The program's Go build information lists the Go toolchain go1.26.2 in 0.21.0-2; go1.26.3 in 0.21.0-3 to 0.21.0-5; go1.26.4 in 0.21.0-6 to 0.21.0-7; go1.26.5 in 0.21.0-8 to 0.21.0-11; go1.26.6 in 0.21.0-12; go1.26.7 in 0.21.0-13 to 0.22.0-0; go1.26.8 in 0.22.0-1 to 0.22.0-3; go1.27.1 in 0.23.0-1 to 0.23.0-2; go1.27.2 in 0.23.0-3; go1.27.3 in 0.23.0-4 to 0.24.0-2; go1.27.4 in 0.24.0-3 to 0.24.0-5. Because every build is compiled with CGO_ENABLED=0, the net package is built with its cgo stub (net/cgo_stub.go) in place of net/cgo_unix.go, so the cgo resolver cannot be used. In the Go function table of every program, on both architectures, there is no net.cgoResSearch and no other net function from the cgo resolver, net/cgo_unix.go is not in the source file table, and a byte search of each whole program finds neither cgoResSearch nor cgo_unix.go; the same reads find net.(*Resolver).LookupCNAME, the pure Go resolver's net.(*Resolver).goLookupCNAME, and net/cgo_stub.go and net/dnsclient_unix.go in the file table. LookupCNAME in these programs always uses the pure Go resolver, which does not contain the double free."
     },
     {
       "vulnerability": {
