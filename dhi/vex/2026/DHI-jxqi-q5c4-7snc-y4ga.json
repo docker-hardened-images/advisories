@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-23T22:07:32Z",
-  "last_updated": "2026-11-26T01:47:20Z",
-  "version": 2,
+  "last_updated": "2026-11-28T00:26:36Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -17,7 +17,20 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/valkey-7.2@7.2.14-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update valkey-7.2 to 7.2.15-0 or later.",
+      "status_notes": "GHSA-f4q9-j22m-xqq9, Valkey's advisory for CVE-2026-136156, https://github.com/valkey-io/valkey/security/advisories/GHSA-f4q9-j22m-xqq9, reports an integer truncation in cluster mode: clusterCreatePublishMsgBlock (in src/cluster.c on 7.2) computes the length of the cluster bus message for a PUBLISH or SPUBLISH as a size_t but passes it on as a uint32_t, so when the channel and message together exceed 4 GiB a buffer far smaller than the message is allocated and the full channel and message are copied into it. An authenticated user who can publish, for example by building the arguments in a script, can overflow the heap with attacker-controlled bytes; servers that do not run in cluster mode are not affected. It lists 7.2.x up to 7.2.14 as affected, with 7.2.15 as the patched release. The fix is upstream pull request https://github.com/valkey-io/valkey/pull/5030. On the 7.2 branch it is commit https://github.com/valkey-io/valkey/commit/b5338882d16feded3ba801d625b86199942b057b, which adds clusterPublishMessageLengthValid() to check the full serialized length before any 32-bit conversion or allocation in src/cluster.c, and makes PUBLISH and SPUBLISH reply with the error 'Publish message is too large for the cluster bus' in src/pubsub.c. It is in the 7.2.15 release tag and not in 7.2.14. The DHI valkey-7.2 packages for Debian 13 are built from the upstream valkey release tag of the same version, and the DHI packaging applies no patches to the valkey source. We unpacked every valkey-7.2 package published by 2026-11-27 on amd64 and arm64 (versions 7.2.14-0, 7.2.15-0, 7.2.16-0 and 7.2.16-1 of valkey-7.2-server, valkey-7.2-tools, valkey-7.2-sentinel and the two -dbgsym packages, checksums verified against the package index). The server code ships in valkey-7.2-server as /usr/bin/valkey-server, where valkey-check-aof, valkey-check-rdb and the redis-* names are symbolic links that resolve to it; valkey-7.2-sentinel contains only the valkey-sentinel and redis-sentinel symbolic links to valkey-server and a changelog; valkey-7.2-tools ships the separate valkey-cli and valkey-benchmark programs; the -dbgsym packages hold only detached debug files. These three programs are the only ELF programs in the packages (the other ELF files are those debug files), each dynamically linked against libc.so.6, libm.so.6, libssl.so.3 and libcrypto.so.3 (the arm64 builds also name the dynamic loader), and the scan found no static archive, PE, Mach-O or bundled archive file in any of them. In valkey-server, 7.2.15-0, 7.2.16-0 and 7.2.16-1 carry the version strings 7.2.15 and 7.2.16 and contain both that error text and the clusterPublishMessageLengthValid function name that the fix adds, while 7.2.14-0 carries 7.2.14 and contains neither; the version string, read the same way, is our control and is present in every build. Neither marker appears in valkey-cli or valkey-benchmark. 7.2.15-0 is the first published build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-jxqi-q5c4-7snc-y4ga",
+        "aliases": [
+          "GHSA-f4q9-j22m-xqq9"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/valkey-7.2@7.2.15-0?distro=dhi-13"
         },
@@ -28,7 +41,8 @@
           "@id": "pkg:deb/dhi/valkey-7.2@7.2.16-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "GHSA-f4q9-j22m-xqq9, Valkey's advisory for CVE-2026-136156, https://github.com/valkey-io/valkey/security/advisories/GHSA-f4q9-j22m-xqq9, reports an integer truncation in cluster mode: clusterCreatePublishMsgBlock (in src/cluster.c on 7.2) computes the length of the cluster bus message for a PUBLISH or SPUBLISH as a size_t but passes it on as a uint32_t, so when the channel and message together exceed 4 GiB a buffer far smaller than the message is allocated and the full channel and message are copied into it. An authenticated user who can publish, for example by building the arguments in a script, can overflow the heap with attacker-controlled bytes; servers that do not run in cluster mode are not affected. It lists 7.2.x up to 7.2.14 as affected, with 7.2.15 as the patched release. The fix is upstream pull request https://github.com/valkey-io/valkey/pull/5030. On the 7.2 branch it is commit https://github.com/valkey-io/valkey/commit/b5338882d16feded3ba801d625b86199942b057b, which adds clusterPublishMessageLengthValid() to check the full serialized length before any 32-bit conversion or allocation in src/cluster.c, and makes PUBLISH and SPUBLISH reply with the error 'Publish message is too large for the cluster bus' in src/pubsub.c. It is in the 7.2.15 release tag and not in 7.2.14. The DHI valkey-7.2 packages for Debian 13 are built from the upstream valkey release tag of the same version, and the DHI packaging applies no patches to the valkey source. We unpacked every valkey-7.2 package published by 2026-11-27 on amd64 and arm64 (versions 7.2.14-0, 7.2.15-0, 7.2.16-0 and 7.2.16-1 of valkey-7.2-server, valkey-7.2-tools, valkey-7.2-sentinel and the two -dbgsym packages, checksums verified against the package index). The server code ships in valkey-7.2-server as /usr/bin/valkey-server, where valkey-check-aof, valkey-check-rdb and the redis-* names are symbolic links that resolve to it; valkey-7.2-sentinel contains only the valkey-sentinel and redis-sentinel symbolic links to valkey-server and a changelog; valkey-7.2-tools ships the separate valkey-cli and valkey-benchmark programs; the -dbgsym packages hold only detached debug files. These three programs are the only ELF programs in the packages (the other ELF files are those debug files), each dynamically linked against libc.so.6, libm.so.6, libssl.so.3 and libcrypto.so.3 (the arm64 builds also name the dynamic loader), and the scan found no static archive, PE, Mach-O or bundled archive file in any of them. In valkey-server, 7.2.15-0, 7.2.16-0 and 7.2.16-1 carry the version strings 7.2.15 and 7.2.16 and contain both that error text and the clusterPublishMessageLengthValid function name that the fix adds, while 7.2.14-0 carries 7.2.14 and contains neither; the version string, read the same way, is our control and is present in every build. Neither marker appears in valkey-cli or valkey-benchmark. 7.2.15-0 is the first published build that carries the fix."
     },
     {
       "vulnerability": {

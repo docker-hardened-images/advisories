@@ -4,7 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-13T05:54:07Z",
-  "version": 1,
+  "last_updated": "2026-11-28T00:26:40Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -69,7 +70,9 @@
           "@id": "pkg:apk/dhi/rust@1.99.1-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "No fixed release is available yet; update when Docker Hardened Images publishes one.",
+      "status_notes": "GHSA-3pv8-6f4r-ffg2: the Rust tar crate 0.4.45 and earlier applies a PAX extended header to the next header in the stream even when that is another extension header (a GNU long name or long link, or another PAX header), so a crafted archive can desynchronize the stream and unpack differently with this crate than with other tar parsers. It is fixed in tar 0.4.46 by commit bab14dd: https://github.com/composefs/tar-rs/security/advisories/GHSA-3pv8-6f4r-ffg2, https://github.com/composefs/tar-rs/pull/454, https://github.com/composefs/tar-rs/commit/bab14dd84b411ac16ecb56d4f2d2f7bfb88a9838. Scanned every package of this owner published in the DHI Alpine 3.23 repository, for x86_64 and aarch64: all 17 packages (rust, cargo, rustc-dev, rustfmt, rust-clippy, rust-dbg, rust-src, rust-wasm, rust-uefi, rust-gdb, rust-lldb and the doc and completion packages) of builds 1.91.1-r0, 1.91.1-r3 and 1.91.1-r4, and build 1.91.1-r2, which publishes only rust and cargo. Every file, including the .rlib archives and the .rmeta compiler metadata, was searched for the crate's source paths, which name the crate version it was built from. The cargo program (/usr/bin/cargo) in every one of those builds, on both architectures, is compiled with tar 0.4.44, whose src/archive.rs applies PAX extensions to the next header of any type. Alpine's patch for CVE-2026-33056, which builds 1.91.1-r2 to -r4 carry, changes only the directory-unpacking code and not this logic. Apart from cargo and its debug symbols in rust-dbg, no file in these packages contains the tar crate's source paths. No published build of this owner carries a fixed tar version, so every published build is affected."
     }
   ]
 }
