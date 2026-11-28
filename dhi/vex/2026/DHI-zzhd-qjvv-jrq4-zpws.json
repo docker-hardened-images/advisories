@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:02:09Z",
-  "last_updated": "2026-11-21T22:14:21Z",
-  "version": 4,
+  "last_updated": "2026-11-28T02:25:15Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -129,7 +129,9 @@
           "@id": "pkg:apk/dhi/dotnet8-runtime@8.0.34-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-96232 (GHSA-f8qh-mqg4-9939) is a .NET information disclosure issue in Windows Presentation Foundation (WPF): an out-of-bounds read in XAML and XPS handling can disclose information over a network. Microsoft lists Windows as the only affected platform and the Microsoft.WindowsDesktop.App.Runtime packs for win-x64, win-x86 and win-arm64 as the only affected .NET 8 packages, from 8.0.0 through 8.0.31, fixed in 8.0.32 (https://github.com/advisories/GHSA-f8qh-mqg4-9939, https://github.com/dotnet/announcements/issues/480, https://github.com/dotnet/wpf/issues/12024, https://github.com/dotnet/core/blob/main/release-notes/8.0/8.0.32/8.0.32.md). DHI dotnet8-runtime for Alpine 3.23 builds .NET 8 for Linux (linux-musl) from Microsoft's source release, and each build's version is the .NET runtime version it carries. We read all 220 packages of the ten builds published for Alpine 3.23 as of 2026-11-27 (8.0.23-r0, 8.0.24-r0, 8.0.25-r0, 8.0.26-r0, 8.0.27-r0, 8.0.29-r0, 8.0.31-r0, 8.0.32-r0, 8.0.33-r0 and 8.0.34-r0), every subpackage including the -dbg debug packages, for x86_64 and aarch64, recursing into the nupkg, zip and tar.gz archives they hold, and recorded every .NET assembly with its file version and every ELF, PE and Mach-O file. No WPF code is present: no package contains a PresentationFramework, PresentationCore, PresentationUI, System.Xaml, ReachFramework, DirectWriteForwarder, UIAutomation, wpfgfx, PresentationNative or PenImc assembly or native library, a PresentationBuildTasks build task, or a Microsoft.WindowsDesktop.App shared framework or runtime pack, and no package contains a native Windows PE file or a Mach-O file: every PE file in them is a managed .NET assembly with a CLR header. The only assemblies with WPF-related names are WindowsBase.dll compatibility facades of 4 KB to 6 KB that ship with the Microsoft.NETCore.App shared framework and its runtime, NativeAOT compiler and reference packs, and in source-build reference packages in dotnet8-runtime-artifacts; they hold no WPF implementation. dotnet8-runtime-artifacts also holds the Microsoft.Internal.Runtime.WindowsDesktop.Transport nupkg, whose assemblies are libraries built in the .NET runtime repository (such as System.Security.Cryptography.Pkcs, System.Diagnostics.EventLog and System.IO.Packaging) and no WPF assembly, and the Microsoft.Private.Intellisense documentation nupkg, which contains no assembly. WPF is built only for Windows, so this owner does not contain the WPF component."
     },
     {
       "vulnerability": {

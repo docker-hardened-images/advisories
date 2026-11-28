@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T17:00:40Z",
-  "last_updated": "2026-11-21T23:25:24Z",
-  "version": 5,
+  "last_updated": "2026-11-28T02:25:14Z",
+  "version": 6,
   "statements": [
     {
       "vulnerability": {
@@ -129,7 +129,9 @@
           "@id": "pkg:apk/dhi/dotnet8-runtime@8.0.34-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-96230 (GHSA-qjpx-jqm5-h2c4) is an ASP.NET Core remote code execution issue in Microsoft.AspNetCore.Components.WebAssembly.Server: the Blazor WebAssembly development-server debug page can reflect unencoded exception text, allowing cross-origin script injection through the unauthenticated /_framework/debug endpoint used by dotnet watch. Microsoft lists only the Microsoft.AspNetCore.Components.WebAssembly.Server NuGet package as affected, from 8.0.0 through 8.0.31 for .NET 8, fixed in 8.0.32 (https://github.com/advisories/GHSA-qjpx-jqm5-h2c4, https://github.com/dotnet/announcements/issues/478, https://github.com/dotnet/aspnetcore/discussions/69802, https://github.com/dotnet/core/blob/main/release-notes/8.0/8.0.32/8.0.32.md). DHI dotnet8-runtime for Alpine 3.23 builds .NET 8 for Linux (linux-musl) from Microsoft's source release, and each build's version is the .NET runtime version it carries. We read all 220 packages of the ten builds published for Alpine 3.23 as of 2026-11-27 (8.0.23-r0, 8.0.24-r0, 8.0.25-r0, 8.0.26-r0, 8.0.27-r0, 8.0.29-r0, 8.0.31-r0, 8.0.32-r0, 8.0.33-r0 and 8.0.34-r0), every subpackage including the -dbg debug packages, for x86_64 and aarch64, recursing into the nupkg, zip and tar.gz archives they hold, and recorded every .NET assembly with its file version and every ELF, PE and Mach-O file. No package contains a Microsoft.AspNetCore.Components.WebAssembly.Server assembly or nupkg, a Blazor WebAssembly development server (DevServer) assembly or nupkg, a BrowserDebugHost or BrowserDebugProxy assembly, or any Microsoft.AspNetCore.Components.WebAssembly assembly or nupkg. A byte search of every .NET assembly in every package, including those inside nupkg files, finds no TargetPickerUi or UseWebAssemblyDebugging string; the affected package defines both for the /_framework/debug endpoint (https://github.com/dotnet/aspnetcore/blob/v8.0.31/src/Components/WebAssembly/Server/src/WebAssemblyNetDebugProxyAppBuilderExtensions.cs). The same scan finds the ASP.NET Core Components server assembly (Microsoft.AspNetCore.Components.Server.dll) in every build, and the same byte search finds the TrySkipNextArray routine in that assembly in builds 8.0.23-r0 to 8.0.27-r0, so both searches reach ASP.NET Core Components files. The affected package is not part of this owner."
     },
     {
       "vulnerability": {
