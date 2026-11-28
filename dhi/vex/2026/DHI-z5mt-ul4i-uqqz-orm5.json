@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:54:50Z",
-  "last_updated": "2026-11-28T06:10:11Z",
-  "version": 4,
+  "last_updated": "2026-11-28T15:34:41Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -53,15 +53,6 @@
       },
       "products": [
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
         },
         {
@@ -71,7 +62,30 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.10-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-6638 (REFRESH PUBLICATION allows SQL injection via table name) in 17.10 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-6638/ lists 17.10 as the fixed release for major version 17 (minor versions before 17.10 are affected; the component is the core server), and the 17.10 release notes, https://www.postgresql.org/docs/release/17.10/, list it as 'Properly quote object names in logical replication origin checks'. The 17.x fix is https://github.com/postgres/postgres/commit/f0f59b658ef10901c9af3af7705c802a72a0577e ('Fix SQL injection in logical replication origin checks', tagged Security: CVE-2026-6638), which is in the REL_17_10 release tag and not in REL_17_9. In check_publications_origin() in src/backend/commands/subscriptioncmds.c it stops pasting the subscriber's schema and table names between single quotes into the query sent to the publisher, changing the format string \"AND NOT (N.nspname = '%s' AND C.relname = '%s')\" to \"AND NOT (N.nspname = %s AND C.relname = %s)\" and passing the names through quote_literal_cstr(). We checked the server program, /usr/libexec/postgresql17/postgres, in every postgresql17 package published for Alpine 3.23 in the DHI package repository as of 2026-11-28 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0), on both x86_64 and aarch64, with each package checked against the package index checksum. In 17.7-r0, 17.8-r0 and 17.9-r0 the program holds the old quoted format string once and not the new one; in 17.10-r0, 17.11-r0 and 17.12-r0 it holds the new format string once and not the old one. The query text that precedes it in the same function ('SELECT DISTINCT P.pubname AS pubname') is present once in every build as a control, and the programs report PostgreSQL 17.7 through 17.12 respectively. 17.10-r0 is the first published build that carries the fix, and 17.7-r0 through 17.9-r0 are affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-z5mt-ul4i-uqqz-orm5",
+        "aliases": [
+          "CVE-2026-6638"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-6638 (REFRESH PUBLICATION allows SQL injection via table name) in 17.10 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-6638/ lists 17.10 as the fixed release for major version 17 (minor versions before 17.10 are affected; the component is the core server), and the 17.10 release notes, https://www.postgresql.org/docs/release/17.10/, list it as 'Properly quote object names in logical replication origin checks'. The 17.x fix is https://github.com/postgres/postgres/commit/f0f59b658ef10901c9af3af7705c802a72a0577e ('Fix SQL injection in logical replication origin checks', tagged Security: CVE-2026-6638), which is in the REL_17_10 release tag and not in REL_17_9. In check_publications_origin() in src/backend/commands/subscriptioncmds.c it stops pasting the subscriber's schema and table names between single quotes into the query sent to the publisher, changing the format string \"AND NOT (N.nspname = '%s' AND C.relname = '%s')\" to \"AND NOT (N.nspname = %s AND C.relname = %s)\" and passing the names through quote_literal_cstr(). We checked the server program, /usr/libexec/postgresql17/postgres, in every postgresql17 package published for Alpine 3.23 in the DHI package repository as of 2026-11-28 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0), on both x86_64 and aarch64, with each package checked against the package index checksum. In 17.7-r0, 17.8-r0 and 17.9-r0 the program holds the old quoted format string once and not the new one; in 17.10-r0, 17.11-r0 and 17.12-r0 it holds the new format string once and not the old one. The query text that precedes it in the same function ('SELECT DISTINCT P.pubname AS pubname') is present once in every build as a control, and the programs report PostgreSQL 17.7 through 17.12 respectively. 17.10-r0 is the first published build that carries the fix, and 17.7-r0 through 17.9-r0 are affected."
     },
     {
       "vulnerability": {

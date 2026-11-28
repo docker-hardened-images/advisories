@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:54:50Z",
-  "last_updated": "2026-11-27T08:09:35Z",
-  "version": 4,
+  "last_updated": "2026-11-28T15:34:34Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -53,15 +53,6 @@
       },
       "products": [
         {
-          "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/postgresql17@17.7-r0?distro=dhi-3.23"
         },
         {
@@ -71,7 +62,30 @@
           "@id": "pkg:apk/dhi/postgresql17@17.9-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "affected",
+      "action_statement": "Update postgresql17 to 17.10-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-6474 (PostgreSQL timeofday() can disclose portions of server memory) in 17.10 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-6474/ lists 17.10 as the fixed release for major version 17 (versions before 17.10 are affected), and the 17.10 release notes, https://www.postgresql.org/docs/release/17.10/, list this CVE. The fix is commits https://github.com/postgres/postgres/commit/4197c880cada16a5ae2777cd4ef8522090376a77 (src/backend/utils/adt/timestamp.c: timeofday() no longer passes text produced by pg_strftime() to snprintf() as a format string) and https://github.com/postgres/postgres/commit/a386d14feb210cd9c6c9b68cd8782e089f4d5b62 (src/timezone/strftime.c) on the REL_17_STABLE branch; both are tagged Security: CVE-2026-6474 and are in the REL_17_10 release tag and not in REL_17_9. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, which builds the upstream PostgreSQL release tarball; the 17.10-r0 APKBUILD, https://github.com/alpinelinux/aports/blob/2949d6752d74a3fb36bd772b9f993331fa6917e2/main/postgresql17/APKBUILD, differs from the 17.9-r0 one only in the version, the tarball checksum and the secfixes list, applies no patch that touches the files this fix changes, and lists CVE-2026-6474 under its 17.10-r0 secfixes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every postgresql17 build published for Alpine 3.23 in the DHI package repository as of 2026-11-27 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0), on both x86_64 and aarch64, with package checksums verified against the package index: 17.7-r0, 17.8-r0 and 17.9-r0 report PostgreSQL 17.7, 17.8 and 17.9 and are affected, while 17.10-r0, 17.11-r0 and 17.12-r0 report 17.10, 17.11 and 17.12 and carry the fix. As a check, the server binary in 17.7-r0, 17.8-r0 and 17.9-r0 contains the old combined timeofday() format string ('%a %b %d %H:%M:%S.%%06d %Y %Z') that the fix removes, and 17.10-r0, 17.11-r0 and 17.12-r0 instead contain the split format strings it adds ('%a %b %d %H:%M:%S' and '%s.%06d %s'), on both architectures. 17.10-r0 is the first published build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-yggg-y7zf-funf-udux",
+        "aliases": [
+          "CVE-2026-6474"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.10-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.11-r0?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/postgresql17@17.12-r0?distro=dhi-3.23"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-6474 (PostgreSQL timeofday() can disclose portions of server memory) in 17.10 on the PostgreSQL 17 branch: https://www.postgresql.org/support/security/CVE-2026-6474/ lists 17.10 as the fixed release for major version 17 (versions before 17.10 are affected), and the 17.10 release notes, https://www.postgresql.org/docs/release/17.10/, list this CVE. The fix is commits https://github.com/postgres/postgres/commit/4197c880cada16a5ae2777cd4ef8522090376a77 (src/backend/utils/adt/timestamp.c: timeofday() no longer passes text produced by pg_strftime() to snprintf() as a format string) and https://github.com/postgres/postgres/commit/a386d14feb210cd9c6c9b68cd8782e089f4d5b62 (src/timezone/strftime.c) on the REL_17_STABLE branch; both are tagged Security: CVE-2026-6474 and are in the REL_17_10 release tag and not in REL_17_9. The DHI postgresql17 packages for Alpine 3.23 are built from Alpine's postgresql17 APKBUILD, which builds the upstream PostgreSQL release tarball; the 17.10-r0 APKBUILD, https://github.com/alpinelinux/aports/blob/2949d6752d74a3fb36bd772b9f993331fa6917e2/main/postgresql17/APKBUILD, differs from the 17.9-r0 one only in the version, the tarball checksum and the secfixes list, applies no patch that touches the files this fix changes, and lists CVE-2026-6474 under its 17.10-r0 secfixes. We checked the postgres server binary, /usr/libexec/postgresql17/postgres, in every postgresql17 build published for Alpine 3.23 in the DHI package repository as of 2026-11-27 (17.7-r0, 17.8-r0, 17.9-r0, 17.10-r0, 17.11-r0 and 17.12-r0), on both x86_64 and aarch64, with package checksums verified against the package index: 17.7-r0, 17.8-r0 and 17.9-r0 report PostgreSQL 17.7, 17.8 and 17.9 and are affected, while 17.10-r0, 17.11-r0 and 17.12-r0 report 17.10, 17.11 and 17.12 and carry the fix. As a check, the server binary in 17.7-r0, 17.8-r0 and 17.9-r0 contains the old combined timeofday() format string ('%a %b %d %H:%M:%S.%%06d %Y %Z') that the fix removes, and 17.10-r0, 17.11-r0 and 17.12-r0 instead contain the split format strings it adds ('%a %b %d %H:%M:%S' and '%s.%06d %s'), on both architectures. 17.10-r0 is the first published build that carries the fix."
     },
     {
       "vulnerability": {

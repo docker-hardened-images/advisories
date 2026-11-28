@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T18:54:50Z",
-  "last_updated": "2026-11-28T00:41:27Z",
-  "version": 4,
+  "last_updated": "2026-11-28T15:34:31Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -17,7 +17,20 @@
       "products": [
         {
           "@id": "pkg:apk/dhi/postgresql16@16.13-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update postgresql16 to 16.14-r0 or later.",
+      "status_notes": "PostgreSQL fixed CVE-2026-6637 (refint allows stack buffer overflow and SQL injection) in 16.14 on the PostgreSQL 16 branch: https://www.postgresql.org/support/security/CVE-2026-6637/ lists 16.14 as the fixed release for major version 16 (versions before 16.14 are affected; the component is the contrib module refint), and the 16.14 release notes, https://www.postgresql.org/docs/release/16.14/, list it under 'Prevent SQL injection and buffer overruns in contrib/spi'. The fix is https://github.com/postgres/postgres/commit/710995782fa388f3878a86e1d9ed68db8abc4276 (refint: Fix SQL injection and buffer overruns, tagged Security: CVE-2026-6637), which changes only contrib/spi/refint.c and is in the REL_16_14 release tag and not in REL_16_13. It replaces the fixed 8192-byte query buffers in check_primary_key() and check_foreign_key() with growable strings, and quotes cascaded key values with quote_literal_cstr() instead of wrapping some types in bare single quotes. The DHI postgresql16 packages for Alpine 3.23 are built from Alpine's postgresql16 APKBUILD, which builds the upstream PostgreSQL release tarball; its 16.14-r0 security upgrade, https://github.com/alpinelinux/aports/commit/56de254843f841a99aedea4953a2dc9ec9338eb4, lists CVE-2026-6637 under the 16.14-r0 secfixes. We checked every postgresql16 and postgresql16-contrib build published for Alpine 3.23 in the DHI package repository as of 2026-11-27 (16.13-r0, 16.14-r0, 16.15-r0 and 16.16-r0), on both x86_64 and aarch64, with package checksums verified against the package index. The refint module ships as /usr/lib/postgresql16/refint.so in the postgresql16-contrib package. In 16.13-r0 on both architectures refint.so still holds the old format string ' %s = %s%s%s %s ' and imports SPI_gettype, and does not import quote_literal_cstr; in 16.14-r0, 16.15-r0 and 16.16-r0 on both architectures the old format string and the SPI_gettype import are gone, and refint.so imports quote_literal_cstr and holds the new format string ' %s = %s ' that the fix adds (check_foreign_key is present in every build as a positive control). The postgres server binaries report PostgreSQL 16.13, 16.14, 16.15 and 16.16 respectively. 16.14-r0 is the first published build that carries the fix, and 16.13-r0 is affected."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-tui2-35ev-zyhf-7cve",
+        "aliases": [
+          "CVE-2026-6637"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/postgresql16@16.14-r0?distro=dhi-3.23"
         },
@@ -28,7 +41,8 @@
           "@id": "pkg:apk/dhi/postgresql16@16.16-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "PostgreSQL fixed CVE-2026-6637 (refint allows stack buffer overflow and SQL injection) in 16.14 on the PostgreSQL 16 branch: https://www.postgresql.org/support/security/CVE-2026-6637/ lists 16.14 as the fixed release for major version 16 (versions before 16.14 are affected; the component is the contrib module refint), and the 16.14 release notes, https://www.postgresql.org/docs/release/16.14/, list it under 'Prevent SQL injection and buffer overruns in contrib/spi'. The fix is https://github.com/postgres/postgres/commit/710995782fa388f3878a86e1d9ed68db8abc4276 (refint: Fix SQL injection and buffer overruns, tagged Security: CVE-2026-6637), which changes only contrib/spi/refint.c and is in the REL_16_14 release tag and not in REL_16_13. It replaces the fixed 8192-byte query buffers in check_primary_key() and check_foreign_key() with growable strings, and quotes cascaded key values with quote_literal_cstr() instead of wrapping some types in bare single quotes. The DHI postgresql16 packages for Alpine 3.23 are built from Alpine's postgresql16 APKBUILD, which builds the upstream PostgreSQL release tarball; its 16.14-r0 security upgrade, https://github.com/alpinelinux/aports/commit/56de254843f841a99aedea4953a2dc9ec9338eb4, lists CVE-2026-6637 under the 16.14-r0 secfixes. We checked every postgresql16 and postgresql16-contrib build published for Alpine 3.23 in the DHI package repository as of 2026-11-27 (16.13-r0, 16.14-r0, 16.15-r0 and 16.16-r0), on both x86_64 and aarch64, with package checksums verified against the package index. The refint module ships as /usr/lib/postgresql16/refint.so in the postgresql16-contrib package. In 16.13-r0 on both architectures refint.so still holds the old format string ' %s = %s%s%s %s ' and imports SPI_gettype, and does not import quote_literal_cstr; in 16.14-r0, 16.15-r0 and 16.16-r0 on both architectures the old format string and the SPI_gettype import are gone, and refint.so imports quote_literal_cstr and holds the new format string ' %s = %s ' that the fix adds (check_foreign_key is present in every build as a positive control). The postgres server binaries report PostgreSQL 16.13, 16.14, 16.15 and 16.16 respectively. 16.14-r0 is the first published build that carries the fix, and 16.13-r0 is affected."
     },
     {
       "vulnerability": {
