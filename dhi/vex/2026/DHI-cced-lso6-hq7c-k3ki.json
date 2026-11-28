@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-11T19:00:00Z",
-  "last_updated": "2026-11-27T23:56:50Z",
-  "version": 4,
+  "last_updated": "2026-11-28T14:55:58Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -99,7 +99,20 @@
         },
         {
           "@id": "pkg:apk/dhi/nodejs-24@24.16.0-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update nodejs-24 to 24.17.0-r0 or later.",
+      "status_notes": "CVE-2026-48934 is a TLS host verification bypass in Node.js clients: a TLS session saved from a connection to one server could be resumed on a connection to a different servername, and because the identity check is skipped for a resumed session, the second connection was accepted without verifying that the certificate matches its host. Node.js fixed it for 24.x in 24.17.0, released 2026-06-18: the June 2026 security release, https://nodejs.org/en/blog/vulnerability/june-2026-security-releases, lists 24.x among the affected release lines, and the 24.17.0 release notes, https://nodejs.org/en/blog/release/v24.17.0, list this CVE. The fix is commit https://github.com/nodejs/node/commit/a77af4867b ('tls: bind reusable sessions to authenticated host'), which carries CVE-ID: CVE-2026-48934 and is in the v24.17.0 tag and not in v24.16.0; it changes lib/internal/tls/wrap.js. An incomplete-fix follow-up for HTTPS Agent session reuse was published separately as CVE-2026-58040 and fixed in 24.18.1 (https://nodejs.org/en/blog/vulnerability/july-2026-security-releases); it has its own assessment. The CVE record, https://www.cve.org/CVERecord?id=CVE-2026-48934, lists Node.js 24 releases up to 24.16.0 as affected. The DHI nodejs-24 packages for Alpine 3.23 are built from the upstream Node.js release tarball for their version. Each published nodejs-24 package holds one file, /usr/bin/node, a dynamically linked musl program that carries the Node.js JavaScript library and the C++ runtime where this code lives; the nodejs-24-dev subpackages hold C and C++ header files and two .gypi build configuration files under /usr/include/node, and the nodejs-24-doc subpackages hold the node man page and two debugger helper files, gdbinit and lldb_commands.py, with no ELF, PE or Mach-O file in either. We checked the node binary, /usr/bin/node, in every nodejs-24 package for Alpine 3.23 published by 2026-11-28, on x86_64 and aarch64 (checksums verified against the package index): 24.17.0-r0, 24.18.0-r0, 24.18.1-r0, 24.19.0-r0, 24.20.0-r0, 24.21.0-r0, 24.22.0-r0, 24.22.1-r0, 24.22.1-r1, 24.22.2-r0 and 24.22.3-r0 report v24.17.0 through v24.22.3 and carry the fix, while the earlier builds 24.13.0-r0, 24.13.1-r0, 24.14.0-r0, 24.14.1-r0, 24.15.0-r0, 24.15.0-r1 and 24.16.0-r0 report v24.13.0 through v24.16.0 and are affected. As a check, the source of lib/internal/tls/wrap.js embedded in the node binary contains the session wrapper this fix adds, which tags each saved session with the host it was authenticated for (the 'nodejs:tls:session:1' prefix, read back by getSessionForReuse()), in 24.17.0-r0 and every later build on both architectures, and does not in any earlier build. 24.17.0-r0 is the first published build that carries the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-cced-lso6-hq7c-k3ki",
+        "aliases": [
+          "CVE-2026-48934"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/nodejs-24@24.17.0-r0?distro=dhi-3.23"
         },
@@ -134,7 +147,8 @@
           "@id": "pkg:apk/dhi/nodejs-24@24.22.3-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-48934 is a TLS host verification bypass in Node.js clients: a TLS session saved from a connection to one server could be resumed on a connection to a different servername, and because the identity check is skipped for a resumed session, the second connection was accepted without verifying that the certificate matches its host. Node.js fixed it for 24.x in 24.17.0, released 2026-06-18: the June 2026 security release, https://nodejs.org/en/blog/vulnerability/june-2026-security-releases, lists 24.x among the affected release lines, and the 24.17.0 release notes, https://nodejs.org/en/blog/release/v24.17.0, list this CVE. The fix is commit https://github.com/nodejs/node/commit/a77af4867b ('tls: bind reusable sessions to authenticated host'), which carries CVE-ID: CVE-2026-48934 and is in the v24.17.0 tag and not in v24.16.0; it changes lib/internal/tls/wrap.js. An incomplete-fix follow-up for HTTPS Agent session reuse was published separately as CVE-2026-58040 and fixed in 24.18.1 (https://nodejs.org/en/blog/vulnerability/july-2026-security-releases); it has its own assessment. The CVE record, https://www.cve.org/CVERecord?id=CVE-2026-48934, lists Node.js 24 releases up to 24.16.0 as affected. The DHI nodejs-24 packages for Alpine 3.23 are built from the upstream Node.js release tarball for their version. Each published nodejs-24 package holds one file, /usr/bin/node, a dynamically linked musl program that carries the Node.js JavaScript library and the C++ runtime where this code lives; the nodejs-24-dev subpackages hold C and C++ header files and two .gypi build configuration files under /usr/include/node, and the nodejs-24-doc subpackages hold the node man page and two debugger helper files, gdbinit and lldb_commands.py, with no ELF, PE or Mach-O file in either. We checked the node binary, /usr/bin/node, in every nodejs-24 package for Alpine 3.23 published by 2026-11-28, on x86_64 and aarch64 (checksums verified against the package index): 24.17.0-r0, 24.18.0-r0, 24.18.1-r0, 24.19.0-r0, 24.20.0-r0, 24.21.0-r0, 24.22.0-r0, 24.22.1-r0, 24.22.1-r1, 24.22.2-r0 and 24.22.3-r0 report v24.17.0 through v24.22.3 and carry the fix, while the earlier builds 24.13.0-r0, 24.13.1-r0, 24.14.0-r0, 24.14.1-r0, 24.15.0-r0, 24.15.0-r1 and 24.16.0-r0 report v24.13.0 through v24.16.0 and are affected. As a check, the source of lib/internal/tls/wrap.js embedded in the node binary contains the session wrapper this fix adds, which tags each saved session with the host it was authenticated for (the 'nodejs:tls:session:1' prefix, read back by getSessionForReuse()), in 24.17.0-r0 and every later build on both architectures, and does not in any earlier build. 24.17.0-r0 is the first published build that carries the fix."
     },
     {
       "vulnerability": {
