@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-18T23:13:35Z",
-  "last_updated": "2026-11-27T10:28:12Z",
-  "version": 38,
+  "last_updated": "2026-11-28T07:11:26Z",
+  "version": 39,
   "statements": [
     {
       "vulnerability": {
@@ -19991,7 +19991,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-dev@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39833 (GO-2026-5005, GHSA-jppx-rxg9-jmrx): the in-memory SSH agent keyring returned by NewKeyring in golang.org/x/crypto/ssh/agent accepted keys with the ConfirmBeforeUse constraint but never enforced it, so the key signed without any confirmation prompt. It affects golang.org/x/crypto before 0.52.0, and the Go vulnerability database names a single function, keyring.Add in golang.org/x/crypto/ssh/agent. Upstream fixed it in commit 0fb843a47222 (https://go.dev/cl/778642), released in v0.52.0. Sources: https://pkg.go.dev/vuln/GO-2026-5005, https://go.dev/issue/79436 and https://groups.google.com/g/golang-announce/c/a082jnz-LvI. We checked every scout-sbom-indexer-dev package published for Alpine 3.23 in the DHI Alpine repository as of 28 November 2026: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, on x86_64 and aarch64 (50 packages). Each package holds one file, /sbom-indexer, a statically linked Go program for Linux built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). We read the program in full from every package, except 1.26.0-r3, whose program has the same SHA-1 checksum, recorded in its package header, as the 1.26.0-r2 program we read. The -dev program is built without the -w linker flag and without -trimpath, but it carries the same Go release and module versions as the scout-sbom-indexer program of the same build. Its Go build information lists golang.org/x/crypto, with no replace directive for that module and the same on both architectures: v0.50.0 in 1.20.4-r1 to 1.20.4-r2, v0.51.0 in 1.20.4-r3 to 1.20.4-r4, v0.52.0 in 1.20.4-r5 to 1.21.0-r1, v0.53.0 in 1.21.0-r2 to 1.21.0-r3, v0.54.0 in 1.23.1-r0 to 1.23.1-r1, v0.55.0 in 1.23.1-r3 to 1.23.1-r6, v0.57.0 in 1.23.1-r8 to 1.23.1-r10, v0.58.0 in 1.26.0-r1 to 1.29.0-r0, v0.59.0 in 1.29.0-r1 to 1.30.0-r0. Reading the program's Go function table in every build (runtime.main found in every build as a control) shows golang.org/x/crypto/ssh/agent linked only for the agent client (agent.(*client).Add and the other client methods): no build has agent.NewKeyring or any method of the in-memory keyring type, including agent.(*keyring).Add, and a byte search of every build, which also finds the names of functions the compiler inlined, finds neither agent.(*keyring) nor agent.NewKeyring. The program never creates an in-memory agent keyring, so the code this CVE is in is not present, whichever x/crypto version a build carries. As a positive control, the same function-table reader and byte search, run on a test program built with CGO_ENABLED=0 and -trimpath for linux/amd64 and linux/arm64 against golang.org/x/crypto v0.50.0 that calls agent.NewKeyring and adds a key with ConfirmBeforeUse, find agent.(*keyring).Add in the function table and both agent.(*keyring) and agent.NewKeyring in the byte search. The CVE is open in Debian 13 (trixie), where its golang-go.crypto package is marked no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39833); this decision rests on the code in these builds, not on that status."
     },
     {
       "vulnerability": {
@@ -20077,7 +20079,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips-dev@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39833 (GO-2026-5005, GHSA-jppx-rxg9-jmrx): the in-memory SSH agent keyring returned by NewKeyring in golang.org/x/crypto/ssh/agent accepted keys with the ConfirmBeforeUse constraint but never enforced it, so the key signed without any confirmation prompt. It affects golang.org/x/crypto before 0.52.0, and the Go vulnerability database names a single function, keyring.Add in golang.org/x/crypto/ssh/agent. Upstream fixed it in commit 0fb843a47222 (https://go.dev/cl/778642), released in v0.52.0. Sources: https://pkg.go.dev/vuln/GO-2026-5005, https://go.dev/issue/79436 and https://groups.google.com/g/golang-announce/c/a082jnz-LvI. The scout-sbom-indexer-fips-dev packages for Alpine 3.23 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information, function table and a byte search, as done for the scout-sbom-indexer packages) to establish whether the in-memory keyring (agent.NewKeyring and keyring.Add) is linked. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -20163,7 +20166,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips-oci-config@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39833 (GO-2026-5005, GHSA-jppx-rxg9-jmrx): the in-memory SSH agent keyring returned by NewKeyring in golang.org/x/crypto/ssh/agent accepted keys with the ConfirmBeforeUse constraint but never enforced it, so the key signed without any confirmation prompt. It affects golang.org/x/crypto before 0.52.0, and the Go vulnerability database names a single function, keyring.Add in golang.org/x/crypto/ssh/agent. Upstream fixed it in commit 0fb843a47222 (https://go.dev/cl/778642), released in v0.52.0. Sources: https://pkg.go.dev/vuln/GO-2026-5005, https://go.dev/issue/79436 and https://groups.google.com/g/golang-announce/c/a082jnz-LvI. The scout-sbom-indexer-fips-oci-config packages for Alpine 3.23 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of every published build of this package, to confirm that, like scout-sbom-indexer-oci-config, it holds only a YAML configuration file and no program. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -20249,7 +20253,8 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-fips@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39833 (GO-2026-5005, GHSA-jppx-rxg9-jmrx): the in-memory SSH agent keyring returned by NewKeyring in golang.org/x/crypto/ssh/agent accepted keys with the ConfirmBeforeUse constraint but never enforced it, so the key signed without any confirmation prompt. It affects golang.org/x/crypto before 0.52.0, and the Go vulnerability database names a single function, keyring.Add in golang.org/x/crypto/ssh/agent. Upstream fixed it in commit 0fb843a47222 (https://go.dev/cl/778642), released in v0.52.0. Sources: https://pkg.go.dev/vuln/GO-2026-5005, https://go.dev/issue/79436 and https://groups.google.com/g/golang-announce/c/a082jnz-LvI. The scout-sbom-indexer-fips packages for Alpine 3.23 are published in the DHI Alpine security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information, function table and a byte search, as done for the scout-sbom-indexer packages) to establish whether the in-memory keyring (agent.NewKeyring and keyring.Add) is linked. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -20335,7 +20340,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer-oci-config@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-39833 (GO-2026-5005, GHSA-jppx-rxg9-jmrx): the in-memory SSH agent keyring returned by NewKeyring in golang.org/x/crypto/ssh/agent accepted keys with the ConfirmBeforeUse constraint but never enforced it, so the key signed without any confirmation prompt. It affects golang.org/x/crypto before 0.52.0, and the Go vulnerability database names a single function, keyring.Add in golang.org/x/crypto/ssh/agent. Upstream fixed it in commit 0fb843a47222 (https://go.dev/cl/778642), released in v0.52.0. Sources: https://pkg.go.dev/vuln/GO-2026-5005, https://go.dev/issue/79436 and https://groups.google.com/g/golang-announce/c/a082jnz-LvI. We checked every scout-sbom-indexer-oci-config package published for Alpine 3.23 in the DHI Alpine repository as of 28 November 2026: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, on both architectures (50 packages). Each package holds a single 180-byte file, /opt/docker/config/scout-sbom-indexer.yaml, a YAML configuration file that sets SBOM cataloger options for the image (every package downloaded in full, its checksum matching the repository index). It contains no program, library or Go code, so golang.org/x/crypto is not part of this package. The program ships in the scout-sbom-indexer and scout-sbom-indexer-dev packages, which have their own decisions."
     },
     {
       "vulnerability": {
@@ -20421,7 +20428,9 @@
           "@id": "pkg:apk/dhi/scout-sbom-indexer@1.30.0-r0?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39833 (GO-2026-5005, GHSA-jppx-rxg9-jmrx): the in-memory SSH agent keyring returned by NewKeyring in golang.org/x/crypto/ssh/agent accepted keys with the ConfirmBeforeUse constraint but never enforced it, so the key signed without any confirmation prompt. It affects golang.org/x/crypto before 0.52.0, and the Go vulnerability database names a single function, keyring.Add in golang.org/x/crypto/ssh/agent. Upstream fixed it in commit 0fb843a47222 (https://go.dev/cl/778642), released in v0.52.0. Sources: https://pkg.go.dev/vuln/GO-2026-5005, https://go.dev/issue/79436 and https://groups.google.com/g/golang-announce/c/a082jnz-LvI. We checked every scout-sbom-indexer package published for Alpine 3.23 in the DHI Alpine repository as of 28 November 2026: 25 builds, 1.20.4-r1 to the current 1.30.0-r0, on x86_64 and aarch64 (50 packages). Each package holds one file, /sbom-indexer, a statically linked Go program for Linux built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). We read the program in full from every package, except 1.26.0-r3, whose program has the same SHA-1 checksum, recorded in its package header, as the 1.26.0-r2 program we read. Its Go build information lists golang.org/x/crypto, with no replace directive for that module and the same on both architectures: v0.50.0 in 1.20.4-r1 to 1.20.4-r2, v0.51.0 in 1.20.4-r3 to 1.20.4-r4, v0.52.0 in 1.20.4-r5 to 1.21.0-r1, v0.53.0 in 1.21.0-r2 to 1.21.0-r3, v0.54.0 in 1.23.1-r0 to 1.23.1-r1, v0.55.0 in 1.23.1-r3 to 1.23.1-r6, v0.57.0 in 1.23.1-r8 to 1.23.1-r10, v0.58.0 in 1.26.0-r1 to 1.29.0-r0, v0.59.0 in 1.29.0-r1 to 1.30.0-r0. Reading the program's Go function table in every build (runtime.main found in every build as a control) shows golang.org/x/crypto/ssh/agent linked only for the agent client (agent.(*client).Add and the other client methods): no build has agent.NewKeyring or any method of the in-memory keyring type, including agent.(*keyring).Add, and a byte search of every build, which also finds the names of functions the compiler inlined, finds neither agent.(*keyring) nor agent.NewKeyring. The program never creates an in-memory agent keyring, so the code this CVE is in is not present, whichever x/crypto version a build carries. As a positive control, the same function-table reader and byte search, run on a test program built with CGO_ENABLED=0 and -trimpath for linux/amd64 and linux/arm64 against golang.org/x/crypto v0.50.0 that calls agent.NewKeyring and adds a key with ConfirmBeforeUse, find agent.(*keyring).Add in the function table and both agent.(*keyring) and agent.NewKeyring in the byte search. The CVE is open in Debian 13 (trixie), where its golang-go.crypto package is marked no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39833); this decision rests on the code in these builds, not on that status."
     },
     {
       "vulnerability": {
@@ -40692,7 +40701,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-dev@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39833 (GO-2026-5005, GHSA-jppx-rxg9-jmrx): the in-memory SSH agent keyring returned by NewKeyring in golang.org/x/crypto/ssh/agent accepted keys with the ConfirmBeforeUse constraint but never enforced it, so the key signed without any confirmation prompt. It affects golang.org/x/crypto before 0.52.0, and the Go vulnerability database names a single function, keyring.Add in golang.org/x/crypto/ssh/agent. Upstream fixed it in commit 0fb843a47222 (https://go.dev/cl/778642), released in v0.52.0. Sources: https://pkg.go.dev/vuln/GO-2026-5005, https://go.dev/issue/79436 and https://groups.google.com/g/golang-announce/c/a082jnz-LvI. We checked every scout-sbom-indexer-dev package published for Debian 13 in the DHI Debian repository as of 28 November 2026: 25 builds, 1.20.4-1 to the current 1.30.0-0, on amd64 and arm64 (50 packages). Each package installs one file, /sbom-indexer, as listed in the md5sums manifest of its control archive, and the MD5 checksum recorded there equals that of the program we read in full from the Alpine 3.23 package of the same version, revision number and architecture (for example 1.20.4-5 matches 1.20.4-r5; 1.26.0-3 matches the 1.26.0-r2 program, which 1.26.0-r3 also carries), so these packages carry the same statically linked Go programs, built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). The -dev program is built without the -w linker flag and without -trimpath, but it carries the same Go release and module versions as the scout-sbom-indexer program of the same build. Its Go build information lists golang.org/x/crypto, with no replace directive for that module and the same on both architectures: v0.50.0 in 1.20.4-1 to 1.20.4-2, v0.51.0 in 1.20.4-3 to 1.20.4-4, v0.52.0 in 1.20.4-5 to 1.21.0-1, v0.53.0 in 1.21.0-2 to 1.21.0-3, v0.54.0 in 1.23.1-0 to 1.23.1-1, v0.55.0 in 1.23.1-3 to 1.23.1-6, v0.57.0 in 1.23.1-8 to 1.23.1-10, v0.58.0 in 1.26.0-1 to 1.29.0-0, v0.59.0 in 1.29.0-1 to 1.30.0-0. Reading the program's Go function table in every build (runtime.main found in every build as a control) shows golang.org/x/crypto/ssh/agent linked only for the agent client (agent.(*client).Add and the other client methods): no build has agent.NewKeyring or any method of the in-memory keyring type, including agent.(*keyring).Add, and a byte search of every build, which also finds the names of functions the compiler inlined, finds neither agent.(*keyring) nor agent.NewKeyring. The program never creates an in-memory agent keyring, so the code this CVE is in is not present, whichever x/crypto version a build carries. As a positive control, the same function-table reader and byte search, run on a test program built with CGO_ENABLED=0 and -trimpath for linux/amd64 and linux/arm64 against golang.org/x/crypto v0.50.0 that calls agent.NewKeyring and adds a key with ConfirmBeforeUse, find agent.(*keyring).Add in the function table and both agent.(*keyring) and agent.NewKeyring in the byte search. The CVE is open in Debian 13 (trixie), where its golang-go.crypto package is marked no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39833); this decision rests on the code in these builds, not on that status."
     },
     {
       "vulnerability": {
@@ -40778,7 +40789,8 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-fips-dev@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39833 (GO-2026-5005, GHSA-jppx-rxg9-jmrx): the in-memory SSH agent keyring returned by NewKeyring in golang.org/x/crypto/ssh/agent accepted keys with the ConfirmBeforeUse constraint but never enforced it, so the key signed without any confirmation prompt. It affects golang.org/x/crypto before 0.52.0, and the Go vulnerability database names a single function, keyring.Add in golang.org/x/crypto/ssh/agent. Upstream fixed it in commit 0fb843a47222 (https://go.dev/cl/778642), released in v0.52.0. Sources: https://pkg.go.dev/vuln/GO-2026-5005, https://go.dev/issue/79436 and https://groups.google.com/g/golang-announce/c/a082jnz-LvI. The scout-sbom-indexer-fips-dev packages for Debian 13 are published in the DHI Debian security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information, function table and a byte search, as done for the scout-sbom-indexer packages) to establish whether the in-memory keyring (agent.NewKeyring and keyring.Add) is linked. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -40864,7 +40876,8 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-fips-oci-config@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39833 (GO-2026-5005, GHSA-jppx-rxg9-jmrx): the in-memory SSH agent keyring returned by NewKeyring in golang.org/x/crypto/ssh/agent accepted keys with the ConfirmBeforeUse constraint but never enforced it, so the key signed without any confirmation prompt. It affects golang.org/x/crypto before 0.52.0, and the Go vulnerability database names a single function, keyring.Add in golang.org/x/crypto/ssh/agent. Upstream fixed it in commit 0fb843a47222 (https://go.dev/cl/778642), released in v0.52.0. Sources: https://pkg.go.dev/vuln/GO-2026-5005, https://go.dev/issue/79436 and https://groups.google.com/g/golang-announce/c/a082jnz-LvI. The scout-sbom-indexer-fips-oci-config packages for Debian 13 are published in the DHI Debian security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of every published build of this package, to confirm that, like scout-sbom-indexer-oci-config, it holds only a YAML configuration file and no program. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -40950,7 +40963,8 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-fips@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-39833 (GO-2026-5005, GHSA-jppx-rxg9-jmrx): the in-memory SSH agent keyring returned by NewKeyring in golang.org/x/crypto/ssh/agent accepted keys with the ConfirmBeforeUse constraint but never enforced it, so the key signed without any confirmation prompt. It affects golang.org/x/crypto before 0.52.0, and the Go vulnerability database names a single function, keyring.Add in golang.org/x/crypto/ssh/agent. Upstream fixed it in commit 0fb843a47222 (https://go.dev/cl/778642), released in v0.52.0. Sources: https://pkg.go.dev/vuln/GO-2026-5005, https://go.dev/issue/79436 and https://groups.google.com/g/golang-announce/c/a082jnz-LvI. The scout-sbom-indexer-fips packages for Debian 13 are published in the DHI Debian security repository, which requires authentication, and we have not inspected them for this assessment. Pending: an inspection of the program in every published build of this package (its Go build information, function table and a byte search, as done for the scout-sbom-indexer packages) to establish whether the in-memory keyring (agent.NewKeyring and keyring.Add) is linked. Until then this package is under investigation."
     },
     {
       "vulnerability": {
@@ -41036,7 +41050,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer-oci-config@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "component_not_present",
+      "impact_statement": "CVE-2026-39833 (GO-2026-5005, GHSA-jppx-rxg9-jmrx): the in-memory SSH agent keyring returned by NewKeyring in golang.org/x/crypto/ssh/agent accepted keys with the ConfirmBeforeUse constraint but never enforced it, so the key signed without any confirmation prompt. It affects golang.org/x/crypto before 0.52.0, and the Go vulnerability database names a single function, keyring.Add in golang.org/x/crypto/ssh/agent. Upstream fixed it in commit 0fb843a47222 (https://go.dev/cl/778642), released in v0.52.0. Sources: https://pkg.go.dev/vuln/GO-2026-5005, https://go.dev/issue/79436 and https://groups.google.com/g/golang-announce/c/a082jnz-LvI. We checked every scout-sbom-indexer-oci-config package published for Debian 13 in the DHI Debian repository as of 28 November 2026: 25 builds, 1.20.4-1 to the current 1.30.0-0, on both architectures (50 packages). Each package, downloaded in full with its checksum matching the repository index, holds a single file, /opt/docker/config/scout-sbom-indexer.yaml, the same 180-byte YAML configuration file shipped in the Alpine packages (it sets SBOM cataloger options for the image). It contains no program, library or Go code, so golang.org/x/crypto is not part of this package. The program ships in the scout-sbom-indexer and scout-sbom-indexer-dev packages, which have their own decisions."
     },
     {
       "vulnerability": {
@@ -41122,7 +41138,9 @@
           "@id": "pkg:deb/dhi/scout-sbom-indexer@1.30.0-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "CVE-2026-39833 (GO-2026-5005, GHSA-jppx-rxg9-jmrx): the in-memory SSH agent keyring returned by NewKeyring in golang.org/x/crypto/ssh/agent accepted keys with the ConfirmBeforeUse constraint but never enforced it, so the key signed without any confirmation prompt. It affects golang.org/x/crypto before 0.52.0, and the Go vulnerability database names a single function, keyring.Add in golang.org/x/crypto/ssh/agent. Upstream fixed it in commit 0fb843a47222 (https://go.dev/cl/778642), released in v0.52.0. Sources: https://pkg.go.dev/vuln/GO-2026-5005, https://go.dev/issue/79436 and https://groups.google.com/g/golang-announce/c/a082jnz-LvI. We checked every scout-sbom-indexer package published for Debian 13 in the DHI Debian repository as of 28 November 2026: 25 builds, 1.20.4-1 to the current 1.30.0-0, on amd64 and arm64 (50 packages). Each package installs one file, /sbom-indexer, as listed in the md5sums manifest of its control archive, and the MD5 checksum recorded there equals that of the program we read in full from the Alpine 3.23 package of the same version, revision number and architecture (for example 1.20.4-5 matches 1.20.4-r5; 1.26.0-3 matches the 1.26.0-r2 program, which 1.26.0-r3 also carries), so these packages carry the same statically linked Go programs, built with CGO_ENABLED=0 (no program interpreter and no shared-library dependencies). Its Go build information lists golang.org/x/crypto, with no replace directive for that module and the same on both architectures: v0.50.0 in 1.20.4-1 to 1.20.4-2, v0.51.0 in 1.20.4-3 to 1.20.4-4, v0.52.0 in 1.20.4-5 to 1.21.0-1, v0.53.0 in 1.21.0-2 to 1.21.0-3, v0.54.0 in 1.23.1-0 to 1.23.1-1, v0.55.0 in 1.23.1-3 to 1.23.1-6, v0.57.0 in 1.23.1-8 to 1.23.1-10, v0.58.0 in 1.26.0-1 to 1.29.0-0, v0.59.0 in 1.29.0-1 to 1.30.0-0. Reading the program's Go function table in every build (runtime.main found in every build as a control) shows golang.org/x/crypto/ssh/agent linked only for the agent client (agent.(*client).Add and the other client methods): no build has agent.NewKeyring or any method of the in-memory keyring type, including agent.(*keyring).Add, and a byte search of every build, which also finds the names of functions the compiler inlined, finds neither agent.(*keyring) nor agent.NewKeyring. The program never creates an in-memory agent keyring, so the code this CVE is in is not present, whichever x/crypto version a build carries. As a positive control, the same function-table reader and byte search, run on a test program built with CGO_ENABLED=0 and -trimpath for linux/amd64 and linux/arm64 against golang.org/x/crypto v0.50.0 that calls agent.NewKeyring and adds a key with ConfirmBeforeUse, find agent.(*keyring).Add in the function table and both agent.(*keyring) and agent.NewKeyring in the byte search. The CVE is open in Debian 13 (trixie), where its golang-go.crypto package is marked no-dsa (https://security-tracker.debian.org/tracker/CVE-2026-39833); this decision rests on the code in these builds, not on that status."
     },
     {
       "vulnerability": {
