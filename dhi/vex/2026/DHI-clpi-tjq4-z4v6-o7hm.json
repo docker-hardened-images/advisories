@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-10T02:48:08Z",
-  "last_updated": "2026-11-25T02:33:30Z",
-  "version": 2,
+  "last_updated": "2026-11-28T06:10:13Z",
+  "version": 3,
   "statements": [
     {
       "vulnerability": {
@@ -17,7 +17,20 @@
       "products": [
         {
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update mariadb to 1:11.8.6-0+deb13u1+dhi1 or later.",
+      "status_notes": "CVE-2026-97380 (GHSA-625w-4hgq-qwmr, MDEV-40470): from MariaDB 10.6.1 until 11.8.9 and the other fixed releases, GRANT PROXY treated an IDENTIFIED clause with an empty value as if no authentication had been given, so it checked the wrong grantor privileges, and a low-privileged user who can name another account could set that account's password. It is fixed in MariaDB 11.8.9 by upstream commit dbd60d0ad8daa2d01050346aa50b7b102490e456, which makes LEX_USER::has_auth() in sql/structs.h report any explicit authentication clause: https://github.com/MariaDB/server/security/advisories/GHSA-625w-4hgq-qwmr, https://github.com/MariaDB/server/commit/dbd60d0ad8daa2d01050346aa50b7b102490e456, https://security-tracker.debian.org/tracker/CVE-2026-97380. The same commit also drops an allocation for CURRENT_USER from sql/sql_yacc.yy; the MariaDB 11.8.6 grammar never had that allocation, so for this version the sql/structs.h change is the whole fix. The DHI mariadb packages backport that change onto Debian's mariadb 1:11.8.6-0+deb13u1 from the second DHI rebuild, the version this range names as fixed. The DHI Debian repository publishes four mariadb builds, successive DHI rebuilds of 1:11.8.6-0+deb13u1 (called the first to fourth rebuild below; the fourth is the current build), each with 56 binary packages per architecture on amd64 and arm64. From every build, on both architectures, we read the packages that carry the server code (mariadb-server-core, mariadb-backup, libmariadbd19t64 and mariadb-test) and mariadb-test-data, each checked against the repository index checksum. The server's privilege code is in /usr/sbin/mariadbd (mariadb-server-core) and /usr/bin/mariadb-backup (mariadb-backup), and in both has_auth() is compiled inline into get_current_user. In the first rebuild that function tests the plugin, password and password-text lengths of the authentication clause; from the second rebuild on it tests only whether a clause was given, on both architectures (from the exported symbol tables and the disassembly: get_current_user shrinks from 661 to 607 bytes on amd64 and from 732 to 648 bytes on arm64 in both programs, and mysql_grant_role in mariadbd shrinks too; the third and fourth rebuilds have the same sizes as the second). The embedded server copies, libmariadbd.so.19 in libmariadbd19t64 and the mariadb-test-embedded, mariadb-client-test-embedded and test-connect-t programs in mariadb-test, are built without the privilege system: their GRANT PROXY handler only reports success and is the same in every build. The Debian changelog shipped in mariadb-server-core and the grant5 regression test in mariadb-test-data record the backport from the second rebuild on. The range ends at the first build that carries it."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-clpi-tjq4-z4v6-o7hm",
+        "aliases": [
+          "CVE-2026-97380"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi1?distro=dhi-13"
         },
@@ -28,7 +41,8 @@
           "@id": "pkg:deb/dhi/mariadb@1:11.8.6-0%2Bdeb13u1%2Bdhi3?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-97380 (GHSA-625w-4hgq-qwmr, MDEV-40470): from MariaDB 10.6.1 until 11.8.9 and the other fixed releases, GRANT PROXY treated an IDENTIFIED clause with an empty value as if no authentication had been given, so it checked the wrong grantor privileges, and a low-privileged user who can name another account could set that account's password. It is fixed in MariaDB 11.8.9 by upstream commit dbd60d0ad8daa2d01050346aa50b7b102490e456, which makes LEX_USER::has_auth() in sql/structs.h report any explicit authentication clause: https://github.com/MariaDB/server/security/advisories/GHSA-625w-4hgq-qwmr, https://github.com/MariaDB/server/commit/dbd60d0ad8daa2d01050346aa50b7b102490e456, https://security-tracker.debian.org/tracker/CVE-2026-97380. The same commit also drops an allocation for CURRENT_USER from sql/sql_yacc.yy; the MariaDB 11.8.6 grammar never had that allocation, so for this version the sql/structs.h change is the whole fix. The DHI mariadb packages backport that change onto Debian's mariadb 1:11.8.6-0+deb13u1 from the second DHI rebuild, the version this range names as fixed. The DHI Debian repository publishes four mariadb builds, successive DHI rebuilds of 1:11.8.6-0+deb13u1 (called the first to fourth rebuild below; the fourth is the current build), each with 56 binary packages per architecture on amd64 and arm64. From every build, on both architectures, we read the packages that carry the server code (mariadb-server-core, mariadb-backup, libmariadbd19t64 and mariadb-test) and mariadb-test-data, each checked against the repository index checksum. The server's privilege code is in /usr/sbin/mariadbd (mariadb-server-core) and /usr/bin/mariadb-backup (mariadb-backup), and in both has_auth() is compiled inline into get_current_user. In the first rebuild that function tests the plugin, password and password-text lengths of the authentication clause; from the second rebuild on it tests only whether a clause was given, on both architectures (from the exported symbol tables and the disassembly: get_current_user shrinks from 661 to 607 bytes on amd64 and from 732 to 648 bytes on arm64 in both programs, and mysql_grant_role in mariadbd shrinks too; the third and fourth rebuilds have the same sizes as the second). The embedded server copies, libmariadbd.so.19 in libmariadbd19t64 and the mariadb-test-embedded, mariadb-client-test-embedded and test-connect-t programs in mariadb-test, are built without the privilege system: their GRANT PROXY handler only reports success and is the same in every build. The Debian changelog shipped in mariadb-server-core and the grant5 regression test in mariadb-test-data record the backport from the second rebuild on. The range ends at the first build that carries it."
     }
   ]
 }
