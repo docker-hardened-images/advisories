@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-23T22:07:18Z",
-  "last_updated": "2026-11-26T03:10:06Z",
-  "version": 4,
+  "last_updated": "2026-11-28T07:45:38Z",
+  "version": 5,
   "statements": [
     {
       "vulnerability": {
@@ -80,7 +80,9 @@
           "@id": "pkg:deb/dhi/valkey-8.1@8.1.9-0?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Valkey's advisory GHSA-jcj7-v34w-v9vv (CVE-2026-136157), https://github.com/valkey-io/valkey/security/advisories/GHSA-jcj7-v34w-v9vv, reports a use-after-free in the RDMA transport: rdmaProcessPendingData() in src/rdma.c walks its pending-connection list with an iterator that caches the next entry, so a command such as CLIENT KILL run from inside that loop can free another client's connection, and connRdmaClose() freed a connection without removing it from the list. It lists 8.1.x up to 8.1.9 as affected, fixed in 8.1.10 by commit https://github.com/valkey-io/valkey/commit/335ddd5b305aed9f4222a5eb648b51574360f349 (upstream pull request https://github.com/valkey-io/valkey/pull/4534), and says only servers built with RDMA support (USE_RDMA) are affected. In the 8.1 source the RDMA transport in src/rdma.c is compiled only when USE_RDMA is set to builtin or module, which the Makefile does only for BUILD_RDMA=yes or BUILD_RDMA=module; otherwise the file compiles to a stub RegisterConnectionTypeRdma() that only logs that the connection type is not built in. Each DHI valkey-8.1 package for Debian 13 is built from the upstream release tag of the same version with BUILD_TLS=yes and no BUILD_RDMA setting, and with no patches to the valkey source. We checked every valkey-8.1 build published in the DHI Debian repository as of 2026-11-28 (8.1.9-0, 8.1.10-0, 8.1.11-0, 8.1.12-0 and 8.1.12-1), on amd64 and arm64, with checksums verified against the package index. In each build the valkey-8.1-server-dbgsym symbol table of valkey-server defines no rdmaProcessPendingData, connRdmaClose or any other connRdma function and imports no rdma_ or ibv_ function, while the TLS transport's tlsProcessPendingData, our control, is defined in every build. No program links librdmacm or libibverbs: valkey-server, valkey-cli and valkey-benchmark need only libssl, libcrypto, libm and libc, plus the dynamic loader ld-linux-aarch64.so.1 on arm64. No package ships the valkey-rdma module or any other loadable module or shared library; the -dbgsym packages hold only detached debug symbols and a symbolic link to the base package's documentation directory. The vulnerable handler is therefore absent from every published build, including 8.1.9-0, which predates the upstream fix. The Debian tracker, https://security-tracker.debian.org/tracker/CVE-2026-136157, records the fix in Debian's valkey 9.1.2-1 for unstable and no decision not to fix it."
     },
     {
       "vulnerability": {
