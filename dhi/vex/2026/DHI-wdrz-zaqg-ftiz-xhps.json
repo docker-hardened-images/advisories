@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-24T19:38:30Z",
-  "last_updated": "2026-11-28T10:03:30Z",
-  "version": 49,
+  "last_updated": "2026-11-28T10:58:22Z",
+  "version": 50,
   "statements": [
     {
       "vulnerability": {
@@ -111539,7 +111539,20 @@
         },
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer-dev@5.12.1-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update grafana-image-renderer-dev to 5.12.1-r1 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). We read the Go build information and the Go function table of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer-dev package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64, each checked against its index checksum. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, unstripped (it keeps its ELF symbol table). Their build information lists Go 1.26.5 in 5.10.1-r0 to 5.12.1-r0, 1.26.6 in 5.12.1-r1, 1.26.7 in 5.12.1-r2 to 5.12.2-r0, 1.26.8 in 5.12.2-r1 to 5.12.5-r0, 1.26.9 in 5.12.6-r0 to 5.12.7-r0, 1.26.10 in 5.12.8-r0 to 5.12.10-r0 and 1.26.11 in 5.12.10-r1 to 5.12.11-r2, the same on both architectures and in the base and -dev packages. Every build's function table includes net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse. As a check in the binary itself, the extent of net/url.resolvePath in the Go function table (the distance from its entry to the next function, alignment padding included) changes from 1856 to 1216 bytes on x86_64/amd64 and 1504 to 1104 bytes on aarch64/arm64 at 5.12.1-r1, the first build with Go 1.26.6, and is the same in every build on either side. Builds up to 5.12.1-r0 (Go 1.26.5 or older) are therefore affected, and 5.12.1-r1 (Go 1.26.6) is the first published build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer-dev@5.12.1-r1?distro=dhi-3.23"
         },
@@ -111601,7 +111614,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer-dev@5.12.9-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). We read the Go build information and the Go function table of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer-dev package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64, each checked against its index checksum. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, unstripped (it keeps its ELF symbol table). Their build information lists Go 1.26.5 in 5.10.1-r0 to 5.12.1-r0, 1.26.6 in 5.12.1-r1, 1.26.7 in 5.12.1-r2 to 5.12.2-r0, 1.26.8 in 5.12.2-r1 to 5.12.5-r0, 1.26.9 in 5.12.6-r0 to 5.12.7-r0, 1.26.10 in 5.12.8-r0 to 5.12.10-r0 and 1.26.11 in 5.12.10-r1 to 5.12.11-r2, the same on both architectures and in the base and -dev packages. Every build's function table includes net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse. As a check in the binary itself, the extent of net/url.resolvePath in the Go function table (the distance from its entry to the next function, alignment padding included) changes from 1856 to 1216 bytes on x86_64/amd64 and 1504 to 1104 bytes on aarch64/arm64 at 5.12.1-r1, the first build with Go 1.26.6, and is the same in every build on either side. Builds up to 5.12.1-r0 (Go 1.26.5 or older) are therefore affected, and 5.12.1-r1 (Go 1.26.6) is the first published build with the fix."
     },
     {
       "vulnerability": {
@@ -111628,7 +111642,20 @@
         },
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer-dev@5.12.1-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update grafana-image-renderer-dev to 5.12.1-r1 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). We read the Go build information and the Go function table of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer-dev package for Alpine 3.24 in the DHI Alpine repository as of 2026-11-28: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64. We read the Alpine 3.23 packages, each checked against its index checksum: every Alpine 3.24 index entry for this package has the same package checksum as the 3.23 entry of the same version and architecture. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, unstripped (it keeps its ELF symbol table). Their build information lists Go 1.26.5 in 5.10.1-r0 to 5.12.1-r0, 1.26.6 in 5.12.1-r1, 1.26.7 in 5.12.1-r2 to 5.12.2-r0, 1.26.8 in 5.12.2-r1 to 5.12.5-r0, 1.26.9 in 5.12.6-r0 to 5.12.7-r0, 1.26.10 in 5.12.8-r0 to 5.12.10-r0 and 1.26.11 in 5.12.10-r1 to 5.12.11-r2, the same on both architectures and in the base and -dev packages. Every build's function table includes net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse. As a check in the binary itself, the extent of net/url.resolvePath in the Go function table (the distance from its entry to the next function, alignment padding included) changes from 1856 to 1216 bytes on x86_64/amd64 and 1504 to 1104 bytes on aarch64/arm64 at 5.12.1-r1, the first build with Go 1.26.6, and is the same in every build on either side. Builds up to 5.12.1-r0 (Go 1.26.5 or older) are therefore affected, and 5.12.1-r1 (Go 1.26.6) is the first published build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer-dev@5.12.1-r1?distro=dhi-3.24"
         },
@@ -111690,7 +111717,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer-dev@5.12.9-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). We read the Go build information and the Go function table of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer-dev package for Alpine 3.24 in the DHI Alpine repository as of 2026-11-28: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64. We read the Alpine 3.23 packages, each checked against its index checksum: every Alpine 3.24 index entry for this package has the same package checksum as the 3.23 entry of the same version and architecture. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, unstripped (it keeps its ELF symbol table). Their build information lists Go 1.26.5 in 5.10.1-r0 to 5.12.1-r0, 1.26.6 in 5.12.1-r1, 1.26.7 in 5.12.1-r2 to 5.12.2-r0, 1.26.8 in 5.12.2-r1 to 5.12.5-r0, 1.26.9 in 5.12.6-r0 to 5.12.7-r0, 1.26.10 in 5.12.8-r0 to 5.12.10-r0 and 1.26.11 in 5.12.10-r1 to 5.12.11-r2, the same on both architectures and in the base and -dev packages. Every build's function table includes net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse. As a check in the binary itself, the extent of net/url.resolvePath in the Go function table (the distance from its entry to the next function, alignment padding included) changes from 1856 to 1216 bytes on x86_64/amd64 and 1504 to 1104 bytes on aarch64/arm64 at 5.12.1-r1, the first build with Go 1.26.6, and is the same in every build on either side. Builds up to 5.12.1-r0 (Go 1.26.5 or older) are therefore affected, and 5.12.1-r1 (Go 1.26.6) is the first published build with the fix."
     },
     {
       "vulnerability": {
@@ -111779,7 +111807,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer-fips-dev@5.12.9-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). The grafana-image-renderer-fips-dev packages for Alpine 3.23 in the DHI Alpine security repository, which requires authentication, are built separately from the non-FIPS grafana-image-renderer packages, and we have not yet read the Go build information and function table of every published grafana-image-renderer-fips-dev build. Pending: that per-build scan on both architectures, to establish which Go release each FIPS build was compiled with. For comparison, the non-FIPS grafana-image-renderer packages of the same releases carry the fix from 5.12.1-r1; that does not yet prove the FIPS builds do."
     },
     {
       "vulnerability": {
@@ -111868,7 +111897,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer-fips-dev@5.12.9-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). The grafana-image-renderer-fips-dev packages for Alpine 3.24 in the DHI Alpine security repository, which requires authentication, are built separately from the non-FIPS grafana-image-renderer packages, and we have not yet read the Go build information and function table of every published grafana-image-renderer-fips-dev build. Pending: that per-build scan on both architectures, to establish which Go release each FIPS build was compiled with. For comparison, the non-FIPS grafana-image-renderer packages of the same releases carry the fix from 5.12.1-r1; that does not yet prove the FIPS builds do."
     },
     {
       "vulnerability": {
@@ -111957,7 +111987,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer-fips@5.12.9-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). The grafana-image-renderer-fips packages for Alpine 3.23 in the DHI Alpine security repository, which requires authentication, are built separately from the non-FIPS grafana-image-renderer packages, and we have not yet read the Go build information and function table of every published grafana-image-renderer-fips build. Pending: that per-build scan on both architectures, to establish which Go release each FIPS build was compiled with. For comparison, the non-FIPS grafana-image-renderer packages of the same releases carry the fix from 5.12.1-r1; that does not yet prove the FIPS builds do."
     },
     {
       "vulnerability": {
@@ -112046,7 +112077,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer-fips@5.12.9-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). The grafana-image-renderer-fips packages for Alpine 3.24 in the DHI Alpine security repository, which requires authentication, are built separately from the non-FIPS grafana-image-renderer packages, and we have not yet read the Go build information and function table of every published grafana-image-renderer-fips build. Pending: that per-build scan on both architectures, to establish which Go release each FIPS build was compiled with. For comparison, the non-FIPS grafana-image-renderer packages of the same releases carry the fix from 5.12.1-r1; that does not yet prove the FIPS builds do."
     },
     {
       "vulnerability": {
@@ -112073,7 +112105,20 @@
         },
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer@5.12.1-r0?distro=dhi-3.23"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update grafana-image-renderer to 5.12.1-r1 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). We read the Go build information and the Go function table of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64, each checked against its index checksum. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, stripped of its ELF symbol table; the Go function table is kept. Their build information lists Go 1.26.5 in 5.10.1-r0 to 5.12.1-r0, 1.26.6 in 5.12.1-r1, 1.26.7 in 5.12.1-r2 to 5.12.2-r0, 1.26.8 in 5.12.2-r1 to 5.12.5-r0, 1.26.9 in 5.12.6-r0 to 5.12.7-r0, 1.26.10 in 5.12.8-r0 to 5.12.10-r0 and 1.26.11 in 5.12.10-r1 to 5.12.11-r2, the same on both architectures and in the base and -dev packages. Every build's function table includes net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse. As a check in the binary itself, the extent of net/url.resolvePath in the Go function table (the distance from its entry to the next function, alignment padding included) changes from 1856 to 1216 bytes on x86_64/amd64 and 1504 to 1104 bytes on aarch64/arm64 at 5.12.1-r1, the first build with Go 1.26.6, and is the same in every build on either side. Builds up to 5.12.1-r0 (Go 1.26.5 or older) are therefore affected, and 5.12.1-r1 (Go 1.26.6) is the first published build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer@5.12.1-r1?distro=dhi-3.23"
         },
@@ -112135,7 +112180,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer@5.12.9-r1?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). We read the Go build information and the Go function table of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer package for Alpine 3.23 in the DHI Alpine repository as of 2026-11-28: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64, each checked against its index checksum. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, stripped of its ELF symbol table; the Go function table is kept. Their build information lists Go 1.26.5 in 5.10.1-r0 to 5.12.1-r0, 1.26.6 in 5.12.1-r1, 1.26.7 in 5.12.1-r2 to 5.12.2-r0, 1.26.8 in 5.12.2-r1 to 5.12.5-r0, 1.26.9 in 5.12.6-r0 to 5.12.7-r0, 1.26.10 in 5.12.8-r0 to 5.12.10-r0 and 1.26.11 in 5.12.10-r1 to 5.12.11-r2, the same on both architectures and in the base and -dev packages. Every build's function table includes net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse. As a check in the binary itself, the extent of net/url.resolvePath in the Go function table (the distance from its entry to the next function, alignment padding included) changes from 1856 to 1216 bytes on x86_64/amd64 and 1504 to 1104 bytes on aarch64/arm64 at 5.12.1-r1, the first build with Go 1.26.6, and is the same in every build on either side. Builds up to 5.12.1-r0 (Go 1.26.5 or older) are therefore affected, and 5.12.1-r1 (Go 1.26.6) is the first published build with the fix."
     },
     {
       "vulnerability": {
@@ -112162,7 +112208,20 @@
         },
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer@5.12.1-r0?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update grafana-image-renderer to 5.12.1-r1 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). We read the Go build information and the Go function table of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer package for Alpine 3.24 in the DHI Alpine repository as of 2026-11-28: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64. We read the Alpine 3.23 packages, each checked against its index checksum: every Alpine 3.24 index entry for this package has the same package checksum as the 3.23 entry of the same version and architecture. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, stripped of its ELF symbol table; the Go function table is kept. Their build information lists Go 1.26.5 in 5.10.1-r0 to 5.12.1-r0, 1.26.6 in 5.12.1-r1, 1.26.7 in 5.12.1-r2 to 5.12.2-r0, 1.26.8 in 5.12.2-r1 to 5.12.5-r0, 1.26.9 in 5.12.6-r0 to 5.12.7-r0, 1.26.10 in 5.12.8-r0 to 5.12.10-r0 and 1.26.11 in 5.12.10-r1 to 5.12.11-r2, the same on both architectures and in the base and -dev packages. Every build's function table includes net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse. As a check in the binary itself, the extent of net/url.resolvePath in the Go function table (the distance from its entry to the next function, alignment padding included) changes from 1856 to 1216 bytes on x86_64/amd64 and 1504 to 1104 bytes on aarch64/arm64 at 5.12.1-r1, the first build with Go 1.26.6, and is the same in every build on either side. Builds up to 5.12.1-r0 (Go 1.26.5 or older) are therefore affected, and 5.12.1-r1 (Go 1.26.6) is the first published build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/grafana-image-renderer@5.12.1-r1?distro=dhi-3.24"
         },
@@ -112224,7 +112283,8 @@
           "@id": "pkg:apk/dhi/grafana-image-renderer@5.12.9-r1?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). We read the Go build information and the Go function table of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer package for Alpine 3.24 in the DHI Alpine repository as of 2026-11-28: 26 builds from 5.10.1-r0 to the current 5.12.11-r2, for both x86_64 and aarch64. We read the Alpine 3.23 packages, each checked against its index checksum: every Alpine 3.24 index entry for this package has the same package checksum as the 3.23 entry of the same version and architecture. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, stripped of its ELF symbol table; the Go function table is kept. Their build information lists Go 1.26.5 in 5.10.1-r0 to 5.12.1-r0, 1.26.6 in 5.12.1-r1, 1.26.7 in 5.12.1-r2 to 5.12.2-r0, 1.26.8 in 5.12.2-r1 to 5.12.5-r0, 1.26.9 in 5.12.6-r0 to 5.12.7-r0, 1.26.10 in 5.12.8-r0 to 5.12.10-r0 and 1.26.11 in 5.12.10-r1 to 5.12.11-r2, the same on both architectures and in the base and -dev packages. Every build's function table includes net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse. As a check in the binary itself, the extent of net/url.resolvePath in the Go function table (the distance from its entry to the next function, alignment padding included) changes from 1856 to 1216 bytes on x86_64/amd64 and 1504 to 1104 bytes on aarch64/arm64 at 5.12.1-r1, the first build with Go 1.26.6, and is the same in every build on either side. Builds up to 5.12.1-r0 (Go 1.26.5 or older) are therefore affected, and 5.12.1-r1 (Go 1.26.6) is the first published build with the fix."
     },
     {
       "vulnerability": {
@@ -313662,7 +313722,20 @@
         },
         {
           "@id": "pkg:deb/dhi/grafana-image-renderer-dev@5.12.1-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update grafana-image-renderer-dev to 5.12.1-1 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). We read the Go build information and the Go function table of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer-dev package for Debian 13 in the DHI Debian repository as of 2026-11-28: 26 builds from 5.10.1-0 to the current 5.12.11-2, for both amd64 and arm64. Each Debian package's MD5 manifest lists only that file, with the same MD5 as the Alpine 3.23 package of the same version and architecture (Debian 5.12.1-1 is Alpine 5.12.1-r1, and so on), which we read directly; two Debian packages downloaded in full matched their index SHA-256 and that MD5. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, unstripped (it keeps its ELF symbol table). Their build information lists Go 1.26.5 in 5.10.1-0 to 5.12.1-0, 1.26.6 in 5.12.1-1, 1.26.7 in 5.12.1-2 to 5.12.2-0, 1.26.8 in 5.12.2-1 to 5.12.5-0, 1.26.9 in 5.12.6-0 to 5.12.7-0, 1.26.10 in 5.12.8-0 to 5.12.10-0 and 1.26.11 in 5.12.10-1 to 5.12.11-2, the same on both architectures and in the base and -dev packages. Every build's function table includes net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse. As a check in the binary itself, the extent of net/url.resolvePath in the Go function table (the distance from its entry to the next function, alignment padding included) changes from 1856 to 1216 bytes on x86_64/amd64 and 1504 to 1104 bytes on aarch64/arm64 at 5.12.1-1, the first build with Go 1.26.6, and is the same in every build on either side. Builds up to 5.12.1-0 (Go 1.26.5 or older) are therefore affected, and 5.12.1-1 (Go 1.26.6) is the first published build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/grafana-image-renderer-dev@5.12.1-1?distro=dhi-13"
         },
@@ -313724,7 +313797,8 @@
           "@id": "pkg:deb/dhi/grafana-image-renderer-dev@5.12.9-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). We read the Go build information and the Go function table of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer-dev package for Debian 13 in the DHI Debian repository as of 2026-11-28: 26 builds from 5.10.1-0 to the current 5.12.11-2, for both amd64 and arm64. Each Debian package's MD5 manifest lists only that file, with the same MD5 as the Alpine 3.23 package of the same version and architecture (Debian 5.12.1-1 is Alpine 5.12.1-r1, and so on), which we read directly; two Debian packages downloaded in full matched their index SHA-256 and that MD5. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, unstripped (it keeps its ELF symbol table). Their build information lists Go 1.26.5 in 5.10.1-0 to 5.12.1-0, 1.26.6 in 5.12.1-1, 1.26.7 in 5.12.1-2 to 5.12.2-0, 1.26.8 in 5.12.2-1 to 5.12.5-0, 1.26.9 in 5.12.6-0 to 5.12.7-0, 1.26.10 in 5.12.8-0 to 5.12.10-0 and 1.26.11 in 5.12.10-1 to 5.12.11-2, the same on both architectures and in the base and -dev packages. Every build's function table includes net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse. As a check in the binary itself, the extent of net/url.resolvePath in the Go function table (the distance from its entry to the next function, alignment padding included) changes from 1856 to 1216 bytes on x86_64/amd64 and 1504 to 1104 bytes on aarch64/arm64 at 5.12.1-1, the first build with Go 1.26.6, and is the same in every build on either side. Builds up to 5.12.1-0 (Go 1.26.5 or older) are therefore affected, and 5.12.1-1 (Go 1.26.6) is the first published build with the fix."
     },
     {
       "vulnerability": {
@@ -313813,7 +313887,8 @@
           "@id": "pkg:deb/dhi/grafana-image-renderer-fips-dev@5.12.9-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). The grafana-image-renderer-fips-dev packages for Debian 13 in the DHI Debian security repository, which requires authentication, are built separately from the non-FIPS grafana-image-renderer packages, and we have not yet read the Go build information and function table of every published grafana-image-renderer-fips-dev build. Pending: that per-build scan on both architectures, to establish which Go release each FIPS build was compiled with. For comparison, the non-FIPS grafana-image-renderer packages of the same releases carry the fix from 5.12.1-1; that does not yet prove the FIPS builds do."
     },
     {
       "vulnerability": {
@@ -313902,7 +313977,8 @@
           "@id": "pkg:deb/dhi/grafana-image-renderer-fips@5.12.9-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). The grafana-image-renderer-fips packages for Debian 13 in the DHI Debian security repository, which requires authentication, are built separately from the non-FIPS grafana-image-renderer packages, and we have not yet read the Go build information and function table of every published grafana-image-renderer-fips build. Pending: that per-build scan on both architectures, to establish which Go release each FIPS build was compiled with. For comparison, the non-FIPS grafana-image-renderer packages of the same releases carry the fix from 5.12.1-1; that does not yet prove the FIPS builds do."
     },
     {
       "vulnerability": {
@@ -313929,7 +314005,20 @@
         },
         {
           "@id": "pkg:deb/dhi/grafana-image-renderer@5.12.1-0?distro=dhi-13"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update grafana-image-renderer to 5.12.1-1 or later.",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). We read the Go build information and the Go function table of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer package for Debian 13 in the DHI Debian repository as of 2026-11-28: 26 builds from 5.10.1-0 to the current 5.12.11-2, for both amd64 and arm64. Each Debian package's MD5 manifest lists only that file, with the same MD5 as the Alpine 3.23 package of the same version and architecture (Debian 5.12.1-1 is Alpine 5.12.1-r1, and so on), which we read directly; two Debian packages downloaded in full matched their index SHA-256 and that MD5. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, stripped of its ELF symbol table; the Go function table is kept. Their build information lists Go 1.26.5 in 5.10.1-0 to 5.12.1-0, 1.26.6 in 5.12.1-1, 1.26.7 in 5.12.1-2 to 5.12.2-0, 1.26.8 in 5.12.2-1 to 5.12.5-0, 1.26.9 in 5.12.6-0 to 5.12.7-0, 1.26.10 in 5.12.8-0 to 5.12.10-0 and 1.26.11 in 5.12.10-1 to 5.12.11-2, the same on both architectures and in the base and -dev packages. Every build's function table includes net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse. As a check in the binary itself, the extent of net/url.resolvePath in the Go function table (the distance from its entry to the next function, alignment padding included) changes from 1856 to 1216 bytes on x86_64/amd64 and 1504 to 1104 bytes on aarch64/arm64 at 5.12.1-1, the first build with Go 1.26.6, and is the same in every build on either side. Builds up to 5.12.1-0 (Go 1.26.5 or older) are therefore affected, and 5.12.1-1 (Go 1.26.6) is the first published build with the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-wdrz-zaqg-ftiz-xhps",
+        "aliases": [
+          "CVE-2026-56860"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:deb/dhi/grafana-image-renderer@5.12.1-1?distro=dhi-13"
         },
@@ -313991,7 +314080,8 @@
           "@id": "pkg:deb/dhi/grafana-image-renderer@5.12.9-1?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-56860 (GO-2026-6218): net/url in the Go standard library resolved relative paths containing parent-directory (..) segments with quadratic time and heavy allocation in resolvePath, which URL.Parse and URL.ResolveReference call, so a crafted reference can consume excessive CPU and memory. Go 1.25.13, 1.26.6 and 1.27.0-rc.3 fix it: https://pkg.go.dev/vuln/GO-2026-6218, https://go.dev/issue/80494, https://github.com/golang/go/commit/128893dbf9a6b4d6e7c99942096e2c0018d6fe57 (the Go 1.26 branch fix, which names this CVE). We read the Go build information and the Go function table of /usr/bin/grafana-image-renderer, the only file in the package, in every published grafana-image-renderer package for Debian 13 in the DHI Debian repository as of 2026-11-28: 26 builds from 5.10.1-0 to the current 5.12.11-2, for both amd64 and arm64. Each Debian package's MD5 manifest lists only that file, with the same MD5 as the Alpine 3.23 package of the same version and architecture (Debian 5.12.1-1 is Alpine 5.12.1-r1, and so on), which we read directly; two Debian packages downloaded in full matched their index SHA-256 and that MD5. The program is a statically linked Go executable (no ELF interpreter and no shared-library dependencies) built with CGO_ENABLED=0, stripped of its ELF symbol table; the Go function table is kept. Their build information lists Go 1.26.5 in 5.10.1-0 to 5.12.1-0, 1.26.6 in 5.12.1-1, 1.26.7 in 5.12.1-2 to 5.12.2-0, 1.26.8 in 5.12.2-1 to 5.12.5-0, 1.26.9 in 5.12.6-0 to 5.12.7-0, 1.26.10 in 5.12.8-0 to 5.12.10-0 and 1.26.11 in 5.12.10-1 to 5.12.11-2, the same on both architectures and in the base and -dev packages. Every build's function table includes net/url.resolvePath, net/url.(*URL).ResolveReference and net/url.(*URL).Parse. As a check in the binary itself, the extent of net/url.resolvePath in the Go function table (the distance from its entry to the next function, alignment padding included) changes from 1856 to 1216 bytes on x86_64/amd64 and 1504 to 1104 bytes on aarch64/arm64 at 5.12.1-1, the first build with Go 1.26.6, and is the same in every build on either side. Builds up to 5.12.1-0 (Go 1.26.5 or older) are therefore affected, and 5.12.1-1 (Go 1.26.6) is the first published build with the fix."
     },
     {
       "vulnerability": {
