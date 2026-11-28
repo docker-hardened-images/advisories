@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-19T22:11:01Z",
-  "last_updated": "2026-11-28T06:24:49Z",
-  "version": 9,
+  "last_updated": "2026-11-28T17:40:12Z",
+  "version": 10,
   "statements": [
     {
       "vulnerability": {
@@ -201,18 +201,6 @@
           "@id": "pkg:apk/dhi/python-3.11@3.11.15-r0?distro=dhi-3.23"
         },
         {
-          "@id": "pkg:apk/dhi/python-3.11@3.11.15-r10?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/python-3.11@3.11.15-r11?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/python-3.11@3.11.15-r12?distro=dhi-3.23"
-        },
-        {
-          "@id": "pkg:apk/dhi/python-3.11@3.11.15-r13?distro=dhi-3.23"
-        },
-        {
           "@id": "pkg:apk/dhi/python-3.11@3.11.15-r1?distro=dhi-3.23"
         },
         {
@@ -238,6 +226,31 @@
         },
         {
           "@id": "pkg:apk/dhi/python-3.11@3.11.15-r9?distro=dhi-3.23"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update python-3.11 to 3.11.15-r10 or later.",
+      "status_notes": "CVE-2026-9669: a bz2.BZ2Decompressor could be used again after a decompression error; an application that caught the OSError and retried with the same object could make libbz2 resume from an invalid state and, with crafted input, write past a stack buffer. Upstream fixed it in https://github.com/python/cpython/issues/150599 (3.11 commit https://github.com/python/cpython/commit/1ba6135eae75ad8413413caeeedb56ae72320636), first released in CPython 3.11.16; see the advisory https://mail.python.org/archives/list/security-announce@python.org/thread/DBJZETMGUIFK7DVUWMOXHD3Z6IX2QPSX/ and https://www.cve.org/CVERecord?id=CVE-2026-9669, which lists 3.11 releases before 3.11.16 as affected. The fix, in Modules/_bz2module.c, records the error code in a new field of the decompressor object (moving the end-of-stream flag after it) and refuses further calls with the ValueError 'Decompressor is unusable after a previous error'. Checked the compiled _bz2 extension module (lib-dynload/_bz2.cpython-311-*.so) in the python-3.11 package of every build of the python-3.11 source published in the DHI Alpine 3.23 repository by 2026-11-28, 3.11.14-r0 to 3.11.18-r4, on x86_64 and aarch64 (package sizes checked against the repository index): 3.11.14-r0 to 3.11.15-r9 do not contain that message and have none of the byte loads or stores at the end-of-stream flag's new offset that the fixed module has, so they lack the fix; 3.11.15-r10 to 3.11.18-r4 contain that message and access the end-of-stream flag at its new offset, as the module built from the upstream 3.11.16 source does. On aarch64 the module in 3.11.15-r12 and 3.11.15-r13 is byte-identical to the one in 3.11.16-r1. 3.11.15-r10 to 3.11.15-r13 therefore carry a DHI backport made before the upstream 3.11.16 release. The range ends at 3.11.15-r10. Builds from 3.11.15-r10 on that the CVE record still matches carry the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ijim-hwge-z6h3-e36l",
+        "aliases": [
+          "CVE-2026-9669"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/dhi/python-3.11@3.11.15-r10?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/python-3.11@3.11.15-r11?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/python-3.11@3.11.15-r12?distro=dhi-3.23"
+        },
+        {
+          "@id": "pkg:apk/dhi/python-3.11@3.11.15-r13?distro=dhi-3.23"
         },
         {
           "@id": "pkg:apk/dhi/python-3.11@3.11.16-r1?distro=dhi-3.23"
@@ -267,7 +280,8 @@
           "@id": "pkg:apk/dhi/python-3.11@3.11.18-r4?distro=dhi-3.23"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-9669: a bz2.BZ2Decompressor could be used again after a decompression error; an application that caught the OSError and retried with the same object could make libbz2 resume from an invalid state and, with crafted input, write past a stack buffer. Upstream fixed it in https://github.com/python/cpython/issues/150599 (3.11 commit https://github.com/python/cpython/commit/1ba6135eae75ad8413413caeeedb56ae72320636), first released in CPython 3.11.16; see the advisory https://mail.python.org/archives/list/security-announce@python.org/thread/DBJZETMGUIFK7DVUWMOXHD3Z6IX2QPSX/ and https://www.cve.org/CVERecord?id=CVE-2026-9669, which lists 3.11 releases before 3.11.16 as affected. The fix, in Modules/_bz2module.c, records the error code in a new field of the decompressor object (moving the end-of-stream flag after it) and refuses further calls with the ValueError 'Decompressor is unusable after a previous error'. Checked the compiled _bz2 extension module (lib-dynload/_bz2.cpython-311-*.so) in the python-3.11 package of every build of the python-3.11 source published in the DHI Alpine 3.23 repository by 2026-11-28, 3.11.14-r0 to 3.11.18-r4, on x86_64 and aarch64 (package sizes checked against the repository index): 3.11.14-r0 to 3.11.15-r9 do not contain that message and have none of the byte loads or stores at the end-of-stream flag's new offset that the fixed module has, so they lack the fix; 3.11.15-r10 to 3.11.18-r4 contain that message and access the end-of-stream flag at its new offset, as the module built from the upstream 3.11.16 source does. On aarch64 the module in 3.11.15-r12 and 3.11.15-r13 is byte-identical to the one in 3.11.16-r1. 3.11.15-r10 to 3.11.15-r13 therefore carry a DHI backport made before the upstream 3.11.16 release. The range ends at 3.11.15-r10. Builds from 3.11.15-r10 on that the CVE record still matches carry the fix."
     },
     {
       "vulnerability": {
@@ -282,7 +296,20 @@
         },
         {
           "@id": "pkg:apk/dhi/python-3.11@3.11.15-r1?distro=dhi-3.24"
-        },
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update python-3.11 to 3.11.15-r2 or later.",
+      "status_notes": "CVE-2026-9669: a bz2.BZ2Decompressor could be used again after a decompression error; an application that caught the OSError and retried with the same object could make libbz2 resume from an invalid state and, with crafted input, write past a stack buffer. Upstream fixed it in https://github.com/python/cpython/issues/150599 (3.11 commit https://github.com/python/cpython/commit/1ba6135eae75ad8413413caeeedb56ae72320636), first released in CPython 3.11.16; see the advisory https://mail.python.org/archives/list/security-announce@python.org/thread/DBJZETMGUIFK7DVUWMOXHD3Z6IX2QPSX/ and https://www.cve.org/CVERecord?id=CVE-2026-9669, which lists 3.11 releases before 3.11.16 as affected. The fix, in Modules/_bz2module.c, records the error code in a new field of the decompressor object (moving the end-of-stream flag after it) and refuses further calls with the ValueError 'Decompressor is unusable after a previous error'. Checked the compiled _bz2 extension module (lib-dynload/_bz2.cpython-311-*.so) in the python-3.11 package of every build of the python-3.11 source published in the DHI Alpine 3.24 repository by 2026-11-28, 3.11.15-r0 to 3.11.18-r5, on x86_64 and aarch64 (package sizes checked against the repository index): 3.11.15-r0 and 3.11.15-r1 do not contain that message and have none of the byte loads or stores at the end-of-stream flag's new offset that the fixed module has, so they lack the fix; 3.11.15-r2 to 3.11.18-r5 contain that message and access the end-of-stream flag at its new offset, as the module built from the upstream 3.11.16 source does. On aarch64 the module in 3.11.15-r2, 3.11.15-r4 and 3.11.15-r5 is byte-identical to the one in 3.11.16-r1. 3.11.15-r2 to 3.11.15-r5 therefore carry a DHI backport made before the upstream 3.11.16 release. The range ends at 3.11.15-r2. Builds from 3.11.15-r2 on that the CVE record still matches carry the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ijim-hwge-z6h3-e36l",
+        "aliases": [
+          "CVE-2026-9669"
+        ]
+      },
+      "products": [
         {
           "@id": "pkg:apk/dhi/python-3.11@3.11.15-r2?distro=dhi-3.24"
         },
@@ -326,7 +353,8 @@
           "@id": "pkg:apk/dhi/python-3.11@3.11.18-r5?distro=dhi-3.24"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-9669: a bz2.BZ2Decompressor could be used again after a decompression error; an application that caught the OSError and retried with the same object could make libbz2 resume from an invalid state and, with crafted input, write past a stack buffer. Upstream fixed it in https://github.com/python/cpython/issues/150599 (3.11 commit https://github.com/python/cpython/commit/1ba6135eae75ad8413413caeeedb56ae72320636), first released in CPython 3.11.16; see the advisory https://mail.python.org/archives/list/security-announce@python.org/thread/DBJZETMGUIFK7DVUWMOXHD3Z6IX2QPSX/ and https://www.cve.org/CVERecord?id=CVE-2026-9669, which lists 3.11 releases before 3.11.16 as affected. The fix, in Modules/_bz2module.c, records the error code in a new field of the decompressor object (moving the end-of-stream flag after it) and refuses further calls with the ValueError 'Decompressor is unusable after a previous error'. Checked the compiled _bz2 extension module (lib-dynload/_bz2.cpython-311-*.so) in the python-3.11 package of every build of the python-3.11 source published in the DHI Alpine 3.24 repository by 2026-11-28, 3.11.15-r0 to 3.11.18-r5, on x86_64 and aarch64 (package sizes checked against the repository index): 3.11.15-r0 and 3.11.15-r1 do not contain that message and have none of the byte loads or stores at the end-of-stream flag's new offset that the fixed module has, so they lack the fix; 3.11.15-r2 to 3.11.18-r5 contain that message and access the end-of-stream flag at its new offset, as the module built from the upstream 3.11.16 source does. On aarch64 the module in 3.11.15-r2, 3.11.15-r4 and 3.11.15-r5 is byte-identical to the one in 3.11.16-r1. 3.11.15-r2 to 3.11.15-r5 therefore carry a DHI backport made before the upstream 3.11.16 release. The range ends at 3.11.15-r2. Builds from 3.11.15-r2 on that the CVE record still matches carry the fix."
     },
     {
       "vulnerability": {
@@ -1012,18 +1040,6 @@
           "@id": "pkg:deb/dhi/python-3.11@3.11.15-0?distro=dhi-13"
         },
         {
-          "@id": "pkg:deb/dhi/python-3.11@3.11.15-10?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/python-3.11@3.11.15-11?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/python-3.11@3.11.15-12?distro=dhi-13"
-        },
-        {
-          "@id": "pkg:deb/dhi/python-3.11@3.11.15-13?distro=dhi-13"
-        },
-        {
           "@id": "pkg:deb/dhi/python-3.11@3.11.15-1?distro=dhi-13"
         },
         {
@@ -1037,6 +1053,31 @@
         },
         {
           "@id": "pkg:deb/dhi/python-3.11@3.11.15-6?distro=dhi-13"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update python-3.11 to 3.11.15-7 or later.",
+      "status_notes": "CVE-2026-9669: a bz2.BZ2Decompressor could be used again after a decompression error; an application that caught the OSError and retried with the same object could make libbz2 resume from an invalid state and, with crafted input, write past a stack buffer. Upstream fixed it in https://github.com/python/cpython/issues/150599 (3.11 commit https://github.com/python/cpython/commit/1ba6135eae75ad8413413caeeedb56ae72320636), first released in CPython 3.11.16; see the advisory https://mail.python.org/archives/list/security-announce@python.org/thread/DBJZETMGUIFK7DVUWMOXHD3Z6IX2QPSX/ and https://www.cve.org/CVERecord?id=CVE-2026-9669, which lists 3.11 releases before 3.11.16 as affected. The fix, in Modules/_bz2module.c, records the error code in a new field of the decompressor object (moving the end-of-stream flag after it) and refuses further calls with the ValueError 'Decompressor is unusable after a previous error'. Checked the compiled _bz2 extension module (lib-dynload/_bz2.cpython-311-*.so) in every build of the python-3.11 source published in the DHI Debian 13 repository by 2026-11-28, 3.11.15-0 to 3.11.18-10, on amd64 and arm64 (checksums verified against the repository index); the standard library ships in libpython-3.11-stdlib up to 3.11.15-9 and in libpython-3.11-minimal from 3.11.15-10, and 3.11.15-0 to 3.11.15-2 were published as architecture-independent packages that each carry one architecture's native code (aarch64 in 3.11.15-0 and 3.11.15-2, x86_64 in 3.11.15-1): 3.11.15-0 to 3.11.15-6 do not contain that message and have none of the byte loads or stores at the end-of-stream flag's new offset that the fixed module has, so they lack the fix; 3.11.15-7 to 3.11.18-10 contain that message and access the end-of-stream flag at its new offset, as the module built from the upstream 3.11.16 source does. On each architecture the module is byte-identical within 3.11.15-7 to 3.11.15-9 and within 3.11.15-10 to 3.11.15-13, and its machine code in 3.11.15-7 and 3.11.15-10 is the same as in 3.11.16-0, which is built from the upstream 3.11.16 source, apart from addresses: a DHI backport made before the upstream release. The range ends at 3.11.15-7. Builds from 3.11.15-7 on that the CVE record still matches carry the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "DHI-ijim-hwge-z6h3-e36l",
+        "aliases": [
+          "CVE-2026-9669"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/dhi/python-3.11@3.11.15-10?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/python-3.11@3.11.15-11?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/python-3.11@3.11.15-12?distro=dhi-13"
+        },
+        {
+          "@id": "pkg:deb/dhi/python-3.11@3.11.15-13?distro=dhi-13"
         },
         {
           "@id": "pkg:deb/dhi/python-3.11@3.11.15-7?distro=dhi-13"
@@ -1093,7 +1134,8 @@
           "@id": "pkg:deb/dhi/python-3.11@3.11.18-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "fixed",
+      "status_notes": "CVE-2026-9669: a bz2.BZ2Decompressor could be used again after a decompression error; an application that caught the OSError and retried with the same object could make libbz2 resume from an invalid state and, with crafted input, write past a stack buffer. Upstream fixed it in https://github.com/python/cpython/issues/150599 (3.11 commit https://github.com/python/cpython/commit/1ba6135eae75ad8413413caeeedb56ae72320636), first released in CPython 3.11.16; see the advisory https://mail.python.org/archives/list/security-announce@python.org/thread/DBJZETMGUIFK7DVUWMOXHD3Z6IX2QPSX/ and https://www.cve.org/CVERecord?id=CVE-2026-9669, which lists 3.11 releases before 3.11.16 as affected. The fix, in Modules/_bz2module.c, records the error code in a new field of the decompressor object (moving the end-of-stream flag after it) and refuses further calls with the ValueError 'Decompressor is unusable after a previous error'. Checked the compiled _bz2 extension module (lib-dynload/_bz2.cpython-311-*.so) in every build of the python-3.11 source published in the DHI Debian 13 repository by 2026-11-28, 3.11.15-0 to 3.11.18-10, on amd64 and arm64 (checksums verified against the repository index); the standard library ships in libpython-3.11-stdlib up to 3.11.15-9 and in libpython-3.11-minimal from 3.11.15-10, and 3.11.15-0 to 3.11.15-2 were published as architecture-independent packages that each carry one architecture's native code (aarch64 in 3.11.15-0 and 3.11.15-2, x86_64 in 3.11.15-1): 3.11.15-0 to 3.11.15-6 do not contain that message and have none of the byte loads or stores at the end-of-stream flag's new offset that the fixed module has, so they lack the fix; 3.11.15-7 to 3.11.18-10 contain that message and access the end-of-stream flag at its new offset, as the module built from the upstream 3.11.16 source does. On each architecture the module is byte-identical within 3.11.15-7 to 3.11.15-9 and within 3.11.15-10 to 3.11.15-13, and its machine code in 3.11.15-7 and 3.11.15-10 is the same as in 3.11.16-0, which is built from the upstream 3.11.16 source, apart from addresses: a DHI backport made before the upstream release. The range ends at 3.11.15-7. Builds from 3.11.15-7 on that the CVE record still matches carry the fix."
     },
     {
       "vulnerability": {
