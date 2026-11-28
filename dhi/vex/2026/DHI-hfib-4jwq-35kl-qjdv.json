@@ -4,8 +4,8 @@
   "author": "Docker Hardened Images <dhi@docker.com>",
   "role": "Document Creator",
   "timestamp": "2026-11-14T02:01:31Z",
-  "last_updated": "2026-11-28T10:00:37Z",
-  "version": 27,
+  "last_updated": "2026-11-28T14:21:27Z",
+  "version": 28,
   "statements": [
     {
       "vulnerability": {
@@ -3171,7 +3171,9 @@
           "@id": "pkg:deb/dhi/nifi@2.12.0-9?distro=dhi-13"
         }
       ],
-      "status": "under_investigation"
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "GHSA-wppq-2f6r-wfvm (RUSTSEC-2026-0524; no CVE id is assigned) affects the Rust crate quinn-proto from 0.11.0 to 0.11.18: a quinn-proto QUIC client that receives one Retry packet whose token and Source Connection ID are 1162 bytes or more combined panics in a debug build, or allocates 10.9 GiB or more of memory and can abort in a release build, the next time it builds a packet; any server the client connects to, or anyone who sees the client's first Initial packet, can send it. quinn-proto 0.11.19 fixes it: https://github.com/quinn-rs/quinn/security/advisories/GHSA-wppq-2f6r-wfvm and https://rustsec.org/advisories/RUSTSEC-2026-0524.html . The nifi packages in the Debian 13 index of the DHI Debian repository (read on 2026-11-28) are ten builds, 2.12.0-1 to the current 2.12.0-10, for amd64 and arm64, with no debug-symbol packages. The only program in them outside the Java archives is /usr/lib/nifi/.local/bin/uv. We read that file from the data archive of all 20 packages: it is the uv program from astral's uv release archive for the same architecture (same MD5 checksum as uv-x86_64-unknown-linux-gnu.tar.gz or uv-aarch64-unknown-linux-gnu.tar.gz, checked against its published SHA-256), uv 0.13.7 in 2.12.0-1 and 2.12.0-2, uv 0.13.8 in 2.12.0-3, uv 0.13.9 in 2.12.0-4 to 2.12.0-9 and uv 0.13.10 in 2.12.0-10 (https://github.com/astral-sh/uv/releases). Each of those eight programs is a dynamically linked Linux ELF program for x86-64 or AArch64 that links against the GNU C library, and the dependency list that cargo-auditable embeds in each, zlib-compressed, names quinn-proto 0.11.18 (with quinn 0.11.9 and quinn-udp 0.5.15); uv's Cargo.lock at the tags 0.13.7 to 0.13.10 pins the same version. That list records the dependency graph cargo resolved, which is what scanners match, not the code the linker kept. In uv's lock file the only crate that depends on quinn is reqwest 0.13.5, where only the http3 feature enables it (https://github.com/seanmonstar/reqwest/blob/v0.13.5/Cargo.toml), and uv's workspace enables reqwest with rustls and http2 but not http3 at each of these tags (https://github.com/astral-sh/uv/blob/0.13.10/Cargo.toml). We searched the bytes of all eight programs, ignoring case, for the string quinn: none contains it, so no quinn crate name, symbol or source path (such as a panic location) is in the code, while the same search finds reqwest 36 times and rustls 72 or 73 times in each program, including 13 distinct reqwest and 41 or 42 distinct rustls source paths. So the uv program in every published nifi build contains no quinn-proto code. The rest of the package was unpacked in full for the amd64 2.12.0-10 package (checked against its index SHA-256), opening every Java archive and every archive nested inside those (5,813 archives): besides uv, its native code is files bundled inside the Java archives for many operating systems and processor architectures (4,490 ELF, 1,027 Mach-O and 900 native Windows PE files, none of them a managed .NET assembly, and no static archives), from snappy-java, lz4-java, jline-native, jna, zstd-jni, jansi, netty, conscrypt and hazelcast; the string quinn appears there, ignoring case, only as a personal name in the sample-data files of the datafaker library, and no file other than uv carries a cargo-auditable dependency list or Rust crate source paths. For the other 19 packages, the md5sums manifest of each lists the same 631 files, and every file except uv and two to nine NAR archives has the same checksum as in the amd64 2.12.0-10 package; the NAR archives that differ in the arm64 2.12.0-1 and 2.12.0-9 packages (14 archives, read from the full packages) hold no Rust code, and the other differing NAR archives were not unpacked."
     },
     {
       "vulnerability": {
